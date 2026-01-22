@@ -56,8 +56,15 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <Settings size={20} className={currentView === 'settings' ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'} />
           <span>Settings</span>
         </button>
-        <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 group">
-          <HelpCircle size={20} className="text-gray-400 group-hover:text-gray-600" />
+        <button 
+          onClick={() => onNavigate && onNavigate('help')}
+          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+            currentView === 'help' 
+            ? 'bg-gray-50 text-gray-900 font-medium' 
+            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+          }`}
+        >
+          <HelpCircle size={20} className={currentView === 'help' ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'} />
           <span>Help Center</span>
         </button>
       </div>
