@@ -5,9 +5,11 @@ import Features from './components/Features';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
+import DemoModal from './components/DemoModal';
 
 export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'features'>('home');
@@ -15,6 +17,16 @@ export default function App() {
   const openAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setIsAuthOpen(true);
+    // Ensure demo is closed if auth is opened from within demo
+    setIsDemoOpen(false);
+  };
+
+  const openDemo = () => {
+    setIsDemoOpen(true);
+  };
+
+  const closeDemo = () => {
+    setIsDemoOpen(false);
   };
 
   const handleLogin = () => {
@@ -40,9 +52,9 @@ export default function App() {
       />
       <main className="flex-grow flex flex-col justify-center">
         {currentPage === 'home' ? (
-          <Hero />
+          <Hero onOpenDemo={openDemo} />
         ) : (
-          <Features onOpenAuth={openAuth} />
+          <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
         )}
       </main>
       <Footer />
@@ -51,6 +63,11 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)} 
         initialMode={authMode}
         onLogin={handleLogin}
+      />
+      <DemoModal 
+        isOpen={isDemoOpen}
+        onClose={closeDemo}
+        onSignup={() => openAuth('signup')}
       />
     </div>
   );

@@ -2,7 +2,11 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 
-export default function Hero() {
+interface HeroProps {
+  onOpenDemo?: () => void;
+}
+
+export default function Hero({ onOpenDemo }: HeroProps) {
   return (
     <div className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
@@ -52,7 +56,10 @@ export default function Hero() {
             <button className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-full hover:bg-gray-800 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
               Start Tracking Free
             </button>
-            <button className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200">
+            <button 
+              onClick={onOpenDemo}
+              className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+            >
               View Demo
             </button>
           </div>
