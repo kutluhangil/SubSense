@@ -4,9 +4,10 @@ import BrandIcon from './BrandIcon';
 
 interface FeaturesProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
+  onOpenDemo?: () => void;
 }
 
-export default function Features({ onOpenAuth }: FeaturesProps) {
+export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
   const features = [
     {
       icon: Layers,
@@ -69,7 +70,10 @@ export default function Features({ onOpenAuth }: FeaturesProps) {
             >
               Start Tracking Free
             </button>
-            <button className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200">
+            <button 
+              onClick={onOpenDemo}
+              className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200"
+            >
               View Demo
             </button>
           </div>
@@ -105,8 +109,8 @@ export default function Features({ onOpenAuth }: FeaturesProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10 h-full w-full pointer-events-none"></div>
             
             {/* Mockup Browser Window */}
-            <div className="bg-gray-900 rounded-xl p-2 shadow-2xl ring-1 ring-gray-900/10">
-              <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 aspect-[16/10] relative flex flex-col">
+            <div className="bg-gray-900 rounded-xl p-2 shadow-2xl ring-1 ring-gray-900/10 cursor-pointer" onClick={onOpenDemo}>
+              <div className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 aspect-[16/10] relative flex flex-col group">
                  {/* Fake Browser Header */}
                  <div className="h-8 bg-white border-b border-gray-200 flex items-center px-4 gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -114,7 +118,7 @@ export default function Features({ onOpenAuth }: FeaturesProps) {
                     <div className="w-3 h-3 rounded-full bg-green-400"></div>
                  </div>
                  {/* Fake UI Content */}
-                 <div className="flex-1 p-8 grid grid-cols-12 gap-6 bg-gray-50">
+                 <div className="flex-1 p-8 grid grid-cols-12 gap-6 bg-gray-50 transition-transform duration-500 group-hover:scale-[1.02]">
                     {/* Sidebar */}
                     <div className="col-span-2 bg-white rounded-lg border border-gray-100 hidden md:block"></div>
                     {/* Main */}
@@ -135,10 +139,10 @@ export default function Features({ onOpenAuth }: FeaturesProps) {
                  </div>
                  
                  {/* Overlay Text */}
-                 <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[2px]">
-                    <div className="bg-white/90 backdrop-blur-md px-8 py-4 rounded-2xl shadow-xl border border-white/50 text-center">
-                        <p className="font-bold text-gray-900 text-lg">Interactive Dashboard</p>
-                        <p className="text-gray-500 text-sm">Real-time data at your fingertips</p>
+                 <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-white/90 backdrop-blur-md px-8 py-4 rounded-2xl shadow-xl border border-white/50 text-center transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                        <p className="font-bold text-gray-900 text-lg">Click to Interact</p>
+                        <p className="text-gray-500 text-sm">Launch the live demo</p>
                     </div>
                  </div>
               </div>
