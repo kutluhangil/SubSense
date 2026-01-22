@@ -6,6 +6,7 @@ import Friends from './Friends';
 import Analytics from './Analytics';
 import Settings from './Settings';
 import Comparison from './Comparison';
+import HelpCenter from './HelpCenter';
 import { Plus } from 'lucide-react';
 
 interface DashboardProps {
@@ -64,9 +65,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
            {currentView === 'analytics' && <Analytics />}
            {currentView === 'compare' && <Comparison />}
            {currentView === 'settings' && <Settings />}
+           {currentView === 'help' && <HelpCenter />}
            
            {/* Placeholder for other views */}
-           {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare') && (
+           {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare' && currentView !== 'help') && (
              <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                 <div className="p-4 bg-gray-100 rounded-full mb-4">
                   <Plus className="w-8 h-8 text-gray-400" />
