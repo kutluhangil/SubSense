@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import Logo from './Logo';
 
 interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
@@ -27,10 +28,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
             className="flex-shrink-0 flex items-center cursor-pointer" 
             onClick={() => handleNav('home')}
           >
-            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center mr-2">
-              <span className="text-white font-bold text-lg">S</span>
-            </div>
-            <span className="font-semibold text-xl tracking-tight text-gray-900">SubTrack</span>
+            <Logo className="h-9" />
           </div>
 
           {/* Desktop Menu */}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft } from 'lucide-react';
+import Logo from './Logo';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -19,11 +20,8 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
   return (
     <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 h-full">
       {/* Logo Area */}
-      <div className="h-20 flex items-center px-8 border-b border-gray-50 cursor-pointer" onClick={() => onNavigate && onNavigate('dashboard')}>
-        <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center mr-3">
-           <span className="text-white font-bold text-lg">S</span>
-        </div>
-        <span className="font-semibold text-xl tracking-tight text-gray-900">SubTrack</span>
+      <div className="h-20 flex items-center px-6 border-b border-gray-50 cursor-pointer" onClick={() => onNavigate && onNavigate('dashboard')}>
+        <Logo className="h-8" />
       </div>
 
       {/* Navigation */}

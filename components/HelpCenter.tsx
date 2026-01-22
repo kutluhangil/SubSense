@@ -129,7 +129,7 @@ export default function HelpCenter() {
        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Help Center</h2>
-          <p className="text-gray-500 text-sm mt-1">Guides, FAQs, and support for SubTrack Global.</p>
+          <p className="text-gray-500 text-sm mt-1">Guides, FAQs, and support for SubscriptionHub.</p>
         </div>
         
         <div className="relative w-full md:w-80">
