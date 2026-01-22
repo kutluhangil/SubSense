@@ -1,7 +1,8 @@
 import React from 'react';
-import { Globe, DollarSign, Sparkles } from 'lucide-react';
+import { Globe, DollarSign } from 'lucide-react';
 import { LANGUAGES, CURRENCIES } from '../utils/data';
 import Logo from './Logo';
+import HintCardCarousel from './HintCardCarousel';
 
 export default function Footer() {
   return (
@@ -16,25 +17,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12 items-center">
           
-          {/* Left Side - Animated Branding */}
+          {/* Left Side - Animated Branding & Hints */}
           <div className="col-span-1 group cursor-default">
              <div className="flex items-center space-x-3 mb-6 transition-transform duration-500 hover:scale-105 origin-left">
                 <Logo className="h-12" />
              </div>
              
-             <div className="relative overflow-hidden p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group/card">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#1B3A6D] to-[#3ABEFF] group-hover/card:w-1.5 transition-all duration-300"></div>
-                <p className="text-gray-600 text-lg leading-relaxed font-medium relative z-10">
-                  Global subscription management for the <br/>
-                  <span className="text-gray-900 font-bold relative inline-block">
-                    modern digital life
-                    <svg className="absolute -bottom-1 left-0 w-full h-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" viewBox="0 0 100 10" preserveAspectRatio="none">
-                      <path d="M0 5 Q 50 10 100 5" stroke="#3ABEFF" strokeWidth="2" fill="none" />
-                    </svg>
-                  </span>.
-                </p>
-                <Sparkles className="absolute top-4 right-4 text-[#3ABEFF] w-5 h-5 animate-pulse opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
-             </div>
+             {/* New Interactive Hint Card Carousel */}
+             <HintCardCarousel />
           </div>
 
           {/* Right Side - Settings */}
