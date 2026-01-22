@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import BrandIcon from './BrandIcon';
+import HeroTextRotator from './HeroTextRotator';
 
 interface HeroProps {
   onOpenDemo?: () => void;
@@ -11,7 +12,7 @@ export default function Hero({ onOpenDemo }: HeroProps) {
     <div className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
         
-        {/* Floating Icons Background Layer - Absolute positioned specifically for visual decoration */}
+        {/* Floating Icons Background Layer */}
         <div className="absolute inset-0 pointer-events-none select-none z-0 hidden lg:block">
            {/* Left Side */}
            <div className="absolute top-1/4 left-10 xl:left-20 animate-float opacity-100">
@@ -37,22 +38,16 @@ export default function Hero({ onOpenDemo }: HeroProps) {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 max-w-3xl mx-auto">
+        <div className="relative z-10 w-full flex flex-col items-center">
           <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm leading-6 text-gray-600 mb-8 hover:bg-gray-100 transition-colors cursor-default">
             <span>Global currency support is here</span>
             <ArrowRight className="ml-2 h-4 w-4" />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6">
-            Master your recurring <br className="hidden sm:block" />
-            <span className="text-gray-500">expenses effortlessly.</span>
-          </h1>
+          {/* New Rotating Hero Text Component */}
+          <HeroTextRotator />
 
-          <p className="mt-4 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Stop losing money on forgotten subscriptions. Track, manage, and optimize your global spending in one minimalist dashboard.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-6">
             <button className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-full hover:bg-gray-800 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
               Start Tracking Free
             </button>
@@ -65,7 +60,7 @@ export default function Hero({ onOpenDemo }: HeroProps) {
           </div>
         </div>
 
-        {/* Mobile-only static icon row to ensure visibility without cluttering */}
+        {/* Mobile-only static icon row */}
         <div className="lg:hidden mt-12 flex justify-center gap-6 opacity-80">
            <BrandIcon type="netflix" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
            <BrandIcon type="spotify" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
