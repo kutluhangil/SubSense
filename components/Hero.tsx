@@ -10,25 +10,25 @@ export default function Hero() {
         {/* Floating Icons Background Layer - Absolute positioned specifically for visual decoration */}
         <div className="absolute inset-0 pointer-events-none select-none z-0 hidden lg:block">
            {/* Left Side */}
-           <div className="absolute top-1/4 left-10 xl:left-20 animate-float opacity-80">
-              <BrandIcon type="netflix" className="w-12 h-12 shadow-lg rounded-xl" />
+           <div className="absolute top-1/4 left-10 xl:left-20 animate-float opacity-100">
+              <BrandIcon type="netflix" className="w-16 h-16 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
-           <div className="absolute bottom-1/3 left-24 xl:left-40 animate-float-delayed opacity-60">
-              <BrandIcon type="spotify" className="w-10 h-10 shadow-md rounded-lg" />
+           <div className="absolute bottom-1/3 left-24 xl:left-40 animate-float-delayed opacity-90">
+              <BrandIcon type="spotify" className="w-14 h-14 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
-           <div className="absolute top-2/3 left-10 xl:left-16 animate-float opacity-40">
-              <BrandIcon type="adobe" className="w-8 h-8 shadow-sm rounded-md" />
+           <div className="absolute top-2/3 left-10 xl:left-16 animate-float opacity-80">
+              <BrandIcon type="adobe" className="w-12 h-12 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
 
            {/* Right Side */}
-           <div className="absolute top-1/3 right-10 xl:right-20 animate-float-delayed opacity-80">
-              <BrandIcon type="youtube" className="w-12 h-12 shadow-lg rounded-xl" />
+           <div className="absolute top-1/3 right-10 xl:right-20 animate-float-delayed opacity-100">
+              <BrandIcon type="youtube" className="w-16 h-16 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
-           <div className="absolute bottom-1/4 right-24 xl:right-32 animate-float opacity-60">
-              <BrandIcon type="amazon" className="w-10 h-10 shadow-md rounded-lg" />
+           <div className="absolute bottom-1/4 right-24 xl:right-32 animate-float opacity-90">
+              <BrandIcon type="amazon" className="w-14 h-14 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
-           <div className="absolute top-20 right-32 xl:right-48 animate-float-delayed opacity-50">
-             <BrandIcon type="apple" className="w-9 h-9 shadow-sm rounded-lg" />
+           <div className="absolute top-20 right-32 xl:right-48 animate-float-delayed opacity-80">
+             <BrandIcon type="apple" className="w-12 h-12 bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/40 rounded-2xl" />
            </div>
         </div>
 
@@ -59,11 +59,11 @@ export default function Hero() {
         </div>
 
         {/* Mobile-only static icon row to ensure visibility without cluttering */}
-        <div className="lg:hidden mt-12 flex justify-center gap-6 opacity-70">
-           <BrandIcon type="netflix" className="w-10 h-10 shadow-sm rounded-xl" />
-           <BrandIcon type="spotify" className="w-10 h-10 shadow-sm rounded-xl" />
-           <BrandIcon type="youtube" className="w-10 h-10 shadow-sm rounded-xl" />
-           <BrandIcon type="amazon" className="w-10 h-10 shadow-sm rounded-xl" />
+        <div className="lg:hidden mt-12 flex justify-center gap-6 opacity-80">
+           <BrandIcon type="netflix" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
+           <BrandIcon type="spotify" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
+           <BrandIcon type="youtube" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
+           <BrandIcon type="amazon" className="w-12 h-12 bg-white/90 shadow-md rounded-2xl border border-gray-100" />
         </div>
       </div>
     </div>
