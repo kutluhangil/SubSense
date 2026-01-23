@@ -1,4 +1,6 @@
-import React from 'react';
+
+import React, { useState } from 'react';
+import { SUBSCRIPTION_CATALOG } from '../utils/data';
 
 interface BrandIconProps {
   type: string;
@@ -9,7 +11,28 @@ interface BrandIconProps {
 const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", noBackground = false }) => {
   const baseClasses = `flex items-center justify-center relative overflow-hidden flex-shrink-0 ${noBackground ? '' : 'bg-white'} ${className}`;
   const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || 'default';
+  const [imageError, setImageError] = useState(false);
 
+  // Check if we have a website url for this type to fetch a logo
+  const serviceDetail = SUBSCRIPTION_CATALOG[normalizedType];
+  const externalLogoUrl = !imageError && serviceDetail?.website 
+    ? `https://logo.clearbit.com/${serviceDetail.website}` 
+    : null;
+
+  if (externalLogoUrl) {
+    return (
+      <div className={baseClasses} title={type}>
+        <img 
+          src={externalLogoUrl} 
+          alt={`${type} logo`} 
+          className="w-full h-full object-contain p-[10%]"
+          onError={() => setImageError(true)}
+        />
+      </div>
+    );
+  }
+
+  // Fallback to internal SVGs if external logo fails or doesn't exist
   const renderIcon = () => {
     switch (normalizedType) {
       case 'netflix':
