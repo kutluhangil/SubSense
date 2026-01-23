@@ -1,24 +1,54 @@
 
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import App from './App';
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
+const containerId = 'root';
+let container = document.getElementById(containerId);
+if (!container) {
   throw new Error("Could not find root element to mount to");
 }
 
-// Cast to any to attach the root instance to the DOM node.
-// This prevents "Minified React error #310" (createRoot called on container that is already a root)
-// which can happen in development/HMR environments if this file is re-executed.
-const container = rootElement as any;
+// Key to store the React root instance on the DOM element for HMR
+const ROOT_KEY = '__react_root_instance__';
 
-if (!container._reactRoot) {
-  container._reactRoot = ReactDOM.createRoot(rootElement);
+// Try to retrieve existing root from the DOM node
+let root = (container as any)[ROOT_KEY];
+
+if (!root) {
+  try {
+    // Attempt to create a new root
+    root = createRoot(container);
+  } catch (e) {
+    // If createRoot fails (e.g., Error #310), the container might already be a root
+    // but we lost the reference. We must recover by replacing the container.
+    const newContainer = document.createElement('div');
+    newContainer.id = containerId;
+    
+    // Copy classes/attributes if needed, though usually root is clean
+    if (container.className) newContainer.className = container.className;
+    
+    if (container.parentNode) {
+      container.parentNode.replaceChild(newContainer, container);
+      container = newContainer;
+      root = createRoot(container);
+    } else {
+      // If we can't replace (detached), just rethrow
+      throw e;
+    }
+  }
+
+  // Save the root instance to the container for future usage
+  if (root) {
+    (container as any)[ROOT_KEY] = root;
+  }
 }
 
-container._reactRoot.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Render the app
+if (root) {
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}

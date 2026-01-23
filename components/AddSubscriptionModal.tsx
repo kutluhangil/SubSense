@@ -16,18 +16,17 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
   const { t, formatPrice, currentCurrency } = useLanguage();
   const [mapError, setMapError] = useState(false);
 
-  if (!isOpen || !service) return null;
-
-  const brandKey = service.type.toLowerCase().replace(/\s+/g, '');
-  const brandColor = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
+  // Safeguard: Extract netWorth for dependency array, ensure it's safe
+  const serviceNetWorth = service?.netWorth;
 
   // Format net worth dynamically if it's a number-string
+  // MOVED before early return to comply with React Rules of Hooks
   const formattedNetWorth = React.useMemo(() => {
-    if (!service.netWorth || service.netWorth === "Unknown") return service.netWorth || "Unknown";
+    if (!serviceNetWorth || serviceNetWorth === "Unknown") return serviceNetWorth || "Unknown";
     
     // Try to parse number
-    const val = parseFloat(service.netWorth);
-    if (isNaN(val)) return service.netWorth;
+    const val = parseFloat(serviceNetWorth);
+    if (isNaN(val)) return serviceNetWorth;
 
     // Use Intl for billions/trillions formatting
     return new Intl.NumberFormat('en-US', {
@@ -36,12 +35,18 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
       notation: 'compact',
       maximumFractionDigits: 1
     }).format(val);
-  }, [service.netWorth]);
+  }, [serviceNetWorth]);
+
+  // Early return must happen AFTER all hooks
+  if (!isOpen || !service) return null;
+
+  const brandKey = (service.type || 'default').toLowerCase().replace(/\s+/g, '');
+  const brandColor = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
 
   // Map URL for generic embed (note: often requires API key for guaranteed service, using simplified mode)
   const mapEmbedUrl = service.coordinates 
     ? `https://maps.google.com/maps?q=${service.coordinates.lat},${service.coordinates.lng}&z=13&output=embed`
-    : `https://maps.google.com/maps?q=${encodeURIComponent(service.headquarters)}&z=13&output=embed`;
+    : `https://maps.google.com/maps?q=${encodeURIComponent(service.headquarters || "")}&z=13&output=embed`;
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -64,18 +69,18 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                 <X size={20} />
             </button>
             <div className="w-24 h-24 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center absolute -bottom-12 transform transition-transform hover:scale-105">
-                <BrandIcon type={service.type} className="w-16 h-16" noBackground />
+                <BrandIcon type={service.type || 'default'} className="w-16 h-16" noBackground />
             </div>
         </div>
 
         <div className="flex-1 overflow-y-auto pt-16 pb-8 px-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">{service.name}</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">{service.name || "Unknown Service"}</h2>
             <p className="text-sm font-semibold mb-4" style={{ color: brandColor }}>
-                {service.currency === 'TRY' ? '₺' : '$'}{service.price} / month
+                {service.currency === 'TRY' ? '₺' : '$'}{service.price || '0.00'} / month
             </p>
             
             <p className="text-sm text-gray-500 leading-relaxed mb-6 border-b border-gray-100 pb-6">
-                {service.description}
+                {service.description || "No description available."}
             </p>
 
             {/* Metadata Grid */}
@@ -85,14 +90,18 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                     <p className="text-[10px] uppercase text-gray-400 font-bold mb-1 flex items-center gap-1">
                         <Calendar size={10} /> {t('search.founded')}
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 truncate" title={service.foundedYear}>{service.foundedYear}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate" title={service.foundedYear || ""}>
+                        {service.foundedYear || "—"}
+                    </p>
                 </div>
                 {/* CEO */}
                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <p className="text-[10px] uppercase text-gray-400 font-bold mb-1 flex items-center gap-1">
                         <User size={10} /> {t('search.ceo')}
                     </p>
-                    <p className="text-sm font-semibold text-gray-900 truncate" title={service.ceo}>{service.ceo}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate" title={service.ceo || ""}>
+                        {service.ceo || "—"}
+                    </p>
                 </div>
                 {/* Net Worth */}
                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 col-span-2 flex items-center justify-between">
@@ -101,7 +110,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                           <DollarSign size={10} /> {t('search.net_worth')}
                       </p>
                       <p className="text-sm font-bold text-green-700">
-                        {formattedNetWorth !== "Unknown" ? formattedNetWorth : "–"} 
+                        {formattedNetWorth !== "Unknown" ? formattedNetWorth : "—"} 
                         {formattedNetWorth !== "Unknown" && <span className="text-[10px] font-normal text-gray-400 ml-1">({t('search.as_of').replace('{0}', '2024')})</span>}
                       </p>
                     </div>
@@ -122,38 +131,46 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                    <p className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1">
                       <Globe size={10} /> {t('search.hq')}
                    </p>
-                   <a 
-                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(service.headquarters)}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-[10px] text-blue-600 hover:underline flex items-center gap-1"
-                   >
-                     {t('search.view_map')} <ExternalLink size={8} />
-                   </a>
+                   {service.headquarters && (
+                     <a 
+                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(service.headquarters)}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="text-[10px] text-blue-600 hover:underline flex items-center gap-1"
+                     >
+                       {t('search.view_map')} <ExternalLink size={8} />
+                     </a>
+                   )}
                 </div>
                 
-                <div className="relative w-full h-32 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 group">
-                   {!mapError ? (
-                     <iframe 
-                       width="100%" 
-                       height="100%" 
-                       style={{ border: 0 }}
-                       src={mapEmbedUrl}
-                       allowFullScreen
-                       onError={() => setMapError(true)}
-                       title={`${service.name} HQ Map`}
-                       className="grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
-                     />
-                   ) : (
-                     <div className="flex items-center justify-center h-full text-gray-400 bg-gray-50">
-                        <MapPin size={24} />
+                {service.headquarters || service.coordinates ? (
+                  <div className="relative w-full h-32 bg-gray-100 rounded-xl overflow-hidden border border-gray-200 group">
+                     {!mapError ? (
+                       <iframe 
+                         width="100%" 
+                         height="100%" 
+                         style={{ border: 0 }}
+                         src={mapEmbedUrl}
+                         allowFullScreen
+                         onError={() => setMapError(true)}
+                         title={`${service.name} HQ Map`}
+                         className="grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+                       />
+                     ) : (
+                       <div className="flex items-center justify-center h-full text-gray-400 bg-gray-50">
+                          <MapPin size={24} />
+                       </div>
+                     )}
+                     {/* Overlay Label */}
+                     <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-gray-700 shadow-sm flex items-center gap-1 pointer-events-none">
+                        <MapPin size={10} className="text-red-500" /> {service.headquarters || "HQ"}
                      </div>
-                   )}
-                   {/* Overlay Label */}
-                   <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-gray-700 shadow-sm flex items-center gap-1 pointer-events-none">
-                      <MapPin size={10} className="text-red-500" /> {service.headquarters}
-                   </div>
-                </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-12 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center text-xs text-gray-400">
+                    Map unavailable
+                  </div>
+                )}
             </div>
 
             <button 
