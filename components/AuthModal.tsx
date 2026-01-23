@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface AuthModalProps {
@@ -12,108 +12,300 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: AuthModalProps) {
   const [mode, setMode] = useState(initialMode);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { t } = useLanguage();
   
+  // Form Data State
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    country: 'United States',
+    birthYear: '',
+    agreedToTerms: false
+  });
+
+  // Password strength visual logic
+  const passwordStrength = React.useMemo(() => {
+    const pwd = formData.password;
+    if (!pwd) return 0;
+    let score = 0;
+    if (pwd.length > 7) score++;
+    if (pwd.match(/[0-9]/)) score++;
+    if (pwd.match(/[^a-zA-Z0-9]/)) score++;
+    return score; // 0 to 3
+  }, [formData.password]);
+
   useEffect(() => {
-    setMode(initialMode);
+    if (isOpen) {
+        setMode(initialMode);
+        // Reset form on open if desired, or keep state
+        setShowPassword(false);
+    }
   }, [initialMode, isOpen]);
 
-  if (!isOpen) return null;
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onLogin) {
-      onLogin();
-    }
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      if (onLogin) onLogin(); // Triggers global login state in App
+    }, 1500);
   };
 
+  if (!isOpen) return null;
+
   return (
-     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
         {/* Backdrop */}
         <div 
-          className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" 
+          className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
           onClick={onClose}
         ></div>
         
         {/* Modal Card */}
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 opacity-100 animate-float-in">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden transform transition-all scale-100 opacity-100 animate-in zoom-in-95 duration-200 border border-gray-100">
+           
            {/* Close Button */}
            <button 
              onClick={onClose}
-             className="absolute top-4 right-4 rtl:right-auto rtl:left-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors z-10"
+             className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors z-20"
            >
              <X size={20} />
            </button>
 
-           <div className="p-8">
+           {/* Scrollable Content Area */}
+           <div className="overflow-y-auto p-8 custom-scrollbar">
+              
+              {/* Header */}
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {mode === 'login' ? t('auth.welcome') : t('auth.create')}
+                  {mode === 'login' ? t('auth.welcome') : "Create your account"}
                 </h2>
                 <p className="text-gray-500 text-sm">
                   {mode === 'login' 
                     ? t('auth.login_desc') 
-                    : t('auth.signup_desc')}
+                    : "Start tracking and managing your subscriptions today."}
                 </p>
               </div>
 
-              {/* Email Form */}
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div>
-                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1 rtl:mr-1">{t('auth.email')}</label>
-                   <div className="relative group">
-                     <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center pointer-events-none">
-                       <Mail size={16} className="text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+              {/* Login Form */}
+              {mode === 'login' && (
+                  <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if(onLogin) onLogin(); }}>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">{t('auth.email')}</label>
+                      <div className="relative group">
+                          <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                          <input 
+                            type="email" 
+                            className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white placeholder-gray-400"
+                            placeholder="name@example.com"
+                          />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">{t('auth.password')}</label>
+                      <div className="relative group">
+                          <Lock size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                          <input 
+                            type="password" 
+                            className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white placeholder-gray-400"
+                            placeholder="••••••••"
+                          />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <a href="#" className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">Forgot password?</a>
+                    </div>
+                    <button type="submit" className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center transform active:scale-[0.98]">
+                      {t('auth.submit_login')} <ArrowRight size={18} className="ml-2" />
+                    </button>
+                  </form>
+              )}
+
+              {/* Signup Form */}
+              {mode === 'signup' && (
+                  <form className="space-y-4" onSubmit={handleSubmit}>
+                     
+                     {/* Full Name */}
+                     <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Full Name</label>
+                        <div className="relative group">
+                           <User size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                           <input 
+                              type="text" 
+                              value={formData.fullName}
+                              onChange={(e) => handleChange('fullName', e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
+                              placeholder="John Doe"
+                              required
+                           />
+                        </div>
                      </div>
-                     <input 
-                       type="email" 
-                       className="block w-full pl-10 pr-3 rtl:pr-10 rtl:pl-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
-                       placeholder="name@example.com"
-                     />
-                   </div>
-                </div>
 
-                <div>
-                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1 rtl:mr-1">{t('auth.password')}</label>
-                   <div className="relative group">
-                     <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center pointer-events-none">
-                       <Lock size={16} className="text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                     {/* Username */}
+                     <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Username</label>
+                        <input 
+                           type="text" 
+                           value={formData.username}
+                           onChange={(e) => handleChange('username', e.target.value)}
+                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
+                           placeholder="@username"
+                           required
+                        />
                      </div>
-                     <input 
-                       type="password" 
-                       className="block w-full pl-10 pr-3 rtl:pr-10 rtl:pl-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
-                       placeholder="••••••••"
-                     />
-                   </div>
-                </div>
 
-                {mode === 'login' && (
-                  <div className="flex justify-end">
-                    <a href="#" className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors">Forgot password?</a>
-                  </div>
-                )}
+                     {/* Email */}
+                     <div className="space-y-1">
+                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Email Address</label>
+                        <div className="relative group">
+                           <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                           <input 
+                              type="email" 
+                              value={formData.email}
+                              onChange={(e) => handleChange('email', e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
+                              placeholder="name@example.com"
+                              required
+                           />
+                        </div>
+                     </div>
 
-                <button type="submit" className="w-full bg-gray-900 text-white rounded-xl py-2.5 font-semibold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center">
-                  {mode === 'login' ? t('auth.submit_login') : t('auth.submit_signup')}
-                  <ArrowRight size={16} className="ml-2 rtl:ml-0 rtl:mr-2 rtl:rotate-180" />
-                </button>
-              </form>
+                     {/* Password Group */}
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1 col-span-2 sm:col-span-1">
+                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Password</label>
+                           <div className="relative group">
+                              <Lock size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                              <input 
+                                 type={showPassword ? "text" : "password"}
+                                 value={formData.password}
+                                 onChange={(e) => handleChange('password', e.target.value)}
+                                 className="w-full pl-10 pr-9 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
+                                 placeholder="••••••••"
+                                 required
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                              >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                           </div>
+                        </div>
+                        <div className="space-y-1 col-span-2 sm:col-span-1">
+                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Confirm</label>
+                           <input 
+                              type="password" 
+                              value={formData.confirmPassword}
+                              onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                              className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all focus:bg-white placeholder-gray-400 ${
+                                  formData.confirmPassword && formData.password !== formData.confirmPassword 
+                                  ? 'border-red-300 focus:ring-red-100' 
+                                  : 'border-gray-200 focus:ring-gray-900/10 focus:border-gray-900'
+                              }`}
+                              placeholder="••••••••"
+                              required
+                           />
+                        </div>
+                     </div>
+                     
+                     {/* Strength Indicator */}
+                     {formData.password && (
+                        <div className="flex gap-1.5 h-1.5 mt-2 px-1">
+                           <div className={`flex-1 rounded-full transition-colors duration-300 ${passwordStrength >= 1 ? 'bg-red-400' : 'bg-gray-200'}`}></div>
+                           <div className={`flex-1 rounded-full transition-colors duration-300 ${passwordStrength >= 2 ? 'bg-yellow-400' : 'bg-gray-200'}`}></div>
+                           <div className={`flex-1 rounded-full transition-colors duration-300 ${passwordStrength >= 3 ? 'bg-green-400' : 'bg-gray-200'}`}></div>
+                        </div>
+                     )}
 
-              <p className="text-xs text-center text-gray-400 mt-6">
-                Social login options (Google, Apple) coming soon.
-              </p>
+                     {/* Country & Year */}
+                     <div className="grid grid-cols-5 gap-4">
+                        <div className="space-y-1 col-span-3">
+                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Country</label>
+                           <div className="relative group">
+                              <Globe size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                              <select 
+                                 value={formData.country}
+                                 onChange={(e) => handleChange('country', e.target.value)}
+                                 className="w-full pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 appearance-none focus:bg-white cursor-pointer"
+                              >
+                                 <option>United States</option>
+                                 <option>United Kingdom</option>
+                                 <option>Turkey</option>
+                                 <option>Germany</option>
+                                 <option>Japan</option>
+                              </select>
+                              {/* Custom Dropdown Arrow could go here via CSS or absolute icon */}
+                           </div>
+                        </div>
+                        <div className="space-y-1 col-span-2">
+                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Birth Year</label>
+                           <div className="relative group">
+                              <Calendar size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                              <input 
+                                 type="number" 
+                                 value={formData.birthYear}
+                                 onChange={(e) => handleChange('birthYear', e.target.value)}
+                                 className="w-full pl-10 pr-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
+                                 placeholder="YYYY"
+                              />
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Terms */}
+                     <div className="pt-2">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                           <input 
+                              type="checkbox" 
+                              checked={formData.agreedToTerms}
+                              onChange={(e) => handleChange('agreedToTerms', e.target.checked)}
+                              className="mt-1 rounded border-gray-300 text-gray-900 focus:ring-gray-900 w-4 h-4 cursor-pointer" 
+                           />
+                           <span className="text-xs text-gray-500 leading-snug group-hover:text-gray-700 transition-colors">
+                              I agree to the <a href="#" className="font-bold text-gray-900 hover:underline">Terms of Service</a> and <a href="#" className="font-bold text-gray-900 hover:underline">Privacy Policy</a>.
+                           </span>
+                        </label>
+                     </div>
+
+                     <button 
+                        type="submit"
+                        disabled={!formData.agreedToTerms || isSubmitting}
+                        className={`w-full py-3.5 rounded-xl text-sm font-bold shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center mt-2 ${
+                           !formData.agreedToTerms || isSubmitting
+                           ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                           : 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
+                        }`}
+                     >
+                        {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                        {!isSubmitting && <Check size={18} className="ml-2" />}
+                     </button>
+                  </form>
+              )}
+
            </div>
 
-           <div className="bg-gray-50 px-8 py-4 text-center border-t border-gray-100">
-             <p className="text-sm text-gray-500">
-               {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
-               <button 
-                 onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                 className="font-semibold text-gray-900 hover:underline focus:outline-none"
-               >
-                 {mode === 'login' ? t('nav.signup') : t('nav.login')}
-               </button>
-             </p>
+           {/* Footer: Switch Modes */}
+           <div className="bg-gray-50 p-4 text-center border-t border-gray-100 text-xs font-medium text-gray-500">
+             {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
+             <button 
+               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+               className="font-bold text-gray-900 hover:underline focus:outline-none ml-1"
+             >
+               {mode === 'login' ? t('nav.signup') : t('nav.login')}
+             </button>
            </div>
         </div>
      </div>
