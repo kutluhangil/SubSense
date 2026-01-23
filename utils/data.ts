@@ -35,6 +35,13 @@ export const SUBSCRIPTION_CATEGORIES = [
 // Flattened list for dropdowns
 export const ALL_SUBSCRIPTIONS = SUBSCRIPTION_CATEGORIES.flatMap(cat => cat.examples).sort();
 
+// Popular services for Onboarding
+export const POPULAR_SERVICES = [
+  "Netflix", "Spotify", "YouTube Premium", "Amazon Prime", 
+  "Apple Music", "Disney+", "Adobe Creative Cloud", "Xbox Game Pass",
+  "PlayStation Plus", "ChatGPT Plus", "Canva Pro", "Google Workspace"
+];
+
 export const LANGUAGES = [
   { code: "en", name: "English 🇺🇸" },
   { code: "tr", name: "Türkçe 🇹🇷" }
@@ -62,13 +69,21 @@ export const BRAND_COLORS: Record<string, string> = {
   "adobecreativecloud": "#ED1C24",
   "apple": "#999999", // Neutral gray/silver
   "appletv+": "#000000",
+  "applemusic": "#FC3C44",
   "chatgpt": "#10A37F",
+  "chatgptplus": "#10A37F",
   "openai": "#10A37F",
   "canva": "#00C4CC",
+  "canvapro": "#00C4CC",
   "gamepass": "#107C10",
   "xbox": "#107C10",
+  "xboxgamepass": "#107C10",
+  "playstation": "#00439C",
+  "playstationplus": "#00439C",
   "disney": "#113CCF",
   "disney+": "#113CCF",
+  "googleworkspace": "#4285F4",
+  "google": "#4285F4",
   "hulu": "#1CE783",
   "hbo": "#5F259F",
   "hbomax": "#5F259F",
