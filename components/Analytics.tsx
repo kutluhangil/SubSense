@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -38,37 +38,75 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], color?: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isHovering, setIsHovering] = useState(false);
 
+  // Measure container dimensions for pixel-perfect rendering
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        setDimensions({ width, height });
+      }
+    };
+    
+    // Initial measurement
+    updateDimensions();
+
+    // Observe resizing
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(containerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  const { width, height } = dimensions;
+  
+  // Layout constants
+  const chartPadding = { top: 20, right: 10, bottom: 30, left: 50 };
+
   // Memoize calculations
   const { points, pathD, fillPath, maxValue } = useMemo(() => {
+    if (width === 0 || height === 0) return { points: [], pathD: '', fillPath: '', maxValue: 0 };
+
     const max = Math.max(...data.map(d => d.value)) * 1.1; // 10% headroom
     const min = 0;
     
+    // Available drawing area
+    const drawWidth = width - chartPadding.left - chartPadding.right;
+    const drawHeight = height - chartPadding.top - chartPadding.bottom;
+
     const pts = data.map((d, i) => ({
-      x: (i / (data.length - 1)) * 100,
-      y: 100 - ((d.value - min) / (max - min)) * 100,
+      x: chartPadding.left + (i / (data.length - 1)) * drawWidth,
+      y: chartPadding.top + drawHeight - ((d.value - min) / (max - min)) * drawHeight,
       ...d
     }));
 
     const path = generateSmoothPath(pts);
-    const fill = `${path} L 100 100 L 0 100 Z`;
+    const fill = `${path} L ${pts[pts.length-1].x} ${chartPadding.top + drawHeight} L ${chartPadding.left} ${chartPadding.top + drawHeight} Z`;
     
     return { points: pts, pathD: path, fillPath: fill, maxValue: max };
-  }, [data]);
+  }, [data, width, height, chartPadding]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || width === 0) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const width = rect.width;
     
-    // Find nearest point
-    const index = Math.round((x / width) * (data.length - 1));
-    if (index >= 0 && index < data.length) {
-        setHoveredIndex(index);
-    }
+    // Map x to nearest data point
+    const drawWidth = width - chartPadding.left - chartPadding.right;
+    const chartX = x - chartPadding.left;
+    
+    // Allow a bit of buffer for mouse outside exact chart area
+    if (chartX < -10 || chartX > drawWidth + 10) return;
+    
+    const rawIndex = (chartX / drawWidth) * (data.length - 1);
+    const index = Math.round(Math.max(0, Math.min(data.length - 1, rawIndex)));
+    
+    setHoveredIndex(index);
     setIsHovering(true);
   };
 
@@ -86,26 +124,48 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
     >
-      {/* Y-Axis Grid */}
-      <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 pb-8 pl-0 pointer-events-none">
-        {[100, 75, 50, 25, 0].map(pct => (
-          <div key={pct} className="w-full flex items-center border-b border-dashed border-gray-100 h-0 relative">
-             <span className="absolute left-0 -translate-y-1/2 bg-white pr-2 z-10 font-medium">
-               ${Math.round((pct/100) * maxValue).toLocaleString()}
-             </span>
-          </div>
-        ))}
-      </div>
-      
-      {/* SVG Rendering */}
-      <div className="absolute inset-0 left-10 right-2 bottom-6 top-4">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
+      {/* SVG Rendering Layer */}
+      {width > 0 && height > 0 && (
+        <svg 
+            width={width} 
+            height={height} 
+            viewBox={`0 0 ${width} ${height}`} 
+            className="absolute inset-0 overflow-visible"
+        >
            <defs>
              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
                <stop offset="0%" stopColor={color} stopOpacity="0.15" />
                <stop offset="100%" stopColor={color} stopOpacity="0" />
              </linearGradient>
            </defs>
+
+           {/* Grid Lines */}
+           {[0, 0.25, 0.5, 0.75, 1].map((tick, i) => {
+               const y = chartPadding.top + (height - chartPadding.top - chartPadding.bottom) * (1 - tick);
+               const val = Math.round(maxValue * tick);
+               return (
+                   <g key={i}>
+                       <line 
+                           x1={chartPadding.left} 
+                           y1={y} 
+                           x2={width - chartPadding.right} 
+                           y2={y} 
+                           stroke="#F3F4F6" 
+                           strokeDasharray="4 4" 
+                       />
+                       {/* Y-Axis Labels inside SVG for alignment */}
+                       <text 
+                           x={chartPadding.left - 10} 
+                           y={y} 
+                           dy="3" 
+                           textAnchor="end" 
+                           className="text-[10px] fill-gray-400 font-medium"
+                       >
+                           ${val.toLocaleString()}
+                       </text>
+                   </g>
+               );
+           })}
            
            {/* Area Fill */}
            <path d={fillPath} fill="url(#trendGradient)" className="transition-opacity duration-300 hidden sm:block" />
@@ -118,20 +178,18 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
              strokeWidth="2" 
              strokeLinecap="round" 
              strokeLinejoin="round" 
-             vectorEffect="non-scaling-stroke"
              className="drop-shadow-sm"
            />
 
            {/* Vertical Hover Line */}
            {isHovering && hoveredPoint && (
              <line 
-                x1={`${hoveredPoint.x}%`} y1="0" 
-                x2={`${hoveredPoint.x}%`} y2="100" 
+                x1={hoveredPoint.x} y1={chartPadding.top} 
+                x2={hoveredPoint.x} y2={height - chartPadding.bottom} 
                 stroke={color} 
                 strokeWidth="1" 
                 strokeDasharray="4 4" 
-                opacity="0.2"
-                vectorEffect="non-scaling-stroke"
+                opacity="0.3"
              />
            )}
 
@@ -141,54 +199,56 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
              return (
                <circle 
                  key={i}
-                 cx={`${p.x}%`} 
-                 cy={`${p.y}%`} 
-                 r={isHovered ? "4" : "3"} 
+                 cx={p.x} 
+                 cy={p.y} 
+                 r={isHovered ? 4 : 3} 
                  fill={color} 
                  stroke="white" 
-                 strokeWidth="1.5" 
-                 className={`transition-all duration-200 ${isHovered ? 'shadow-md scale-110' : ''}`}
-                 style={{ opacity: isHovering && !isHovered ? 0.5 : 1 }}
+                 strokeWidth={isHovered ? 2 : 1.5}
+                 className={`transition-all duration-200 ${isHovered ? 'shadow-md' : ''}`}
                />
              );
            })}
+
+           {/* X-Axis Labels */}
+           {points.map((p, i) => (
+               <text 
+                   key={i}
+                   x={p.x} 
+                   y={height - 10} 
+                   textAnchor="middle" 
+                   className={`text-[10px] font-medium uppercase tracking-wide fill-gray-400 transition-colors ${hoveredIndex === i ? 'fill-gray-900 font-bold' : ''}`}
+               >
+                   {p.label}
+               </text>
+           ))}
         </svg>
-      </div>
+      )}
 
-      {/* X-Axis Labels */}
-      <div className="absolute bottom-0 left-10 right-2 flex justify-between text-xs text-gray-400 font-medium uppercase tracking-wide">
-         {data.map((d, i) => (
-             <span key={i} className={`transition-colors ${hoveredIndex === i ? 'text-gray-900 font-bold' : ''}`}>
-                 {d.label}
-             </span>
-         ))}
-      </div>
-
-      {/* HTML Tooltip Overlay */}
+      {/* HTML Tooltip Overlay - Compact & Precise */}
       {isHovering && hoveredPoint && (
          <div 
-            className="absolute z-20 transition-all duration-100 ease-out pointer-events-none"
+            className="absolute z-20 pointer-events-none transition-all duration-100 ease-out"
             style={{ 
-                left: `calc(10% + ${hoveredPoint.x * 0.9}%)`, // Adjust for left padding (10%) and width factor
-                top: `${hoveredPoint.y}%`,
-                transform: `translate(-50%, -130%)` 
+                left: hoveredPoint.x,
+                top: hoveredPoint.y,
+                transform: `translate(-50%, -140%)` 
             }}
          >
-            <div className="bg-[#0f0f14]/90 backdrop-blur-md text-white rounded-lg px-3 py-2 shadow-xl border border-white/10 w-max max-w-[180px]">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{hoveredPoint.label}</div>
-                <div className="text-base font-bold mb-0.5">${hoveredPoint.value.toLocaleString()}</div>
-                
-                {/* Percentage Change */}
-                <div className={`text-[11px] font-medium flex items-center ${
-                    ((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'
-                }`}>
-                    {((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? <TrendingUp size={10} className="mr-1" /> : <TrendingUp size={10} className="mr-1 rotate-180" />}
-                    {Math.abs(((hoveredPoint.value - hoveredPoint.prevValue)/hoveredPoint.prevValue)*100).toFixed(1)}% 
-                    <span className="text-gray-500 ml-1 font-normal">vs last mo</span>
+            <div className="bg-[#0f0f14]/95 text-white rounded-md px-3 py-2 shadow-none border border-white/10 w-max min-w-[100px]">
+                <div className="flex items-center justify-between gap-4 mb-0.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{hoveredPoint.label}</span>
+                    <span className={`text-[10px] font-bold ${
+                        ((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                        {((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? '+' : ''}
+                        {Math.abs(((hoveredPoint.value - hoveredPoint.prevValue)/hoveredPoint.prevValue)*100).toFixed(1)}%
+                    </span>
                 </div>
+                <div className="text-base font-bold">${hoveredPoint.value.toLocaleString()}</div>
                 
                 {/* Tooltip Arrow */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#0f0f14]/90"></div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#0f0f14]/95"></div>
             </div>
          </div>
        )}
@@ -211,13 +271,13 @@ const SpendingHeatmap = () => {
 
   return (
     <div className="flex flex-col h-full justify-between">
-      <div className="flex gap-1 overflow-x-auto pb-2">
+      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
          {Array.from({ length: weeks }).map((_, w) => (
            <div key={w} className="flex flex-col gap-1">
              {Array.from({ length: days }).map((_, d) => (
                <div 
                  key={`${w}-${d}`} 
-                 className={`w-3 h-3 rounded-[2px] ${getActivity(w, d)} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400 transition-all`}
+                 className={`w-3 h-3 rounded-[2px] ${getActivity(w, d)} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400 transition-all cursor-pointer`}
                  title={`Activity level: ${w*d}`}
                ></div>
              ))}
