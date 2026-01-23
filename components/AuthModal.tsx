@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, ArrowRight } from 'lucide-react';
-import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface AuthModalProps {
@@ -57,27 +57,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                 </p>
               </div>
 
-              {/* Social Login */}
-              <div className="space-y-3 mb-6">
-                <button onClick={onLogin} className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all text-sm group bg-white">
-                  <BrandIcon type="google" className="w-5 h-5 mr-3 rtl:mr-0 rtl:ml-3" noBackground />
-                  <span>{t('auth.google')}</span>
-                </button>
-                <button onClick={onLogin} className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all text-sm group bg-white">
-                  <BrandIcon type="apple" className="w-5 h-5 mr-3 rtl:mr-0 rtl:ml-3 text-black" noBackground />
-                  <span>{t('auth.apple')}</span>
-                </button>
-              </div>
-
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-100"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-400">Or continue with</span>
-                </div>
-              </div>
-
               {/* Email Form */}
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
@@ -119,6 +98,10 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                   <ArrowRight size={16} className="ml-2 rtl:ml-0 rtl:mr-2 rtl:rotate-180" />
                 </button>
               </form>
+
+              <p className="text-xs text-center text-gray-400 mt-6">
+                Social login options (Google, Apple) coming soon.
+              </p>
            </div>
 
            <div className="bg-gray-50 px-8 py-4 text-center border-t border-gray-100">

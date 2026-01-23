@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, MapPin, MessageCircle, ArrowRight, Wallet, Calendar, Clock, Plus, Minus, Edit3, Share2 } from 'lucide-react';
 import BrandIcon from './BrandIcon';
@@ -110,7 +111,7 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
                     </div>
                  ))}
                  {friend.sharedSubs.length === 0 && (
-                    <p className="text-sm text-gray-400 italic">No shared subscriptions found.</p>
+                    <p className="text-sm text-gray-400 italic">{t('friend.no_shared')}</p>
                  )}
               </div>
            </div>
@@ -120,7 +121,7 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
               <h3 className="text-sm font-bold text-gray-900 mb-2">{t('friend.about')}</h3>
               <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                  <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                    {friend.about || "This user hasn't shared any information yet."}
+                    {friend.about || t('friend.no_info')}
                  </p>
                  <div className="flex flex-wrap gap-2">
                     {friend.tags.map((tag, i) => (

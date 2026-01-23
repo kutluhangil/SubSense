@@ -22,7 +22,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('userLanguagePreference');
-      return (saved as LanguageCode) || 'en';
+      // Validate saved language to match LanguageCode type
+      if (saved === 'en' || saved === 'tr') {
+        return saved;
+      }
     }
     return 'en';
   });
@@ -38,7 +41,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Direction logic
-  const dir = currentLanguage === 'ar' ? 'rtl' : 'ltr';
+  // Cast to string to avoid TypeScript error since 'ar' is not currently in LanguageCode
+  const dir = (currentLanguage as string) === 'ar' ? 'rtl' : 'ltr';
 
   // Persistence Effects
   useEffect(() => {

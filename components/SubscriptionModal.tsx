@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Calendar, Edit2, TrendingUp, Bell, Lightbulb, Trash2 } from 'lucide-react';
 import BrandIcon from './BrandIcon';
@@ -47,6 +48,7 @@ const getAccentColor = (type: string, name: string) => {
 
 // Simple Line Chart Component for Price History
 const PriceHistoryChart = ({ data, accentColor }: { data: number[], accentColor: string }) => {
+  const { t } = useLanguage();
   if (!data || data.length === 0) return null;
   
   const max = Math.max(...data) * 1.2;
@@ -90,7 +92,7 @@ const PriceHistoryChart = ({ data, accentColor }: { data: number[], accentColor:
         className="absolute top-0 right-0 text-xs font-bold px-2 py-1 rounded-full"
         style={{ color: accentColor, backgroundColor: `${accentColor}15` }} // 15 = hex opacity ~8%
       >
-         +12.5% vs Last Year
+         {t('modal.vs_last_year')}
       </div>
     </div>
   );
@@ -250,7 +252,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                              </div>
                           </div>
                           <div>
-                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Currency</label>
+                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('footer.currency')}</label>
                              <input 
                                type="text" 
                                value="USD" 
@@ -303,7 +305,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                        <Lightbulb size={16} className="mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
                        <div>
                           <p className="text-xs font-bold mb-0.5" style={{ color: accentColor }}>{t('modal.ai_insight')}</p>
-                          <p className="text-xs leading-snug text-gray-600">Price has increased by 15% in the last 12 months. Consider checking for annual plan discounts.</p>
+                          <p className="text-xs leading-snug text-gray-600">{t('modal.insight_text')}</p>
                        </div>
                     </div>
                  </div>
@@ -312,7 +314,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                      <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                          <Calendar size={16} style={{ color: accentColor }} /> Next Payment
+                          <Calendar size={16} style={{ color: accentColor }} /> {t('modal.next_payment')}
                         </h3>
                         <span className="text-xs font-bold text-gray-900 bg-gray-100 px-2 py-1 rounded">
                            {nextPaymentMonth} {formData.billingDay}

@@ -48,6 +48,12 @@ export default function Settings() {
     }
   };
 
+  const formatMessage = (template: string, ...args: string[]) => {
+    return template.replace(/{(\d+)}/g, (match, number) => {
+      return typeof args[number] !== 'undefined' ? args[number] : match;
+    });
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       {/* Header */}
@@ -87,21 +93,21 @@ export default function Settings() {
                         </div>
                         <div className="flex-1 text-center sm:text-left">
                             <h4 className="font-bold text-lg text-gray-900">{userData.name}</h4>
-                            <p className="text-sm text-gray-500 mb-3">Update your photo and personal details.</p>
+                            <p className="text-sm text-gray-500 mb-3">{t('settings.desc')}</p>
                             <div className="flex gap-3 justify-center sm:justify-start">
-                                <button className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">Change Photo</button>
-                                <button className="text-xs font-semibold text-red-600 hover:text-red-700 px-2 py-1.5">{t('friends.remove')}</button>
+                                <button className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">{t('settings.change_photo')}</button>
+                                <button className="text-xs font-semibold text-red-600 hover:text-red-700 px-2 py-1.5">{t('settings.remove')}</button>
                             </div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Full Name</label>
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settings.full_name')}</label>
                             <input type="text" defaultValue={userData.name} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Username</label>
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settings.username')}</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-2.5 text-gray-400 font-medium">@</span>
                                 <input type="text" defaultValue={userData.username} className="w-full pl-8 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium text-gray-900" />
@@ -110,12 +116,12 @@ export default function Settings() {
                             <p className="text-[10px] text-gray-400 pl-1">subscriptionhub.com/u/{userData.username}</p>
                         </div>
                         <div className="space-y-1.5 md:col-span-2">
-                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">About Me</label>
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settings.about_me')}</label>
                             <textarea 
                                 defaultValue={userData.bio} 
                                 rows={3}
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
-                                placeholder="Tell the world who you are..."
+                                placeholder={t('settings.tell_world')}
                             />
                             <div className="flex justify-end">
                                 <span className="text-[10px] text-gray-400">84/160</span>
@@ -125,11 +131,11 @@ export default function Settings() {
                             <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Location</label>
                             <div className="relative">
                                 <Globe size={16} className="absolute left-3.5 top-3 text-gray-400" />
-                                <input type="text" defaultValue={userData.location} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="City, Country" />
+                                <input type="text" defaultValue={userData.location} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder={t('settings.placeholder_city')} />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Website</label>
+                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settings.website')}</label>
                             <input type="text" defaultValue={userData.website} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="https://" />
                         </div>
                     </div>
