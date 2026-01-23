@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp } from 'lucide-react';
+import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock } from 'lucide-react';
+import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
 
@@ -36,6 +37,139 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 };
 
 // --- Components ---
+
+const SubscriptionLifetimeTimeline = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Mock Data - In a real app this would come from the subscription list
+  const subscriptions = [
+    { name: 'Netflix', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 3, 5, 15)).toISOString(), type: 'netflix' },
+    { name: 'Spotify', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 2, 0, 20)).toISOString(), type: 'spotify' },
+    { name: 'Adobe Creative Cloud', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 1, 2, 10)).toISOString(), type: 'adobe' },
+    { name: 'Amazon Prime', startDate: new Date(new Date().setMonth(new Date().getMonth() - 18)).toISOString(), type: 'amazon' },
+    { name: 'YouTube Premium', startDate: new Date(new Date().setMonth(new Date().getMonth() - 8)).toISOString(), type: 'youtube' },
+    { name: 'ChatGPT Plus', startDate: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(), type: 'chatgpt' }
+  ];
+
+  const today = new Date();
+  const timelineStart = new Date(today.getFullYear() - 3, today.getMonth(), 1); // 3 years ago
+  const totalDuration = today.getTime() - timelineStart.getTime();
+
+  // Helper to calculate position percentage
+  const getPosition = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const diff = date.getTime() - timelineStart.getTime();
+    return Math.max(0, (diff / totalDuration) * 100);
+  };
+
+  const getDurationWidth = (dateStr: string) => {
+    const start = getPosition(dateStr);
+    return 100 - start; // Extends to "now" (100%)
+  };
+
+  const getDurationText = (dateStr: string) => {
+      const start = new Date(dateStr);
+      const diffTime = Math.abs(today.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const years = Math.floor(diffDays / 365);
+      const months = Math.floor((diffDays % 365) / 30);
+      
+      if (years > 0) return `${years}y ${months}m`;
+      return `${months}m`;
+  };
+
+  // Generate Year Markers
+  const yearMarkers = [];
+  const startYear = timelineStart.getFullYear();
+  const endYear = today.getFullYear();
+  
+  for (let y = startYear; y <= endYear; y++) {
+      const date = new Date(y, 0, 1);
+      if (date >= timelineStart) {
+          yearMarkers.push({ label: y.toString(), left: getPosition(date.toISOString()) });
+      }
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <Clock size={18} className="text-gray-400" /> Subscription Lifetime
+        </h3>
+        <span className="text-xs text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded-md">Scroll to view history</span>
+      </div>
+
+      <div className="relative w-full overflow-x-auto pb-4" ref={scrollContainerRef}>
+        <div className="min-w-[600px] relative pr-16">
+            
+            {/* Timeline Header (Years) */}
+            <div className="h-8 border-b border-gray-100 relative mb-6 text-xs font-semibold text-gray-400 select-none">
+                {yearMarkers.map((marker) => (
+                    <div 
+                        key={marker.label} 
+                        className="absolute bottom-0 border-l border-gray-200 pl-2 pb-1"
+                        style={{ left: `${marker.left}%` }}
+                    >
+                        {marker.label}
+                    </div>
+                ))}
+                <div className="absolute right-0 bottom-0 bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold translate-y-1/2 z-10">Now</div>
+            </div>
+
+            {/* Subscriptions Lines */}
+            <div className="space-y-5">
+                {subscriptions.map((sub, index) => {
+                    const left = getPosition(sub.startDate);
+                    const width = getDurationWidth(sub.startDate);
+                    const brandColor = BRAND_COLORS[sub.type] || BRAND_COLORS['default'];
+
+                    return (
+                        <div key={index} className="relative h-8 flex items-center group">
+                            {/* Dotted Guide Line */}
+                            <div className="absolute left-0 right-0 h-px bg-gray-100 top-1/2 -z-10 border-t border-dashed border-gray-200"></div>
+
+                            {/* The Bar */}
+                            <div 
+                                className="absolute h-2.5 rounded-l-full shadow-sm group-hover:h-3.5 transition-all duration-300 opacity-80 group-hover:opacity-100"
+                                style={{ 
+                                    left: `${left}%`, 
+                                    width: `${width}%`,
+                                    background: `linear-gradient(90deg, ${brandColor}40 0%, ${brandColor} 100%)`
+                                }}
+                            ></div>
+
+                            {/* Start Point (Icon) */}
+                            <div 
+                                className="absolute flex items-center gap-3 transition-all duration-300 z-10 group-hover:scale-110 cursor-pointer"
+                                style={{ left: `${left}%`, transform: 'translateX(-50%)' }}
+                            >
+                                <div className="w-8 h-8 bg-white rounded-full border border-gray-100 shadow-md flex items-center justify-center p-1.5 relative group/icon">
+                                    <BrandIcon type={sub.type} className="w-full h-full" noBackground />
+                                    {/* Tooltip */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/icon:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
+                                        Started {new Date(sub.startDate).toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Duration Label (floating right end) */}
+                            <div 
+                                className="absolute text-[10px] font-bold text-gray-500 bg-white/90 px-1.5 py-0.5 rounded shadow-sm border border-gray-100 right-0 translate-x-full ml-2"
+                            >
+                                {getDurationText(sub.startDate)}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Current Time Line */}
+            <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-blue-500/20 z-0 border-r border-dashed border-blue-400"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurrency }: { data: DataPoint[], color?: string, convertPrice: (v: number) => number, currentCurrency: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -416,6 +550,8 @@ export default function Analytics() {
             </div>
          </div>
       </div>
+
+      <SubscriptionLifetimeTimeline />
 
       <div>
          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">

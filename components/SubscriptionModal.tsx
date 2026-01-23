@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Calendar, Edit2, TrendingUp, Bell, Lightbulb, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, Calendar, Edit2, TrendingUp, TrendingDown, Bell, Lightbulb, Trash2, Check } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -47,54 +46,185 @@ const getAccentColor = (type: string, name: string) => {
   return BRAND_COLORS['default'];
 };
 
-// Simple Line Chart Component for Price History
-const PriceHistoryChart = ({ data, accentColor }: { data: number[], accentColor: string }) => {
-  const { t } = useLanguage();
+// Helper for generating smooth Bezier curves
+const generateSmoothPath = (points: {x: number, y: number}[]) => {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i === 0 ? 0 : i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2] || p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) * 0.2;
+    const cp1y = p1.y + (p2.y - p0.y) * 0.2;
+    const cp2x = p2.x - (p3.x - p1.x) * 0.2;
+    const cp2y = p2.y - (p3.y - p1.y) * 0.2;
+
+    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  return path;
+};
+
+// Helper to generate past month labels
+const getMonthLabels = (count: number) => {
+  const months = [];
+  const today = new Date();
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    months.push(d.toLocaleString('default', { month: 'short', year: 'numeric' }));
+  }
+  return months;
+};
+
+// --- REDESIGNED CHART COMPONENT ---
+const PriceHistoryChart = ({ data, accentColor, currency }: { data: number[], accentColor: string, currency: string }) => {
+  const { formatPrice } = useLanguage();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  
+  // Resize observer to make chart responsive
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateWidth = () => {
+      if(containerRef.current) setWidth(containerRef.current.offsetWidth);
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
   if (!data || data.length === 0) return null;
+
+  const height = 140;
+  const padding = { top: 20, bottom: 20, left: 10, right: 10 };
   
-  const max = Math.max(...data) * 1.2;
-  const min = Math.min(...data) * 0.8;
-  const range = max - min;
+  // Dynamic scaling
+  const minVal = Math.min(...data);
+  const maxVal = Math.max(...data);
+  // Add 10% buffer to top and bottom, ensure range isn't zero
+  const range = maxVal - minVal || maxVal * 0.1 || 10; 
+  const yMin = minVal - range * 0.2; 
+  const yMax = maxVal + range * 0.2;
   
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - ((val - min) / range) * 100;
-    return `${x},${y}`;
-  }).join(' ');
+  const points = data.map((val, i) => ({
+    x: padding.left + (i / (data.length - 1)) * (width - padding.left - padding.right),
+    y: height - padding.bottom - ((val - yMin) / (yMax - yMin)) * (height - padding.top - padding.bottom),
+    value: val,
+    label: getMonthLabels(data.length)[i]
+  }));
+
+  const pathD = generateSmoothPath(points);
+  const fillPath = `${pathD} L ${points[points.length-1].x} ${height} L ${points[0].x} ${height} Z`;
+
+  // Calculate percentage change for tooltip
+  const getChange = (curr: number, prev: number) => {
+    if (!prev) return 0;
+    return ((curr - prev) / prev) * 100;
+  };
 
   return (
-    <div className="h-32 w-full relative mt-4">
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
-        <defs>
-          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={accentColor} stopOpacity="0.2" />
-            <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={`M0,100 ${points.replace(/,/g, ' ')} 100,100`} fill="url(#chartGradient)" />
-        <polyline 
-          points={points} 
-          fill="none" 
-          stroke={accentColor} 
-          strokeWidth="3" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          vectorEffect="non-scaling-stroke"
-        />
-        {data.map((val, i) => {
-            const x = (i / (data.length - 1)) * 100;
-            const y = 100 - ((val - min) / range) * 100;
-            return (
-              <circle key={i} cx={`${x}%`} cy={`${y}%`} r="3" fill="white" stroke={accentColor} strokeWidth="2" />
-            )
-        })}
-      </svg>
-      <div 
-        className="absolute top-0 right-0 text-xs font-bold px-2 py-1 rounded-full"
-        style={{ color: accentColor, backgroundColor: `${accentColor}15` }} // 15 = hex opacity ~8%
-      >
-         {t('modal.vs_last_year')}
-      </div>
+    <div className="relative w-full h-[140px] select-none" ref={containerRef}>
+      {width > 0 && (
+        <svg width={width} height={height} className="overflow-visible">
+          <defs>
+            <linearGradient id={`gradient-${accentColor}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={accentColor} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
+            </linearGradient>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+               <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor={accentColor} floodOpacity="0.2" />
+            </filter>
+          </defs>
+
+          {/* Grid lines */}
+          <line x1={0} y1={height - padding.bottom} x2={width} y2={height - padding.bottom} stroke="#f3f4f6" strokeWidth="1" />
+          <line x1={0} y1={padding.top} x2={width} y2={padding.top} stroke="#f3f4f6" strokeWidth="1" strokeDasharray="4 4" />
+
+          {/* Area Fill */}
+          <path d={fillPath} fill={`url(#gradient-${accentColor})`} className="opacity-0 animate-fade-in" style={{ animation: 'fadeIn 0.5s ease-out forwards' }} />
+
+          {/* Line */}
+          <path 
+            d={pathD} 
+            fill="none" 
+            stroke={accentColor} 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            filter="url(#shadow)"
+            className="animate-draw-line"
+            style={{ 
+              strokeDasharray: 1000,
+              strokeDashoffset: 1000,
+              animation: 'drawLine 1s ease-out forwards' 
+            }}
+          />
+
+          {/* Interaction Points */}
+          {points.map((p, i) => (
+            <g key={i} onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)}>
+              {/* Invisible larger hit area */}
+              <circle cx={p.x} cy={p.y} r="15" fill="transparent" className="cursor-pointer" />
+              
+              {/* Visible dot */}
+              <circle 
+                cx={p.x} 
+                cy={p.y} 
+                r={hoveredIndex === i ? 5 : 3} 
+                fill={accentColor} 
+                stroke="white" 
+                strokeWidth="2" 
+                className={`transition-all duration-200 ${hoveredIndex === i ? 'opacity-100 shadow-md' : 'opacity-0 hover:opacity-100'}`}
+                style={{ opacity: hoveredIndex === null || hoveredIndex === i ? 1 : 0.4 }}
+              />
+            </g>
+          ))}
+        </svg>
+      )}
+
+      {/* Dynamic Tooltip */}
+      {hoveredIndex !== null && points[hoveredIndex] && (
+        <div 
+          className="absolute z-20 pointer-events-none transition-all duration-200 ease-out"
+          style={{ 
+            left: points[hoveredIndex].x, 
+            top: points[hoveredIndex].y - 10, 
+            transform: `translate(-50%, -100%)` 
+          }}
+        >
+          <div className="bg-white rounded-lg shadow-lg border border-gray-100 p-2.5 min-w-[120px] text-center animate-in fade-in zoom-in-95 duration-150">
+             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{points[hoveredIndex].label}</p>
+             <p className="text-sm font-bold text-gray-900 leading-tight">
+               {formatPrice(points[hoveredIndex].value)}
+             </p>
+             {hoveredIndex > 0 && (
+                <div className={`text-[10px] font-bold mt-1 flex items-center justify-center gap-0.5 ${
+                   getChange(points[hoveredIndex].value, points[hoveredIndex-1].value) > 0 ? 'text-red-500' : 
+                   getChange(points[hoveredIndex].value, points[hoveredIndex-1].value) < 0 ? 'text-green-500' : 'text-gray-400'
+                }`}>
+                   {getChange(points[hoveredIndex].value, points[hoveredIndex-1].value) > 0 ? '↑' : getChange(points[hoveredIndex].value, points[hoveredIndex-1].value) < 0 ? '↓' : '-'}
+                   {Math.abs(getChange(points[hoveredIndex].value, points[hoveredIndex-1].value)).toFixed(1)}%
+                </div>
+             )}
+             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-white rotate-45 border-r border-b border-gray-100"></div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes drawLine {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeIn {
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
@@ -112,7 +242,15 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
         nickname: subscription.nickname || '',
         notes: subscription.notes || '',
         billingDay: subscription.billingDay || new Date(subscription.nextDate).getDate() || 1,
-        history: subscription.history || [subscription.price * 0.8, subscription.price * 0.9, subscription.price, subscription.price, subscription.price * 1.1]
+        // Ensure mock history data if none exists
+        history: subscription.history || [
+           subscription.price * 0.9, 
+           subscription.price * 0.9, 
+           subscription.price * 0.95, 
+           subscription.price, 
+           subscription.price, 
+           subscription.price * 1.05
+        ]
       });
     }
   }, [subscription, isOpen]);
@@ -143,6 +281,35 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
   // Generate simple next payment preview
   const currentDate = new Date();
   const nextPaymentMonth = currentDate.toLocaleString('default', { month: 'long' });
+
+  // --- TREND LOGIC ---
+  const history = formData.history || [];
+  const startPrice = history[0] || 0;
+  const endPrice = history[history.length - 1] || 0;
+  const trendPercent = startPrice ? ((endPrice - startPrice) / startPrice) * 100 : 0;
+  
+  let trendIcon = <TrendingUp size={16} />;
+  let trendColor = 'text-gray-500 bg-gray-50';
+  let trendText = t('modal.insight_text'); // Fallback
+
+  if (trendPercent > 5) {
+     trendIcon = <TrendingUp size={14} className="text-red-600" />;
+     trendColor = 'text-red-700 bg-red-50 border-red-100';
+     trendText = `Price increased by ${trendPercent.toFixed(1)}% this year. Consider switching to an annual plan to save.`;
+  } else if (trendPercent < -2) {
+     trendIcon = <TrendingDown size={14} className="text-green-600" />;
+     trendColor = 'text-green-700 bg-green-50 border-green-100';
+     trendText = `Your cost decreased by ${Math.abs(trendPercent).toFixed(1)}% — great job optimizing your plans!`;
+  } else {
+     trendIcon = <Check size={14} className="text-gray-600" />;
+     trendColor = 'text-gray-700 bg-gray-50 border-gray-100';
+     trendText = `Prices remained stable this year. No action needed.`;
+  }
+
+  // Visual trend badge for header
+  const headerTrend = trendPercent > 0 
+    ? `+${trendPercent.toFixed(1)}%` 
+    : `${trendPercent.toFixed(1)}%`;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
@@ -295,18 +462,31 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
               <div className="lg:col-span-5 space-y-6">
                  
                  {/* Price History */}
-                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-2">
-                       <TrendingUp size={16} style={{ color: accentColor }} /> {t('modal.price_history')}
-                    </h3>
-                    <PriceHistoryChart data={formData.history || []} accentColor={accentColor} />
+                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                           <TrendingUp size={16} style={{ color: accentColor }} /> {t('modal.price_history')}
+                        </h3>
+                        <div 
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ color: accentColor, backgroundColor: `${accentColor}15` }}
+                        >
+                            {headerTrend} vs Last Year
+                        </div>
+                    </div>
                     
-                    {/* Tooltip */}
-                    <div className="mt-4 rounded-lg p-3 flex gap-3 items-start" style={{ backgroundColor: `${accentColor}10`, border: `1px solid ${accentColor}20` }}>
-                       <Lightbulb size={16} className="mt-0.5 flex-shrink-0" style={{ color: accentColor }} />
+                    <PriceHistoryChart 
+                        data={formData.history || []} 
+                        accentColor={accentColor} 
+                        currency={formData.currency || 'USD'} 
+                    />
+                    
+                    {/* Dynamic AI Insight */}
+                    <div className={`mt-2 rounded-xl p-3 flex gap-3 items-start border transition-colors ${trendColor}`}>
+                       <Lightbulb size={16} className="mt-0.5 flex-shrink-0" />
                        <div>
-                          <p className="text-xs font-bold mb-0.5" style={{ color: accentColor }}>{t('modal.ai_insight')}</p>
-                          <p className="text-xs leading-snug text-gray-600">{t('modal.insight_text')}</p>
+                          <p className="text-[10px] font-bold mb-0.5 uppercase tracking-wide opacity-80">{t('modal.ai_insight')}</p>
+                          <p className="text-xs leading-snug font-medium">{trendText}</p>
                        </div>
                     </div>
                  </div>
