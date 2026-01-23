@@ -1,7 +1,22 @@
 import React, { useState } from 'react';
 import { Search, MapPin, UserPlus, MoreHorizontal, MessageCircle, UserMinus } from 'lucide-react';
 import BrandIcon from './BrandIcon';
-import FriendProfileModal from './FriendProfileModal';
+import ProfileCardModal, { UserProfile } from './ProfileCardModal';
+
+// Helper to convert friend data to profile format
+const mapFriendToProfile = (friend: Friend): UserProfile => ({
+    name: friend.name,
+    username: friend.username.replace('@', ''),
+    avatar: friend.avatar,
+    location: friend.country,
+    bio: friend.about,
+    totalSubs: friend.totalSubs,
+    monthlySpend: friend.monthlySpend,
+    currency: friend.currency,
+    status: friend.status,
+    integrations: ['spotify', 'github'], // Mock integrations for friends
+    isSelf: false
+});
 
 export interface Friend {
   id: number;
@@ -109,7 +124,7 @@ export default function Friends() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -221,10 +236,10 @@ export default function Friends() {
         ))}
       </div>
 
-      <FriendProfileModal 
+      <ProfileCardModal 
         isOpen={!!selectedFriend}
         onClose={() => setSelectedFriend(null)}
-        friend={selectedFriend}
+        user={selectedFriend ? mapFriendToProfile(selectedFriend) : null}
       />
     </div>
   );
