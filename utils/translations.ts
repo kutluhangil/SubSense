@@ -2,7 +2,6 @@ export type LanguageCode = 'en' | 'tr' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru'
 
 export const translations: Record<LanguageCode, Record<string, string>> = {
   en: {
-    // ... existing keys ...
     "nav.features": "Features",
     "nav.login": "Log in",
     "nav.signup": "Sign up",
@@ -94,7 +93,21 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "search.ceo": "CEO",
     "search.hq": "Headquarters",
     "search.price_starts": "Starts at",
-    "search.voice": "Voice Search"
+    "search.voice": "Voice Search",
+    "analytics.title": "Analytics",
+    "analytics.subtitle": "Track your spending habits and recurring expenses.",
+    "analytics.personal": "Personal",
+    "analytics.friends": "Friends Comp.",
+    "analytics.export": "Export",
+    "analytics.trend": "Spending Trend",
+    "analytics.trend_desc": "Monthly breakdown across all subscriptions",
+    "analytics.heatmap": "Activity Heatmap",
+    "analytics.heatmap_desc": "Payment frequency over the last 3 months",
+    "analytics.cost_dist": "Cost Distribution",
+    "analytics.lifetime": "Lifetime Spend",
+    "analytics.potential_save": "Potential Savings",
+    "analytics.ai_insights": "AI Insights & Recommendations",
+    "analytics.global_compare": "Global Comparison"
   },
   tr: {
     // ... existing keys ...
@@ -189,106 +202,138 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "search.ceo": "CEO",
     "search.hq": "Genel Merkez",
     "search.price_starts": "Başlangıç Fiyatı",
-    "search.voice": "Sesli Arama"
+    "search.voice": "Sesli Arama",
+    "analytics.title": "Analizler",
+    "analytics.subtitle": "Harcama alışkanlıklarınızı ve düzenli giderlerinizi takip edin.",
+    "analytics.personal": "Kişisel",
+    "analytics.friends": "Arkadaş Karş.",
+    "analytics.export": "Dışa Aktar",
+    "analytics.trend": "Harcama Trendi",
+    "analytics.trend_desc": "Tüm abonelikler için aylık döküm",
+    "analytics.heatmap": "Aktivite Haritası",
+    "analytics.heatmap_desc": "Son 3 aydaki ödeme sıklığı",
+    "analytics.cost_dist": "Maliyet Dağılımı",
+    "analytics.lifetime": "Toplam Harcama",
+    "analytics.potential_save": "Potansiyel Tasarruf",
+    "analytics.ai_insights": "Yapay Zeka Öngörüleri",
+    "analytics.global_compare": "Küresel Karşılaştırma"
   },
-  // English fallbacks for other languages to avoid breakage
+  // Fallbacks for other languages to ensure stability
   es: {
     // ... existing ...
-    "search.placeholder": "Buscar un servicio de suscripción...",
-    "search.title": "Descubrir Servicios",
-    "search.add_to_dash": "Añadir al Tablero",
-    "search.added_success": "añadido a tu Tablero.",
-    "search.founded": "Fundada",
-    "search.ceo": "CEO",
-    "search.hq": "Sede",
-    "search.price_starts": "Empieza en"
+    "analytics.title": "Analítica",
+    "analytics.personal": "Personal",
+    "analytics.friends": "Amigos",
+    "analytics.export": "Exportar",
+    "analytics.trend": "Tendencia de Gastos",
+    "analytics.cost_dist": "Distribución de Costos",
+    "analytics.lifetime": "Gasto Total",
+    "analytics.potential_save": "Ahorro Potencial",
+    "analytics.ai_insights": "Insights de IA",
+    "analytics.global_compare": "Comparación Global"
   },
   fr: {
     // ... existing ...
-    "search.placeholder": "Rechercher un service...",
-    "search.title": "Découvrir des services",
-    "search.add_to_dash": "Ajouter au tableau de bord",
-    "search.added_success": "ajouté à votre tableau de bord.",
-    "search.founded": "Fondation",
-    "search.ceo": "PDG",
-    "search.hq": "Siège social",
-    "search.price_starts": "Commence à"
+    "analytics.title": "Analytique",
+    "analytics.personal": "Personnel",
+    "analytics.friends": "Amis",
+    "analytics.export": "Exporter",
+    "analytics.trend": "Tendance des dépenses",
+    "analytics.cost_dist": "Répartition des coûts",
+    "analytics.lifetime": "Dépense totale",
+    "analytics.potential_save": "Économies potentielles",
+    "analytics.ai_insights": "Insights IA",
+    "analytics.global_compare": "Comparaison mondiale"
   },
   de: {
     // ... existing ...
-    "search.placeholder": "Abonnement suchen...",
-    "search.title": "Dienste entdecken",
-    "search.add_to_dash": "Zum Dashboard hinzufügen",
-    "search.added_success": "zum Dashboard hinzugefügt.",
-    "search.founded": "Gründung",
-    "search.ceo": "CEO",
-    "search.hq": "Hauptsitz",
-    "search.price_starts": "Ab"
+    "analytics.title": "Analyse",
+    "analytics.personal": "Persönlich",
+    "analytics.friends": "Freunde",
+    "analytics.export": "Exportieren",
+    "analytics.trend": "Ausgabentrend",
+    "analytics.cost_dist": "Kostenverteilung",
+    "analytics.lifetime": "Gesamtausgaben",
+    "analytics.potential_save": "Potenzielle Einsparungen",
+    "analytics.ai_insights": "KI-Einblicke",
+    "analytics.global_compare": "Globaler Vergleich"
   },
   it: {
     // ... existing ...
-    "search.placeholder": "Cerca un servizio...",
-    "search.title": "Scopri Servizi",
-    "search.add_to_dash": "Aggiungi alla Dashboard",
-    "search.added_success": "aggiunto alla tua Dashboard.",
-    "search.founded": "Fondazione",
-    "search.ceo": "CEO",
-    "search.hq": "Sede centrale",
-    "search.price_starts": "A partire da"
+    "analytics.title": "Analisi",
+    "analytics.personal": "Personale",
+    "analytics.friends": "Amici",
+    "analytics.export": "Esporta",
+    "analytics.trend": "Trend di Spesa",
+    "analytics.cost_dist": "Distribuzione Costi",
+    "analytics.lifetime": "Spesa Totale",
+    "analytics.potential_save": "Risparmio Potenziale",
+    "analytics.ai_insights": "Approfondimenti IA",
+    "analytics.global_compare": "Confronto Globale"
   },
   pt: {
     // ... existing ...
-    "search.placeholder": "Pesquisar um serviço...",
-    "search.title": "Descobrir Serviços",
-    "search.add_to_dash": "Adicionar ao Painel",
-    "search.added_success": "adicionado ao seu Painel.",
-    "search.founded": "Fundação",
-    "search.ceo": "CEO",
-    "search.hq": "Sede",
-    "search.price_starts": "Começa em"
+    "analytics.title": "Análise",
+    "analytics.personal": "Pessoal",
+    "analytics.friends": "Amigos",
+    "analytics.export": "Exportar",
+    "analytics.trend": "Tendência de Gastos",
+    "analytics.cost_dist": "Distribuição de Custos",
+    "analytics.lifetime": "Gasto Total",
+    "analytics.potential_save": "Economia Potencial",
+    "analytics.ai_insights": "Insights de IA",
+    "analytics.global_compare": "Comparação Global"
   },
   ru: {
     // ... existing ...
-    "search.placeholder": "Найти подписку...",
-    "search.title": "Обзор сервисов",
-    "search.add_to_dash": "Добавить в дашборд",
-    "search.added_success": "добавлено в дашборд.",
-    "search.founded": "Основано",
-    "search.ceo": "CEO",
-    "search.hq": "Штаб-квартира",
-    "search.price_starts": "От"
+    "analytics.title": "Аналитика",
+    "analytics.personal": "Личное",
+    "analytics.friends": "Друзья",
+    "analytics.export": "Экспорт",
+    "analytics.trend": "Тренд расходов",
+    "analytics.cost_dist": "Распределение затрат",
+    "analytics.lifetime": "Общие расходы",
+    "analytics.potential_save": "Потенциальная экономия",
+    "analytics.ai_insights": "AI Инсайты",
+    "analytics.global_compare": "Глобальное сравнение"
   },
   ja: {
     // ... existing ...
-    "search.placeholder": "サブスクリプションを検索...",
-    "search.title": "サービスを探索",
-    "search.add_to_dash": "ダッシュボードに追加",
-    "search.added_success": "ダッシュボードに追加されました。",
-    "search.founded": "設立",
-    "search.ceo": "CEO",
-    "search.hq": "本社",
-    "search.price_starts": "価格"
+    "analytics.title": "分析",
+    "analytics.personal": "個人",
+    "analytics.friends": "友達",
+    "analytics.export": "エクスポート",
+    "analytics.trend": "支出傾向",
+    "analytics.cost_dist": "コスト配分",
+    "analytics.lifetime": "総支出",
+    "analytics.potential_save": "潜在的な節約",
+    "analytics.ai_insights": "AIインサイト",
+    "analytics.global_compare": "グローバル比較"
   },
   zh: {
     // ... existing ...
-    "search.placeholder": "搜索订阅服务...",
-    "search.title": "发现服务",
-    "search.add_to_dash": "添加到仪表盘",
-    "search.added_success": "已添加到您的仪表盘。",
-    "search.founded": "成立",
-    "search.ceo": "CEO",
-    "search.hq": "总部",
-    "search.price_starts": "起价"
+    "analytics.title": "分析",
+    "analytics.personal": "个人",
+    "analytics.friends": "好友",
+    "analytics.export": "导出",
+    "analytics.trend": "支出趋势",
+    "analytics.cost_dist": "成本分布",
+    "analytics.lifetime": "总支出",
+    "analytics.potential_save": "潜在节省",
+    "analytics.ai_insights": "AI 洞察",
+    "analytics.global_compare": "全球比较"
   },
   ar: {
     // ... existing ...
-    "search.placeholder": "البحث عن خدمة اشتراك...",
-    "search.title": "اكتشف الخدمات",
-    "search.add_to_dash": "إضافة إلى لوحة القيادة",
-    "search.added_success": "تمت الإضافة إلى لوحة القيادة.",
-    "search.founded": "تأسست",
-    "search.ceo": "المدير التنفيذي",
-    "search.hq": "المقر الرئيسي",
-    "search.price_starts": "يبدأ من"
+    "analytics.title": "تحليلات",
+    "analytics.personal": "شخصي",
+    "analytics.friends": "أصدقاء",
+    "analytics.export": "تصدير",
+    "analytics.trend": "اتجاه الإنفاق",
+    "analytics.cost_dist": "توزيع التكلفة",
+    "analytics.lifetime": "إجمالي الإنفاق",
+    "analytics.potential_save": "التوفير المحتمل",
+    "analytics.ai_insights": "رؤى الذكاء الاصطناعي",
+    "analytics.global_compare": "مقارنة عالمية"
   }
 };
