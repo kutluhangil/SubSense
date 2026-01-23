@@ -159,6 +159,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "search.price_starts": "Starts at",
     "search.voice": "Voice Search",
     "search.press_enter": "Press Enter to search",
+    "search.net_worth": "Net Worth",
+    "search.view_map": "View on Google Maps",
+    "search.as_of": "as of {0}",
     
     "analytics.title": "Analytics",
     "analytics.subtitle": "Track your spending habits and recurring expenses.",
@@ -441,6 +444,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "search.price_starts": "Başlangıç Fiyatı",
     "search.voice": "Sesli Arama",
     "search.press_enter": "Aramak için Enter'a basın",
+    "search.net_worth": "Piyasa Değeri",
+    "search.view_map": "Haritada Görüntüle",
+    "search.as_of": "{0} itibariyle",
     
     "analytics.title": "Analizler",
     "analytics.subtitle": "Harcama alışkanlıklarınızı ve düzenli giderlerinizi takip edin.",

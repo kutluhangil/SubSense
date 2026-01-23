@@ -101,6 +101,9 @@ export interface SubscriptionDetail {
   price: string;
   currency: string; // Default display currency
   type: string; // matches brand icon types
+  netWorth?: string; // Estimated valuation
+  coordinates?: { lat: number; lng: number }; // For map
+  website?: string; // For fetching logo
 }
 
 export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
@@ -111,10 +114,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     foundedYear: "1997",
     founders: "Reed Hastings, Marc Randolph",
     ceo: "Ted Sarandos, Greg Peters",
-    headquarters: "Los Gatos, California, US",
+    headquarters: "Los Gatos, California, USA",
     price: "15.49",
     currency: "USD",
-    type: "netflix"
+    type: "netflix",
+    netWorth: "260000000000", // ~$260B
+    website: "netflix.com",
+    coordinates: { lat: 37.2266, lng: -121.9746 }
   },
   "spotify": {
     id: "spotify",
@@ -126,19 +132,25 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     headquarters: "Stockholm, Sweden",
     price: "10.99",
     currency: "USD",
-    type: "spotify"
+    type: "spotify",
+    netWorth: "65000000000", // ~$65B
+    website: "spotify.com",
+    coordinates: { lat: 59.3346, lng: 18.0632 }
   },
   "youtube premium": {
     id: "youtube",
     name: "YouTube Premium",
     description: "YouTube Premium is a subscription service offered by YouTube that provides ad-free access to content across the service.",
-    foundedYear: "2014",
-    founders: "Google (Parent)",
+    foundedYear: "2005",
+    founders: "Chad Hurley, Steve Chen, Jawed Karim",
     ceo: "Neal Mohan",
-    headquarters: "San Bruno, California, US",
+    headquarters: "San Bruno, California, USA",
     price: "13.99",
     currency: "USD",
-    type: "youtube"
+    type: "youtube",
+    netWorth: "2000000000000", // Alphabet ~$2T
+    website: "youtube.com",
+    coordinates: { lat: 37.6275, lng: -122.4274 }
   },
   "amazon prime": {
     id: "amazon",
@@ -147,22 +159,28 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     foundedYear: "2005",
     founders: "Jeff Bezos",
     ceo: "Andy Jassy",
-    headquarters: "Seattle, Washington, US",
+    headquarters: "Seattle, Washington, USA",
     price: "14.99",
     currency: "USD",
-    type: "amazon"
+    type: "amazon",
+    netWorth: "2000000000000", // Amazon ~$2T
+    website: "amazon.com",
+    coordinates: { lat: 47.6152, lng: -122.3382 }
   },
   "adobe creative cloud": {
     id: "adobe",
     name: "Adobe Creative Cloud",
     description: "A set of applications and services from Adobe Inc. that gives subscribers access to a collection of software used for graphic design, video editing, web development, and photography.",
-    foundedYear: "1982 (Adobe)",
+    foundedYear: "1982",
     founders: "John Warnock, Charles Geschke",
     ceo: "Shantanu Narayen",
-    headquarters: "San Jose, California, US",
+    headquarters: "San Jose, California, USA",
     price: "54.99",
     currency: "USD",
-    type: "adobe"
+    type: "adobe",
+    netWorth: "220000000000", // ~$220B
+    website: "adobe.com",
+    coordinates: { lat: 37.3307, lng: -121.8941 }
   },
   "apple tv+": {
     id: "appletv",
@@ -171,10 +189,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     foundedYear: "2019",
     founders: "Apple Inc.",
     ceo: "Tim Cook",
-    headquarters: "Cupertino, California, US",
+    headquarters: "Cupertino, California, USA",
     price: "9.99",
     currency: "USD",
-    type: "apple"
+    type: "apple",
+    netWorth: "3000000000000", // Apple ~$3T
+    website: "apple.com",
+    coordinates: { lat: 37.3346, lng: -122.0090 }
   },
   "canva pro": {
     id: "canva",
@@ -186,7 +207,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     headquarters: "Sydney, Australia",
     price: "14.99",
     currency: "USD",
-    type: "canva"
+    type: "canva",
+    netWorth: "26000000000", // ~$26B
+    website: "canva.com",
+    coordinates: { lat: -33.8838, lng: 151.2108 }
   },
   "hepsiburada premium": {
     id: "hepsiburada",
@@ -198,7 +222,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     headquarters: "Istanbul, Turkey",
     price: "29.90",
     currency: "TRY",
-    type: "hepsiburada"
+    type: "hepsiburada",
+    netWorth: "300000000", // ~$300M (Market Cap)
+    website: "hepsiburada.com",
+    coordinates: { lat: 41.0082, lng: 28.9784 }
   },
   "trendyol elite": {
     id: "trendyol",
@@ -208,9 +235,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Demet Mutlu",
     ceo: "Çağlayan Çetin",
     headquarters: "Istanbul, Turkey",
-    price: "0.00", // Often loyalty based
+    price: "0.00",
     currency: "TRY",
-    type: "trendyol"
+    type: "trendyol",
+    netWorth: "16500000000", // ~$16.5B
+    website: "trendyol.com",
+    coordinates: { lat: 41.1099, lng: 29.0253 }
   },
   "blutv": {
     id: "blutv",
@@ -222,7 +252,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     headquarters: "Istanbul, Turkey",
     price: "99.90",
     currency: "TRY",
-    type: "blutv"
+    type: "blutv",
+    netWorth: "Unknown", // Private/Subsidiary
+    website: "blutv.com",
+    coordinates: { lat: 41.0082, lng: 28.9784 }
   },
   "exxen": {
     id: "exxen",
@@ -234,7 +267,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     headquarters: "Istanbul, Turkey",
     price: "129.90",
     currency: "TRY",
-    type: "exxen"
+    type: "exxen",
+    netWorth: "Unknown", // Private
+    website: "exxen.com",
+    coordinates: { lat: 41.1120, lng: 29.0200 }
   },
   "xbox game pass": {
     id: "gamepass",
@@ -243,10 +279,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     foundedYear: "2017",
     founders: "Microsoft",
     ceo: "Phil Spencer (Xbox)",
-    headquarters: "Redmond, Washington, US",
+    headquarters: "Redmond, Washington, USA",
     price: "16.99",
     currency: "USD",
-    type: "gamepass"
+    type: "gamepass",
+    netWorth: "3000000000000", // Microsoft ~$3T
+    website: "xbox.com",
+    coordinates: { lat: 47.6740, lng: -122.1215 }
   },
   "disney+": {
     id: "disney",
@@ -255,9 +294,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     foundedYear: "2019",
     founders: "The Walt Disney Company",
     ceo: "Bob Iger",
-    headquarters: "Burbank, California, US",
+    headquarters: "Burbank, California, USA",
     price: "13.99",
     currency: "USD",
-    type: "disney"
+    type: "disney",
+    netWorth: "200000000000", // Disney ~$200B
+    website: "disneyplus.com",
+    coordinates: { lat: 34.1561, lng: -118.3243 }
   }
 };
