@@ -76,7 +76,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Insights & History",
     "modal.price_history": "Price History",
     "modal.reminder": "Payment Reminder",
-    "modal.ai_insight": "AI Insight"
+    "modal.ai_insight": "AI Insight",
+    "friend.total_active": "Total Active",
+    "friend.lifetime": "Lifetime Spend",
+    "friend.monthly": "Monthly Avg",
+    "friend.shared": "Shared with You",
+    "friend.about": "About",
+    "friend.activity": "Recent Updates",
+    "friend.message": "Send Message",
+    "friend.view_shared": "View Shared"
   },
   tr: {
     "nav.features": "Özellikler",
@@ -153,10 +161,16 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "İçgörüler ve Geçmiş",
     "modal.price_history": "Fiyat Geçmişi",
     "modal.reminder": "Ödeme Hatırlatıcısı",
-    "modal.ai_insight": "Yapay Zeka İçgörüsü"
+    "modal.ai_insight": "Yapay Zeka İçgörüsü",
+    "friend.total_active": "Toplam Aktif",
+    "friend.lifetime": "Toplam Harcama",
+    "friend.monthly": "Aylık Ort.",
+    "friend.shared": "Seninle Paylaşılanlar",
+    "friend.about": "Hakkında",
+    "friend.activity": "Son Güncellemeler",
+    "friend.message": "Mesaj Gönder",
+    "friend.view_shared": "Paylaşılanları Gör"
   },
-  // ... other languages (defaulting to English for brevity in this snippet update, 
-  // normally would update all)
   es: {
     "nav.features": "Funciones",
     "nav.login": "Iniciar sesión",
@@ -232,10 +246,16 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Estadísticas e Historial",
     "modal.price_history": "Historial de Precios",
     "modal.reminder": "Recordatorio de Pago",
-    "modal.ai_insight": "Insight de IA"
+    "modal.ai_insight": "Insight de IA",
+    "friend.total_active": "Total Activo",
+    "friend.lifetime": "Gasto Total",
+    "friend.monthly": "Promedio Mensual",
+    "friend.shared": "Compartido Contigo",
+    "friend.about": "Acerca de",
+    "friend.activity": "Actualizaciones Recientes",
+    "friend.message": "Enviar Mensaje",
+    "friend.view_shared": "Ver Compartidos"
   },
-  // For other languages, using English fallbacks via spread would be cleaner in a real app,
-  // but keeping structure consistent:
   fr: {
     "nav.features": "Fonctionnalités",
     "nav.login": "Connexion",
@@ -311,7 +331,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Aperçus et Historique",
     "modal.price_history": "Historique des prix",
     "modal.reminder": "Rappel de paiement",
-    "modal.ai_insight": "Aperçu IA"
+    "modal.ai_insight": "Aperçu IA",
+    "friend.total_active": "Total Actif",
+    "friend.lifetime": "Dépense Totale",
+    "friend.monthly": "Moy. Mensuelle",
+    "friend.shared": "Partagé avec vous",
+    "friend.about": "À propos",
+    "friend.activity": "Mises à jour récentes",
+    "friend.message": "Envoyer un message",
+    "friend.view_shared": "Voir partagés"
   },
   de: {
     "nav.features": "Funktionen",
@@ -388,7 +416,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Einblicke & Verlauf",
     "modal.price_history": "Preisverlauf",
     "modal.reminder": "Zahlungserinnerung",
-    "modal.ai_insight": "KI-Einblick"
+    "modal.ai_insight": "KI-Einblick",
+    "friend.total_active": "Total Aktiv",
+    "friend.lifetime": "Gesamtausgaben",
+    "friend.monthly": "Monatl. Durchschn.",
+    "friend.shared": "Geteilt mit dir",
+    "friend.about": "Über",
+    "friend.activity": "Letzte Updates",
+    "friend.message": "Nachricht senden",
+    "friend.view_shared": "Geteilte ansehen"
   },
   it: {
     "nav.features": "Funzionalità",
@@ -465,7 +501,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Approfondimenti e Cronologia",
     "modal.price_history": "Cronologia Prezzi",
     "modal.reminder": "Promemoria Pagamento",
-    "modal.ai_insight": "Approfondimento IA"
+    "modal.ai_insight": "Approfondimento IA",
+    "friend.total_active": "Totale Attivi",
+    "friend.lifetime": "Spesa Totale",
+    "friend.monthly": "Media Mensile",
+    "friend.shared": "Condiviso con te",
+    "friend.about": "Info",
+    "friend.activity": "Aggiornamenti recenti",
+    "friend.message": "Invia Messaggio",
+    "friend.view_shared": "Vedi Condivisi"
   },
   pt: {
     "nav.features": "Recursos",
@@ -542,7 +586,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Insights e Histórico",
     "modal.price_history": "Histórico de Preços",
     "modal.reminder": "Lembrete de Pagamento",
-    "modal.ai_insight": "Insight de IA"
+    "modal.ai_insight": "Insight de IA",
+    "friend.total_active": "Total Ativo",
+    "friend.lifetime": "Gasto Total",
+    "friend.monthly": "Média Mensal",
+    "friend.shared": "Compartilhado",
+    "friend.about": "Sobre",
+    "friend.activity": "Atividades Recentes",
+    "friend.message": "Enviar Mensagem",
+    "friend.view_shared": "Ver Compartilhados"
   },
   ru: {
     "nav.features": "Функции",
@@ -619,7 +671,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "Статистика и история",
     "modal.price_history": "История цен",
     "modal.reminder": "Напоминание о платеже",
-    "modal.ai_insight": "AI Инсайт"
+    "modal.ai_insight": "AI Инсайт",
+    "friend.total_active": "Всего активных",
+    "friend.lifetime": "Всего потрачено",
+    "friend.monthly": "В среднем/мес",
+    "friend.shared": "Общее с вами",
+    "friend.about": "О себе",
+    "friend.activity": "Недавняя активность",
+    "friend.message": "Написать",
+    "friend.view_shared": "Смотреть общие"
   },
   ja: {
     "nav.features": "機能",
@@ -696,7 +756,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "インサイトと履歴",
     "modal.price_history": "価格履歴",
     "modal.reminder": "支払いリマインダー",
-    "modal.ai_insight": "AIインサイト"
+    "modal.ai_insight": "AIインサイト",
+    "friend.total_active": "有効なサブスク",
+    "friend.lifetime": "総支出",
+    "friend.monthly": "月平均",
+    "friend.shared": "共有中",
+    "friend.about": "詳細",
+    "friend.activity": "最近のアクティビティ",
+    "friend.message": "メッセージ送信",
+    "friend.view_shared": "共有を表示"
   },
   zh: {
     "nav.features": "功能",
@@ -773,7 +841,15 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "洞察与历史",
     "modal.price_history": "价格历史",
     "modal.reminder": "付款提醒",
-    "modal.ai_insight": "AI 洞察"
+    "modal.ai_insight": "AI 洞察",
+    "friend.total_active": "活跃总数",
+    "friend.lifetime": "总支出",
+    "friend.monthly": "月均",
+    "friend.shared": "与您共享",
+    "friend.about": "关于",
+    "friend.activity": "最近动态",
+    "friend.message": "发送消息",
+    "friend.view_shared": "查看共享"
   },
   ar: {
     "nav.features": "الميزات",
@@ -850,6 +926,14 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "modal.insights": "رؤى وتاريخ",
     "modal.price_history": "تاريخ السعر",
     "modal.reminder": "تذكير الدفع",
-    "modal.ai_insight": "رؤى الذكاء الاصطناعي"
+    "modal.ai_insight": "رؤى الذكاء الاصطناعي",
+    "friend.total_active": "إجمالي النشط",
+    "friend.lifetime": "إجمالي الإنفاق",
+    "friend.monthly": "المتوسط الشهري",
+    "friend.shared": "مشترك معك",
+    "friend.about": "عن",
+    "friend.activity": "التحديثات الأخيرة",
+    "friend.message": "إرسال رسالة",
+    "friend.view_shared": "عرض المشترك"
   }
 };
