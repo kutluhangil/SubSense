@@ -51,9 +51,9 @@ function AppContent() {
         onNavigate={setCurrentPage} 
         currentPage={currentPage}
       />
-      <main className="flex-grow flex flex-col justify-center">
+      <main className="flex-grow flex flex-col">
         {currentPage === 'home' ? (
-          <Hero onOpenDemo={openDemo} />
+          <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
         ) : (
           <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
         )}
