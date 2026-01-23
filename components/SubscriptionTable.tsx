@@ -1,15 +1,22 @@
 import React from 'react';
 import BrandIcon from './BrandIcon';
 import { MoreHorizontal } from 'lucide-react';
+import { Subscription } from './SubscriptionModal';
 
-export default function SubscriptionTable() {
-  const subscriptions = [
-    { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active' },
-    { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active' },
-    { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring' },
-    { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active' },
-    { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active' },
-  ];
+interface SubscriptionTableProps {
+  subscriptions?: Subscription[];
+  onSelectSubscription?: (sub: Subscription) => void;
+}
+
+export default function SubscriptionTable({ subscriptions = [], onSelectSubscription }: SubscriptionTableProps) {
+  // Fallback data if none provided (though usually it will be)
+  const displaySubs = subscriptions.length > 0 ? subscriptions : [
+    { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active' },
+    { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active' },
+    { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring' },
+    { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active' },
+    { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active' },
+  ] as Subscription[];
 
   return (
     <div className="overflow-x-auto">
@@ -24,12 +31,16 @@ export default function SubscriptionTable() {
           </tr>
         </thead>
         <tbody className="bg-white">
-          {subscriptions.map((sub) => (
-            <tr key={sub.id} className="hover:bg-gray-50/80 transition-colors group">
+          {displaySubs.map((sub) => (
+            <tr 
+              key={sub.id} 
+              className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              onClick={() => onSelectSubscription && onSelectSubscription(sub)}
+            >
               <td className="px-6 py-4">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10 mr-4">
-                     <BrandIcon type={sub.type as any} className="w-10 h-10 shadow-sm rounded-xl" />
+                     <BrandIcon type={sub.type} className="w-10 h-10 shadow-sm rounded-xl" />
                   </div>
                   <div>
                     <div className="font-medium text-gray-900 text-sm">{sub.name}</div>
@@ -47,7 +58,7 @@ export default function SubscriptionTable() {
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-gray-900">${sub.price}</div>
+                <div className="text-sm font-semibold text-gray-900">${sub.price.toFixed(2)}</div>
                 <div className="text-xs text-gray-500">{sub.cycle}</div>
               </td>
               <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">

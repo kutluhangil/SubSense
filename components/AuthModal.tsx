@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, ArrowRight } from 'lucide-react';
 import BrandIcon from './BrandIcon';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: AuthModalProps) {
   const [mode, setMode] = useState(initialMode);
+  const { t } = useLanguage();
   
   useEffect(() => {
     setMode(initialMode);
@@ -38,7 +40,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
            {/* Close Button */}
            <button 
              onClick={onClose}
-             className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors z-10"
+             className="absolute top-4 right-4 rtl:right-auto rtl:left-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors z-10"
            >
              <X size={20} />
            </button>
@@ -46,24 +48,24 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
            <div className="p-8">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {mode === 'login' ? 'Welcome back' : 'Create an account'}
+                  {mode === 'login' ? t('auth.welcome') : t('auth.create')}
                 </h2>
                 <p className="text-gray-500 text-sm">
                   {mode === 'login' 
-                    ? 'Enter your details to access your account' 
-                    : 'Start tracking your subscriptions today'}
+                    ? t('auth.login_desc') 
+                    : t('auth.signup_desc')}
                 </p>
               </div>
 
               {/* Social Login */}
               <div className="space-y-3 mb-6">
                 <button onClick={onLogin} className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all text-sm group bg-white">
-                  <BrandIcon type="google" className="w-5 h-5 mr-3" noBackground />
-                  <span>Continue with Google</span>
+                  <BrandIcon type="google" className="w-5 h-5 mr-3 rtl:mr-0 rtl:ml-3" noBackground />
+                  <span>{t('auth.google')}</span>
                 </button>
                 <button onClick={onLogin} className="w-full flex items-center justify-center px-4 py-2.5 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all text-sm group bg-white">
-                  <BrandIcon type="apple" className="w-5 h-5 mr-3 text-black" noBackground />
-                  <span>Continue with Apple</span>
+                  <BrandIcon type="apple" className="w-5 h-5 mr-3 rtl:mr-0 rtl:ml-3 text-black" noBackground />
+                  <span>{t('auth.apple')}</span>
                 </button>
               </div>
 
@@ -79,28 +81,28 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
               {/* Email Form */}
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
-                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1">Email address</label>
+                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1 rtl:mr-1">{t('auth.email')}</label>
                    <div className="relative group">
-                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center pointer-events-none">
                        <Mail size={16} className="text-gray-400 group-focus-within:text-gray-900 transition-colors" />
                      </div>
                      <input 
                        type="email" 
-                       className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                       className="block w-full pl-10 pr-3 rtl:pr-10 rtl:pl-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
                        placeholder="name@example.com"
                      />
                    </div>
                 </div>
 
                 <div>
-                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1">Password</label>
+                   <label className="block text-xs font-medium text-gray-700 mb-1.5 ml-1 rtl:mr-1">{t('auth.password')}</label>
                    <div className="relative group">
-                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <div className="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3 rtl:pr-3 flex items-center pointer-events-none">
                        <Lock size={16} className="text-gray-400 group-focus-within:text-gray-900 transition-colors" />
                      </div>
                      <input 
                        type="password" 
-                       className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                       className="block w-full pl-10 pr-3 rtl:pr-10 rtl:pl-3 py-2.5 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all text-sm bg-gray-50/50 focus:bg-white"
                        placeholder="••••••••"
                      />
                    </div>
@@ -113,8 +115,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                 )}
 
                 <button type="submit" className="w-full bg-gray-900 text-white rounded-xl py-2.5 font-semibold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center">
-                  {mode === 'login' ? 'Log in' : 'Create account'}
-                  <ArrowRight size={16} className="ml-2" />
+                  {mode === 'login' ? t('auth.submit_login') : t('auth.submit_signup')}
+                  <ArrowRight size={16} className="ml-2 rtl:ml-0 rtl:mr-2 rtl:rotate-180" />
                 </button>
               </form>
            </div>
@@ -126,7 +128,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                  onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
                  className="font-semibold text-gray-900 hover:underline focus:outline-none"
                >
-                 {mode === 'login' ? 'Sign up' : 'Log in'}
+                 {mode === 'login' ? t('nav.signup') : t('nav.login')}
                </button>
              </p>
            </div>

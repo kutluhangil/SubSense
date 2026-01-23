@@ -1,31 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-
-const MESSAGES = [
-  {
-    headline: "Master your recurring expenses effortlessly.",
-    subtext: "Stop losing money on forgotten subscriptions. Track, manage, and optimize your global spending in one minimalist dashboard."
-  },
-  {
-    headline: "Take control of your digital life.",
-    subtext: "Monitor Netflix, Spotify, and hundreds of other services all in one place."
-  },
-  {
-    headline: "Stay one step ahead of price changes.",
-    subtext: "Get real-time updates whenever global subscription prices shift."
-  },
-  {
-    headline: "Compare subscriptions across the world.",
-    subtext: "See how much you'd pay in USD, EUR, or TRY instantly."
-  },
-  {
-    headline: "Simplify your subscriptions with smart insights.",
-    subtext: "AI helps you track, analyze, and save on recurring costs automatically."
-  },
-  {
-    headline: "Never miss a renewal again.",
-    subtext: "Get notified before every due date — plan ahead, stress less."
-  }
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Individual Character Particle Component
 const ParticleChar = ({ char, phase, index }: { char: string, phase: 'enter' | 'active' | 'exit', index: number }) => {
@@ -54,11 +28,6 @@ const ParticleChar = ({ char, phase, index }: { char: string, phase: 'enter' | '
       transform: 'translate3d(0, 0, 0)',
       filter: 'blur(0)',
       transition: 'opacity 1s ease-out, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1)',
-      // Start state (overridden by effect execution, but handled via CSS classes usually. 
-      // Here we rely on the prop change from a previous unmounted state or standard flow)
-      // Actually for 'enter', we usually animate FROM something. 
-      // In this React setup, 'enter' phase renders a FRESH component. 
-      // To animate entry, we use an animation keyframe or transition from a 'start' style.
       animation: 'fadeInUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards'
     };
   } else if (phase === 'active') {
@@ -114,6 +83,26 @@ const DisintegratingText = ({ text, className, phase }: { text: string, classNam
 export default function HeroTextRotator() {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<'enter' | 'active' | 'exit'>('enter');
+  const { t } = useLanguage();
+
+  const messages = useMemo(() => [
+    {
+      headline: t("msg.headline_1"),
+      subtext: t("msg.subtext_1")
+    },
+    {
+      headline: t("msg.headline_2"),
+      subtext: t("msg.subtext_2")
+    },
+    {
+      headline: t("msg.headline_3"),
+      subtext: t("msg.subtext_3")
+    },
+    {
+      headline: t("msg.headline_4"),
+      subtext: t("msg.subtext_4")
+    }
+  ], [t]);
 
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
@@ -127,15 +116,15 @@ export default function HeroTextRotator() {
     } else if (phase === 'exit') {
       // Wait for dissolve (1.5s) + delay (0.5s) = 2s total
       timeout = setTimeout(() => {
-        setIndex((prev) => (prev + 1) % MESSAGES.length);
+        setIndex((prev) => (prev + 1) % messages.length);
         setPhase('enter');
       }, 2000);
     }
 
     return () => clearTimeout(timeout);
-  }, [phase]);
+  }, [phase, messages.length]);
 
-  const msg = MESSAGES[index];
+  const msg = messages[index] || messages[0];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[300px] sm:min-h-[240px] w-full max-w-4xl mx-auto px-4 perspective-[1000px]">
