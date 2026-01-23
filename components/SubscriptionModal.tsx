@@ -19,6 +19,7 @@ export interface Subscription {
   notes?: string;
   billingDay?: number;
   history?: number[]; // Mock price history
+  category?: string;
 }
 
 interface SubscriptionModalProps {

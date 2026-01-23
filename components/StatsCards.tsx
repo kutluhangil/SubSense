@@ -29,14 +29,15 @@ export default function StatsCards() {
       change: '-2.4%',
       trend: 'down',
       icon: TrendingUp, 
-      color: 'bg-green-50 text-green-600'
+      color: 'bg-green-50 text-green-600',
+      hasGraph: true
     }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div key={index} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-4">
             <div className={`p-3 rounded-xl ${stat.color}`}>
               <stat.icon size={22} />
@@ -60,6 +61,32 @@ export default function StatsCards() {
           <div>
             <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
             <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+            
+            {/* Micro Graph for Forecast Card */}
+            {stat.hasGraph && (
+               <div className="mt-3 h-8 w-full relative opacity-75">
+                  <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full">
+                     <path d="M0,10 C10,15 20,5 30,12 C40,18 50,8 60,14 C70,10 80,16 90,5 L100,12" 
+                           fill="none" 
+                           stroke="#16a34a" 
+                           strokeWidth="2" 
+                           vectorEffect="non-scaling-stroke"
+                           strokeLinecap="round"
+                     />
+                     <path d="M0,10 C10,15 20,5 30,12 C40,18 50,8 60,14 C70,10 80,16 90,5 L100,12 L100,20 L0,20 Z" 
+                           fill="url(#sparkGradient)" 
+                           stroke="none"
+                     />
+                     <defs>
+                        <linearGradient id="sparkGradient" x1="0" y1="0" x2="0" y2="1">
+                           <stop offset="0%" stopColor="#16a34a" stopOpacity="0.2"/>
+                           <stop offset="100%" stopColor="#16a34a" stopOpacity="0"/>
+                        </linearGradient>
+                     </defs>
+                  </svg>
+                  <p className="text-[10px] text-green-700 mt-1 font-medium">Spending trend: <span className="font-bold">↑ +8.2%</span> this quarter</p>
+               </div>
+            )}
           </div>
         </div>
       ))}
