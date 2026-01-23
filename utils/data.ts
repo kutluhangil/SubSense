@@ -3,7 +3,7 @@
 export const SUBSCRIPTION_CATEGORIES = [
   {
     name: "Entertainment & Streaming",
-    examples: ["Netflix", "Disney+", "HBO Max", "Hulu", "Amazon Prime Video", "Apple TV+", "Paramount+", "Peacock TV", "Discovery+", "Crunchyroll", "YouTube Premium"]
+    examples: ["Netflix", "Disney+", "HBO Max", "Hulu", "Amazon Prime Video", "Apple TV+", "Paramount+", "Peacock TV", "Discovery+", "Crunchyroll", "YouTube Premium", "BluTV", "Exxen", "PuhuTV", "Gain"]
   },
   {
     name: "Music & Audio",
@@ -26,32 +26,8 @@ export const SUBSCRIPTION_CATEGORIES = [
     examples: ["Slack Pro", "Zoom Pro", "Google Workspace", "Microsoft 365", "Trello Premium", "Asana Business", "ClickUp Unlimited", "Monday.com Pro", "HubSpot Starter", "Salesforce Essentials"]
   },
   {
-    name: "Cloud & Storage",
-    examples: ["Google One", "iCloud+", "Dropbox Plus", "OneDrive 365", "Mega.nz", "Box Premium"]
-  },
-  {
-    name: "Security & VPN",
-    examples: ["NordVPN", "ExpressVPN", "Surfshark", "1Password", "Bitwarden Premium", "LastPass", "ProtonMail Plus", "Dashlane Premium"]
-  },
-  {
-    name: "Education & Learning",
-    examples: ["Coursera Plus", "Udemy Personal Plan", "Skillshare Premium", "MasterClass", "Duolingo Plus", "Babbel", "Rosetta Stone"]
-  },
-  {
-    name: "Health & Lifestyle",
-    examples: ["Calm Premium", "Headspace", "Strava", "Nike Training Club", "Fitbod", "MyFitnessPal Premium"]
-  },
-  {
-    name: "Social & Creator Platforms",
-    examples: ["LinkedIn Premium", "Medium Membership", "Patreon", "OnlyFans", "Substack", "X Premium (Twitter Blue)"]
-  },
-  {
-    name: "Developer & Hosting Tools",
-    examples: ["Vercel Pro", "Render Premium", "Heroku", "DigitalOcean", "Netlify Pro", "GitHub Advanced Security"]
-  },
-  {
-    name: "E-Commerce & Website Builders",
-    examples: ["Shopify", "Wix Premium", "Webflow Pro", "Squarespace", "Domain.com", "Namecheap Hosting"]
+    name: "Shopping & Delivery",
+    examples: ["Amazon Prime", "Hepsiburada Premium", "Trendyol Elite", "Getir", "Yemeksepeti Club"]
   }
 ];
 
@@ -70,15 +46,7 @@ export const LANGUAGES = [
   { code: "ja", name: "日本語" },
   { code: "ko", name: "한국어" },
   { code: "zh", name: "中文 (Simplified)" },
-  { code: "ar", name: "العربية" },
-  { code: "hi", name: "हिन्दी" },
-  { code: "nl", name: "Nederlands" },
-  { code: "sv", name: "Svenska" },
-  { code: "no", name: "Norsk" },
-  { code: "pl", name: "Polski" },
-  { code: "da", name: "Dansk" },
-  { code: "fi", name: "Suomi" },
-  { code: "th", name: "ไทย" }
+  { code: "ar", name: "العربية" }
 ];
 
 export const CURRENCIES = [
@@ -89,19 +57,7 @@ export const CURRENCIES = [
   { code: "JPY", symbol: "¥", name: "Japanese Yen" },
   { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
   { code: "AUD", symbol: "A$", name: "Australian Dollar" },
-  { code: "CAD", symbol: "CA$", name: "Canadian Dollar" },
-  { code: "CHF", symbol: "CHF", name: "Swiss Franc" },
-  { code: "SEK", symbol: "kr", name: "Swedish Krona" },
-  { code: "NOK", symbol: "kr", name: "Norwegian Krone" },
-  { code: "DKK", symbol: "kr", name: "Danish Krone" },
-  { code: "PLN", symbol: "zł", name: "Polish Zloty" },
-  { code: "INR", symbol: "₹", name: "Indian Rupee" },
-  { code: "HKD", symbol: "HK$", name: "Hong Kong Dollar" },
-  { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
-  { code: "NZD", symbol: "NZ$", name: "New Zealand Dollar" },
-  { code: "RUB", symbol: "₽", name: "Russian Ruble" },
-  { code: "BRL", symbol: "R$", name: "Brazilian Real" },
-  { code: "MXN", symbol: "MX$", name: "Mexican Peso" }
+  { code: "CAD", symbol: "CA$", name: "Canadian Dollar" }
 ];
 
 export const BRAND_COLORS: Record<string, string> = {
@@ -114,6 +70,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "adobe": "#ED1C24",
   "adobecreativecloud": "#ED1C24",
   "apple": "#999999", // Neutral gray/silver
+  "appletv+": "#000000",
   "chatgpt": "#10A37F",
   "openai": "#10A37F",
   "canva": "#00C4CC",
@@ -123,6 +80,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "disney+": "#113CCF",
   "hulu": "#1CE783",
   "hbo": "#5F259F",
+  "hbomax": "#5F259F",
   "max": "#002BE7",
   "twitch": "#9146FF",
   "slack": "#4A154B",
@@ -130,5 +88,185 @@ export const BRAND_COLORS: Record<string, string> = {
   "github": "#181717",
   "linear": "#5E6AD2",
   "figma": "#F24E1E",
+  "hepsiburada": "#F68B1E",
+  "hepsiburadapremium": "#F68B1E",
+  "trendyol": "#FF6600",
+  "trendyolelite": "#FF6600",
+  "blutv": "#13C0CA",
+  "exxen": "#FFCC00",
+  "gain": "#D60057",
+  "puhutv": "#E60000",
   "default": "#4F46E5" // Indigo-600
+};
+
+export interface SubscriptionDetail {
+  id: string;
+  name: string;
+  description: string;
+  foundedYear: string;
+  founders: string;
+  ceo: string;
+  headquarters: string;
+  price: string;
+  currency: string; // Default display currency
+  type: string; // matches brand icon types
+}
+
+export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
+  "netflix": {
+    id: "netflix",
+    name: "Netflix",
+    description: "Netflix is a global streaming service offering a wide variety of award-winning TV shows, movies, anime, documentaries, and more.",
+    foundedYear: "1997",
+    founders: "Reed Hastings, Marc Randolph",
+    ceo: "Ted Sarandos, Greg Peters",
+    headquarters: "Los Gatos, California, US",
+    price: "15.49",
+    currency: "USD",
+    type: "netflix"
+  },
+  "spotify": {
+    id: "spotify",
+    name: "Spotify",
+    description: "Spotify is a digital music, podcast, and video service that gives you access to millions of songs and other content from creators all over the world.",
+    foundedYear: "2006",
+    founders: "Daniel Ek, Martin Lorentzon",
+    ceo: "Daniel Ek",
+    headquarters: "Stockholm, Sweden",
+    price: "10.99",
+    currency: "USD",
+    type: "spotify"
+  },
+  "youtube premium": {
+    id: "youtube",
+    name: "YouTube Premium",
+    description: "YouTube Premium is a subscription service offered by YouTube that provides ad-free access to content across the service.",
+    foundedYear: "2014",
+    founders: "Google (Parent)",
+    ceo: "Neal Mohan",
+    headquarters: "San Bruno, California, US",
+    price: "13.99",
+    currency: "USD",
+    type: "youtube"
+  },
+  "amazon prime": {
+    id: "amazon",
+    name: "Amazon Prime",
+    description: "Amazon Prime provides free fast delivery, video streaming, music, and more.",
+    foundedYear: "2005",
+    founders: "Jeff Bezos",
+    ceo: "Andy Jassy",
+    headquarters: "Seattle, Washington, US",
+    price: "14.99",
+    currency: "USD",
+    type: "amazon"
+  },
+  "adobe creative cloud": {
+    id: "adobe",
+    name: "Adobe Creative Cloud",
+    description: "A set of applications and services from Adobe Inc. that gives subscribers access to a collection of software used for graphic design, video editing, web development, and photography.",
+    foundedYear: "1982 (Adobe)",
+    founders: "John Warnock, Charles Geschke",
+    ceo: "Shantanu Narayen",
+    headquarters: "San Jose, California, US",
+    price: "54.99",
+    currency: "USD",
+    type: "adobe"
+  },
+  "apple tv+": {
+    id: "appletv",
+    name: "Apple TV+",
+    description: "Apple TV+ is an American subscription streaming service owned and operated by Apple Inc.",
+    foundedYear: "2019",
+    founders: "Apple Inc.",
+    ceo: "Tim Cook",
+    headquarters: "Cupertino, California, US",
+    price: "9.99",
+    currency: "USD",
+    type: "apple"
+  },
+  "canva pro": {
+    id: "canva",
+    name: "Canva Pro",
+    description: "Canva is an online design and publishing tool that empowers everyone in the world to design anything and publish anywhere.",
+    foundedYear: "2013",
+    founders: "Melanie Perkins, Cliff Obrecht, Cameron Adams",
+    ceo: "Melanie Perkins",
+    headquarters: "Sydney, Australia",
+    price: "14.99",
+    currency: "USD",
+    type: "canva"
+  },
+  "hepsiburada premium": {
+    id: "hepsiburada",
+    name: "Hepsiburada Premium",
+    description: "Turkey's leading e-commerce platform offering premium benefits like free delivery, BluTV subscription, and cashback.",
+    foundedYear: "2000",
+    founders: "Hanzade Doğan Boyner",
+    ceo: "Nilhan Onal Gökçetekin",
+    headquarters: "Istanbul, Turkey",
+    price: "29.90",
+    currency: "TRY",
+    type: "hepsiburada"
+  },
+  "trendyol elite": {
+    id: "trendyol",
+    name: "Trendyol Elite",
+    description: "Trendyol is one of the largest e-commerce platforms in Turkey. Elite status offers special perks and delivery options.",
+    foundedYear: "2010",
+    founders: "Demet Mutlu",
+    ceo: "Çağlayan Çetin",
+    headquarters: "Istanbul, Turkey",
+    price: "0.00", // Often loyalty based
+    currency: "TRY",
+    type: "trendyol"
+  },
+  "blutv": {
+    id: "blutv",
+    name: "BluTV",
+    description: "BluTV is a Turkish subscription video-on-demand service offering local and international series, movies, and live TV.",
+    foundedYear: "2015",
+    founders: "Aydın Doğan Yalçındağ",
+    ceo: "Deniz Şaşmaz Oflaz",
+    headquarters: "Istanbul, Turkey",
+    price: "99.90",
+    currency: "TRY",
+    type: "blutv"
+  },
+  "exxen": {
+    id: "exxen",
+    name: "Exxen",
+    description: "Exxen is a Turkish digital streaming platform founded by Acun Ilıcalı, featuring original content and sports.",
+    foundedYear: "2021",
+    founders: "Acun Ilıcalı",
+    ceo: "Acun Ilıcalı",
+    headquarters: "Istanbul, Turkey",
+    price: "129.90",
+    currency: "TRY",
+    type: "exxen"
+  },
+  "xbox game pass": {
+    id: "gamepass",
+    name: "Xbox Game Pass",
+    description: "Microsoft's video game subscription service offering a rotating catalog of games from a range of publishers.",
+    foundedYear: "2017",
+    founders: "Microsoft",
+    ceo: "Phil Spencer (Xbox)",
+    headquarters: "Redmond, Washington, US",
+    price: "16.99",
+    currency: "USD",
+    type: "gamepass"
+  },
+  "disney+": {
+    id: "disney",
+    name: "Disney+",
+    description: "The streaming home for Disney, Pixar, Marvel, Star Wars, National Geographic, and more.",
+    foundedYear: "2019",
+    founders: "The Walt Disney Company",
+    ceo: "Bob Iger",
+    headquarters: "Burbank, California, US",
+    price: "13.99",
+    currency: "USD",
+    type: "disney"
+  }
 };

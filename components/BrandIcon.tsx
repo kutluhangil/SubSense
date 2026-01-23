@@ -8,7 +8,7 @@ interface BrandIconProps {
 
 const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", noBackground = false }) => {
   const baseClasses = `flex items-center justify-center relative overflow-hidden flex-shrink-0 ${noBackground ? '' : 'bg-white'} ${className}`;
-  const normalizedType = type.toLowerCase().replace(/\s+/g, '');
+  const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || 'default';
 
   const renderIcon = () => {
     switch (normalizedType) {
@@ -70,6 +70,66 @@ const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", no
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+        );
+      case 'canva':
+      case 'canvapro':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="12" fill="#00C4CC"/>
+            <path d="M12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6Z" fill="white" fillOpacity="0.3"/>
+            <path d="M12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8Z" fill="white"/>
+          </svg>
+        );
+      case 'hepsiburada':
+      case 'hepsiburadapremium':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="#F68B1E" rx="4"/>
+            <path d="M12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7ZM12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12C15 13.6569 13.6569 15 12 15Z" fill="white"/>
+            <path d="M12 10.5C11.1716 10.5 10.5 11.1716 10.5 12C10.5 12.8284 11.1716 13.5 12 13.5C12.8284 13.5 13.5 12.8284 13.5 12C13.5 11.1716 12.8284 10.5 12 10.5Z" fill="white"/>
+          </svg>
+        );
+      case 'trendyol':
+      case 'trendyolelite':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="#FF6600" rx="4"/>
+            <path d="M8 8H16L12 14L8 8Z" fill="white"/>
+            <path d="M12 14V17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        );
+      case 'blutv':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="#13C0CA" rx="4"/>
+            <path d="M8 7V17L17 12L8 7Z" fill="white"/>
+          </svg>
+        );
+      case 'exxen':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="#000000" rx="4"/>
+            <path d="M7 7H10L12 10L14 7H17L13.5 12L17 17H14L12 14L10 17H7L10.5 12L7 7Z" fill="#FFCC00"/>
+          </svg>
+        );
+      case 'disney':
+      case 'disney+':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="#113CCF" rx="4"/>
+            <path d="M12 6C8 6 6 9 6 12C6 15 8 18 12 18C15 18 18 15 18 12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M15 10C16 9 17 8 18 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M12 14C12 14 14 13 16 12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        );
+      case 'gamepass':
+      case 'xbox':
+        return (
+          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="#107C10"/>
+            <path d="M12 6L16 12L12 18L8 12L12 6Z" fill="white" fillOpacity="0.2"/>
+            <path d="M7 7L17 17M17 7L7 17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         );
       default:
