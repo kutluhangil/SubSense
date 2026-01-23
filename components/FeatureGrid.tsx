@@ -1,62 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { LayoutGrid, Users, CreditCard, PieChart, ArrowRightLeft, Settings, ArrowRight, ToggleLeft, ToggleRight } from 'lucide-react';
-
-const features = [
-  {
-    id: 'dashboard',
-    icon: LayoutGrid,
-    title: "Dashboard",
-    desc: "Track all your active subscriptions in one view.",
-    color: "#3B82F6", // blue-500
-    bg: "bg-blue-50",
-    hoverBorder: "group-hover:border-blue-500/50"
-  },
-  {
-    id: 'friends',
-    icon: Users,
-    title: "Friends",
-    desc: "Share and compare your subscriptions with friends.",
-    color: "#0D9488", // teal-600
-    bg: "bg-teal-50",
-    hoverBorder: "group-hover:border-teal-500/50"
-  },
-  {
-    id: 'subscriptions',
-    icon: CreditCard,
-    title: "Subscriptions",
-    desc: "Add, edit, and manage every service you use.",
-    color: "#9333EA", // purple-600
-    bg: "bg-purple-50",
-    hoverBorder: "group-hover:border-purple-500/50"
-  },
-  {
-    id: 'analytics',
-    icon: PieChart,
-    title: "Analytics",
-    desc: "Visualize your spending and discover trends.",
-    color: "#7C3AED", // violet-600
-    bg: "bg-violet-50",
-    hoverBorder: "group-hover:border-violet-500/50"
-  },
-  {
-    id: 'compare',
-    icon: ArrowRightLeft,
-    title: "Compare",
-    desc: "Compare global subscription prices by region.",
-    color: "#EA580C", // orange-600
-    bg: "bg-orange-50",
-    hoverBorder: "group-hover:border-orange-500/50"
-  },
-  {
-    id: 'settings',
-    icon: Settings,
-    title: "Settings",
-    desc: "Customize your experience and preferences.",
-    color: "#4B5563", // gray-600
-    bg: "bg-gray-50",
-    hoverBorder: "group-hover:border-gray-500/50"
-  }
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 // --- Mini Animation Components ---
 
@@ -163,7 +108,7 @@ const SettingsPreview = ({ color }: { color: string }) => (
   </div>
 );
 
-const FeaturePreviewPopup = ({ feature }: { feature: typeof features[0] }) => {
+const FeaturePreviewPopup = ({ feature }: { feature: any }) => {
   return (
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-48 h-32 bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 z-50 transform origin-bottom">
        <div className="h-1 w-full" style={{ backgroundColor: feature.color }}></div>
@@ -186,10 +131,68 @@ const FeaturePreviewPopup = ({ feature }: { feature: typeof features[0] }) => {
 };
 
 export default function FeatureGrid() {
+  const { t } = useLanguage();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [autoCycleIndex, setAutoCycleIndex] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const features = [
+    {
+      id: 'dashboard',
+      icon: LayoutGrid,
+      title: t('features.dashboard.title'),
+      desc: t('features.dashboard.desc'),
+      color: "#3B82F6", // blue-500
+      bg: "bg-blue-50",
+      hoverBorder: "group-hover:border-blue-500/50"
+    },
+    {
+      id: 'friends',
+      icon: Users,
+      title: t('features.friends.title'),
+      desc: t('features.friends.desc'),
+      color: "#0D9488", // teal-600
+      bg: "bg-teal-50",
+      hoverBorder: "group-hover:border-teal-500/50"
+    },
+    {
+      id: 'subscriptions',
+      icon: CreditCard,
+      title: t('features.subscriptions.title'),
+      desc: t('features.subscriptions.desc'),
+      color: "#9333EA", // purple-600
+      bg: "bg-purple-50",
+      hoverBorder: "group-hover:border-purple-500/50"
+    },
+    {
+      id: 'analytics',
+      icon: PieChart,
+      title: t('features.analytics.title'),
+      desc: t('features.analytics.desc'),
+      color: "#7C3AED", // violet-600
+      bg: "bg-violet-50",
+      hoverBorder: "group-hover:border-violet-500/50"
+    },
+    {
+      id: 'compare',
+      icon: ArrowRightLeft,
+      title: t('features.compare.title'),
+      desc: t('features.compare.desc'),
+      color: "#EA580C", // orange-600
+      bg: "bg-orange-50",
+      hoverBorder: "group-hover:border-orange-500/50"
+    },
+    {
+      id: 'settings',
+      icon: Settings,
+      title: t('features.settings.title'),
+      desc: t('features.settings.desc'),
+      color: "#4B5563", // gray-600
+      bg: "bg-gray-50",
+      hoverBorder: "group-hover:border-gray-500/50"
+    }
+  ];
 
   // Auto-cycle logic when idle
   useEffect(() => {
@@ -208,7 +211,7 @@ export default function FeatureGrid() {
     return () => {
       if (idleTimerRef.current) clearInterval(idleTimerRef.current);
     };
-  }, []);
+  }, [features.length]);
 
   const handleMouseEnter = (index: number) => {
     if (idleTimerRef.current) clearInterval(idleTimerRef.current);
@@ -229,8 +232,8 @@ export default function FeatureGrid() {
   return (
     <div className="py-16 relative" ref={containerRef}>
       <div className="text-center mb-12">
-         <span className="inline-block py-1 px-3 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider mb-3">Features</span>
-         <h2 className="text-3xl font-bold text-gray-900">Explore what you can do</h2>
+         <span className="inline-block py-1 px-3 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider mb-3">{t('features.tag')}</span>
+         <h2 className="text-3xl font-bold text-gray-900">{t('features.explore')}</h2>
       </div>
       
       {/* Grid Container with Blur Effect on Siblings */}

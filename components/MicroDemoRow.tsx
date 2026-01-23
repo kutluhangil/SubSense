@@ -1,13 +1,17 @@
+
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function MicroDemoRow() {
+  const { t } = useLanguage();
+
   return (
     <div className="py-12 bg-gray-50/50 border-y border-gray-100 overflow-hidden">
        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-6">
           
           {/* Dashboard Mini */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 h-32 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:border-blue-200 transition-colors">
-             <p className="text-[10px] font-bold text-gray-400 uppercase">Spend Chart</p>
+             <p className="text-[10px] font-bold text-gray-400 uppercase">{t('demo.spend_chart')}</p>
              <div className="flex items-end gap-1 h-16 pb-2">
                 {[40, 60, 30, 70, 50, 80, 65].map((h, i) => (
                    <div 
@@ -22,18 +26,18 @@ export default function MicroDemoRow() {
 
           {/* Friends Mini */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 h-32 flex flex-col justify-center items-center shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors">
-             <p className="absolute top-4 left-4 text-[10px] font-bold text-gray-400 uppercase">Sharing</p>
+             <p className="absolute top-4 left-4 text-[10px] font-bold text-gray-400 uppercase">{t('demo.sharing')}</p>
              <div className="flex -space-x-3">
                 <div className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white z-10 animate-bounce" style={{ animationDelay: '0s' }}></div>
                 <div className="w-10 h-10 rounded-full bg-gray-300 border-2 border-white z-20 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 <div className="w-10 h-10 rounded-full bg-gray-400 border-2 border-white z-30 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
              </div>
-             <div className="mt-2 text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full">+2 New</div>
+             <div className="mt-2 text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full">+2 {t('demo.new')}</div>
           </div>
 
           {/* Compare Mini */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 h-32 shadow-sm relative overflow-hidden group hover:border-orange-200 transition-colors">
-             <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Price Compare</p>
+             <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{t('demo.price_compare')}</p>
              <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                    <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> US</div>
@@ -58,7 +62,7 @@ export default function MicroDemoRow() {
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-violet-600">75%</div>
              </div>
-             <p className="absolute top-4 left-4 text-[10px] font-bold text-gray-400 uppercase">Budget</p>
+             <p className="absolute top-4 left-4 text-[10px] font-bold text-gray-400 uppercase">{t('demo.budget')}</p>
           </div>
 
        </div>

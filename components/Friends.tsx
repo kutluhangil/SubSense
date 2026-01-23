@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Search, MapPin, UserPlus, MoreHorizontal, MessageCircle, UserMinus } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Helper to convert friend data to profile format
 const mapFriendToProfile = (friend: Friend): UserProfile => ({
@@ -38,6 +40,7 @@ export interface Friend {
 export default function Friends() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const { t, formatPrice } = useLanguage();
 
   const friends: Friend[] = [
     {
@@ -128,8 +131,8 @@ export default function Friends() {
       {/* Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Friends</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage your connections and see shared interests.</p>
+          <h2 className="text-xl font-bold text-gray-900">{t('features.friends.title')}</h2>
+          <p className="text-gray-500 text-sm mt-1">{t('friends.subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -139,7 +142,7 @@ export default function Friends() {
                 </div>
                 <input
                 type="text"
-                placeholder="Search friends..."
+                placeholder={t('friends.search_placeholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white w-full md:w-64 transition-all"
@@ -147,7 +150,7 @@ export default function Friends() {
             </div>
             <button className="flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm">
                 <UserPlus size={16} />
-                <span className="hidden sm:inline">Add Friend</span>
+                <span className="hidden sm:inline">{t('friends.add_btn')}</span>
             </button>
         </div>
       </div>
@@ -198,20 +201,20 @@ export default function Friends() {
               </div>
               <div className="w-px h-3 bg-gray-200"></div>
               <div className="text-xs font-medium text-gray-700">
-                {friend.totalSubs} Subscriptions
+                {friend.totalSubs} {t('friends.subscriptions')}
               </div>
             </div>
 
             {/* Shared Subscriptions */}
             <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">Shared with you</p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">{t('friends.shared_with_you')}</p>
               <div className="flex -space-x-2">
                 {friend.sharedSubs.map((sub, index) => (
                   <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white shadow-sm flex items-center justify-center overflow-hidden z-10 hover:z-20 transition-all hover:scale-110">
                      <BrandIcon type={sub} className="w-full h-full p-1.5" noBackground />
                   </div>
                 ))}
-                {friend.sharedSubs.length === 0 && <span className="text-xs text-gray-400 italic pl-1">None</span>}
+                {friend.sharedSubs.length === 0 && <span className="text-xs text-gray-400 italic pl-1">{t('friends.none')}</span>}
               </div>
             </div>
 
@@ -222,14 +225,14 @@ export default function Friends() {
                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                >
                   <MessageCircle size={14} className="mr-2" />
-                  Message
+                  {t('friend.message')}
                </button>
                <button 
                  onClick={(e) => { e.stopPropagation(); /* Add logic */ }}
                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors"
                >
                   <UserMinus size={14} className="mr-2" />
-                  Remove
+                  {t('friends.remove')}
                </button>
             </div>
           </div>

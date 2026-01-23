@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Globe, DollarSign } from 'lucide-react';
+import { Globe, DollarSign, Sparkles } from 'lucide-react';
 import { LANGUAGES, CURRENCIES } from '../utils/data';
 import Logo from './Logo';
 import HintCardCarousel from './HintCardCarousel';
@@ -7,7 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { LanguageCode } from '../utils/translations';
 
 export default function Footer() {
-  const { currentLanguage, setLanguage, t } = useLanguage();
+  const { currentLanguage, setLanguage, currentCurrency, setCurrency, t } = useLanguage();
 
   return (
     <footer className="bg-white border-t border-gray-100 pt-16 pb-12 overflow-hidden relative">
@@ -55,6 +56,14 @@ export default function Footer() {
                       </select>
                    </div>
                  </div>
+                 
+                 {/* AI Tooltip */}
+                 <div className="absolute top-full left-0 mt-2 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 hidden md:block">
+                    <div className="bg-gray-900 text-white text-[10px] p-2 rounded-lg shadow-lg flex items-start gap-2">
+                       <Sparkles size={12} className="text-yellow-400 flex-shrink-0 mt-0.5" />
+                       {t('footer.ai_tooltip')}
+                    </div>
+                 </div>
               </div>
 
               {/* Currency Selector */}
@@ -64,7 +73,11 @@ export default function Footer() {
                    <DollarSign className="w-5 h-5 text-gray-400 mr-3 rtl:mr-0 rtl:ml-3 group-hover:text-gray-900 transition-colors" />
                    <div className="flex flex-col flex-1">
                       <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t('footer.currency')}</label>
-                      <select className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 rtl:pr-0 rtl:pl-8 outline-none appearance-none min-w-[140px]">
+                      <select 
+                        className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 rtl:pr-0 rtl:pl-8 outline-none appearance-none min-w-[140px]"
+                        value={currentCurrency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                      >
                         {CURRENCIES.map(curr => (
                           <option key={curr.code} value={curr.code}>{curr.code} ({curr.symbol})</option>
                         ))}

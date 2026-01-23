@@ -1,7 +1,9 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, ArrowRightLeft, Globe, TrendingUp, TrendingDown, Info, Search, Zap, Lightbulb, AlertTriangle, Download, Clock, DollarSign, RotateCcw, Sparkles } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { ALL_SUBSCRIPTIONS } from '../utils/data';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // --- Types & Constants ---
 
@@ -379,6 +381,7 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
 
 const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingData[], baseCurrency: string, serviceName: string }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const { t } = useLanguage();
 
   // Simple logic to generate "AI" insights
   const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
@@ -393,7 +396,7 @@ const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingDat
         >
            <div className="flex items-center gap-2 text-indigo-900">
               <Sparkles size={18} className="text-indigo-600" />
-              <span className="font-bold text-sm">AI Price Insights</span>
+              <span className="font-bold text-sm">{t('compare.ai_insights')}</span>
            </div>
            <ChevronDown size={16} className={`text-indigo-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
@@ -422,8 +425,15 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
    const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
    const savings = basePrice - cheapest.usdPrice;
    const savingsPercent = ((savings / basePrice) * 100).toFixed(0);
+   const { t } = useLanguage();
 
    if (savings <= 0) return null;
+
+   const formatMessage = (template: string, ...args: string[]) => {
+     return template.replace(/{(\d+)}/g, (match, number) => {
+       return typeof args[number] !== 'undefined' ? args[number] : match;
+     });
+   };
 
    return (
       <div className="bg-gray-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
@@ -432,20 +442,25 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
          </div>
          
          <div className="relative z-10">
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Potential Annual Savings</p>
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('compare.potential_savings')}</p>
             <div className="flex items-baseline gap-1 mb-1">
                <span className="text-4xl font-bold">${(savings * 12).toFixed(2)}</span>
                <span className="text-sm text-gray-400">/ year</span>
             </div>
             <div className="flex items-center gap-2 mb-4">
                <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">
-                  Save {savingsPercent}%
+                  {t('compare.save')} {savingsPercent}%
                </span>
-               <span className="text-xs text-gray-400">vs {baseCountry}</span>
+               <span className="text-xs text-gray-400">{t('compare.vs')} {baseCountry}</span>
             </div>
 
             <p className="text-xs text-gray-300 leading-relaxed border-t border-gray-800 pt-3 mt-3">
-               Switching your billing region from <span className="text-white font-bold">{COUNTRY_CONFIG[baseCountry]?.flag} {baseCountry}</span> to <span className="text-white font-bold">{COUNTRY_CONFIG[cheapest.country]?.flag} {cheapest.country}</span> could save you <span className="text-white font-bold">${savings.toFixed(2)}</span> every month.
+               {formatMessage(
+                 t('compare.switching_msg'), 
+                 `${baseCountry}`, 
+                 `${cheapest.country}`, 
+                 `$${savings.toFixed(2)}`
+               )}
             </p>
          </div>
       </div>
@@ -454,13 +469,14 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
 
 const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseCurrency: string }) => {
    const baseItem = data.find(d => d.currency === baseCurrency) || data[0];
+   const { t } = useLanguage();
 
    return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
          <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 text-sm">Regional Pricing</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">{t('compare.regional_pricing')}</h3>
             <div className="text-xs text-gray-500 flex items-center gap-1">
-               <Clock size={12} /> Live
+               <Clock size={12} /> {t('compare.live')}
             </div>
          </div>
          <div className="flex-1 overflow-auto">
@@ -509,6 +525,7 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
 };
 
 export default function Comparison() {
+  const { t } = useLanguage();
   const [selectedService, setSelectedService] = useState('Netflix');
   const [baseCurrency, setBaseCurrency] = useState('USD');
   const [liveFx, setLiveFx] = useState(false);
@@ -523,9 +540,6 @@ export default function Comparison() {
      if (!liveFx) return;
      const interval = setInterval(() => {
         // Trigger re-render to simulate noise in chart
-        // In a real app, this would update `currentData` state.
-        // Here, the Chart component handles the visual noise via the `liveFx` prop re-render.
-        // We force update by toggling a dummy state if needed, but prop change is enough.
      }, 200);
      return () => clearInterval(interval);
   }, [liveFx]);
@@ -536,8 +550,8 @@ export default function Comparison() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Global Pricing</h2>
-          <p className="text-gray-500 text-sm mt-1">Compare subscription costs across different regions in real-time.</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('features.compare.title')}</h2>
+          <p className="text-gray-500 text-sm mt-1">{t('compare.subtitle')}</p>
         </div>
         <div className="flex gap-2">
            <button 
@@ -545,10 +559,10 @@ export default function Comparison() {
              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${liveFx ? 'bg-red-50 text-red-600 border-red-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200'}`}
            >
               {liveFx ? <Zap size={14} className="animate-pulse" /> : <Zap size={14} />}
-              {liveFx ? 'Live FX On' : 'Live FX Off'}
+              {liveFx ? t('compare.live_fx_on') : t('compare.live_fx_off')}
            </button>
            <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors">
-              <Download size={14} /> Export Report
+              <Download size={14} /> {t('compare.export')}
            </button>
         </div>
       </div>
@@ -556,7 +570,7 @@ export default function Comparison() {
       {/* Controls */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
          <div className="md:col-span-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">Service</label>
+             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">{t('compare.service')}</label>
              <div className="relative">
                  <select 
                      className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-gray-900 focus:border-gray-900 block p-2.5 pr-8 font-medium"
@@ -569,7 +583,7 @@ export default function Comparison() {
              </div>
          </div>
          <div className="md:col-span-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">Base Currency</label>
+             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">{t('compare.base_currency')}</label>
              <div className="relative">
                  <select 
                      className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-gray-900 focus:border-gray-900 block p-2.5 pr-8 font-medium"
@@ -600,8 +614,8 @@ export default function Comparison() {
                       <div className="flex items-center gap-3">
                           <BrandIcon type={selectedService} className="w-10 h-10 rounded-xl shadow-sm border border-gray-100" />
                           <div>
-                              <h3 className="font-bold text-gray-900">Price History (USD)</h3>
-                              <p className="text-xs text-gray-500">6 Month Trend Analysis</p>
+                              <h3 className="font-bold text-gray-900">{t('compare.price_history')} (USD)</h3>
+                              <p className="text-xs text-gray-500">{t('compare.trend_analysis')}</p>
                           </div>
                       </div>
                       
@@ -640,7 +654,7 @@ export default function Comparison() {
                          onTouchEnd={() => setTimeTravelIndex(null)}
                       />
                       <p className="text-center text-xs text-gray-400 mt-2 flex items-center justify-center gap-1">
-                          <RotateCcw size={10} /> Drag to view historical pricing
+                          <RotateCcw size={10} /> {t('compare.drag_history')}
                       </p>
                   </div>
               </div>

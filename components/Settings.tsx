@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, Bell, Shield, Moon, Sun, Monitor, Camera, Save, Eye, EyeOff, Lock, Globe, Share2, Zap, Layout, LogOut, Smartphone, Check, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -59,7 +60,7 @@ export default function Settings() {
           onClick={() => setIsPreviewOpen(true)}
           className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
         >
-          <Eye size={16} /> Preview Public Profile
+          <Eye size={16} /> {t('settings.preview')}
         </button>
       </div>
 
@@ -89,7 +90,7 @@ export default function Settings() {
                             <p className="text-sm text-gray-500 mb-3">Update your photo and personal details.</p>
                             <div className="flex gap-3 justify-center sm:justify-start">
                                 <button className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">Change Photo</button>
-                                <button className="text-xs font-semibold text-red-600 hover:text-red-700 px-2 py-1.5">Remove</button>
+                                <button className="text-xs font-semibold text-red-600 hover:text-red-700 px-2 py-1.5">{t('friends.remove')}</button>
                             </div>
                         </div>
                     </div>
@@ -146,11 +147,11 @@ export default function Settings() {
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
                     <Share2 className="text-purple-600" size={20} />
                     <div>
-                        <h3 className="text-base font-bold text-gray-900">Connected Accounts</h3>
+                        <h3 className="text-base font-bold text-gray-900">{t('settings.connected')}</h3>
                     </div>
                 </div>
                 <div className="p-6">
-                    <p className="text-sm text-gray-500 mb-6">Link your favorite apps to sync activity and display on your profile.</p>
+                    <p className="text-sm text-gray-500 mb-6">{t('settings.connect_desc')}</p>
                     <div className="space-y-4">
                         {integrations.map((app) => (
                             <div key={app.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white group">
@@ -160,7 +161,7 @@ export default function Settings() {
                                     </div>
                                     <div>
                                         <h4 className="font-bold text-sm text-gray-900">{app.name}</h4>
-                                        <p className="text-xs text-gray-500">{app.connected ? 'Connected' : 'Not connected'}</p>
+                                        <p className="text-xs text-gray-500">{app.connected ? t('settings.connected_status') : t('settings.not_connected')}</p>
                                     </div>
                                 </div>
                                 <button 
@@ -175,9 +176,9 @@ export default function Settings() {
                                     {connectingId === app.id ? (
                                         <span className="animate-pulse">Connecting...</span>
                                     ) : app.connected ? (
-                                        <span className="flex items-center gap-1"><Check size={12} /> Connected</span>
+                                        <span className="flex items-center gap-1"><Check size={12} /> {t('settings.connected_status')}</span>
                                     ) : (
-                                        'Connect'
+                                        t('settings.connect_btn')
                                     )}
                                 </button>
                             </div>
@@ -190,23 +191,23 @@ export default function Settings() {
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
                  <div className="px-6 py-4 border-b border-indigo-100/50 flex items-center gap-3">
                     <Zap className="text-indigo-600" size={20} />
-                    <h3 className="text-base font-bold text-indigo-900">AI Personalization</h3>
+                    <h3 className="text-base font-bold text-indigo-900">{t('settings.ai_title')}</h3>
                 </div>
                 <div className="p-6 space-y-6">
-                    <p className="text-sm text-indigo-800/70">Control how SubscriptionHub AI tailors insights, savings tips, and analytics for you.</p>
+                    <p className="text-sm text-indigo-800/70">{t('settings.ai_desc')}</p>
                     
                     <div className="flex items-center justify-between">
                          <div>
-                            <h4 className="text-sm font-bold text-indigo-900">Smart Suggestions</h4>
-                            <p className="text-xs text-indigo-700/60">Receive proactive alerts about potential savings.</p>
+                            <h4 className="text-sm font-bold text-indigo-900">{t('settings.smart_suggestions')}</h4>
+                            <p className="text-xs text-indigo-700/60">{t('settings.smart_suggestions_desc')}</p>
                          </div>
                          <Toggle defaultChecked color="bg-indigo-600" />
                     </div>
                     
                     <div className="flex items-center justify-between">
                          <div>
-                            <h4 className="text-sm font-bold text-indigo-900">Focus Area</h4>
-                            <p className="text-xs text-indigo-700/60">Prioritize insights for...</p>
+                            <h4 className="text-sm font-bold text-indigo-900">{t('settings.focus_area')}</h4>
+                            <p className="text-xs text-indigo-700/60">{t('settings.focus_area_desc')}</p>
                          </div>
                          <select className="bg-white border border-indigo-200 text-indigo-900 text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
                             <option>Budget Saving</option>
@@ -218,7 +219,7 @@ export default function Settings() {
                     <div className="flex items-start gap-3 p-3 bg-white/60 rounded-xl border border-indigo-100">
                         <input type="checkbox" id="train-ai" className="mt-0.5 text-indigo-600 rounded focus:ring-indigo-500" defaultChecked />
                         <label htmlFor="train-ai" className="text-xs text-indigo-800 leading-snug cursor-pointer">
-                            Allow AI to analyze my spending history to improve global forecasting models. (Anonymized data only)
+                            {t('settings.train_ai')}
                         </label>
                     </div>
                 </div>
@@ -233,7 +234,7 @@ export default function Settings() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
                     <Eye className="text-gray-400" size={20} />
-                    <h3 className="text-base font-bold text-gray-900">Privacy & Visibility</h3>
+                    <h3 className="text-base font-bold text-gray-900">{t('settings.privacy_visibility')}</h3>
                 </div>
                 <div className="p-6 space-y-6">
                     <div className="space-y-4">
@@ -249,15 +250,15 @@ export default function Settings() {
                             </select>
                          </div>
                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 pl-6">Show Spending Stats</span>
+                            <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.show_stats')}</span>
                             <Toggle defaultChecked />
                          </div>
                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 pl-6">Show Subscriptions</span>
+                            <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.show_subs')}</span>
                             <Toggle defaultChecked />
                          </div>
                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 pl-6">Allow Friend Requests</span>
+                            <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.allow_requests')}</span>
                             <Toggle defaultChecked />
                          </div>
                     </div>
@@ -273,21 +274,21 @@ export default function Settings() {
                 <div className="p-6 space-y-5">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900">Payment Due</h4>
+                            <h4 className="text-sm font-medium text-gray-900">{t('settings.payment_due')}</h4>
                             <p className="text-xs text-gray-500">3 days before renewal</p>
                         </div>
                         <Toggle defaultChecked />
                     </div>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900">Price Alerts</h4>
+                            <h4 className="text-sm font-medium text-gray-900">{t('settings.price_alerts')}</h4>
                             <p className="text-xs text-gray-500">Global price changes</p>
                         </div>
                         <Toggle defaultChecked />
                     </div>
                     <div className="flex items-center justify-between">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900">Weekly Digest</h4>
+                            <h4 className="text-sm font-medium text-gray-900">{t('settings.weekly_digest')}</h4>
                             <p className="text-xs text-gray-500">Summary via email</p>
                         </div>
                         <Toggle />
@@ -303,7 +304,7 @@ export default function Settings() {
                 </div>
                 <div className="p-6 space-y-6">
                     <div>
-                        <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">Recent Activity</h4>
+                        <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-3">{t('settings.recent_activity')}</h4>
                         <div className="space-y-3">
                              <div className="flex items-center justify-between text-xs p-3 bg-gray-50 rounded-xl border border-gray-100">
                                  <div className="flex items-center gap-3">
@@ -330,13 +331,13 @@ export default function Settings() {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-50">
                         <div className="flex items-center gap-2">
                            <Lock size={16} className="text-gray-400" />
-                           <span className="text-sm font-medium text-gray-700">2-Step Verification</span>
+                           <span className="text-sm font-medium text-gray-700">{t('settings.two_step')}</span>
                         </div>
-                        <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">Setup</button>
+                        <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">{t('settings.setup')}</button>
                     </div>
 
                     <button className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 border border-red-100 bg-red-50 hover:bg-red-100 py-2.5 rounded-xl transition-colors">
-                        <LogOut size={16} /> Log out all devices
+                        <LogOut size={16} /> {t('settings.logout_all')}
                     </button>
                 </div>
             </div>
