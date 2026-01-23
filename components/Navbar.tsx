@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
@@ -10,6 +11,7 @@ interface NavbarProps {
 
 export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleNav = (page: 'home' | 'features') => {
     if (onNavigate) {
@@ -32,25 +34,25 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
             <button 
               onClick={() => handleNav('features')} 
               className={`text-sm font-medium transition-colors ${currentPage === 'features' ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
             >
-              Features
+              {t('nav.features')}
             </button>
-            <div className="flex items-center space-x-4 ml-4">
+            <div className="flex items-center space-x-4 ml-4 rtl:space-x-reverse rtl:ml-0 rtl:mr-4">
               <button 
                 onClick={() => onOpenAuth('login')}
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Log in
+                {t('nav.login')}
               </button>
               <button 
                 onClick={() => onOpenAuth('signup')}
                 className="text-sm font-medium bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
               >
-                Sign up
+                {t('nav.signup')}
               </button>
             </div>
           </div>
@@ -74,18 +76,18 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <button 
               onClick={() => handleNav('features')} 
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
-              Features
+              {t('nav.features')}
             </button>
             <button 
               onClick={() => {
                 onOpenAuth('login');
                 setIsOpen(false);
               }}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
-              Log in
+              {t('nav.login')}
             </button>
             <button 
               onClick={() => {
@@ -94,7 +96,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
               }}
               className="block w-full px-3 py-2 mt-4 text-center rounded-md text-base font-medium bg-gray-900 text-white hover:bg-gray-800"
             >
-              Sign up
+              {t('nav.signup')}
             </button>
           </div>
         </div>

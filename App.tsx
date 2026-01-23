@@ -6,8 +6,9 @@ import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import DemoModal from './components/DemoModal';
+import { LanguageProvider } from './contexts/LanguageContext';
 
-export default function App() {
+function AppContent() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -70,5 +71,13 @@ export default function App() {
         onSignup={() => openAuth('signup')}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }

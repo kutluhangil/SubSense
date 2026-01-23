@@ -3,11 +3,15 @@ import { Globe, DollarSign } from 'lucide-react';
 import { LANGUAGES, CURRENCIES } from '../utils/data';
 import Logo from './Logo';
 import HintCardCarousel from './HintCardCarousel';
+import { useLanguage } from '../contexts/LanguageContext';
+import { LanguageCode } from '../utils/translations';
 
 export default function Footer() {
+  const { currentLanguage, setLanguage, t } = useLanguage();
+
   return (
     <footer className="bg-white border-t border-gray-100 pt-16 pb-12 overflow-hidden relative">
-      {/* Decorative background elements - Updated Colors for SubscriptionHub (Blue/Cyan) */}
+      {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
           <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#1B3A6D]/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
           <div className="absolute top-0 -right-24 w-96 h-96 bg-[#3ABEFF]/10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
@@ -19,7 +23,7 @@ export default function Footer() {
           
           {/* Left Side - Animated Branding & Hints */}
           <div className="col-span-1 group cursor-default">
-             <div className="flex items-center space-x-3 mb-6 transition-transform duration-500 hover:scale-105 origin-left">
+             <div className="flex items-center space-x-3 mb-6 transition-transform duration-500 hover:scale-105 origin-left rtl:origin-right">
                 <Logo className="h-12" />
              </div>
              
@@ -30,17 +34,21 @@ export default function Footer() {
           {/* Right Side - Settings */}
           <div className="flex flex-col md:items-end">
             <h3 className="text-xs font-bold text-gray-400 tracking-widest uppercase mb-6 flex items-center gap-2 bg-gray-50 px-3 py-1 rounded-full w-fit">
-              <Globe size={12} /> Regional Preferences
+              <Globe size={12} /> {t('footer.region')}
             </h3>
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               {/* Language Selector */}
               <div className="relative group w-full md:w-auto">
                  <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl opacity-0 group-hover:opacity-100 transition duration-300 blur-[2px]"></div>
                  <div className="relative flex items-center bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm hover:border-gray-200 transition-colors w-full">
-                   <Globe className="w-5 h-5 text-gray-400 mr-3 group-hover:text-gray-900 transition-colors" />
+                   <Globe className="w-5 h-5 text-gray-400 mr-3 rtl:mr-0 rtl:ml-3 group-hover:text-gray-900 transition-colors" />
                    <div className="flex flex-col flex-1">
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Language</label>
-                      <select className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 outline-none appearance-none min-w-[140px]">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t('footer.language')}</label>
+                      <select 
+                        className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 rtl:pr-0 rtl:pl-8 outline-none appearance-none min-w-[140px]"
+                        value={currentLanguage}
+                        onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+                      >
                         {LANGUAGES.map(lang => (
                           <option key={lang.code} value={lang.code}>{lang.name}</option>
                         ))}
@@ -53,10 +61,10 @@ export default function Footer() {
               <div className="relative group w-full md:w-auto">
                  <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl opacity-0 group-hover:opacity-100 transition duration-300 blur-[2px]"></div>
                  <div className="relative flex items-center bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm hover:border-gray-200 transition-colors w-full">
-                   <DollarSign className="w-5 h-5 text-gray-400 mr-3 group-hover:text-gray-900 transition-colors" />
+                   <DollarSign className="w-5 h-5 text-gray-400 mr-3 rtl:mr-0 rtl:ml-3 group-hover:text-gray-900 transition-colors" />
                    <div className="flex flex-col flex-1">
-                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Currency</label>
-                      <select className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 outline-none appearance-none min-w-[140px]">
+                      <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">{t('footer.currency')}</label>
+                      <select className="bg-transparent text-sm font-semibold text-gray-900 border-none focus:ring-0 cursor-pointer p-0 pr-8 rtl:pr-0 rtl:pl-8 outline-none appearance-none min-w-[140px]">
                         {CURRENCIES.map(curr => (
                           <option key={curr.code} value={curr.code}>{curr.code} ({curr.symbol})</option>
                         ))}
@@ -70,9 +78,9 @@ export default function Footer() {
 
         <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center relative z-10">
           <p className="text-sm text-gray-400 hover:text-gray-600 transition-colors duration-300">
-            &copy; {new Date().getFullYear()} SubscriptionHub Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} {t('footer.rights')}
           </p>
-          <div className="flex space-x-8 mt-6 md:mt-0">
+          <div className="flex space-x-8 rtl:space-x-reverse mt-6 md:mt-0">
              <a href="#" className="text-gray-400 hover:text-blue-500 transform hover:scale-110 transition-all duration-300">
                <span className="sr-only">Twitter</span>
                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>

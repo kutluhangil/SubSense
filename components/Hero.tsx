@@ -2,12 +2,15 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import HeroTextRotator from './HeroTextRotator';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface HeroProps {
   onOpenDemo?: () => void;
 }
 
 export default function Hero({ onOpenDemo }: HeroProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="relative pt-24 pb-16 sm:pt-32 sm:pb-24 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
@@ -40,8 +43,8 @@ export default function Hero({ onOpenDemo }: HeroProps) {
         {/* Main Content */}
         <div className="relative z-10 w-full flex flex-col items-center">
           <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm leading-6 text-gray-600 mb-8 hover:bg-gray-100 transition-colors cursor-default">
-            <span>Global currency support is here</span>
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <span>{t('hero.tagline')}</span>
+            <ArrowRight className="ml-2 h-4 w-4 rtl:rotate-180" />
           </div>
 
           {/* New Rotating Hero Text Component */}
@@ -49,13 +52,13 @@ export default function Hero({ onOpenDemo }: HeroProps) {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full mt-6">
             <button className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-full hover:bg-gray-800 hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
-              Start Tracking Free
+              {t('hero.cta_start')}
             </button>
             <button 
               onClick={onOpenDemo}
               className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
             >
-              View Demo
+              {t('hero.cta_demo')}
             </button>
           </div>
         </div>

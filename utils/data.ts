@@ -103,3 +103,32 @@ export const CURRENCIES = [
   { code: "BRL", symbol: "R$", name: "Brazilian Real" },
   { code: "MXN", symbol: "MX$", name: "Mexican Peso" }
 ];
+
+export const BRAND_COLORS: Record<string, string> = {
+  "netflix": "#E50914",
+  "spotify": "#1DB954",
+  "youtube": "#FF0000",
+  "youtubepremium": "#FF0000",
+  "amazon": "#00A8E1",
+  "amazonprime": "#00A8E1",
+  "adobe": "#ED1C24",
+  "adobecreativecloud": "#ED1C24",
+  "apple": "#999999", // Neutral gray/silver
+  "chatgpt": "#10A37F",
+  "openai": "#10A37F",
+  "canva": "#00C4CC",
+  "gamepass": "#107C10",
+  "xbox": "#107C10",
+  "disney": "#113CCF",
+  "disney+": "#113CCF",
+  "hulu": "#1CE783",
+  "hbo": "#5F259F",
+  "max": "#002BE7",
+  "twitch": "#9146FF",
+  "slack": "#4A154B",
+  "notion": "#000000",
+  "github": "#181717",
+  "linear": "#5E6AD2",
+  "figma": "#F24E1E",
+  "default": "#4F46E5" // Indigo-600
+};

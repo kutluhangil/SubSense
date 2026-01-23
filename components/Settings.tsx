@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { User, Bell, Shield, Moon, Sun, Monitor, Camera, Save } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function Settings() {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-        <p className="text-gray-500 text-sm mt-1">Manage your account preferences and configurations.</p>
+        <h2 className="text-xl font-bold text-gray-900">{t('settings.title')}</h2>
+        <p className="text-gray-500 text-sm mt-1">{t('settings.desc')}</p>
       </div>
 
       {/* Profile Section */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
           <User className="text-gray-400" size={20} />
-          <h3 className="text-base font-semibold text-gray-900">Profile Information</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('settings.profile')}</h3>
         </div>
         <div className="p-6 space-y-6">
            <div className="flex items-center gap-6">
@@ -58,7 +61,7 @@ export default function Settings() {
         <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-end">
           <button className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm">
             <Save size={16} />
-            Save Changes
+            {t('settings.save')}
           </button>
         </div>
       </div>
@@ -69,7 +72,7 @@ export default function Settings() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <Bell className="text-gray-400" size={20} />
-            <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('settings.notifications')}</h3>
           </div>
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
@@ -100,7 +103,7 @@ export default function Settings() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-full">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
             <Monitor className="text-gray-400" size={20} />
-            <h3 className="text-base font-semibold text-gray-900">Appearance</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('settings.appearance')}</h3>
           </div>
           <div className="p-6">
              <div className="grid grid-cols-3 gap-4">
@@ -125,7 +128,7 @@ export default function Settings() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
           <Shield className="text-gray-400" size={20} />
-          <h3 className="text-base font-semibold text-gray-900">Security</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('settings.security')}</h3>
         </div>
         <div className="p-6 space-y-6">
           <div className="flex items-center justify-between py-2">

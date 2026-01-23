@@ -7,14 +7,36 @@ import Analytics from './Analytics';
 import Settings from './Settings';
 import Comparison from './Comparison';
 import HelpCenter from './HelpCenter';
+import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import { Plus } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
+// Initial Data
+const INITIAL_SUBSCRIPTIONS: Subscription[] = [
+  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, history: [15.99, 15.99, 17.49, 19.99, 19.99] },
+  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, history: [12.99, 12.99, 13.99, 14.99, 14.99] },
+  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring', billingDay: 1, history: [52.99, 52.99, 52.99, 54.99, 54.99] },
+  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active', billingDay: 12, history: [119.00, 119.00, 139.00, 139.00, 139.00] },
+  { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, history: [11.99, 11.99, 11.99, 13.99, 13.99] },
+];
+
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState('dashboard');
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(INITIAL_SUBSCRIPTIONS);
+  const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
+  const { t } = useLanguage();
+
+  const handleSubUpdate = (updatedSub: Subscription) => {
+    setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
+  };
+
+  const handleSubDelete = (id: number) => {
+    setSubscriptions(prev => prev.filter(s => s.id !== id));
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -32,14 +54,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 {/* Header */}
                 <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                    <p className="text-gray-500 text-sm mt-1">Welcome back, Alex. You have 2 payments due this week.</p>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
+                    <p className="text-gray-500 text-sm mt-1">{t('dashboard.welcome')}</p>
                   </div>
                   
                   {/* Desktop Add Button */}
-                  <button className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95">
+                  <button className="hidden sm:flex items-center justify-center space-x-2 rtl:space-x-reverse bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95">
                       <Plus size={18} />
-                      <span>Add Subscription</span>
+                      <span>{t('dashboard.add_sub')}</span>
                   </button>
                 </div>
 
@@ -51,12 +73,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 {/* Main Table Section */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-                      <h2 className="text-lg font-semibold text-gray-900">Active Subscriptions</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.active_subs')}</h2>
                       <button className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
-                        View All
+                        {t('dashboard.view_all')}
                       </button>
                   </div>
-                  <SubscriptionTable />
+                  <SubscriptionTable 
+                    subscriptions={subscriptions}
+                    onSelectSubscription={setSelectedSub}
+                  />
                 </div>
              </>
            )}
@@ -86,6 +111,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
         </div>
       </main>
+
+      {/* Edit Modal */}
+      <SubscriptionModal 
+        isOpen={!!selectedSub} 
+        subscription={selectedSub} 
+        onClose={() => setSelectedSub(null)}
+        onSave={handleSubUpdate}
+        onDelete={handleSubDelete}
+      />
 
       {/* Mobile Floating Action Button - Only show on Dashboard */}
       {currentView === 'dashboard' && (
