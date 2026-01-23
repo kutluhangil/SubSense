@@ -422,9 +422,9 @@ export default function Analytics() {
            <Sparkles size={20} className="text-purple-600" /> {t('analytics.ai_insights')}
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <AIInsightCard icon={ArrowUpRight} title="Entertainment Spike" desc="Your entertainment spending increased by 12% this quarter — mostly due to Netflix and Disney+ price hikes." color="bg-red-500" />
-            <AIInsightCard icon={Globe} title="Regional Optimization" desc="You’re spending 35% above average compared to users in your country for SaaS tools." color="bg-blue-500" />
-            <AIInsightCard icon={Lightbulb} title="Duplicate Services" desc="Spotify and YouTube Premium overlap — you could save $9.99 monthly by canceling one." color="bg-yellow-500" />
+            <AIInsightCard icon={ArrowUpRight} title={t('analytics.insight.entertainment_spike')} desc={t('analytics.insight.entertainment_desc')} color="bg-red-500" />
+            <AIInsightCard icon={Globe} title={t('analytics.insight.regional_optimization')} desc={t('analytics.insight.regional_desc')} color="bg-blue-500" />
+            <AIInsightCard icon={Lightbulb} title={t('analytics.insight.duplicate_services')} desc={t('analytics.insight.duplicate_desc')} color="bg-yellow-500" />
          </div>
       </div>
     </div>

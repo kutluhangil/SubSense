@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { X, MapPin, Link as LinkIcon, Calendar, Shield, MessageCircle, UserPlus, Music, Github, Globe, Check } from 'lucide-react';
 import BrandIcon from './BrandIcon';
@@ -40,6 +41,12 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
   }, [isOpen]);
 
   if (!isOpen || !user) return null;
+
+  const formatMessage = (template: string, ...args: string[]) => {
+    return template.replace(/{(\d+)}/g, (match, number) => {
+      return typeof args[number] !== 'undefined' ? args[number] : match;
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-6">
@@ -93,7 +100,7 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
 
            {/* Bio */}
            <p className="text-sm text-gray-600 leading-relaxed mb-6 px-4">
-              {user.bio || "No bio provided yet."}
+              {user.bio || t('profile.no_bio')}
            </p>
 
            {/* Metadata Pills */}
@@ -105,12 +112,12 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
               )}
               {user.joinedDate && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 border border-gray-200 text-xs font-medium text-gray-600 shadow-sm">
-                    <Calendar size={12} /> Joined {user.joinedDate}
+                    <Calendar size={12} /> {formatMessage(t('profile.joined'), user.joinedDate)}
                   </span>
               )}
               {user.website && (
                   <a href={user.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-xs font-medium text-blue-600 shadow-sm hover:bg-blue-100 transition-colors">
-                    <LinkIcon size={12} /> Website
+                    <LinkIcon size={12} /> {t('profile.website')}
                   </a>
               )}
            </div>
@@ -118,11 +125,11 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
            {/* Stats Row */}
            <div className="grid grid-cols-2 gap-4 w-full mb-8">
               <div className="bg-white/60 p-3 rounded-2xl border border-white shadow-sm backdrop-blur-sm">
-                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Active Subs</p>
+                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">{t('profile.active_subs')}</p>
                  <p className="text-xl font-bold text-gray-900">{user.totalSubs}</p>
               </div>
               <div className="bg-white/60 p-3 rounded-2xl border border-white shadow-sm backdrop-blur-sm">
-                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">Monthly</p>
+                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">{t('profile.monthly')}</p>
                  <p className="text-xl font-bold text-gray-900">
                     {user.currency === 'USD' ? '$' : user.currency}
                     {user.monthlySpend.toLocaleString()}
@@ -133,7 +140,7 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
            {/* Connected Integrations */}
            {user.integrations && user.integrations.length > 0 && (
              <div className="mb-8 w-full">
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3">Connected Accounts</p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3">{t('settings.connected')}</p>
                 <div className="flex justify-center gap-3">
                    {user.integrations.includes('spotify') && (
                      <div className="w-8 h-8 rounded-full bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954]" title="Spotify">
@@ -161,15 +168,15 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
                   onClick={onClose}
                   className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all"
                 >
-                  Edit Profile
+                  {t('profile.edit_profile')}
                 </button>
               ) : (
                 <>
                   <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all">
-                     <UserPlus size={18} /> Add Friend
+                     <UserPlus size={18} /> {t('profile.add_friend')}
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50 active:scale-95 transition-all">
-                     <MessageCircle size={18} /> Message
+                     <MessageCircle size={18} /> {t('profile.message')}
                   </button>
                 </>
               )}

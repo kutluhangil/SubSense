@@ -1,3 +1,4 @@
+
 // Comprehensive datasets for the application
 
 export const SUBSCRIPTION_CATEGORIES = [
@@ -35,18 +36,8 @@ export const SUBSCRIPTION_CATEGORIES = [
 export const ALL_SUBSCRIPTIONS = SUBSCRIPTION_CATEGORIES.flatMap(cat => cat.examples).sort();
 
 export const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "tr", name: "Türkçe" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "de", name: "Deutsch" },
-  { code: "it", name: "Italiano" },
-  { code: "pt", name: "Português" },
-  { code: "ru", name: "Русский" },
-  { code: "ja", name: "日本語" },
-  { code: "ko", name: "한국어" },
-  { code: "zh", name: "中文 (Simplified)" },
-  { code: "ar", name: "العربية" }
+  { code: "en", name: "English 🇺🇸" },
+  { code: "tr", name: "Türkçe 🇹🇷" }
 ];
 
 export const CURRENCIES = [
