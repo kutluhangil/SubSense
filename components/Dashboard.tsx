@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
@@ -17,7 +18,7 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-// Initial Data
+// Initial Data (Prices in USD base)
 const INITIAL_SUBSCRIPTIONS: Subscription[] = [
   { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, history: [15.99, 15.99, 17.49, 19.99, 19.99] },
   { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, history: [12.99, 12.99, 13.99, 14.99, 14.99] },
@@ -41,22 +42,23 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   };
 
   const handleAddSubscription = (service: SubscriptionDetail) => {
+    // Assume input is in USD for base logic, or convert if needed
+    const priceVal = parseFloat(service.price);
+    
     const newSub: Subscription = {
         id: Math.max(...subscriptions.map(s => s.id), 0) + 1,
         name: service.name,
         plan: 'Standard',
-        price: parseFloat(service.price),
-        currency: service.currency,
+        price: priceVal,
+        currency: 'USD', // Base currency for storage
         cycle: 'Monthly',
         nextDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         type: service.type,
         status: 'Active',
         billingDay: new Date().getDate(),
-        history: [parseFloat(service.price)]
+        history: [priceVal]
     };
     setSubscriptions(prev => [newSub, ...prev]);
-    // Switch back to dashboard after a short delay or stay? 
-    // Staying allows adding more. The toast in SearchPanel confirms action.
   };
 
   return (
@@ -68,7 +70,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       />
       
       <main className="flex-1 overflow-y-auto relative">
-        {/* Full screen wrapper for search panel to handle its own layout */}
         {currentView === 'subscriptions' ? (
             <SubscriptionSearchPanel onAddSubscription={handleAddSubscription} />
         ) : (
@@ -76,14 +77,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             
             {currentView === 'dashboard' && (
                 <>
-                    {/* Header */}
                     <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
                         <p className="text-gray-500 text-sm mt-1">{t('dashboard.welcome')}</p>
                     </div>
                     
-                    {/* Desktop Add Button */}
                     <button 
                         onClick={() => setCurrentView('subscriptions')}
                         className="hidden sm:flex items-center justify-center space-x-2 rtl:space-x-reverse bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95"
@@ -93,12 +92,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     </button>
                     </div>
 
-                    {/* Stats Section */}
                     <div className="mb-10">
-                    <StatsCards />
+                        <StatsCards />
                     </div>
                     
-                    {/* Main Table Section */}
                     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
                         <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.active_subs')}</h2>
@@ -120,7 +117,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             {currentView === 'settings' && <Settings />}
             {currentView === 'help' && <HelpCenter />}
             
-            {/* Placeholder for other views */}
             {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare' && currentView !== 'help' && currentView !== 'subscriptions') && (
                 <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                     <div className="p-4 bg-gray-100 rounded-full mb-4">
@@ -141,7 +137,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         )}
       </main>
 
-      {/* Edit Modal */}
       <SubscriptionModal 
         isOpen={!!selectedSub} 
         subscription={selectedSub} 
@@ -150,7 +145,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         onDelete={handleSubDelete}
       />
 
-      {/* Mobile Floating Action Button - Only show on Dashboard */}
       {currentView === 'dashboard' && (
         <button 
             onClick={() => setCurrentView('subscriptions')}

@@ -1,18 +1,22 @@
+
 import React from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Calendar } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function StatsCards() {
+  const { t, formatPrice } = useLanguage();
+
   const stats = [
     {
-      label: 'Monthly Spend',
-      value: '$245.50',
+      label: t('stats.monthly'),
+      value: formatPrice(245.50), // Base USD value
       change: '+12.5%',
       trend: 'up',
       icon: DollarSign,
       color: 'bg-blue-50 text-blue-600'
     },
     {
-      label: 'Active Subscriptions',
+      label: t('stats.active'),
       value: '12',
       change: '2 new',
       trend: 'neutral',
@@ -20,11 +24,11 @@ export default function StatsCards() {
       color: 'bg-purple-50 text-purple-600'
     },
     {
-      label: 'Annual Forecast',
-      value: '$2,946',
+      label: t('stats.forecast'),
+      value: formatPrice(2946.00), // Base USD value
       change: '-2.4%',
       trend: 'down',
-      icon: TrendingUp, // Using generic trend icon, visually implied forecast
+      icon: TrendingUp, 
       color: 'bg-green-50 text-green-600'
     }
   ];

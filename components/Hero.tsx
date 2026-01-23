@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import HeroTextRotator from './HeroTextRotator';
@@ -45,7 +46,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                  <HeroTextRotator />
 
                  <p className="mt-6 text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                    Stop losing money on forgotten subscriptions. Track, compare, and optimize your recurring expenses in one beautiful dashboard.
+                    {t('hero.take_control_desc')}
                  </p>
 
                  <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mt-10">
@@ -53,13 +54,13 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                       onClick={() => handleAuth('signup')}
                       className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gray-900 rounded-full hover:bg-gray-800 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                     >
-                      {t('hero.cta_start')}
+                      {t('hero.start_tracking_free')}
                     </button>
                     <button 
                       onClick={onOpenDemo}
                       className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
                     >
-                      {t('hero.cta_demo')}
+                      {t('hero.view_live_demo')}
                     </button>
                  </div>
                  
@@ -69,7 +70,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                        <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
                        <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white"></div>
                     </div>
-                    <span>Trusted by 10,000+ users</span>
+                    <span>{t('hero.trusted')}</span>
                  </div>
               </div>
 
@@ -97,22 +98,22 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
             <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
          </div>
          <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
-            <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">Join the Community</h2>
+            <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">{t('hero.join_community')}</h2>
             <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-               Take control of your digital life. Join thousands of smart spenders today.
+               {t('hero.take_control_desc')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                <button 
                  onClick={() => handleAuth('signup')}
                  className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all shadow-xl"
                >
-                 Start Tracking Free
+                 {t('hero.start_tracking_free')}
                </button>
                <button 
                  onClick={onOpenDemo}
                  className="w-full sm:w-auto px-8 py-4 bg-transparent border border-gray-600 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all"
                >
-                 View Live Demo
+                 {t('hero.view_live_demo')}
                </button>
             </div>
          </div>

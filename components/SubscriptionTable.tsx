@@ -1,7 +1,9 @@
+
 import React from 'react';
 import BrandIcon from './BrandIcon';
 import { MoreHorizontal } from 'lucide-react';
 import { Subscription } from './SubscriptionModal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SubscriptionTableProps {
   subscriptions?: Subscription[];
@@ -9,6 +11,8 @@ interface SubscriptionTableProps {
 }
 
 export default function SubscriptionTable({ subscriptions = [], onSelectSubscription }: SubscriptionTableProps) {
+  const { formatPrice, formatDate } = useLanguage();
+
   // Fallback data if none provided (though usually it will be)
   const displaySubs = subscriptions.length > 0 ? subscriptions : [
     { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active' },
@@ -58,11 +62,11 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-gray-900">${sub.price.toFixed(2)}</div>
+                <div className="text-sm font-semibold text-gray-900">{formatPrice(sub.price)}</div>
                 <div className="text-xs text-gray-500">{sub.cycle}</div>
               </td>
               <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                {sub.nextDate}
+                {formatDate(sub.nextDate)}
               </td>
               <td className="px-6 py-4 text-right">
                 <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">

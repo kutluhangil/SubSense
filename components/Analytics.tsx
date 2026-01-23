@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -6,8 +7,8 @@ import { BRAND_COLORS } from '../utils/data';
 // --- Types ---
 interface DataPoint {
   label: string;
-  value: number;
-  prevValue: number;
+  value: number; // Base USD
+  prevValue: number; // Base USD
 }
 
 // --- Helper Functions ---
@@ -23,7 +24,7 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
     const p2 = points[i + 1];
     const p3 = points[i + 2] || p2;
 
-    const cp1x = p1.x + (p2.x - p0.x) * 0.2; // 0.2 is tension
+    const cp1x = p1.x + (p2.x - p0.x) * 0.2;
     const cp1y = p1.y + (p2.y - p0.y) * 0.2;
     const cp2x = p2.x - (p3.x - p1.x) * 0.2;
     const cp2y = p2.y - (p3.y - p1.y) * 0.2;
@@ -36,51 +37,46 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 // --- Components ---
 
-const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], color?: string }) => {
+const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurrency }: { data: DataPoint[], color?: string, convertPrice: (v: number) => number, currentCurrency: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isHovering, setIsHovering] = useState(false);
 
-  // Measure container dimensions for pixel-perfect rendering
   useEffect(() => {
     if (!containerRef.current) return;
-    
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width, height } = containerRef.current.getBoundingClientRect();
         setDimensions({ width, height });
       }
     };
-    
-    // Initial measurement
     updateDimensions();
-
-    // Observe resizing
     const resizeObserver = new ResizeObserver(updateDimensions);
     resizeObserver.observe(containerRef.current);
-    
     return () => resizeObserver.disconnect();
   }, []);
 
   const { width, height } = dimensions;
-  
-  // Layout constants
   const chartPadding = { top: 20, right: 10, bottom: 30, left: 50 };
 
-  // Memoize calculations
   const { points, pathD, fillPath, maxValue } = useMemo(() => {
     if (width === 0 || height === 0) return { points: [], pathD: '', fillPath: '', maxValue: 0 };
 
-    const max = Math.max(...data.map(d => d.value)) * 1.1; // 10% headroom
+    // Convert values for chart
+    const convertedData = data.map(d => ({
+        ...d,
+        value: convertPrice(d.value),
+        prevValue: convertPrice(d.prevValue)
+    }));
+
+    const max = Math.max(...convertedData.map(d => d.value)) * 1.1;
     const min = 0;
-    
-    // Available drawing area
     const drawWidth = width - chartPadding.left - chartPadding.right;
     const drawHeight = height - chartPadding.top - chartPadding.bottom;
 
-    const pts = data.map((d, i) => ({
-      x: chartPadding.left + (i / (data.length - 1)) * drawWidth,
+    const pts = convertedData.map((d, i) => ({
+      x: chartPadding.left + (i / (convertedData.length - 1)) * drawWidth,
       y: chartPadding.top + drawHeight - ((d.value - min) / (max - min)) * drawHeight,
       ...d
     }));
@@ -89,23 +85,17 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
     const fill = `${path} L ${pts[pts.length-1].x} ${chartPadding.top + drawHeight} L ${chartPadding.left} ${chartPadding.top + drawHeight} Z`;
     
     return { points: pts, pathD: path, fillPath: fill, maxValue: max };
-  }, [data, width, height, chartPadding]);
+  }, [data, width, height, chartPadding, convertPrice]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current || width === 0) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    
-    // Map x to nearest data point
     const drawWidth = width - chartPadding.left - chartPadding.right;
     const chartX = x - chartPadding.left;
-    
-    // Allow a bit of buffer for mouse outside exact chart area
     if (chartX < -10 || chartX > drawWidth + 10) return;
-    
     const rawIndex = (chartX / drawWidth) * (data.length - 1);
     const index = Math.round(Math.max(0, Math.min(data.length - 1, rawIndex)));
-    
     setHoveredIndex(index);
     setIsHovering(true);
   };
@@ -124,7 +114,6 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
     >
-      {/* SVG Rendering Layer */}
       {width > 0 && height > 0 && (
         <svg 
             width={width} 
@@ -139,115 +128,47 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
              </linearGradient>
            </defs>
 
-           {/* Grid Lines */}
            {[0, 0.25, 0.5, 0.75, 1].map((tick, i) => {
                const y = chartPadding.top + (height - chartPadding.top - chartPadding.bottom) * (1 - tick);
                const val = Math.round(maxValue * tick);
                return (
                    <g key={i}>
-                       <line 
-                           x1={chartPadding.left} 
-                           y1={y} 
-                           x2={width - chartPadding.right} 
-                           y2={y} 
-                           stroke="#F3F4F6" 
-                           strokeDasharray="4 4" 
-                       />
-                       {/* Y-Axis Labels inside SVG for alignment */}
-                       <text 
-                           x={chartPadding.left - 10} 
-                           y={y} 
-                           dy="3" 
-                           textAnchor="end" 
-                           className="text-[10px] fill-gray-400 font-medium"
-                       >
-                           ${val.toLocaleString()}
+                       <line x1={chartPadding.left} y1={y} x2={width - chartPadding.right} y2={y} stroke="#F3F4F6" strokeDasharray="4 4" />
+                       <text x={chartPadding.left - 10} y={y} dy="3" textAnchor="end" className="text-[10px] fill-gray-400 font-medium">
+                           {val.toLocaleString()}
                        </text>
                    </g>
                );
            })}
-           
-           {/* Area Fill */}
            <path d={fillPath} fill="url(#trendGradient)" className="transition-opacity duration-300 hidden sm:block" />
-           
-           {/* Line */}
-           <path 
-             d={pathD} 
-             fill="none" 
-             stroke={color} 
-             strokeWidth="2" 
-             strokeLinecap="round" 
-             strokeLinejoin="round" 
-             className="drop-shadow-sm"
-           />
-
-           {/* Vertical Hover Line */}
+           <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-sm" />
            {isHovering && hoveredPoint && (
-             <line 
-                x1={hoveredPoint.x} y1={chartPadding.top} 
-                x2={hoveredPoint.x} y2={height - chartPadding.bottom} 
-                stroke={color} 
-                strokeWidth="1" 
-                strokeDasharray="4 4" 
-                opacity="0.3"
-             />
+             <line x1={hoveredPoint.x} y1={chartPadding.top} x2={hoveredPoint.x} y2={height - chartPadding.bottom} stroke={color} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
            )}
-
-           {/* Data Points */}
            {points.map((p, i) => {
              const isHovered = hoveredIndex === i;
              return (
-               <circle 
-                 key={i}
-                 cx={p.x} 
-                 cy={p.y} 
-                 r={isHovered ? 4 : 3} 
-                 fill={color} 
-                 stroke="white" 
-                 strokeWidth={isHovered ? 2 : 1.5}
-                 className={`transition-all duration-200 ${isHovered ? 'shadow-md' : ''}`}
-               />
+               <circle key={i} cx={p.x} cy={p.y} r={isHovered ? 4 : 3} fill={color} stroke="white" strokeWidth={isHovered ? 2 : 1.5} className={`transition-all duration-200 ${isHovered ? 'shadow-md' : ''}`} />
              );
            })}
-
-           {/* X-Axis Labels */}
            {points.map((p, i) => (
-               <text 
-                   key={i}
-                   x={p.x} 
-                   y={height - 10} 
-                   textAnchor="middle" 
-                   className={`text-[10px] font-medium uppercase tracking-wide fill-gray-400 transition-colors ${hoveredIndex === i ? 'fill-gray-900 font-bold' : ''}`}
-               >
+               <text key={i} x={p.x} y={height - 10} textAnchor="middle" className={`text-[10px] font-medium uppercase tracking-wide fill-gray-400 transition-colors ${hoveredIndex === i ? 'fill-gray-900 font-bold' : ''}`}>
                    {p.label}
                </text>
            ))}
         </svg>
       )}
-
-      {/* HTML Tooltip Overlay - Compact & Precise */}
       {isHovering && hoveredPoint && (
-         <div 
-            className="absolute z-20 pointer-events-none transition-all duration-100 ease-out"
-            style={{ 
-                left: hoveredPoint.x,
-                top: hoveredPoint.y,
-                transform: `translate(-50%, -140%)` 
-            }}
-         >
+         <div className="absolute z-20 pointer-events-none transition-all duration-100 ease-out" style={{ left: hoveredPoint.x, top: hoveredPoint.y, transform: `translate(-50%, -140%)` }}>
             <div className="bg-[#0f0f14]/95 text-white rounded-md px-3 py-2 shadow-none border border-white/10 w-max min-w-[100px]">
                 <div className="flex items-center justify-between gap-4 mb-0.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{hoveredPoint.label}</span>
-                    <span className={`text-[10px] font-bold ${
-                        ((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <span className={`text-[10px] font-bold ${((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'}`}>
                         {((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? '+' : ''}
                         {Math.abs(((hoveredPoint.value - hoveredPoint.prevValue)/hoveredPoint.prevValue)*100).toFixed(1)}%
                     </span>
                 </div>
-                <div className="text-base font-bold">${hoveredPoint.value.toLocaleString()}</div>
-                
-                {/* Tooltip Arrow */}
+                <div className="text-base font-bold">{currentCurrency} {hoveredPoint.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#0f0f14]/95"></div>
             </div>
          </div>
@@ -257,16 +178,14 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
 };
 
 const SpendingHeatmap = () => {
-  // Mock last 3 months (approx 12 weeks)
   const weeks = 14;
   const days = 7;
-  // Pseudo-random activity
   const getActivity = (w: number, d: number) => {
     const val = Math.random();
-    if (val > 0.8) return 'bg-gray-900'; // High
-    if (val > 0.6) return 'bg-gray-600'; // Med
-    if (val > 0.4) return 'bg-gray-300'; // Low
-    return 'bg-gray-100'; // None
+    if (val > 0.8) return 'bg-gray-900'; 
+    if (val > 0.6) return 'bg-gray-600'; 
+    if (val > 0.4) return 'bg-gray-300'; 
+    return 'bg-gray-100'; 
   };
 
   return (
@@ -278,7 +197,6 @@ const SpendingHeatmap = () => {
                <div 
                  key={`${w}-${d}`} 
                  className={`w-3 h-3 rounded-[2px] ${getActivity(w, d)} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400 transition-all cursor-pointer`}
-                 title={`Activity level: ${w*d}`}
                ></div>
              ))}
            </div>
@@ -296,12 +214,12 @@ const SpendingHeatmap = () => {
   );
 };
 
-const CostDistributionChart = () => {
+const CostDistributionChart = ({ formatPrice }: { formatPrice: (v:number) => string }) => {
   const data = [
     { name: 'Netflix', value: 19.99, color: BRAND_COLORS['netflix'] },
     { name: 'Spotify', value: 14.99, color: BRAND_COLORS['spotify'] },
     { name: 'Adobe', value: 54.99, color: BRAND_COLORS['adobe'] },
-    { name: 'Amazon', value: 139.00/12, color: BRAND_COLORS['amazon'] }, // Monthly equiv
+    { name: 'Amazon', value: 139.00/12, color: BRAND_COLORS['amazon'] },
     { name: 'Others', value: 45.00, color: '#9CA3AF' }
   ];
 
@@ -316,30 +234,22 @@ const CostDistributionChart = () => {
               const start = cumulativePercent;
               const pct = seg.value / total;
               cumulativePercent += pct;
-              
               const circumference = 2 * Math.PI * 40; 
               const strokeDasharray = `${pct * circumference} ${circumference}`;
               const strokeDashoffset = -1 * start * circumference;
-
               return (
                 <circle 
-                  key={i}
-                  cx="50" cy="50" r="40"
-                  fill="none"
-                  stroke={seg.color}
-                  strokeWidth="12"
-                  strokeDasharray={strokeDasharray}
-                  strokeDashoffset={strokeDashoffset}
+                  key={i} cx="50" cy="50" r="40" fill="none" stroke={seg.color} strokeWidth="12"
+                  strokeDasharray={strokeDasharray} strokeDashoffset={strokeDashoffset}
                   className="transition-all duration-300 hover:stroke-[14] cursor-pointer"
                 />
               )
            })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-xs font-bold text-gray-900">${Math.round(total)}</span>
+          <span className="text-xs font-bold text-gray-900">{formatPrice(total)}</span>
         </div>
       </div>
-
       <div className="flex-1 space-y-2">
          {data.slice(0, 4).map((d, i) => (
            <div key={i} className="flex items-center justify-between text-xs">
@@ -347,7 +257,7 @@ const CostDistributionChart = () => {
                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }}></div>
                <span className="font-medium text-gray-700">{d.name}</span>
              </div>
-             <span className="text-gray-500 font-medium">${d.value.toFixed(2)}</span>
+             <span className="text-gray-500 font-medium">{formatPrice(d.value)}</span>
            </div>
          ))}
       </div>
@@ -364,8 +274,7 @@ const AIInsightCard = ({ icon: Icon, title, desc, color }: any) => (
         </div>
         <div>
            <h4 className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-2">
-             {title} 
-             <Sparkles size={12} className="text-yellow-500" />
+             {title} <Sparkles size={12} className="text-yellow-500" />
            </h4>
            <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
         </div>
@@ -373,29 +282,23 @@ const AIInsightCard = ({ icon: Icon, title, desc, color }: any) => (
   </div>
 );
 
-const ComparisonWidget = () => {
+const ComparisonWidget = ({ formatPrice }: { formatPrice: (v:number) => string }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-end gap-2 h-32 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
-         {/* Grid Lines */}
          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50">
            <div className="border-t border-dashed border-gray-100 w-full"></div>
            <div className="border-t border-dashed border-gray-100 w-full"></div>
            <div className="border-t border-dashed border-gray-100 w-full"></div>
          </div>
-         
-         {/* Bars */}
          {[
-           { label: 'You', height: '65%', color: 'bg-gray-900', val: '$145' },
-           { label: 'Avg User', height: '80%', color: 'bg-gray-300', val: '$190' },
-           { label: 'Friends', height: '45%', color: 'bg-blue-500', val: '$110' },
+           { label: 'You', height: '65%', color: 'bg-gray-900', val: 145 },
+           { label: 'Avg User', height: '80%', color: 'bg-gray-300', val: 190 },
+           { label: 'Friends', height: '45%', color: 'bg-blue-500', val: 110 },
          ].map((bar, i) => (
            <div key={i} className="flex flex-col items-center justify-end h-full w-1/4 group relative z-10">
-              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5">{bar.val}</span>
-              <div 
-                className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${bar.color}`} 
-                style={{ height: bar.height }}
-              ></div>
+              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5">{formatPrice(bar.val)}</span>
+              <div className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${bar.color}`} style={{ height: bar.height }}></div>
               <span className="text-[10px] font-medium text-gray-400 mt-2">{bar.label}</span>
            </div>
          ))}
@@ -408,11 +311,10 @@ const ComparisonWidget = () => {
 };
 
 export default function Analytics() {
-  const { t } = useLanguage();
+  const { t, currentCurrency, formatPrice, convertPrice } = useLanguage();
   const [dateRange, setDateRange] = useState('Last 6 Months');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
 
-  // Mock Data
   const personalTrendData = [
     { label: 'Jan', value: 1850, prevValue: 1700 },
     { label: 'Feb', value: 2100, prevValue: 1850 },
@@ -437,7 +339,6 @@ export default function Analytics() {
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
       
-      {/* 1. Header & Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('analytics.title')}</h2>
@@ -445,30 +346,15 @@ export default function Analytics() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-           {/* View Toggle */}
            <div className="bg-gray-100 p-1 rounded-xl flex items-center">
-              <button 
-                onClick={() => setViewMode('personal')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {t('analytics.personal')}
-              </button>
-              <button 
-                onClick={() => setViewMode('friends')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'friends' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                {t('analytics.friends')}
-              </button>
+              <button onClick={() => setViewMode('personal')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.personal')}</button>
+              <button onClick={() => setViewMode('friends')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'friends' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.friends')}</button>
            </div>
-
-           {/* Filter */}
            <button className="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
               <Calendar size={16} className="text-gray-400" />
               <span>{dateRange}</span>
               <ChevronDown size={14} className="text-gray-400 ml-1" />
            </button>
-           
-           {/* Export */}
            <button className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm active:scale-95">
               <Download size={16} />
               <span className="hidden sm:inline">{t('analytics.export')}</span>
@@ -476,31 +362,23 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* 2. Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-         {/* Lifetime Spending */}
          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-               <Trophy size={64} />
-            </div>
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
             <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.lifetime')}</p>
-            <h3 className="text-3xl font-bold mb-1">$12,450</h3>
+            <h3 className="text-3xl font-bold mb-1">{formatPrice(12450)}</h3>
             <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg">
                <Trophy size={12} className="text-yellow-400" /> Top 5% Spender
             </div>
          </div>
-
-         {/* Savings Potential */}
          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:border-green-200 transition-colors">
             <div className="flex justify-between items-start mb-2">
                <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
                <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+4%</span>
             </div>
             <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{t('analytics.potential_save')}</p>
-            <h3 className="text-2xl font-bold text-gray-900">$48.00<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
+            <h3 className="text-2xl font-bold text-gray-900">{formatPrice(48.00)}<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
          </div>
-
-         {/* Heatmap Mini */}
          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col justify-between">
             <div className="flex justify-between items-center mb-2">
                <p className="text-gray-900 font-bold text-sm">{t('analytics.heatmap')}</p>
@@ -510,9 +388,7 @@ export default function Analytics() {
          </div>
       </div>
 
-      {/* 3. Main Chart Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Trend Chart */}
          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -524,55 +400,33 @@ export default function Analytics() {
                 <span>8.2%</span>
               </div>
             </div>
-            <SpendingTrendChart data={currentData} color={trendColor} />
+            <SpendingTrendChart data={currentData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
          </div>
-
-         {/* Side Widgets */}
          <div className="space-y-6">
-            {/* Cost Distribution */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
                <div className="flex items-center justify-between mb-6">
                   <h3 className="text-base font-bold text-gray-900">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDistributionChart />
+               <CostDistributionChart formatPrice={formatPrice} />
             </div>
-
-            {/* Comparison Widget */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
                <h3 className="text-base font-bold text-gray-900 mb-4">{t('analytics.global_compare')}</h3>
-               <ComparisonWidget />
+               <ComparisonWidget formatPrice={formatPrice} />
             </div>
          </div>
       </div>
 
-      {/* 4. AI Insights Panel */}
       <div>
          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
            <Sparkles size={20} className="text-purple-600" /> {t('analytics.ai_insights')}
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <AIInsightCard 
-               icon={ArrowUpRight}
-               title="Entertainment Spike"
-               desc="Your entertainment spending increased by 12% this quarter — mostly due to Netflix and Disney+ price hikes."
-               color="bg-red-500"
-            />
-            <AIInsightCard 
-               icon={Globe}
-               title="Regional Optimization"
-               desc="You’re spending 35% above average compared to users in your country for SaaS tools."
-               color="bg-blue-500"
-            />
-            <AIInsightCard 
-               icon={Lightbulb}
-               title="Duplicate Services"
-               desc="Spotify and YouTube Premium overlap — you could save $9.99 monthly by canceling one."
-               color="bg-yellow-500"
-            />
+            <AIInsightCard icon={ArrowUpRight} title="Entertainment Spike" desc="Your entertainment spending increased by 12% this quarter — mostly due to Netflix and Disney+ price hikes." color="bg-red-500" />
+            <AIInsightCard icon={Globe} title="Regional Optimization" desc="You’re spending 35% above average compared to users in your country for SaaS tools." color="bg-blue-500" />
+            <AIInsightCard icon={Lightbulb} title="Duplicate Services" desc="Spotify and YouTube Premium overlap — you could save $9.99 monthly by canceling one." color="bg-yellow-500" />
          </div>
       </div>
-
     </div>
   );
 }

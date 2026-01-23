@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { CreditCard, Globe, Bell, PieChart, Users, Shield, ArrowRight, Zap, Smartphone, Layers, CheckCircle2 } from 'lucide-react';
 import BrandIcon from './BrandIcon';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface FeaturesProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
@@ -8,36 +10,38 @@ interface FeaturesProps {
 }
 
 export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
+  const { t } = useLanguage();
+
   const features = [
     {
       icon: Layers,
-      title: "Smart Subscription Tracking",
-      description: "Automatically organize and monitor all your subscriptions in one minimalist dashboard. Never lose track of a recurring payment again."
+      title: t('features.main.smart_tracking.title'),
+      description: t('features.main.smart_tracking.desc')
     },
     {
       icon: Globe,
-      title: "Global Price Comparison",
-      description: "Instantly see how subscription costs differ across currencies and countries to find the best deals worldwide."
+      title: t('features.main.global_price.title'),
+      description: t('features.main.global_price.desc')
     },
     {
       icon: Bell,
-      title: "Payment Reminders",
-      description: "Get notified 3 days before any renewal or price increase. We help you avoid surprise charges."
+      title: t('features.main.payment_reminders.title'),
+      description: t('features.main.payment_reminders.desc')
     },
     {
       icon: PieChart,
-      title: "Expense Analytics",
-      description: "Visualize your monthly and yearly spending with clean charts. Understand exactly where your money goes."
+      title: t('features.main.expense_analytics.title'),
+      description: t('features.main.expense_analytics.desc')
     },
     {
       icon: Users,
-      title: "Social Tracking",
-      description: "See what your friends use and share subscriptions securely. Split costs and manage shared family plans effortlessly."
+      title: t('features.main.social_tracking.title'),
+      description: t('features.main.social_tracking.desc')
     },
     {
       icon: CreditCard,
-      title: "Multi-Currency Support",
-      description: "View all payments in your local or global currency with real-time exchange rate conversion."
+      title: t('features.main.multi_currency.title'),
+      description: t('features.main.multi_currency.desc')
     }
   ];
 
@@ -56,11 +60,11 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6 max-w-4xl">
-            Everything you need to stay on top of your <span className="text-gray-500">subscriptions.</span>
+            {t('features.main.hero_title')}
           </h1>
           
           <p className="mt-4 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            One platform to track, compare, and optimize all your recurring expenses — across every service, currency, and country.
+            {t('features.main.hero_sub')}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
@@ -68,13 +72,13 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
               onClick={() => onOpenAuth('signup')}
               className="w-full sm:w-auto px-8 py-3.5 text-base font-semibold text-white bg-gray-900 rounded-full hover:bg-gray-800 hover:shadow-lg transition-all duration-200"
             >
-              Start Tracking Free
+              {t('hero.start_tracking_free')}
             </button>
             <button 
               onClick={onOpenDemo}
               className="w-full sm:w-auto px-8 py-3.5 text-base font-medium text-gray-600 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 transition-all duration-200"
             >
-              View Demo
+              {t('hero.view_live_demo')}
             </button>
           </div>
         </div>
@@ -211,7 +215,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
                     <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-xs font-bold text-gray-400 border border-gray-100">SP</div>
                     <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-xs font-bold text-gray-400 border border-gray-100">YT</div>
                  </div>
-                 <div className="w-full bg-gray-900 text-white py-2 rounded-lg text-center text-sm font-medium">Add Friend</div>
+                 <div className="w-full bg-gray-900 text-white py-2 rounded-lg text-center text-sm font-medium">{t('friends.add_btn')}</div>
               </div>
             </div>
           </div>
@@ -238,13 +242,13 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
               onClick={() => onOpenAuth('signup')}
               className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-white bg-gray-900 rounded-full hover:bg-gray-800 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1"
             >
-              Start Tracking for Free
+              {t('hero.start_tracking_free')}
             </button>
             <button 
                onClick={() => onOpenAuth('signup')}
                className="w-full sm:w-auto px-8 py-4 text-lg font-medium text-gray-900 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all"
             >
-              Sign Up Now
+              {t('nav.signup')} Now
             </button>
           </div>
         </div>
