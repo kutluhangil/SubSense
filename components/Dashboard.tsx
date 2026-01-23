@@ -8,6 +8,7 @@ import Analytics from './Analytics';
 import Settings from './Settings';
 import Comparison from './Comparison';
 import HelpCenter from './HelpCenter';
+import Profile from './Profile';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import { Plus } from 'lucide-react';
@@ -111,13 +112,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 </>
             )}
 
+            {currentView === 'profile' && <Profile />}
             {currentView === 'friends' && <Friends />}
             {currentView === 'analytics' && <Analytics />}
             {currentView === 'compare' && <Comparison />}
             {currentView === 'settings' && <Settings />}
             {currentView === 'help' && <HelpCenter />}
             
-            {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare' && currentView !== 'help' && currentView !== 'subscriptions') && (
+            {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare' && currentView !== 'help' && currentView !== 'subscriptions' && currentView !== 'profile') && (
                 <div className="flex flex-col items-center justify-center h-[60vh] text-center">
                     <div className="p-4 bg-gray-100 rounded-full mb-4">
                     <Plus className="w-8 h-8 text-gray-400" />

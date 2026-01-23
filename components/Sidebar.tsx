@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft } from 'lucide-react';
+import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -14,6 +15,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
 
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: t('sidebar.dashboard') },
+    { id: 'profile', icon: User, label: t('sidebar.profile') },
     { id: 'friends', icon: Users, label: t('sidebar.friends') },
     { id: 'subscriptions', icon: CreditCard, label: t('sidebar.subscriptions') },
     { id: 'analytics', icon: PieChart, label: t('sidebar.analytics') },
