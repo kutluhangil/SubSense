@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -37,29 +37,61 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 // --- Components ---
 
 const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], color?: string }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
 
-  const maxValue = Math.max(...data.map(d => d.value)) * 1.1;
-  const minValue = 0;
-  
-  // Calculate coordinates
-  const points = data.map((d, i) => ({
-    x: (i / (data.length - 1)) * 100,
-    y: 100 - ((d.value - minValue) / (maxValue - minValue)) * 100,
-    ...d
-  }));
+  // Memoize calculations
+  const { points, pathD, fillPath, maxValue } = useMemo(() => {
+    const max = Math.max(...data.map(d => d.value)) * 1.1; // 10% headroom
+    const min = 0;
+    
+    const pts = data.map((d, i) => ({
+      x: (i / (data.length - 1)) * 100,
+      y: 100 - ((d.value - min) / (max - min)) * 100,
+      ...d
+    }));
 
-  const pathD = generateSmoothPath(points);
-  const fillPath = `${pathD} L 100 100 L 0 100 Z`;
+    const path = generateSmoothPath(pts);
+    const fill = `${path} L 100 100 L 0 100 Z`;
+    
+    return { points: pts, pathD: path, fillPath: fill, maxValue: max };
+  }, [data]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const width = rect.width;
+    
+    // Find nearest point
+    const index = Math.round((x / width) * (data.length - 1));
+    if (index >= 0 && index < data.length) {
+        setHoveredIndex(index);
+    }
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setHoveredIndex(null);
+  };
+
+  const hoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : null;
 
   return (
-    <div className="h-72 w-full relative group/chart">
+    <div 
+        ref={containerRef}
+        className="h-72 w-full relative group/chart cursor-crosshair select-none"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+    >
       {/* Y-Axis Grid */}
-      <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 pb-8 pl-0">
+      <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 pb-8 pl-0 pointer-events-none">
         {[100, 75, 50, 25, 0].map(pct => (
-          <div key={pct} className="w-full flex items-center border-b border-dashed border-gray-100 h-0">
+          <div key={pct} className="w-full flex items-center border-b border-dashed border-gray-100 h-0 relative">
              <span className="absolute left-0 -translate-y-1/2 bg-white pr-2 z-10 font-medium">
-               ${Math.round((pct/100) * maxValue)}
+               ${Math.round((pct/100) * maxValue).toLocaleString()}
              </span>
           </div>
         ))}
@@ -76,59 +108,48 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
            </defs>
            
            {/* Area Fill */}
-           <path d={fillPath} fill="url(#trendGradient)" className="transition-opacity duration-300" />
+           <path d={fillPath} fill="url(#trendGradient)" className="transition-opacity duration-300 hidden sm:block" />
            
            {/* Line */}
            <path 
              d={pathD} 
              fill="none" 
              stroke={color} 
-             strokeWidth="2.5" 
+             strokeWidth="2" 
              strokeLinecap="round" 
              strokeLinejoin="round" 
              vectorEffect="non-scaling-stroke"
              className="drop-shadow-sm"
            />
 
-           {/* Interactive Points */}
+           {/* Vertical Hover Line */}
+           {isHovering && hoveredPoint && (
+             <line 
+                x1={`${hoveredPoint.x}%`} y1="0" 
+                x2={`${hoveredPoint.x}%`} y2="100" 
+                stroke={color} 
+                strokeWidth="1" 
+                strokeDasharray="4 4" 
+                opacity="0.2"
+                vectorEffect="non-scaling-stroke"
+             />
+           )}
+
+           {/* Data Points */}
            {points.map((p, i) => {
              const isHovered = hoveredIndex === i;
-             const pctChange = ((p.value - p.prevValue) / p.prevValue) * 100;
-             const isPos = pctChange >= 0;
-
              return (
-               <g key={i} onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)}>
-                 {/* Invisible Hit Area */}
-                 <circle cx={`${p.x}%`} cy={`${p.y}%`} r="6" fill="transparent" className="cursor-pointer" />
-                 
-                 {/* Visible Dot */}
-                 <circle 
-                   cx={`${p.x}%`} 
-                   cy={`${p.y}%`} 
-                   r={isHovered ? "5" : "3.5"} 
-                   fill={color} 
-                   stroke="white" 
-                   strokeWidth="2" 
-                   className={`transition-all duration-200 ${isHovered ? 'shadow-md' : ''}`}
-                 />
-
-                 {/* Tooltip */}
-                 <foreignObject x={`${p.x}%`} y={`${p.y}%`} width="150" height="100" style={{ overflow: 'visible', pointerEvents: 'none' }}>
-                    <div className={`transform -translate-x-1/2 -translate-y-[130%] flex flex-col items-center transition-all duration-200 ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                       <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl min-w-[120px]">
-                          <p className="font-semibold mb-1 border-b border-gray-700 pb-1">{p.label}</p>
-                          <div className="flex justify-between items-center gap-3">
-                             <span className="font-bold">${p.value.toLocaleString()}</span>
-                             <span className={`text-[10px] ${isPos ? 'text-green-400' : 'text-red-400'}`}>
-                                {isPos ? '+' : ''}{pctChange.toFixed(1)}%
-                             </span>
-                          </div>
-                       </div>
-                       {/* Triangle Pointer */}
-                       <div className="w-2 h-2 bg-gray-900 rotate-45 transform -translate-y-1"></div>
-                    </div>
-                 </foreignObject>
-               </g>
+               <circle 
+                 key={i}
+                 cx={`${p.x}%`} 
+                 cy={`${p.y}%`} 
+                 r={isHovered ? "4" : "3"} 
+                 fill={color} 
+                 stroke="white" 
+                 strokeWidth="1.5" 
+                 className={`transition-all duration-200 ${isHovered ? 'shadow-md scale-110' : ''}`}
+                 style={{ opacity: isHovering && !isHovered ? 0.5 : 1 }}
+               />
              );
            })}
         </svg>
@@ -136,8 +157,41 @@ const SpendingTrendChart = ({ data, color = "#111827" }: { data: DataPoint[], co
 
       {/* X-Axis Labels */}
       <div className="absolute bottom-0 left-10 right-2 flex justify-between text-xs text-gray-400 font-medium uppercase tracking-wide">
-         {data.map((d, i) => <span key={i}>{d.label}</span>)}
+         {data.map((d, i) => (
+             <span key={i} className={`transition-colors ${hoveredIndex === i ? 'text-gray-900 font-bold' : ''}`}>
+                 {d.label}
+             </span>
+         ))}
       </div>
+
+      {/* HTML Tooltip Overlay */}
+      {isHovering && hoveredPoint && (
+         <div 
+            className="absolute z-20 transition-all duration-100 ease-out pointer-events-none"
+            style={{ 
+                left: `calc(10% + ${hoveredPoint.x * 0.9}%)`, // Adjust for left padding (10%) and width factor
+                top: `${hoveredPoint.y}%`,
+                transform: `translate(-50%, -130%)` 
+            }}
+         >
+            <div className="bg-[#0f0f14]/90 backdrop-blur-md text-white rounded-lg px-3 py-2 shadow-xl border border-white/10 w-max max-w-[180px]">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{hoveredPoint.label}</div>
+                <div className="text-base font-bold mb-0.5">${hoveredPoint.value.toLocaleString()}</div>
+                
+                {/* Percentage Change */}
+                <div className={`text-[11px] font-medium flex items-center ${
+                    ((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'
+                }`}>
+                    {((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? <TrendingUp size={10} className="mr-1" /> : <TrendingUp size={10} className="mr-1 rotate-180" />}
+                    {Math.abs(((hoveredPoint.value - hoveredPoint.prevValue)/hoveredPoint.prevValue)*100).toFixed(1)}% 
+                    <span className="text-gray-500 ml-1 font-normal">vs last mo</span>
+                </div>
+                
+                {/* Tooltip Arrow */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#0f0f14]/90"></div>
+            </div>
+         </div>
+       )}
     </div>
   );
 };
