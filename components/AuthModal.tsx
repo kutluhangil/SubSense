@@ -1,20 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import LegalModal from './LegalModal';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode: 'login' | 'signup';
   onLogin?: () => void;
-  onSimulateReset?: () => void; // For demo purposes to switch to ResetPage
+  onSimulateReset?: () => void;
 }
 
 export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSimulateReset }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
   const { t } = useLanguage();
   
   // Form Data State
@@ -77,6 +79,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
   if (!isOpen) return null;
 
   return (
+     <>
      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
         {/* Backdrop */}
         <div 
@@ -366,19 +369,38 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      </div>
 
-                     {/* Terms */}
+                     {/* Terms - Fixed Layout */}
                      <div className="pt-2">
-                        <label className="flex items-start gap-3 cursor-pointer group">
-                           <input 
-                              type="checkbox" 
-                              checked={formData.agreedToTerms}
-                              onChange={(e) => handleChange('agreedToTerms', e.target.checked)}
-                              className="mt-1 rounded border-gray-300 text-gray-900 focus:ring-gray-900 w-4 h-4 cursor-pointer" 
-                           />
-                           <span className="text-xs text-gray-500 leading-snug group-hover:text-gray-700 transition-colors">
-                              I agree to the <a href="#" className="font-bold text-gray-900 hover:underline">Terms of Service</a> and <a href="#" className="font-bold text-gray-900 hover:underline">Privacy Policy</a>.
-                           </span>
-                        </label>
+                        <div className="flex items-start gap-3">
+                           <div className="flex h-5 items-center">
+                             <input
+                               id="terms"
+                               type="checkbox"
+                               checked={formData.agreedToTerms}
+                               onChange={(e) => handleChange('agreedToTerms', e.target.checked)}
+                               className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                             />
+                           </div>
+                           <label htmlFor="terms" className="text-xs text-gray-500 leading-snug cursor-pointer select-none">
+                             I agree to the{' '}
+                             <button 
+                               type="button" 
+                               onClick={(e) => { e.preventDefault(); setLegalModalType('terms'); }} 
+                               className="font-semibold text-gray-900 hover:underline focus:outline-none"
+                             >
+                               Terms of Service
+                             </button>
+                             {' '}and{' '}
+                             <button 
+                               type="button" 
+                               onClick={(e) => { e.preventDefault(); setLegalModalType('privacy'); }} 
+                               className="font-semibold text-gray-900 hover:underline focus:outline-none"
+                             >
+                               Privacy Policy
+                             </button>
+                             .
+                           </label>
+                        </div>
                      </div>
 
                      <button 
@@ -425,5 +447,15 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
            </div>
         </div>
      </div>
+
+     {/* Legal Modal Overlay */}
+     {legalModalType && (
+        <LegalModal 
+           isOpen={true} 
+           type={legalModalType} 
+           onClose={() => setLegalModalType(null)} 
+        />
+     )}
+     </>
   );
 }
