@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -6,6 +7,7 @@ import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import DemoModal from './components/DemoModal';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 function AppContent() {
@@ -13,7 +15,7 @@ function AppContent() {
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentPage, setCurrentPage] = useState<'home' | 'features'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
 
   const openAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -33,6 +35,7 @@ function AppContent() {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setIsAuthOpen(false);
+    setCurrentPage('home'); // Reset page context on login
   };
 
   const handleLogout = () => {
@@ -40,16 +43,34 @@ function AppContent() {
     setCurrentPage('home');
   };
 
+  const handleSimulateReset = () => {
+    setIsAuthOpen(false); // Close modal
+    setCurrentPage('reset-password'); // Switch to standalone page
+    window.scrollTo(0,0);
+  };
+
   if (isLoggedIn) {
     return <Dashboard onLogout={handleLogout} />;
+  }
+
+  // Standalone Reset Password Page View
+  if (currentPage === 'reset-password') {
+    return (
+      <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+        <ResetPasswordPage onLoginClick={() => {
+          setCurrentPage('home');
+          openAuth('login');
+        }} />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
       <Navbar 
         onOpenAuth={openAuth} 
-        onNavigate={setCurrentPage} 
-        currentPage={currentPage}
+        onNavigate={(page) => setCurrentPage(page as any)} 
+        currentPage={currentPage as 'home' | 'features'}
       />
       <main className="flex-grow flex flex-col">
         {currentPage === 'home' ? (
@@ -64,6 +85,7 @@ function AppContent() {
         onClose={() => setIsAuthOpen(false)} 
         initialMode={authMode}
         onLogin={handleLogin}
+        onSimulateReset={handleSimulateReset}
       />
       <DemoModal 
         isOpen={isDemoOpen}

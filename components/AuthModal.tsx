@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface AuthModalProps {
@@ -8,10 +8,11 @@ interface AuthModalProps {
   onClose: () => void;
   initialMode: 'login' | 'signup';
   onLogin?: () => void;
+  onSimulateReset?: () => void; // For demo purposes to switch to ResetPage
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: AuthModalProps) {
-  const [mode, setMode] = useState(initialMode);
+export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSimulateReset }: AuthModalProps) {
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useLanguage();
@@ -42,8 +43,11 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
   useEffect(() => {
     if (isOpen) {
         setMode(initialMode);
-        // Reset form on open if desired, or keep state
         setShowPassword(false);
+        // Reset email-sent state when reopening
+        if (initialMode !== 'login' && initialMode !== 'signup') {
+           setMode('login');
+        }
     }
   }, [initialMode, isOpen]);
 
@@ -58,8 +62,16 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      if (onLogin) onLogin(); // Triggers global login state in App
+      if (mode === 'forgot-password') {
+        setMode('email-sent');
+      } else if (onLogin) {
+        onLogin(); // Triggers global login state in App
+      }
     }, 1500);
+  };
+
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   if (!isOpen) return null;
@@ -84,23 +96,46 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
            </button>
 
            {/* Scrollable Content Area */}
-           <div className="overflow-y-auto p-8 custom-scrollbar">
+           <div className="overflow-y-auto p-8 custom-scrollbar relative">
               
-              {/* Header */}
+              {/* --- Header Section --- */}
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {mode === 'login' ? t('auth.welcome') : "Create your account"}
-                </h2>
-                <p className="text-gray-500 text-sm">
-                  {mode === 'login' 
-                    ? t('auth.login_desc') 
-                    : "Start tracking and managing your subscriptions today."}
-                </p>
+                {mode === 'login' && (
+                  <>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.welcome')}</h2>
+                    <p className="text-gray-500 text-sm">{t('auth.login_desc')}</p>
+                  </>
+                )}
+                {mode === 'signup' && (
+                  <>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Create your account</h2>
+                    <p className="text-gray-500 text-sm">Start tracking and managing your subscriptions today.</p>
+                  </>
+                )}
+                {mode === 'forgot-password' && (
+                  <>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset your password</h2>
+                    <p className="text-gray-500 text-sm">Enter your email address and we’ll send you a reset link.</p>
+                  </>
+                )}
+                {mode === 'email-sent' && (
+                  <div className="animate-in fade-in zoom-in-95 duration-300">
+                    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Mail size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your inbox</h2>
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      If an account exists for <span className="font-semibold text-gray-700">{formData.email}</span>, we've sent a password reset link.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              {/* --- Forms --- */}
 
               {/* Login Form */}
               {mode === 'login' && (
-                  <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if(onLogin) onLogin(); }}>
+                  <form className="space-y-5" onSubmit={handleSubmit}>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">{t('auth.email')}</label>
                       <div className="relative group">
@@ -109,6 +144,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                             type="email" 
                             className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white placeholder-gray-400"
                             placeholder="name@example.com"
+                            value={formData.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
                           />
                       </div>
                     </div>
@@ -124,12 +161,77 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                       </div>
                     </div>
                     <div className="flex justify-end">
-                      <a href="#" className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors">Forgot password?</a>
+                      <button 
+                        type="button" 
+                        onClick={() => setMode('forgot-password')} 
+                        className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                     <button type="submit" className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center transform active:scale-[0.98]">
-                      {t('auth.submit_login')} <ArrowRight size={18} className="ml-2" />
+                      {isSubmitting ? 'Logging in...' : t('auth.submit_login')} 
+                      {!isSubmitting && <ArrowRight size={18} className="ml-2" />}
                     </button>
                   </form>
+              )}
+
+              {/* Forgot Password Form */}
+              {mode === 'forgot-password' && (
+                  <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">{t('auth.email')}</label>
+                      <div className="relative group">
+                          <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                          <input 
+                            type="email" 
+                            className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white placeholder-gray-400"
+                            placeholder="name@example.com"
+                            value={formData.email}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                            required
+                          />
+                      </div>
+                    </div>
+                    <button 
+                      type="submit" 
+                      disabled={!isValidEmail(formData.email) || isSubmitting}
+                      className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all shadow-lg flex items-center justify-center transform active:scale-[0.98] ${
+                        isValidEmail(formData.email) && !isSubmitting 
+                        ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20' 
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                      }`}
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send reset link'}
+                      {!isSubmitting && <ArrowRight size={18} className="ml-2" />}
+                    </button>
+                  </form>
+              )}
+
+              {/* Email Sent Confirmation */}
+              {mode === 'email-sent' && (
+                  <div className="space-y-4">
+                     <button 
+                       onClick={() => setMode('login')}
+                       className="w-full bg-white border border-gray-200 text-gray-700 rounded-xl py-3.5 font-bold text-sm hover:bg-gray-50 transition-all flex items-center justify-center"
+                     >
+                       <ArrowLeft size={18} className="mr-2" /> Back to login
+                     </button>
+                     
+                     <div className="text-center">
+                        <p className="text-xs text-gray-400">Didn't receive the email? <button className="text-gray-900 font-bold hover:underline">Click to resend</button></p>
+                        
+                        {/* Demo Trigger Link */}
+                        <div className="mt-6 pt-4 border-t border-gray-100">
+                           <button 
+                             onClick={() => onSimulateReset && onSimulateReset()}
+                             className="text-[10px] text-blue-500 hover:text-blue-700 font-mono bg-blue-50 px-2 py-1 rounded"
+                           >
+                             (Demo: Simulate clicking email link)
+                           </button>
+                        </div>
+                     </div>
+                  </div>
               )}
 
               {/* Signup Form */}
@@ -247,7 +349,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
                                  <option>Germany</option>
                                  <option>Japan</option>
                               </select>
-                              {/* Custom Dropdown Arrow could go here via CSS or absolute icon */}
                            </div>
                         </div>
                         <div className="space-y-1 col-span-2">
@@ -299,13 +400,28 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin }: Aut
 
            {/* Footer: Switch Modes */}
            <div className="bg-gray-50 p-4 text-center border-t border-gray-100 text-xs font-medium text-gray-500">
-             {mode === 'login' ? "Don't have an account? " : "Already have an account? "}
-             <button 
-               onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-               className="font-bold text-gray-900 hover:underline focus:outline-none ml-1"
-             >
-               {mode === 'login' ? t('nav.signup') : t('nav.login')}
-             </button>
+             {(mode === 'login' || mode === 'forgot-password' || mode === 'email-sent') && (
+               <>
+                 Don't have an account? 
+                 <button 
+                   onClick={() => setMode('signup')}
+                   className="font-bold text-gray-900 hover:underline focus:outline-none ml-1"
+                 >
+                   {t('nav.signup')}
+                 </button>
+               </>
+             )}
+             {mode === 'signup' && (
+               <>
+                 Already have an account? 
+                 <button 
+                   onClick={() => setMode('login')}
+                   className="font-bold text-gray-900 hover:underline focus:outline-none ml-1"
+                 >
+                   {t('nav.login')}
+                 </button>
+               </>
+             )}
            </div>
         </div>
      </div>
