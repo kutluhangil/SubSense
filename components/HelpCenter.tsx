@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, Shield, Monitor, Mail, ExternalLink, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, BookOpen, FileText, Video, Activity, X, User } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, Shield, Monitor, Mail, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // --- Static Data & Configuration ---
@@ -105,17 +106,23 @@ const FAQS = [
     answer: "Go to the Friends page and use the search bar to find users by username. Click 'Add Friend' to send a request."
   },
   {
-    id: '2fa',
-    category: 'security',
-    question: 'Enabling two-factor authentication',
-    answer: "We recommend enabling 2FA for extra security. Go to Settings > Security and toggle 'Two-Factor Authentication'. Follow the prompts to link your authenticator app."
-  },
-  {
     id: 'theme',
     category: 'custom',
     question: 'Switching themes',
     answer: "In Settings > Appearance, you can choose between Light, Dark, or System default themes to match your preference."
   },
+  {
+    id: 'password-reset',
+    category: 'security',
+    question: 'How to change your password?',
+    answer: "Go to Settings > Profile Information to update your password. If you cannot log in, use the 'Forgot password?' link on the login screen."
+  },
+  {
+    id: 'privacy',
+    category: 'security',
+    question: 'Managing privacy and data export',
+    answer: "You can manage your data privacy settings under Settings > Privacy & Visibility. To export your data, please contact our support team."
+  }
 ];
 
 // --- Sub-Components ---
@@ -377,26 +384,6 @@ export default function HelpCenter() {
                  </div>
               </div>
 
-              {/* Quick Access Widgets */}
-              <div className="grid grid-cols-2 gap-3">
-                 <button className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group">
-                    <BookOpen size={20} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-gray-900">Knowledge Base</p>
-                 </button>
-                 <button className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group">
-                    <FileText size={20} className="text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-gray-900">User Guide PDF</p>
-                 </button>
-                 <button className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group">
-                    <Video size={20} className="text-red-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-gray-900">Video Tutorials</p>
-                 </button>
-                 <button className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-0.5 transition-all text-left group">
-                    <Activity size={20} className="text-green-500 mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-bold text-gray-900">System Status</p>
-                 </button>
-              </div>
-
            </div>
 
            {/* RIGHT COLUMN: Content */}
@@ -483,14 +470,10 @@ export default function HelpCenter() {
                        <h3 className="text-xl font-bold mb-2">Still need help?</h3>
                        <p className="text-gray-400 text-sm max-w-sm">Our team is available 24/7. We usually respond within 2 hours.</p>
                     </div>
-                    <div className="flex flex-col gap-3">
-                       <button className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95">
+                    <div>
+                       <button className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto">
                           <Mail size={18} />
                           <span>Contact Support</span>
-                       </button>
-                       <button className="flex items-center justify-center space-x-2 bg-gray-800/50 text-gray-300 px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors border border-gray-700/50">
-                          <ExternalLink size={18} />
-                          <span>Status Page</span>
                        </button>
                     </div>
                  </div>
