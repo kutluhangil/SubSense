@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, Shield, Monitor, Mail, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import ContactSupportModal from './ContactSupportModal';
 
 // --- Static Data & Configuration ---
 
@@ -299,6 +300,7 @@ export default function HelpCenter() {
   const [activeCategory, setActiveCategory] = useState('start');
   const [searchQuery, setSearchQuery] = useState('');
   const [openItems, setOpenItems] = useState<string[]>([]);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { t } = useLanguage();
 
   const toggleItem = (id: string) => {
@@ -471,7 +473,10 @@ export default function HelpCenter() {
                        <p className="text-gray-400 text-sm max-w-sm">Our team is available 24/7. We usually respond within 2 hours.</p>
                     </div>
                     <div>
-                       <button className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto">
+                       <button 
+                         onClick={() => setIsContactModalOpen(true)}
+                         className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto"
+                       >
                           <Mail size={18} />
                           <span>Contact Support</span>
                        </button>
@@ -485,6 +490,12 @@ export default function HelpCenter() {
 
       {/* Floating Smart Assistant */}
       <SmartHelpAssistant />
+
+      {/* Contact Support Modal */}
+      <ContactSupportModal 
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+      />
 
     </div>
   );

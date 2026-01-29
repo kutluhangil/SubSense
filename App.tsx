@@ -98,8 +98,6 @@ function AppContent() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <LanguageProvider children={<AppContent />} />
   );
 }

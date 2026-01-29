@@ -1,8 +1,15 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
+interface ParticleCharProps {
+  char: string;
+  phase: 'enter' | 'active' | 'exit';
+  index: number;
+}
+
 // Individual Character Particle Component
-const ParticleChar = ({ char, phase, index }: { char: string, phase: 'enter' | 'active' | 'exit', index: number }) => {
+const ParticleChar: React.FC<ParticleCharProps> = ({ char, phase, index }) => {
   // Memoize random physics so they are stable for this character instance
   const physics = useMemo(() => ({
     x: (Math.random() - 0.5) * 80,   // Spread sideways
@@ -52,8 +59,14 @@ const ParticleChar = ({ char, phase, index }: { char: string, phase: 'enter' | '
   return <span style={style}>{char}</span>;
 };
 
+interface AnimatedWordProps {
+  word: string;
+  phase: 'enter' | 'active' | 'exit';
+  baseIndex: number;
+}
+
 // Word Wrapper to handle line breaks correctly
-const AnimatedWord = ({ word, phase, baseIndex }: { word: string, phase: 'enter' | 'active' | 'exit', baseIndex: number }) => (
+const AnimatedWord: React.FC<AnimatedWordProps> = ({ word, phase, baseIndex }) => (
   <span className="inline-block whitespace-nowrap">
     {word.split('').map((char, i) => (
       <ParticleChar key={i} char={char} phase={phase} index={baseIndex + i} />
