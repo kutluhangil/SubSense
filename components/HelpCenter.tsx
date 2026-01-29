@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, Shield, Monitor, Mail, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, X, Monitor } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
@@ -21,7 +21,15 @@ const CATEGORIES = [
     icon: CreditCard, 
     color: 'text-purple-600', 
     bg: 'bg-purple-50',
-    description: 'Adding & tracking services'
+    description: 'Adding & editing services'
+  },
+  { 
+    id: 'analytics', 
+    label: 'Analytics & Insights', 
+    icon: PieChart, 
+    color: 'text-violet-600', 
+    bg: 'bg-violet-50',
+    description: 'Trends & spending habits'
   },
   { 
     id: 'compare', 
@@ -29,35 +37,28 @@ const CATEGORIES = [
     icon: Globe, 
     color: 'text-green-600', 
     bg: 'bg-green-50',
-    description: 'Currency & region pricing'
+    description: 'Regional pricing & currency'
   },
   { 
-    id: 'social', 
-    label: 'Friends & Social', 
+    id: 'profile', 
+    label: 'Profile & Friends', 
     icon: Users, 
     color: 'text-orange-600', 
     bg: 'bg-orange-50',
-    description: 'Sharing & connections'
+    description: 'Social & account details'
   },
   { 
-    id: 'security', 
-    label: 'Account & Security', 
-    icon: Shield, 
-    color: 'text-red-600', 
-    bg: 'bg-red-50',
-    description: 'Privacy & protection'
-  },
-  { 
-    id: 'custom', 
-    label: 'Customization', 
-    icon: Monitor, 
+    id: 'settings', 
+    label: 'Settings & Preferences', 
+    icon: Settings, 
     color: 'text-gray-600', 
     bg: 'bg-gray-50',
-    description: 'Themes & preferences'
+    description: 'Notifications & privacy'
   },
 ];
 
 const FAQS = [
+  // 1. Getting Started
   {
     id: 'create-account',
     category: 'start',
@@ -65,64 +66,158 @@ const FAQS = [
     answer: "Click the 'Sign up' button on the homepage or login screen. You can sign up using your email address or continue with Google/Apple for a faster experience."
   },
   {
-    id: 'add-sub',
+    id: 'login-logout',
     category: 'start',
-    question: 'How to add or remove a subscription?',
-    answer: "To add a subscription, click the 'Add Subscription' button on your dashboard. Search for the service, select your plan, and save. To remove, find the subscription in your list, click the menu icon (three dots), and select 'Remove'."
+    question: 'Logging in and out',
+    answer: "To log in, use your email/password or social provider. To log out, click the 'Log out' button at the bottom of the sidebar menu."
   },
   {
-    id: 'profile',
+    id: 'dashboard-overview',
     category: 'start',
-    question: 'How to update your profile and preferences?',
-    answer: "Navigate to the Settings page from the sidebar. Under 'Profile Information', you can update your name, email, and photo. Don't forget to click 'Save Changes'."
+    question: 'Dashboard overview',
+    answer: "Your Dashboard is the central hub. It shows your active subscriptions, monthly spending summary, upcoming payments timeline, and quick access to analytics widgets."
   },
   {
-    id: 'track',
+    id: 'first-sub',
+    category: 'start',
+    question: 'Adding your first subscription',
+    answer: "Click the 'Add Subscription' button on the dashboard. Search for a service (e.g., Netflix), select it, and enter your plan details to start tracking."
+  },
+
+  // 2. Subscription Management
+  {
+    id: 'manual-add',
     category: 'subs',
-    question: 'Tracking your active subscriptions',
-    answer: "Your Dashboard shows a summary of all active subscriptions. You can view them in a list or card view. The status indicator tells you if a subscription is active, expiring soon, or inactive."
+    question: 'Adding subscriptions manually',
+    answer: "If you can't find a service in our database, you can still track it. Use the 'Add Subscription' button and fill in the custom details for name, price, and billing cycle."
   },
   {
-    id: 'edit-price',
+    id: 'edit-sub',
     category: 'subs',
-    question: 'Editing prices or payment cycles',
-    answer: "If a price changes, click on the specific subscription row. In the details view, you can manually update the price, currency, and billing cycle (monthly/yearly)."
+    question: 'Editing price and billing cycle',
+    answer: "Click on any subscription in your list to open its details. From there, you can update the price, currency, billing cycle (Monthly/Yearly), and next payment date."
   },
   {
-    id: 'compare-prices',
+    id: 'reminders',
+    category: 'subs',
+    question: 'How do payment reminders work?',
+    answer: "We automatically send a notification 3 days before a subscription renewal date. You can enable or disable these reminders in the subscription details modal."
+  },
+  {
+    id: 'active-expiring',
+    category: 'subs',
+    question: 'Active vs Expiring subscriptions',
+    answer: "Active subscriptions are ongoing. 'Expiring' status appears if you've marked a subscription to cancel or if the billing date is approaching without renewal confirmation."
+  },
+  {
+    id: 'delete-sub',
+    category: 'subs',
+    question: 'Deleting a subscription',
+    answer: "To remove a subscription, open its details card and click the 'Delete' button (trash icon). This removes it from your dashboard and calculations."
+  },
+
+  // 3. Analytics & Insights
+  {
+    id: 'monthly-yearly',
+    category: 'analytics',
+    question: 'Viewing monthly vs yearly spend',
+    answer: "Go to the Analytics page to see your 'Lifetime Spend' and monthly breakdown. The Dashboard also provides a quick snapshot of your monthly total."
+  },
+  {
+    id: 'spending-trends',
+    category: 'analytics',
+    question: 'Understanding spending trends',
+    answer: "The Spending Trend chart on the Analytics page visualizes your expenses over the last 6 months, helping you identify spikes or reductions in your budget."
+  },
+  {
+    id: 'cost-distribution',
+    category: 'analytics',
+    question: 'Cost distribution by category',
+    answer: "We categorize your subscriptions (Entertainment, Productivity, etc.) and show a breakdown chart so you know exactly which areas consume most of your budget."
+  },
+  {
+    id: 'ai-insights',
+    category: 'analytics',
+    question: 'What are AI Savings Insights?',
+    answer: "Our AI analyzes your subscriptions to find optimization opportunities, such as identifying duplicate services (e.g., Spotify + Apple Music) or suggesting annual plans."
+  },
+
+  // 4. Global Comparison
+  {
+    id: 'regional-pricing',
     category: 'compare',
-    question: 'How to compare prices across countries?',
-    answer: "Use the 'Compare' tab in the sidebar. Select a service (e.g., Netflix) and a base currency. The table will show how much that service costs in different regions, converted to your base currency."
+    question: 'Comparing regional pricing',
+    answer: "Use the 'Compare' page to select a service (e.g., Netflix) and see how its price varies across different countries like the US, UK, India, and Turkey."
   },
   {
-    id: 'currency',
+    id: 'currency-diff',
     category: 'compare',
-    question: 'Understanding currency conversion',
-    answer: "We use daily updated exchange rates to estimate prices in your selected currency. Please note that actual bank rates may vary slightly due to fees."
+    question: 'Currency differences',
+    answer: "All prices in the comparison tool are converted to your selected base currency (default USD) using real-time exchange rates for accurate comparison."
   },
   {
-    id: 'add-friends',
-    category: 'social',
-    question: 'Adding friends',
-    answer: "Go to the Friends page and use the search bar to find users by username. Click 'Add Friend' to send a request."
+    id: 'price-history',
+    category: 'compare',
+    question: 'Price history charts',
+    answer: "We track historical price changes for major services. The charts on the Compare page show how prices have fluctuated over the last 6 months in different regions."
+  },
+
+  // 5. Profile & Friends
+  {
+    id: 'edit-profile',
+    category: 'profile',
+    question: 'Editing profile details',
+    answer: "Navigate to the Profile page to update your avatar, bio, location, and website. Changes are reflected immediately on your public profile card."
   },
   {
-    id: 'theme',
-    category: 'custom',
-    question: 'Switching themes',
-    answer: "In Settings > Appearance, you can choose between Light, Dark, or System default themes to match your preference."
+    id: 'profile-visibility',
+    category: 'profile',
+    question: 'Profile visibility settings',
+    answer: "You can control who sees your profile in Settings. Options include Public (visible to everyone), Friends Only, or Private."
   },
   {
-    id: 'password-reset',
-    category: 'security',
-    question: 'How to change your password?',
-    answer: "Go to Settings > Profile Information to update your password. If you cannot log in, use the 'Forgot password?' link on the login screen."
+    id: 'friends-list',
+    category: 'profile',
+    question: 'Managing your friends list',
+    answer: "Go to the Friends page to see your connections. You can add new friends by username or remove existing connections."
   },
   {
-    id: 'privacy',
-    category: 'security',
-    question: 'Managing privacy and data export',
-    answer: "You can manage your data privacy settings under Settings > Privacy & Visibility. To export your data, please contact our support team."
+    id: 'shared-subs',
+    category: 'profile',
+    question: 'Viewing shared subscriptions',
+    answer: "When viewing a friend's profile, you'll see a 'Shared with You' section highlighting services you both subscribe to."
+  },
+  {
+    id: 'badges',
+    category: 'profile',
+    question: 'How to earn badges',
+    answer: "Badges are awarded for milestones like 'Top Saver', 'Active Tracker', or 'Global Explorer'. They appear on your profile automatically when earned."
+  },
+
+  // 6. Settings & Preferences
+  {
+    id: 'notifications',
+    category: 'settings',
+    question: 'Managing notifications',
+    answer: "In Settings, you can toggle alerts for 'Payment Due', 'Price Alerts', and 'Weekly Digest' emails."
+  },
+  {
+    id: 'privacy-settings',
+    category: 'settings',
+    question: 'Privacy controls',
+    answer: "Use the 'Privacy & Visibility' section in Settings to hide your spending stats or subscriptions from your public profile."
+  },
+  {
+    id: 'ai-settings',
+    category: 'settings',
+    question: 'AI personalization',
+    answer: "You can enable or disable 'Smart Suggestions' and 'Focus Area' in Settings to tailor the AI insights to your specific goals (e.g., Budget Saving vs Social Trends)."
+  },
+  {
+    id: 'appearance',
+    category: 'settings',
+    question: 'Changing appearance (Dark Mode)',
+    answer: "In your Profile or Settings page, select your preferred theme: Light, Dark, or System (auto-matches your device)."
   }
 ];
 
@@ -149,6 +244,15 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
           <circle cx="300" cy="80" r="40" fill="#C4B5FD" />
         </svg>
       );
+    case 'analytics': // Pie Chart & Graph
+      return (
+        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+          <path d="M200 200 L350 200 A150 150 0 0 1 200 350 Z" fill="#8B5CF6" />
+          <path d="M200 200 L200 350 A150 150 0 0 1 50 200 Z" fill="#A78BFA" />
+          <path d="M200 200 L50 200 A150 150 0 0 1 350 200 Z" fill="#DDD6FE" />
+          <circle cx="200" cy="200" r="50" fill="white" />
+        </svg>
+      );
     case 'compare': // World Map Abstract
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -158,7 +262,7 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
           <circle cx="200" cy="200" r="50" fill="#A7F3D0" />
         </svg>
       );
-    case 'social': // Nodes
+    case 'profile': // Social Nodes
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
           <circle cx="200" cy="200" r="30" fill="#F97316" />
@@ -172,7 +276,7 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
           <line x1="200" y1="200" x2="300" y2="300" stroke="#FFEDD5" strokeWidth="4" />
         </svg>
       );
-    default: // Gears/Settings
+    default: // Settings / Gears
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="350" r="80" fill="#9CA3AF" />
