@@ -11,6 +11,7 @@ import HelpCenter from './HelpCenter';
 import Profile from './Profile';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
+import CalendarModal from './CalendarModal'; // New Import
 import BrandIcon from './BrandIcon';
 import { Plus, Bell, Calendar, ChevronRight, PieChart, TrendingDown, ArrowRight, Check, X, Filter } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -42,6 +43,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // Calendar State
   const { t, formatPrice } = useLanguage();
 
   const filteredSubscriptions = useMemo(() => {
@@ -126,7 +128,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
               <Calendar size={16} className="text-gray-400" /> {t('dashboard.upcoming')}
            </h3>
-           <button className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition-colors">
+           <button 
+             onClick={() => setIsCalendarOpen(true)}
+             className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+           >
               {t('dashboard.view_calendar')}
            </button>
         </div>
@@ -165,196 +170,4 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                  <circle cx="50" cy="50" r="40" fill="none" stroke="#F3F4F6" strokeWidth="20" />
                  {/* Mock Segments */}
                  <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="20" strokeDasharray="60 251" className="opacity-90" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" strokeWidth="20" strokeDasharray="40 251" strokeDashoffset="-60" className="opacity-90" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="20" strokeDasharray="30 251" strokeDashoffset="-100" className="opacity-90" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                 <span className="text-[10px] font-bold text-gray-500">Oct</span>
-              </div>
-           </div>
-           <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Entertainment</div>
-                 <span className="font-bold">45%</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500"></div>Productivity</div>
-                 <span className="font-bold">30%</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>Shopping</div>
-                 <span className="font-bold">25%</span>
-              </div>
-           </div>
-        </div>
-        <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-           {t('dashboard.view_analytics')} <ArrowRight size={10} />
-        </button>
-     </div>
-  );
-
-  const RegionalSavings = () => (
-     <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border border-gray-200 p-4 flex items-start gap-3">
-        <div className="bg-white p-2 rounded-lg shadow-sm text-green-600">
-           <TrendingDown size={18} />
-        </div>
-        <div>
-           <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-1">{t('dashboard.regional_savings')}</h4>
-           <p className="text-xs text-gray-600 leading-snug">
-              Netflix costs <span className="font-bold text-gray-900">$7.85</span> in India 🇮🇳 — you’re paying <span className="font-bold text-red-500">49% more</span>.
-           </p>
-           <button onClick={() => setCurrentView('compare')} className="mt-2 text-[10px] font-bold text-gray-500 hover:text-gray-900 underline decoration-gray-300 underline-offset-2">
-              Compare Pricing
-           </button>
-        </div>
-     </div>
-  );
-
-  const AchievementsPreview = () => (
-     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between group cursor-pointer" onClick={() => setCurrentView('profile')}>
-        <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center border border-yellow-100">
-              <Check size={18} />
-           </div>
-           <div>
-              <h4 className="text-sm font-bold text-gray-900">6 Badges Unlocked</h4>
-              <p className="text-[10px] text-gray-500">Keep it up!</p>
-           </div>
-        </div>
-        <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-600 transition-colors" />
-     </div>
-  );
-
-  return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar 
-        onLogout={onLogout} 
-        currentView={currentView} 
-        onNavigate={setCurrentView} 
-      />
-      
-      <main className="flex-1 overflow-y-auto relative">
-        {currentView === 'subscriptions' ? (
-            <SubscriptionSearchPanel onAddSubscription={handleAddSubscription} />
-        ) : (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-            
-            {currentView === 'dashboard' && (
-                <>
-                    {/* Header */}
-                    <div className="mb-8 flex items-center justify-between relative">
-                       <div>
-                          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
-                          <p className="text-gray-500 text-sm mt-1">{t('dashboard.welcome')}</p>
-                       </div>
-                       
-                       <div className="flex items-center gap-3">
-                          <div className="relative">
-                             <button 
-                               onClick={() => setNotificationsOpen(!notificationsOpen)}
-                               className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors relative shadow-sm"
-                             >
-                                <Bell size={20} />
-                                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                             </button>
-                             {notificationsOpen && <NotificationDropdown />}
-                             {notificationsOpen && (
-                               <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)}></div>
-                             )}
-                          </div>
-
-                          <button 
-                              onClick={() => setCurrentView('subscriptions')}
-                              className="hidden sm:flex items-center justify-center space-x-2 rtl:space-x-reverse bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95"
-                          >
-                              <Plus size={18} />
-                              <span>{t('dashboard.add_sub')}</span>
-                          </button>
-                       </div>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="mb-8">
-                        <StatsCards />
-                    </div>
-                    
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                       
-                       {/* Left Column: Subscriptions */}
-                       <div className="lg:col-span-2 space-y-6">
-                          
-                          <div>
-                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-bold text-gray-900">{t('dashboard.active_subs')}</h2>
-                                <CategoryFilters />
-                             </div>
-                             
-                             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
-                                <SubscriptionTable 
-                                    subscriptions={filteredSubscriptions}
-                                    onSelectSubscription={setSelectedSub}
-                                />
-                             </div>
-                          </div>
-
-                       </div>
-
-                       {/* Right Column: Widgets */}
-                       <div className="space-y-6">
-                          <UpcomingTimeline />
-                          <ExpenseBreakdown />
-                          <RegionalSavings />
-                          <AchievementsPreview />
-                       </div>
-
-                    </div>
-                </>
-            )}
-
-            {currentView === 'profile' && <Profile />}
-            {currentView === 'friends' && <Friends />}
-            {currentView === 'analytics' && <Analytics />}
-            {currentView === 'compare' && <Comparison />}
-            {currentView === 'settings' && <Settings />}
-            {currentView === 'help' && <HelpCenter />}
-            
-            {(currentView !== 'dashboard' && currentView !== 'friends' && currentView !== 'analytics' && currentView !== 'settings' && currentView !== 'compare' && currentView !== 'help' && currentView !== 'subscriptions' && currentView !== 'profile') && (
-                <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-                    <div className="p-4 bg-gray-100 rounded-full mb-4">
-                    <Plus className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Work in Progress</h2>
-                    <p className="text-gray-500 mt-2 max-w-sm">The {currentView} page is currently under construction. Please check back later.</p>
-                    <button 
-                    onClick={() => setCurrentView('dashboard')}
-                    className="mt-6 text-sm font-medium text-gray-900 underline underline-offset-4 hover:text-gray-700"
-                    >
-                    Return to Dashboard
-                    </button>
-                </div>
-            )}
-
-            </div>
-        )}
-      </main>
-
-      <SubscriptionModal 
-        isOpen={!!selectedSub} 
-        subscription={selectedSub} 
-        onClose={() => setSelectedSub(null)}
-        onSave={handleSubUpdate}
-        onDelete={handleSubDelete}
-      />
-
-      {currentView === 'dashboard' && (
-        <button 
-            onClick={() => setCurrentView('subscriptions')}
-            className="fixed bottom-6 right-6 sm:hidden bg-gray-900 text-white p-4 rounded-full shadow-xl shadow-gray-900/20 hover:bg-gray-800 transition-transform active:scale-95 z-50"
-        >
-          <Plus size={24} />
-        </button>
-      )}
-    </div>
-  );
-}
+                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" strokeWidth="20"
