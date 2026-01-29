@@ -5,15 +5,15 @@ import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
 import Friends from './Friends';
 import Analytics from './Analytics';
-import Settings from './Settings';
+import SettingsPage from './Settings';
 import Comparison from './Comparison';
 import HelpCenter from './HelpCenter';
 import Profile from './Profile';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
-import CalendarModal from './CalendarModal'; // New Import
+import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
-import { Plus, Bell, Calendar, ChevronRight, PieChart, TrendingDown, ArrowRight, Check, X, Filter } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SubscriptionDetail } from '../utils/data';
 
@@ -43,7 +43,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false); // Calendar State
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const { t, formatPrice } = useLanguage();
 
   const filteredSubscriptions = useMemo(() => {
@@ -83,9 +86,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         history: [priceVal]
     };
     setSubscriptions(prev => [newSub, ...prev]);
+    setIsAddModalOpen(false);
+    setCurrentView('dashboard'); // Return to dashboard to see new item
   };
 
-  // --- Sub-components for Dashboard Widgets ---
+  // --- Sub-components ---
 
   const NotificationDropdown = () => (
     <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
@@ -136,8 +141,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
            </button>
         </div>
         <div className="space-y-4">
-           {subscriptions.slice(0, 4).map((sub, i) => (
-              <div key={sub.id} className="flex items-center gap-3 group cursor-pointer">
+           {subscriptions.slice(0, 4).map((sub) => (
+              <div key={sub.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => setSelectedSub(sub)}>
                  <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                     <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
                  </div>
@@ -170,4 +175,175 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                  <circle cx="50" cy="50" r="40" fill="none" stroke="#F3F4F6" strokeWidth="20" />
                  {/* Mock Segments */}
                  <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="20" strokeDasharray="60 251" className="opacity-90" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" strokeWidth="20"
+                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" strokeWidth="20" strokeDasharray="40 251" strokeDashoffset="-60" className="opacity-90" />
+                 <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="20" strokeDasharray="30 251" strokeDashoffset="-100" className="opacity-90" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <span className="text-[10px] font-bold text-gray-500">Oct</span>
+              </div>
+           </div>
+           <div className="flex-1 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Entertainment</div>
+                 <span className="font-bold">45%</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500"></div>Productivity</div>
+                 <span className="font-bold">30%</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>Shopping</div>
+                 <span className="font-bold">25%</span>
+              </div>
+           </div>
+        </div>
+        <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+           {t('dashboard.view_analytics')} <ArrowRight size={10} />
+        </button>
+     </div>
+  );
+
+  // --- Main View Rendering Logic ---
+
+  const renderContent = () => {
+    if (isAddModalOpen) {
+      return (
+        <div className="h-full flex flex-col">
+           <div className="flex items-center justify-between mb-6">
+              <button 
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center gap-2"
+              >
+                <ArrowRight size={16} className="rotate-180" /> Back to Dashboard
+              </button>
+           </div>
+           <SubscriptionSearchPanel onAddSubscription={handleAddSubscription} />
+        </div>
+      );
+    }
+
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <div className="animate-in fade-in duration-500">
+             <div className="mb-8 flex items-center justify-between relative">
+                <div>
+                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
+                   <p className="text-gray-500 text-sm mt-1">{t('dashboard.welcome')}</p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                   {/* Notifications */}
+                   <div className="relative">
+                      <button 
+                        onClick={() => setNotificationsOpen(!notificationsOpen)}
+                        className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors relative shadow-sm"
+                      >
+                         <Bell size={20} />
+                         <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                      </button>
+                      {notificationsOpen && <NotificationDropdown />}
+                   </div>
+
+                   <button 
+                     onClick={() => setIsAddModalOpen(true)}
+                     className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95"
+                   >
+                      <Plus size={18} />
+                      <span>{t('dashboard.add_sub')}</span>
+                   </button>
+                </div>
+             </div>
+
+             <StatsCards />
+
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+                <div className="lg:col-span-2 space-y-6">
+                   <div>
+                      <div className="flex items-center justify-between mb-4">
+                         <h2 className="text-lg font-bold text-gray-900">{t('dashboard.active_subs')}</h2>
+                         <button onClick={() => setCurrentView('subscriptions')} className="text-xs font-medium text-blue-600 hover:text-blue-800">{t('dashboard.view_all')}</button>
+                      </div>
+                      
+                      <CategoryFilters />
+
+                      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+                         <SubscriptionTable 
+                           subscriptions={filteredSubscriptions} 
+                           onSelectSubscription={setSelectedSub} 
+                         />
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-6">
+                   <UpcomingTimeline />
+                   <ExpenseBreakdown />
+                </div>
+             </div>
+          </div>
+        );
+      case 'friends': return <Friends />;
+      case 'analytics': return <Analytics />;
+      case 'compare': return <Comparison />;
+      case 'settings': return <SettingsPage />;
+      case 'help': return <HelpCenter />;
+      case 'profile': return <Profile />;
+      case 'subscriptions': return (
+        <div className="space-y-6">
+           <h2 className="text-2xl font-bold text-gray-900">{t('features.subscriptions.title')}</h2>
+           <SubscriptionTable subscriptions={subscriptions} onSelectSubscription={setSelectedSub} />
+        </div>
+      );
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-900">
+       
+       {/* Sidebar - Hidden on mobile, controlled via state */}
+       <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0`}>
+          <Sidebar onLogout={onLogout} currentView={currentView} onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }} />
+       </div>
+
+       {/* Mobile Overlay */}
+       {isMobileMenuOpen && (
+         <div className="fixed inset-0 bg-black/50 z-20 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
+       )}
+
+       <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          {/* Mobile Header */}
+          <header className="md:hidden bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+             <button onClick={() => setIsMobileMenuOpen(true)} className="text-gray-600">
+                <Menu size={24} />
+             </button>
+             <span className="font-bold text-gray-900">SubscriptionHub</span>
+             <button onClick={() => setIsAddModalOpen(true)} className="text-gray-900">
+                <Plus size={24} />
+             </button>
+          </header>
+
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 md:p-8 relative">
+             {renderContent()}
+          </main>
+       </div>
+
+       {/* Global Modals */}
+       <SubscriptionModal 
+         isOpen={!!selectedSub} 
+         onClose={() => setSelectedSub(null)} 
+         subscription={selectedSub}
+         onSave={handleSubUpdate}
+         onDelete={handleSubDelete}
+       />
+
+       <CalendarModal 
+         isOpen={isCalendarOpen} 
+         onClose={() => setIsCalendarOpen(false)} 
+         subscriptions={subscriptions} 
+       />
+    </div>
+  );
+}
