@@ -15,19 +15,12 @@ import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { User } from '../App';
 
 interface DashboardProps {
   onLogout: () => void;
+  user: User;
 }
-
-// Initial Data with Category
-const INITIAL_SUBSCRIPTIONS: Subscription[] = [
-  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, originalPrice: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, category: 'Entertainment', history: [15.99, 15.99, 17.49, 19.99, 19.99] },
-  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, originalPrice: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, category: 'Entertainment', history: [12.99, 12.99, 13.99, 14.99, 14.99] },
-  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, originalPrice: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring', billingDay: 1, category: 'Productivity', history: [52.99, 52.99, 52.99, 54.99, 54.99] },
-  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, originalPrice: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active', billingDay: 12, category: 'Shopping', history: [119.00, 119.00, 139.00, 139.00, 139.00] },
-  { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, originalPrice: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, category: 'Entertainment', history: [11.99, 11.99, 11.99, 13.99, 13.99] },
-];
 
 const DEFAULT_BUDGET_LIMITS = {
   'Entertainment': 50,
@@ -36,23 +29,24 @@ const DEFAULT_BUDGET_LIMITS = {
   'Tools': 50
 };
 
-export default function Dashboard({ onLogout }: DashboardProps) {
+export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [currentView, setCurrentView] = useState('dashboard');
+  const userKey = user?.email || 'guest';
   
-  // Persisted State: Subscriptions
+  // Persisted State: Subscriptions (Scoped to User)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
     try {
-      const saved = localStorage.getItem('subscriptionhub.subscriptions');
-      return saved ? JSON.parse(saved) : INITIAL_SUBSCRIPTIONS;
+      const saved = localStorage.getItem(`subscriptionhub.${userKey}.subscriptions`);
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      return INITIAL_SUBSCRIPTIONS;
+      return [];
     }
   });
 
   // Persisted State: Budget Limits
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
     try {
-      const saved = localStorage.getItem('subscriptionhub.budgetLimits');
+      const saved = localStorage.getItem(`subscriptionhub.${userKey}.budgetLimits`);
       return saved ? JSON.parse(saved) : DEFAULT_BUDGET_LIMITS;
     } catch (e) {
       return DEFAULT_BUDGET_LIMITS;
@@ -62,7 +56,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   // Persisted State: Savings Goal
   const [savingsGoal, setSavingsGoal] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('subscriptionhub.savingsGoal');
+      const saved = localStorage.getItem(`subscriptionhub.${userKey}.savingsGoal`);
       return saved ? parseFloat(saved) : 20;
     } catch (e) {
       return 20;
@@ -72,33 +66,55 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   // Persisted State: Total Saved
   const [totalSaved, setTotalSaved] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('subscriptionhub.totalSaved');
+      const saved = localStorage.getItem(`subscriptionhub.${userKey}.totalSaved`);
       return saved ? parseFloat(saved) : 0;
     } catch (e) {
       return 0;
     }
   });
 
-  // Persistence Effects
+  // Persistence Effects (Write)
   useEffect(() => {
-    try {
-      localStorage.setItem('subscriptionhub.subscriptions', JSON.stringify(subscriptions));
-    } catch (e) {
-      console.error('Failed to save subscriptions');
-    }
+    localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(subscriptions));
+  }, [subscriptions, userKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`subscriptionhub.${userKey}.budgetLimits`, JSON.stringify(budgetLimits));
+  }, [budgetLimits, userKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`subscriptionhub.${userKey}.savingsGoal`, savingsGoal.toString());
+  }, [savingsGoal, userKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
+  }, [totalSaved, userKey]);
+
+  // Derived Metrics (Real-time)
+  const metrics = useMemo(() => {
+    let monthlyTotal = 0;
+    let yearlyTotalForecast = 0;
+    
+    // Filter active subscriptions only for cost calc
+    const activeSubs = subscriptions.filter(s => s.status === 'Active');
+    
+    activeSubs.forEach(sub => {
+      // Normalize to monthly cost
+      if (sub.cycle === 'Monthly') {
+        monthlyTotal += sub.price;
+        yearlyTotalForecast += sub.price * 12;
+      } else {
+        monthlyTotal += sub.price / 12;
+        yearlyTotalForecast += sub.price;
+      }
+    });
+
+    return {
+      monthlySpend: monthlyTotal,
+      activeCount: activeSubs.length,
+      yearlyForecast: yearlyTotalForecast
+    };
   }, [subscriptions]);
-
-  useEffect(() => {
-    localStorage.setItem('subscriptionhub.budgetLimits', JSON.stringify(budgetLimits));
-  }, [budgetLimits]);
-
-  useEffect(() => {
-    localStorage.setItem('subscriptionhub.savingsGoal', savingsGoal.toString());
-  }, [savingsGoal]);
-
-  useEffect(() => {
-    localStorage.setItem('subscriptionhub.totalSaved', totalSaved.toString());
-  }, [totalSaved]);
 
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -110,9 +126,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   
   // Notification State
   const [notifications, setNotifications] = useState([
-    { id: 1, text: "Adobe Creative Cloud renews in 2 days.", time: "2h ago", read: false, type: 'alert' },
-    { id: 2, text: "Spotify Duo plan price will increase next month.", time: "5h ago", read: false, type: 'info' },
-    { id: 3, text: "1 subscription is expiring soon.", time: "1d ago", read: true, type: 'warning' },
+    { id: 1, text: "Welcome to SubscriptionHub!", time: "Just now", read: false, type: 'info' },
   ]);
 
   const { t, formatPrice } = useLanguage();
@@ -143,9 +157,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   };
 
   const handleAddSubscription = (newSub: Subscription) => {
-    // Generate new ID
-    const nextId = Math.max(...subscriptions.map(s => s.id), 0) + 1;
-    const finalSub = { ...newSub, id: nextId };
+    // Generate new ID based on timestamp to avoid collision
+    const finalSub = { ...newSub, id: Date.now() };
     
     setSubscriptions(prev => [finalSub, ...prev]);
     setIsAddModalOpen(false);
@@ -231,6 +244,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
      // Sort by soonest
      const upcoming = [...subscriptions].sort((a,b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()).slice(0, 4);
 
+     if (upcoming.length === 0) {
+        return (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+                <h3 className="font-bold text-gray-900 text-sm mb-2">{t('dashboard.upcoming')}</h3>
+                <p className="text-xs text-gray-400">No upcoming payments.</p>
+            </div>
+        );
+     }
+
      return (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div className="flex justify-between items-center mb-6">
@@ -276,44 +298,79 @@ export default function Dashboard({ onLogout }: DashboardProps) {
      );
   };
 
-  const ExpenseBreakdown = () => (
-     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
-        <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
-           <PieChart size={16} className="text-gray-400" /> {t('dashboard.expense_breakdown')}
-        </h3>
-        <div className="flex items-center gap-6">
-           <div className="relative w-24 h-24 flex-shrink-0">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#F3F4F6" strokeWidth="20" />
-                 {/* Mock Segments */}
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#3B82F6" strokeWidth="20" strokeDasharray="60 251" className="opacity-90" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#8B5CF6" strokeWidth="20" strokeDasharray="40 251" strokeDashoffset="-60" className="opacity-90" />
-                 <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="20" strokeDasharray="30 251" strokeDashoffset="-100" className="opacity-90" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                 <span className="text-[10px] font-bold text-gray-500">Oct</span>
-              </div>
-           </div>
-           <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Entertainment</div>
-                 <span className="font-bold">45%</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-500"></div>Productivity</div>
-                 <span className="font-bold">30%</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                 <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div>Shopping</div>
-                 <span className="font-bold">25%</span>
-              </div>
-           </div>
+  const ExpenseBreakdown = () => {
+     // Dynamic calculation of categories
+     const breakdown = useMemo(() => {
+        const cats: Record<string, number> = {};
+        let total = 0;
+        subscriptions.forEach(sub => {
+            const cat = sub.category || 'Other';
+            const cost = sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
+            cats[cat] = (cats[cat] || 0) + cost;
+            total += cost;
+        });
+        
+        // Sort and top 3
+        return Object.entries(cats)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([name, value]) => ({ 
+                name, 
+                percentage: total > 0 ? (value / total) * 100 : 0 
+            }));
+     }, [subscriptions]);
+
+     return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
+            <h3 className="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
+            <PieChart size={16} className="text-gray-400" /> {t('dashboard.expense_breakdown')}
+            </h3>
+            
+            {breakdown.length === 0 ? (
+                <div className="text-center py-4 text-xs text-gray-400">Add subscriptions to see stats.</div>
+            ) : (
+                <div className="flex items-center gap-6">
+                    <div className="relative w-24 h-24 flex-shrink-0">
+                        <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#F3F4F6" strokeWidth="20" />
+                            {breakdown.map((item, i) => {
+                                // Simple dasharray hack for MVP visualization
+                                const dash = item.percentage; 
+                                const color = ['#3B82F6', '#8B5CF6', '#10B981'][i] || '#9CA3AF';
+                                return (
+                                    <circle 
+                                        key={i} cx="50" cy="50" r="40" fill="none" 
+                                        stroke={color} strokeWidth="20" 
+                                        strokeDasharray={`${dash} 1000`} 
+                                        strokeDashoffset={-20 * i} // Mock offset for visual separation
+                                        className="opacity-90" 
+                                    />
+                                );
+                            })}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-gray-500">Oct</span>
+                        </div>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                        {breakdown.map((item, i) => {
+                            const color = ['bg-blue-500', 'bg-purple-500', 'bg-green-500'][i] || 'bg-gray-400';
+                            return (
+                                <div key={i} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${color}`}></div>{item.name}</div>
+                                    <span className="font-bold">{item.percentage.toFixed(0)}%</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+            <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+            {t('dashboard.view_analytics')} <ArrowRight size={10} />
+            </button>
         </div>
-        <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-           {t('dashboard.view_analytics')} <ArrowRight size={10} />
-        </button>
-     </div>
-  );
+     );
+  };
 
   // --- Main View Rendering Logic ---
 
@@ -341,7 +398,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
              <div className="mb-8 flex items-center justify-between relative">
                 <div>
                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
-                   <p className="text-gray-500 text-sm mt-1">{t('dashboard.welcome')}</p>
+                   <p className="text-gray-500 text-sm mt-1">Welcome back, {user.name}.</p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -374,7 +431,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 </div>
              </div>
 
-             <StatsCards />
+             <StatsCards 
+                monthly={metrics.monthlySpend} 
+                active={metrics.activeCount} 
+                forecast={metrics.yearlyForecast} 
+             />
 
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                 <div className="lg:col-span-2 space-y-6">
