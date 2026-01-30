@@ -444,8 +444,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           <div className="animate-in fade-in duration-500">
              <div className="mb-8 flex items-center justify-between relative">
                 <div>
-                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{t('dashboard.title')}</h1>
-                   <p className="text-gray-500 text-sm mt-1">Welcome back, {user.name}.</p>
+                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('dashboard.title')}</h1>
+                   <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Welcome back, {user.name}.</p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -453,7 +453,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                    <div className="relative">
                       <button 
                         onClick={() => setNotificationsOpen(!notificationsOpen)}
-                        className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors relative shadow-sm"
+                        className="w-10 h-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative shadow-sm"
                       >
                          <Bell size={20} />
                          {unreadCount > 0 && (
@@ -471,7 +471,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                    <button 
                      data-tour="add-btn"
                      onClick={() => setIsAddModalOpen(true)}
-                     className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95"
+                     className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 dark:bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 dark:hover:bg-blue-700 transition-all shadow-sm hover:shadow-md active:scale-95"
                    >
                       <Plus size={18} />
                       <span>{t('dashboard.add_sub')}</span>
@@ -492,13 +492,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 <div className="lg:col-span-2 space-y-6">
                    <div>
                       <div className="flex items-center justify-between mb-4">
-                         <h2 className="text-lg font-bold text-gray-900">{t('dashboard.active_subs')}</h2>
+                         <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('dashboard.active_subs')}</h2>
                          <button onClick={() => setCurrentView('subscriptions')} className="text-xs font-medium text-blue-600 hover:text-blue-800">{t('dashboard.view_all')}</button>
                       </div>
                       
                       <CategoryFilters />
 
-                      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+                      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden min-h-[400px]">
                          <SubscriptionTable 
                            subscriptions={filteredSubscriptions} 
                            onSelectSubscription={setSelectedSub}
@@ -552,7 +552,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans text-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
        
        {/* Sidebar - Hidden on mobile, controlled via state */}
        <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0`}>
@@ -566,18 +566,18 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
        <div className="flex-1 flex flex-col h-screen overflow-hidden">
           {/* Mobile Header */}
-          <header className="md:hidden bg-white border-b border-gray-100 p-4 flex items-center justify-between">
-             <button onClick={() => setIsMobileMenuOpen(true)} className="text-gray-600">
+          <header className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between">
+             <button onClick={() => setIsMobileMenuOpen(true)} className="text-gray-600 dark:text-gray-300">
                 <Menu size={24} />
              </button>
-             <span className="font-bold text-gray-900">SubscriptionHub</span>
-             <button onClick={() => setIsAddModalOpen(true)} className="text-gray-900">
+             <span className="font-bold text-gray-900 dark:text-white">SubscriptionHub</span>
+             <button onClick={() => setIsAddModalOpen(true)} className="text-gray-900 dark:text-white">
                 <Plus size={24} />
              </button>
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 md:p-8 relative">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 md:p-8 relative transition-colors duration-300">
              {renderContent()}
           </main>
        </div>

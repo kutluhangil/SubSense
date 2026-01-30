@@ -132,7 +132,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
       <div className="max-w-5xl mx-auto space-y-6">
         
         {/* Header / Profile Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative group">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden relative group">
            
            {/* Cover Image */}
            <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden group/cover">
@@ -142,10 +142,14 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
               )}
               
-              <div className="absolute bottom-4 right-4 opacity-0 group-hover/cover:opacity-100 transition-opacity">
+              {/* Fix: Added z-20 to ensure it sits on top of everything and receives clicks */}
+              <div className="absolute bottom-4 right-4 z-20 opacity-0 group-hover/cover:opacity-100 transition-opacity duration-200">
                  <button 
-                   onClick={() => coverInputRef.current?.click()}
-                   className="bg-black/30 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-black/50 transition-colors flex items-center gap-2"
+                   onClick={(e) => {
+                       e.stopPropagation();
+                       coverInputRef.current?.click();
+                   }}
+                   className="bg-black/30 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-black/50 transition-colors flex items-center gap-2 cursor-pointer"
                  >
                     <Camera size={14} /> {t('profile.edit_cover')}
                  </button>
@@ -160,7 +164,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                         className="relative group/avatar cursor-pointer"
                         onClick={() => avatarInputRef.current?.click()}
                     >
-                       <div className="w-32 h-32 rounded-full p-1 bg-white shadow-lg relative z-10">
+                       <div className="w-32 h-32 rounded-full p-1 bg-white dark:bg-gray-800 shadow-lg relative z-10">
                           <img src={profileData.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
                        </div>
                        <div className="absolute inset-0 bg-black/40 rounded-full z-20 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity backdrop-blur-[1px]">
@@ -168,8 +172,8 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                        </div>
                     </div>
                     <div className="mb-2">
-                       <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
-                       <p className="text-gray-500 font-medium">{user.email}</p>
+                       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h1>
+                       <p className="text-gray-500 dark:text-gray-400 font-medium">{user.email}</p>
                     </div>
                  </div>
                  
@@ -177,7 +181,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                     {!isEditing ? (
                        <button 
                          onClick={() => setIsEditing(true)}
-                         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all shadow-sm"
+                         className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm"
                        >
                           <Edit2 size={16} /> {t('profile.edit_profile')}
                        </button>
@@ -185,13 +189,13 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                        <>
                           <button 
                             onClick={() => setIsEditing(false)}
-                            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all"
+                            className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all"
                           >
                              {t('profile.cancel')}
                           </button>
                           <button 
                             onClick={handleSave}
-                            className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition-all shadow-md"
+                            className="px-4 py-2 bg-gray-900 dark:bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-gray-800 dark:hover:bg-blue-700 transition-all shadow-md"
                           >
                              {t('profile.save_changes')}
                           </button>
@@ -202,14 +206,14 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
 
               <div className="max-w-2xl">
                  {!isEditing ? (
-                    <p className="text-gray-600 leading-relaxed text-sm">
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
                         {profileData.bio || "No bio added yet."}
                     </p>
                  ) : (
                     <textarea 
                        value={profileData.bio}
                        onChange={(e) => handleInputChange('bio', e.target.value)}
-                       className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none bg-gray-50 focus:bg-white transition-all"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none bg-gray-50 dark:bg-gray-700 dark:text-white focus:bg-white dark:focus:bg-gray-800 transition-all"
                        rows={3}
                        placeholder="Tell us about yourself..."
                     />
@@ -224,35 +228,35 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
            <div className="lg:col-span-8 space-y-6">
               
               {/* Personal Details Card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                 <h3 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                 <h3 className="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <User size={18} className="text-gray-400" /> {t('profile.personal_details')}
                  </h3>
                  
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('settings.full_name')}</label>
+                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('settings.full_name')}</label>
                        <input 
                           type="text" 
                           value={user.name} 
                           disabled={true}
-                          className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                          className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed"
                        />
                     </div>
                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('auth.email')}</label>
+                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('auth.email')}</label>
                        <div className="relative">
                           <Mail size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                           <input 
                              type="email" 
                              value={user.email}
                              disabled={true}
-                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed"
                           />
                        </div>
                     </div>
                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('profile.phone')}</label>
+                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('profile.phone')}</label>
                        <div className="relative">
                           <Phone size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                           <input 
@@ -260,13 +264,13 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                              value={profileData.phone}
                              disabled={!isEditing}
                              onChange={(e) => handleInputChange('phone', e.target.value)}
-                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 disabled:text-gray-500 disabled:bg-gray-50/50 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white disabled:text-gray-500 disabled:bg-gray-50/50 dark:disabled:bg-gray-800 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                              placeholder="+1 (555) 000-0000"
                           />
                        </div>
                     </div>
                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('footer.region')}</label>
+                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('footer.region')}</label>
                        <div className="relative">
                           <MapPin size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                           <input 
@@ -274,13 +278,13 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                              value={profileData.location}
                              disabled={!isEditing}
                              onChange={(e) => handleInputChange('location', e.target.value)}
-                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 disabled:text-gray-500 disabled:bg-gray-50/50 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white disabled:text-gray-500 disabled:bg-gray-50/50 dark:disabled:bg-gray-800 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                              placeholder="City, Country"
                           />
                        </div>
                     </div>
                     <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">{t('profile.website')}</label>
+                       <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('profile.website')}</label>
                        <div className="relative">
                           <LinkIcon size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                           <input 
@@ -288,7 +292,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                              value={profileData.website}
                              disabled={!isEditing}
                              onChange={(e) => handleInputChange('website', e.target.value)}
-                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 disabled:text-gray-500 disabled:bg-gray-50/50 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-900 dark:text-white disabled:text-gray-500 disabled:bg-gray-50/50 dark:disabled:bg-gray-800 disabled:border-transparent transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                              placeholder="yourwebsite.com"
                           />
                        </div>
@@ -297,30 +301,30 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
               </div>
 
               {/* Avatar & Theme */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                 <h3 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                 <h3 className="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <Monitor size={18} className="text-gray-400" /> Appearance
                  </h3>
                  
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 block">{t('profile.theme')}</label>
-                        <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
+                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 block">{t('profile.theme')}</label>
+                        <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl w-fit">
                            <button 
                              onClick={() => setTheme('light')}
-                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'light' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'light' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                            >
                               <Sun size={14} /> {t('profile.theme_light')}
                            </button>
                            <button 
                              onClick={() => setTheme('dark')}
-                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'dark' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'dark' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                            >
                               <Moon size={14} /> {t('profile.theme_dark')}
                            </button>
                            <button 
                              onClick={() => setTheme('system')}
-                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'system' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'system' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                            >
                               <Monitor size={14} /> {t('profile.theme_system')}
                            </button>
@@ -335,42 +339,42 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
            <div className="lg:col-span-4 space-y-6">
               
               {/* Activity Snapshot */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                 <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                 <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                     <Activity size={18} className="text-gray-400" /> {t('profile.activity_snapshot')}
                  </h3>
                  
                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                          <div className="p-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg">
                              <CheckCircle size={16} />
                           </div>
                           <div>
-                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">{t('stats.active')}</p>
-                             <p className="font-bold text-gray-900 text-sm">{activeSubsCount} Subscriptions</p>
+                             <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('stats.active')}</p>
+                             <p className="font-bold text-gray-900 dark:text-white text-sm">{activeSubsCount} Subscriptions</p>
                           </div>
                        </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
                              <Zap size={16} />
                           </div>
                           <div>
-                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">{t('stats.monthly')}</p>
-                             <p className="font-bold text-gray-900 text-sm">{formatPrice(monthlySpend)}</p>
+                             <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('stats.monthly')}</p>
+                             <p className="font-bold text-gray-900 dark:text-white text-sm">{formatPrice(monthlySpend)}</p>
                           </div>
                        </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
                              <Calendar size={16} />
                           </div>
                           <div>
-                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">{t('profile.yearly')}</p>
-                             <p className="font-bold text-gray-900 text-sm">{formatPrice(yearlySpend)}</p>
+                             <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('profile.yearly')}</p>
+                             <p className="font-bold text-gray-900 dark:text-white text-sm">{formatPrice(yearlySpend)}</p>
                           </div>
                        </div>
                     </div>
@@ -378,14 +382,14 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
               </div>
 
               {/* Achievements & Milestones */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-fit">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 flex flex-col h-fit">
                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
                        <Trophy size={18} className="text-gray-400" /> {t('profile.achievements')}
                     </h3>
                     <button 
                         onClick={() => setIsAchievementsOpen(true)}
-                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
+                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
                     >
                         {t('profile.view_all')} <ArrowRight size={10} />
                     </button>
@@ -396,7 +400,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                        <div 
                           key={badge.id} 
                           className={`group relative flex flex-col items-center justify-center p-2 rounded-xl border transition-all cursor-help 
-                            ${badge.earned ? 'bg-gray-50 border-gray-100 hover:border-gray-200' : 'bg-gray-50/50 border-transparent opacity-40 grayscale'}
+                            ${badge.earned ? 'bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600 hover:border-gray-200' : 'bg-gray-50/50 dark:bg-gray-800/50 border-transparent opacity-40 grayscale'}
                           `}
                        >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br ${badge.color} text-white shadow-sm mb-1`}>
@@ -406,10 +410,10 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                     ))}
                  </div>
 
-                 <div className="mt-auto space-y-2 pt-4 border-t border-gray-100">
+                 <div className="mt-auto space-y-2 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-center justify-between text-xs">
-                       <span className="text-gray-500 font-medium">{t('profile.member_since')}</span>
-                       <span className="text-gray-900 font-semibold">{profileData.joinedDate}</span>
+                       <span className="text-gray-500 dark:text-gray-400 font-medium">{t('profile.member_since')}</span>
+                       <span className="text-gray-900 dark:text-white font-semibold">{profileData.joinedDate}</span>
                     </div>
                  </div>
               </div>
@@ -420,36 +424,36 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
 
       {/* Toast Notification */}
       <div 
-        className={`fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 ${showToast ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 ${showToast ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}
       >
-         <CheckCircle size={18} className="text-green-400" />
+         <CheckCircle size={18} className="text-green-400 dark:text-green-600" />
          <span className="font-medium text-sm">{t('profile.saved_success')}</span>
       </div>
 
       {/* Achievements Modal */}
       {isAchievementsOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[80vh] overflow-y-auto">
-              <button onClick={() => setIsAchievementsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[80vh] overflow-y-auto">
+              <button onClick={() => setIsAchievementsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X size={20} /></button>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                  <Trophy className="text-yellow-500" /> All Achievements
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {badges.map((badge) => (
-                    <div key={badge.id} className={`flex items-start gap-4 p-4 rounded-xl border ${badge.earned ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+                    <div key={badge.id} className={`flex items-start gap-4 p-4 rounded-xl border ${badge.earned ? 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 opacity-60'}`}>
                        <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${badge.color} text-white shadow-md flex-shrink-0`}>
                           <badge.icon size={20} />
                        </div>
                        <div>
-                          <h4 className="font-bold text-gray-900 text-sm">{badge.name}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{badge.desc}</p>
+                          <h4 className="font-bold text-gray-900 dark:text-white text-sm">{badge.name}</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{badge.desc}</p>
                           <div className="mt-2">
                              {badge.earned ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">
                                    <Check size={10} /> Earned
                                 </span>
                              ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
                                    Locked
                                 </span>
                              )}

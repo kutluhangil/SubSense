@@ -80,10 +80,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         currentTheme === 'dark' || 
         (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
+      const root = document.documentElement;
+      
       if (isDark) {
-        document.documentElement.classList.add('dark');
+        root.classList.add('dark');
+        root.setAttribute('data-theme', 'dark');
       } else {
-        document.documentElement.classList.remove('dark');
+        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'light');
       }
     };
 
