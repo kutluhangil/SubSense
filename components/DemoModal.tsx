@@ -12,7 +12,7 @@ import SubscriptionTable from './SubscriptionTable';
 import Profile from './Profile';
 import Friends from './Friends';
 import Analytics from './Analytics';
-import SettingsPage from './Settings'; // Renamed to avoid conflict
+import SettingsPage from './Settings';
 import Comparison from './Comparison';
 import HelpCenter from './HelpCenter';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
@@ -210,7 +210,7 @@ const DemoDashboard = ({ onNavigate }: { onNavigate: (page: string) => void }) =
 // --- Main Modal Component ---
 
 export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps) {
-  const { t, formatPrice } = useLanguage();
+  const { t } = useLanguage();
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [activeFeaturePopup, setActiveFeaturePopup] = useState<number | null>(null);
 
@@ -272,8 +272,6 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
 
   const dummyHandler = () => {}; // Used for readonly components
 
-  // Render logic based on active sidebar item
-  // IMPORTANT: We use the real components here for an exact match
   const renderContent = () => {
     switch(activeMenu) {
       case 'dashboard': return <DemoDashboard onNavigate={setActiveMenu} />;
@@ -316,16 +314,14 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       ></div>
 
-      {/* Modal Container */}
       <div className="relative w-full max-w-7xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 ring-1 ring-black/5">
         
-        {/* Header - Cleaned up (No Trial Button) */}
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white z-10">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -376,7 +372,7 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
                  </div>
 
                  <div className="space-y-1 mt-8">
-                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">System</p>
+                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Account</p>
                     {sidebarItems.slice(6).map((item) => (
                         <button
                             key={item.id}
@@ -405,12 +401,11 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
            {/* Content Area */}
            <div className="flex-1 overflow-y-auto relative flex flex-col">
               
-              {/* Dynamic Content - Full height, scrollable */}
               <div className="flex-1">
                  {renderContent()}
               </div>
 
-              {/* Bottom Feature Highlights (Interactive Demo Layer) */}
+              {/* Bottom Feature Highlights */}
               <div className="mt-auto bg-white border-t border-gray-100 p-6 sticky bottom-0 z-30">
                  <div className="max-w-5xl mx-auto">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -436,7 +431,6 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
                                 </p>
                              </button>
 
-                             {/* Feature Popover */}
                              {activeFeaturePopup === feature.id && (
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-72 bg-white text-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 zoom-in-95 duration-200 z-50 cursor-default ring-1 ring-black/5">
                                    <div className="flex justify-between items-start mb-3">
@@ -453,7 +447,6 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
                                    <h4 className="font-bold text-base mb-2 text-gray-900">{feature.label}</h4>
                                    <p className="text-xs text-gray-600 leading-relaxed mb-4">{feature.detail}</p>
                                    
-                                   {/* Mini Visual Preview */}
                                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 h-24 flex items-center justify-center overflow-hidden relative group-hover:border-gray-200 transition-colors">
                                       {feature.visual === 'chart' && (
                                          <div className="w-full h-full flex items-end gap-1 px-2 pb-1">
@@ -484,7 +477,6 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
                                       )}
                                    </div>
                                    
-                                   {/* Arrow */}
                                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-b border-r border-gray-100 transform rotate-45"></div>
                                 </div>
                              )}
@@ -497,7 +489,6 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
            </div>
         </div>
 
-        {/* Global Backdrop for Popups (handles click outside) */}
         {activeFeaturePopup !== null && (
            <div className="absolute inset-0 z-20 bg-black/5 backdrop-blur-[1px]" onClick={closeFeaturePopup}></div>
         )}
