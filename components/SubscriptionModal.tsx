@@ -20,6 +20,7 @@ export interface Subscription {
   billingDay?: number;
   history?: number[]; // Mock price history
   category?: string;
+  reminderEnabled?: boolean; // New Field
 }
 
 interface SubscriptionModalProps {
@@ -243,7 +244,6 @@ const PriceHistoryChart = ({ data, accentColor, currency }: { data: number[], ac
 export default function SubscriptionModal({ isOpen, onClose, subscription, onSave, onDelete }: SubscriptionModalProps) {
   const { t, dir } = useLanguage();
   const [formData, setFormData] = useState<Partial<Subscription>>({});
-  const [reminderEnabled, setReminderEnabled] = useState(true);
   const [isSaveHovered, setIsSaveHovered] = useState(false);
 
   useEffect(() => {
@@ -253,6 +253,8 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
         nickname: subscription.nickname || '',
         notes: subscription.notes || '',
         billingDay: subscription.billingDay || new Date(subscription.nextDate).getDate() || 1,
+        // Set reminder state (default true if undefined)
+        reminderEnabled: subscription.reminderEnabled ?? true,
         // Ensure mock history data if none exists
         history: subscription.history || [
            subscription.price * 0.9, 
@@ -550,11 +552,11 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                            <Bell size={16} className="text-gray-400" /> {t('modal.reminder')}
                         </span>
                         <button 
-                           onClick={() => setReminderEnabled(!reminderEnabled)}
+                           onClick={() => handleChange('reminderEnabled', !formData.reminderEnabled)}
                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors`}
-                           style={{ backgroundColor: reminderEnabled ? accentColor : '#e5e7eb' }}
+                           style={{ backgroundColor: formData.reminderEnabled ? accentColor : '#e5e7eb' }}
                         >
-                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.reminderEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                      </div>
                  </div>

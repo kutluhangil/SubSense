@@ -13,7 +13,7 @@ import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, X } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, X, Check } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SubscriptionDetail } from '../utils/data';
 
@@ -30,13 +30,6 @@ const INITIAL_SUBSCRIPTIONS: Subscription[] = [
   { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, category: 'Entertainment', history: [11.99, 11.99, 11.99, 13.99, 13.99] },
 ];
 
-// Mock Notifications
-const NOTIFICATIONS = [
-  { id: 1, text: "Adobe Creative Cloud renews in 2 days.", time: "2h ago", read: false },
-  { id: 2, text: "Spotify Duo plan price will increase next month.", time: "5h ago", read: false },
-  { id: 3, text: "1 subscription is expiring soon.", time: "1d ago", read: true },
-];
-
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState('dashboard');
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(INITIAL_SUBSCRIPTIONS);
@@ -46,6 +39,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Notification State
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "Adobe Creative Cloud renews in 2 days.", time: "2h ago", read: false, type: 'alert' },
+    { id: 2, text: "Spotify Duo plan price will increase next month.", time: "5h ago", read: false, type: 'info' },
+    { id: 3, text: "1 subscription is expiring soon.", time: "1d ago", read: true, type: 'warning' },
+  ]);
   
   // Budget & Savings State
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({
@@ -106,21 +106,48 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     setCurrentView('dashboard'); // Return to dashboard to see new item
   };
 
+  // Notification Handlers
+  const handleMarkAllRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  const handleNotificationClick = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    // Could navigate to specific views here
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   // --- Sub-components ---
 
   const NotificationDropdown = () => (
     <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-       <div className="p-4 border-b border-gray-50 flex justify-between items-center">
+       <div className="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
           <h3 className="font-bold text-gray-900 text-sm">{t('dashboard.notifications')}</h3>
-          <button className="text-[10px] text-blue-600 font-medium hover:underline">{t('dashboard.mark_read')}</button>
+          <button 
+            onClick={handleMarkAllRead}
+            className="text-[10px] text-blue-600 font-medium hover:underline flex items-center gap-1"
+          >
+            <Check size={12} /> {t('dashboard.mark_read')}
+          </button>
        </div>
        <div className="max-h-64 overflow-y-auto">
-          {NOTIFICATIONS.map(n => (
-             <div key={n.id} className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.read ? 'bg-blue-50/30' : ''}`}>
-                <p className={`text-xs text-gray-800 mb-1 ${!n.read ? 'font-semibold' : ''}`}>{n.text}</p>
+          {notifications.map(n => (
+             <div 
+               key={n.id} 
+               onClick={() => handleNotificationClick(n.id)}
+               className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-blue-50/30' : ''}`}
+             >
+                <div className="flex justify-between items-start">
+                   <p className={`text-xs text-gray-800 mb-1 ${!n.read ? 'font-semibold' : ''}`}>{n.text}</p>
+                   {!n.read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>}
+                </div>
                 <p className="text-[10px] text-gray-400">{n.time}</p>
              </div>
           ))}
+          {notifications.length === 0 && (
+             <div className="p-8 text-center text-gray-400 text-xs">No notifications</div>
+          )}
        </div>
     </div>
   );
@@ -256,9 +283,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                         className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors relative shadow-sm"
                       >
                          <Bell size={20} />
-                         <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                         {unreadCount > 0 && (
+                            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                         )}
                       </button>
-                      {notificationsOpen && <NotificationDropdown />}
+                      {notificationsOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)}></div>
+                          <NotificationDropdown />
+                        </>
+                      )}
                    </div>
 
                    <button 
@@ -286,7 +320,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
                          <SubscriptionTable 
                            subscriptions={filteredSubscriptions} 
-                           onSelectSubscription={setSelectedSub} 
+                           onSelectSubscription={setSelectedSub}
+                           onDeleteSubscription={handleSubDelete}
                          />
                       </div>
                    </div>
@@ -317,7 +352,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       case 'subscriptions': return (
         <div className="space-y-6">
            <h2 className="text-2xl font-bold text-gray-900">{t('features.subscriptions.title')}</h2>
-           <SubscriptionTable subscriptions={subscriptions} onSelectSubscription={setSelectedSub} />
+           <SubscriptionTable 
+             subscriptions={subscriptions} 
+             onSelectSubscription={setSelectedSub} 
+             onDeleteSubscription={handleSubDelete}
+           />
         </div>
       );
       default: return null;

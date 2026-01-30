@@ -22,6 +22,7 @@ interface AnalyticsProps {
   totalSaved?: number;
 }
 
+// ... (Keep existing Helper Functions and Visual Components exactly as they are) ...
 // --- Helper Functions ---
 const generateSmoothPath = (points: {x: number, y: number}[]) => {
   if (points.length === 0) return '';
@@ -356,7 +357,6 @@ const SmartBudgetMonitor = ({
   }, [subscriptions]);
 
   const categories = Object.keys(budgetLimits);
-  // FIX: Explicitly cast Object.values results to number[] to avoid "unknown" type errors in reduce
   const totalBudget = (Object.values(budgetLimits) as number[]).reduce((a, b) => a + b, 0);
   const totalSpent = (Object.values(spendingByCategory) as number[]).reduce((a, b) => a + b, 0);
 
@@ -554,6 +554,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
   const { t, currentCurrency, formatPrice, convertPrice } = useLanguage();
   const [dateRange, setDateRange] = useState('Last 6 Months');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
+  const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
 
   // CSV Export Logic
   const handleExportCSV = () => {
@@ -608,11 +609,34 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
               <button onClick={() => setViewMode('personal')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.personal')}</button>
               <button onClick={() => setViewMode('friends')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'friends' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.friends')}</button>
            </div>
-           <button className="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm">
-              <Calendar size={16} className="text-gray-400" />
-              <span>{dateRange}</span>
-              <ChevronDown size={14} className="text-gray-400 ml-1" />
-           </button>
+           
+           <div className="relative">
+             <button 
+                onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
+                className="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
+             >
+                <Calendar size={16} className="text-gray-400" />
+                <span>{dateRange}</span>
+                <ChevronDown size={14} className="text-gray-400 ml-1" />
+             </button>
+             {isDateDropdownOpen && (
+               <>
+                 <div className="fixed inset-0 z-10" onClick={() => setIsDateDropdownOpen(false)}></div>
+                 <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                    {['Last 30 Days', 'Last 3 Months', 'Last 6 Months', 'Last 12 Months'].map(option => (
+                       <button
+                         key={option}
+                         onClick={() => { setDateRange(option); setIsDateDropdownOpen(false); }}
+                         className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                       >
+                         {option}
+                       </button>
+                    ))}
+                 </div>
+               </>
+             )}
+           </div>
+
            <button 
              onClick={handleExportCSV}
              className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm active:scale-95"

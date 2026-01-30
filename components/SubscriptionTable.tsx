@@ -1,29 +1,54 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import BrandIcon from './BrandIcon';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface SubscriptionTableProps {
   subscriptions?: Subscription[];
   onSelectSubscription?: (sub: Subscription) => void;
+  onDeleteSubscription?: (id: number) => void;
 }
 
-export default function SubscriptionTable({ subscriptions = [], onSelectSubscription }: SubscriptionTableProps) {
+export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription }: SubscriptionTableProps) {
   const { formatPrice, formatDate } = useLanguage();
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDropdownClick = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    setActiveDropdown(activeDropdown === id ? null : id);
+  };
+
+  const handleAction = (e: React.MouseEvent, action: 'edit' | 'delete', sub: Subscription) => {
+    e.stopPropagation();
+    setActiveDropdown(null);
+    if (action === 'edit' && onSelectSubscription) {
+        onSelectSubscription(sub);
+    } else if (action === 'delete' && onDeleteSubscription) {
+        // Confirmation?
+        if (window.confirm("Are you sure you want to delete this subscription?")) {
+            onDeleteSubscription(sub.id);
+        }
+    }
+  };
 
   // Fallback data if none provided (though usually it will be)
-  const displaySubs = subscriptions.length > 0 ? subscriptions : [
-    { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active' },
-    { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active' },
-    { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring' },
-    { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active' },
-    { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active' },
-  ] as Subscription[];
+  const displaySubs = subscriptions.length > 0 ? subscriptions : [] as Subscription[];
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-visible">
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400 font-semibold bg-gray-50/50">
@@ -68,10 +93,38 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
               <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                 {formatDate(sub.nextDate)}
               </td>
-              <td className="px-6 py-4 text-right">
-                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              <td className="px-6 py-4 text-right relative">
+                <button 
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={(e) => handleDropdownClick(e, sub.id)}
+                >
                   <MoreHorizontal size={18} />
                 </button>
+                
+                {/* Dropdown Menu */}
+                {activeDropdown === sub.id && (
+                    <div ref={dropdownRef} className="absolute right-8 top-8 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                       <button 
+                         onClick={(e) => handleAction(e, 'edit', sub)}
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2"
+                       >
+                          <Edit2 size={14} /> Edit Subscription
+                       </button>
+                       <button 
+                         onClick={(e) => handleAction(e, 'edit', sub)}
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2"
+                       >
+                          <Eye size={14} /> View Details
+                       </button>
+                       <div className="h-px bg-gray-50 my-1"></div>
+                       <button 
+                         onClick={(e) => handleAction(e, 'delete', sub)}
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                       >
+                          <Trash2 size={14} /> Remove
+                       </button>
+                    </div>
+                )}
               </td>
             </tr>
           ))}
