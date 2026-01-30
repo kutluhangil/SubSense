@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2, Edit2, X } from 'lucide-react';
+import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2, Edit2, X, DollarSign } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -136,37 +136,29 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   );
 };
 
-const SpendingHeatmap = () => {
-  const getOpacity = (i: number) => {
-     const pattern = Math.abs(Math.sin(i * 12.34) * Math.cos(i * 5.67)); 
-     if (pattern > 0.8) return 0.9;
-     if (pattern > 0.6) return 0.6;
-     if (pattern > 0.4) return 0.3;
-     return 0.1;
-  };
-  
-  return (
-    <div className="flex flex-col h-full justify-between py-2">
-       <div className="grid grid-cols-12 gap-1.5">
-          {Array.from({ length: 48 }).map((_, i) => (
-             <div 
-                key={i} 
-                className="w-full aspect-square rounded-[2px] bg-gray-900 transition-all hover:scale-125 hover:ring-2 hover:ring-offset-1 hover:ring-gray-200"
-                style={{ opacity: getOpacity(i) }}
-                title={`Activity Level: ${Math.round(getOpacity(i)*100)}%`}
-             ></div>
-          ))}
-       </div>
-       <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-3 font-medium">
-          <span>Less</span>
-          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-10"></div>
-          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-40"></div>
-          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-70"></div>
-          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-100"></div>
-          <span>More</span>
-       </div>
-    </div>
-  );
+const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
+    // Sort by price desc
+    const sorted = [...subscriptions].sort((a, b) => b.price - a.price).slice(0, 3);
+
+    return (
+        <div className="flex flex-col h-full justify-center space-y-4">
+            {sorted.map((sub) => (
+                <div key={sub.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100">
+                            <BrandIcon type={sub.type} className="w-5 h-5" noBackground />
+                        </div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-900">{sub.name}</p>
+                            <p className="text-[10px] text-gray-500">{sub.category}</p>
+                        </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-900">{formatPrice(sub.price)}</span>
+                </div>
+            ))}
+            {sorted.length === 0 && <p className="text-xs text-gray-400 text-center">No subscriptions yet.</p>}
+        </div>
+    );
 };
 
 const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v: number) => string, subscriptions: Subscription[] }) => {
@@ -657,12 +649,13 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             />
          </div>
          
-         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col justify-between h-full">
-            <div className="flex justify-between items-center mb-2">
-               <p className="text-gray-900 font-bold text-sm">{t('analytics.heatmap')}</p>
-               <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">{t('analytics.heatmap_desc')}</span>
+         {/* Replaced Heatmap with Top Expenses List */}
+         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col h-full">
+            <div className="flex justify-between items-center mb-4">
+               <p className="text-gray-900 font-bold text-sm">Top Expenses</p>
+               <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">High Impact</span>
             </div>
-            <SpendingHeatmap />
+            <TopExpensesList subscriptions={subscriptions} formatPrice={formatPrice} />
          </div>
       </div>
 

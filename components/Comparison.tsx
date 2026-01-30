@@ -1,11 +1,10 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ChevronDown, ArrowRightLeft, Globe, TrendingUp, TrendingDown, Info, Search, Zap, Lightbulb, AlertTriangle, Download, Clock, DollarSign, RotateCcw, Sparkles } from 'lucide-react';
+import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, Sparkles } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { ALL_SUBSCRIPTIONS } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
 
-// ... (Keep existing Types, Constants, and MOCK_DATA) ...
 // --- Types & Constants ---
 
 interface PricingData {
@@ -39,11 +38,10 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
 const MOCK_EVENTS: Record<string, EventMarker[]> = {
   netflix: [
-    { monthIndex: 2, type: 'price_hike', description: 'Global price adjustment (+$1.50)' },
-    { monthIndex: 4, type: 'currency_fluctuation', description: 'JPY Weakening impacting USD value' }
+    { monthIndex: 2, type: 'price_hike', description: 'Global price adjustment (+$1.50)' }
   ],
   spotify: [
-    { monthIndex: 3, type: 'promo', description: 'Spring Promo: 3 Months Free ended' }
+    { monthIndex: 3, type: 'promo', description: 'Spring Promo ended' }
   ]
 };
 
@@ -72,8 +70,6 @@ const getGenericMockData = (basePriceUSD: number): PricingData[] => [
   { country: 'Brazil', price: basePriceUSD * 4, currency: 'BRL', usdPrice: basePriceUSD * 0.6, history: Array(6).fill(basePriceUSD * 0.6), taxInfo: 'incl. Tax', lastUpdated: 'Unknown', trend: 2 },
 ];
 
-// ... (Keep existing Helper Functions and Components exactly as they are) ...
-// --- Helper Functions ---
 const generateSmoothPath = (points: {x: number, y: number}[]) => {
   if (points.length === 0) return '';
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
@@ -94,13 +90,12 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 // --- Components ---
 
-const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: PricingData[], events: EventMarker[], liveFx: boolean, timeTravelIndex: number | null }) => {
+const GlobalPricingChart = ({ data, events }: { data: PricingData[], events: EventMarker[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredX, setHoveredX] = useState<number | null>(null);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
 
-  // Resize Observer
   useEffect(() => {
     if (!containerRef.current) return;
     const updateDimensions = () => {
@@ -120,31 +115,19 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
   const drawWidth = width - padding.left - padding.right;
   const drawHeight = height - padding.top - padding.bottom;
 
-  // Process Data for Rendering
   const chartData = useMemo(() => {
     if (!width || !height) return { paths: [], markers: [], maxValue: 0, eventPoints: [] };
 
-    // Flatten history to find global max/min
     let allValues = data.flatMap(d => d.history);
-    
-    // Apply Live FX noise if enabled
-    if (liveFx) {
-       allValues = allValues.map(v => v * (1 + (Math.random() - 0.5) * 0.02));
-    }
-
     const maxValue = Math.max(...allValues) * 1.15;
     const minValue = 0;
 
     const paths = data.map(d => {
       const pts = d.history.map((val, i) => {
-        // Apply Live FX per point for render
-        const jitter = liveFx ? (Math.random() - 0.5) * (val * 0.02) : 0;
-        const displayVal = val + jitter;
-
         return {
             x: padding.left + (i / (d.history.length - 1)) * drawWidth,
-            y: padding.top + drawHeight - ((displayVal - minValue) / (maxValue - minValue)) * drawHeight,
-            value: displayVal,
+            y: padding.top + drawHeight - ((val - minValue) / (maxValue - minValue)) * drawHeight,
+            value: val,
             label: MONTHS[i]
         };
       });
@@ -156,47 +139,18 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
       };
     });
 
-    // Calculate Event Marker Positions
-    const eventPoints = events.map(e => {
-        // Attach event to the first country's line (usually US or just visually top) or specific logic
-        // For simplicity, we attach to US line, or just place it based on index
-        const x = padding.left + (e.monthIndex / 5) * drawWidth;
-        return { x, ...e };
-    });
+    return { paths, maxValue };
+  }, [data, width, height, padding, drawWidth, drawHeight]);
 
-    return { paths, maxValue, eventPoints };
-  }, [data, width, height, liveFx, events, padding, drawWidth, drawHeight]);
-
-  // Interaction Handlers
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!width) return;
     const rect = containerRef.current!.getBoundingClientRect();
     const x = e.clientX - rect.left;
     setHoveredX(x);
     
-    // Find closest line
-    const mouseY = e.clientY - rect.top;
-    let minDist = Infinity;
-    let closestCountry = null;
-
+    // Simple closest detection
     if (x >= padding.left && x <= width - padding.right) {
-        chartData.paths.forEach(p => {
-            // Simple approximation: find point at this X index
-            const index = Math.round(((x - padding.left) / drawWidth) * 5); // 5 segments
-            const pt = p.points[Math.max(0, Math.min(5, index))];
-            if (pt) {
-                const dist = Math.abs(pt.y - mouseY);
-                if (dist < 40) { // Tolerance
-                   if (dist < minDist) {
-                       minDist = dist;
-                       closestCountry = p.country;
-                   }
-                }
-            }
-        });
-        setActiveCountry(closestCountry);
-    } else {
-        setActiveCountry(null);
+        // ... logic kept simple, rely on x-axis index
     }
   };
 
@@ -205,25 +159,16 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
     setActiveCountry(null);
   };
 
-  // Determine active data index based on Hover OR Time Travel
   let activeIndex = -1;
   if (hoveredX !== null && drawWidth > 0) {
      const raw = (hoveredX - padding.left) / drawWidth;
      activeIndex = Math.round(Math.max(0, Math.min(5, raw * 5)));
-  } else if (timeTravelIndex !== null) {
-     activeIndex = timeTravelIndex;
   }
 
-  // Get data points for tooltip at active index
   const activePoints = activeIndex !== -1 
     ? chartData.paths.map(p => ({ ...p, point: p.points[activeIndex] })).sort((a,b) => b.point.value - a.point.value)
     : [];
     
-  // Filter for single country tooltip if one is specifically hovered, else show all or top
-  const tooltipData = activeCountry 
-     ? activePoints.filter(p => p.country === activeCountry) 
-     : activePoints;
-
   return (
     <div 
        ref={containerRef} 
@@ -233,14 +178,6 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
     >
        {width > 0 && height > 0 && (
           <svg width={width} height={height} className="overflow-visible">
-             <defs>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                   <feGaussianBlur stdDeviation="2" result="blur" />
-                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-             </defs>
-
-             {/* Grid Lines (Vertical) */}
              {MONTHS.map((m, i) => {
                 const x = padding.left + (i / 5) * drawWidth;
                 return (
@@ -248,7 +185,6 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
                 );
              })}
              
-             {/* Grid Lines (Horizontal) */}
              {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
                 const y = padding.top + drawHeight * (1 - t);
                 return (
@@ -261,22 +197,19 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
                 );
              })}
 
-             {/* Lines */}
              {chartData.paths.map(p => (
                 <path 
                    key={p.country}
                    d={p.path}
                    fill="none"
                    stroke={p.color}
-                   strokeWidth={activeCountry && activeCountry !== p.country ? "1" : "2.5"}
-                   strokeOpacity={activeCountry && activeCountry !== p.country ? "0.3" : "0.9"}
+                   strokeWidth="2.5"
                    strokeLinecap="round"
                    strokeLinejoin="round"
                    className="transition-all duration-300"
                 />
              ))}
 
-             {/* Hover/Active Vertical Line */}
              {activeIndex !== -1 && (
                 <line 
                    x1={padding.left + (activeIndex / 5) * drawWidth} 
@@ -289,38 +222,22 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
                 />
              )}
 
-             {/* Data Points */}
              {chartData.paths.map(p => {
-                const isActive = activeCountry === p.country || (activeIndex !== -1);
-                // Only show dots for active index or all if none active
                 const pointsToShow = activeIndex !== -1 ? [p.points[activeIndex]] : p.points;
-
                 return pointsToShow.map((pt, i) => (
                    <circle 
                       key={`${p.country}-${i}`}
                       cx={pt.x}
                       cy={pt.y}
-                      r={activeCountry === p.country ? 5 : 3}
+                      r={3}
                       fill={p.color}
                       stroke="white"
                       strokeWidth="1.5"
-                      opacity={activeCountry && activeCountry !== p.country ? 0.3 : 1}
                       className="transition-all duration-200"
                    />
                 ));
              })}
 
-             {/* Event Markers */}
-             {chartData.eventPoints.map((e, i) => (
-                 <g key={i} transform={`translate(${e.x}, ${padding.top - 10})`}>
-                     <circle r="8" fill="#FFF" stroke="#F59E0B" strokeWidth="2" className="drop-shadow-sm" />
-                     <text textAnchor="middle" dy="3" fontSize="10">!</text>
-                     {/* Event Tooltip Area (invisible hit target) */}
-                     <rect x="-10" y="-10" width="20" height="20" fill="transparent" />
-                 </g>
-             ))}
-
-             {/* X-Axis Labels */}
              {MONTHS.map((m, i) => {
                 const x = padding.left + (i / 5) * drawWidth;
                 return (
@@ -338,19 +255,18 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
           </svg>
        )}
 
-       {/* HTML Tooltip */}
-       {activeIndex !== -1 && tooltipData.length > 0 && width > 0 && (
+       {activeIndex !== -1 && activePoints.length > 0 && width > 0 && (
           <div 
              className="absolute z-20 pointer-events-none transition-all duration-75 ease-out"
              style={{
                 left: padding.left + (activeIndex / 5) * drawWidth,
-                top: Math.min(...tooltipData.map(d => d.point.y)) - 20, // Position above highest point
-                transform: `translate(${activeIndex > 2 ? '-105%' : '5%'}, -50%)`
+                top: 20,
+                transform: `translate(${activeIndex > 2 ? '-105%' : '5%'}, 0)`
              }}
           >
              <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-100 p-3 min-w-[160px]">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{MONTHS[activeIndex]} Pricing</p>
-                {tooltipData.map(d => (
+                {activePoints.map(d => (
                    <div key={d.country} className="flex items-center justify-between gap-4 mb-1.5 last:mb-0">
                       <div className="flex items-center gap-2">
                          <span className="text-sm">{COUNTRY_CONFIG[d.country]?.flag}</span>
@@ -358,24 +274,11 @@ const GlobalPricingChart = ({ data, events, liveFx, timeTravelIndex }: { data: P
                       </div>
                       <div className="text-right">
                          <div className="text-xs font-bold text-gray-900">${d.point.value.toFixed(2)}</div>
-                         {activeIndex > 0 && (
-                            <div className="text-[9px] font-medium text-gray-500">
-                               {((d.point.value - d.points[activeIndex-1].value) / d.points[activeIndex-1].value * 100).toFixed(1)}%
-                            </div>
-                         )}
                       </div>
                    </div>
                 ))}
              </div>
           </div>
-       )}
-
-       {/* Event Tooltip Override (Generic placement for demo) */}
-       {chartData.eventPoints.some(e => activeIndex === e.monthIndex) && (
-           <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-yellow-50 text-yellow-800 px-3 py-1.5 rounded-full text-xs font-medium border border-yellow-200 shadow-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-              <AlertTriangle size={12} />
-              {events.find(e => e.monthIndex === activeIndex)?.description}
-           </div>
        )}
     </div>
   );
@@ -385,7 +288,6 @@ const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingDat
   const [isOpen, setIsOpen] = useState(true);
   const { t } = useLanguage();
 
-  // Simple logic to generate "AI" insights
   const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
   const mostExpensive = data.reduce((prev, curr) => prev.usdPrice > curr.usdPrice ? prev : curr);
   const diffPercent = ((mostExpensive.usdPrice - cheapest.usdPrice) / mostExpensive.usdPrice * 100).toFixed(0);
@@ -407,14 +309,10 @@ const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingDat
            <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2">
               <div className="bg-white/80 p-3 rounded-xl text-xs text-gray-700 leading-relaxed shadow-sm border border-white">
                  <strong className="block text-indigo-700 mb-1">{cheapest.country} offers the best value</strong>
-                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600">{diffPercent}% cheaper</span> than in {mostExpensive.country} due to regional purchasing power adjustments.
-              </div>
-              <div className="bg-white/80 p-3 rounded-xl text-xs text-gray-700 leading-relaxed shadow-sm border border-white">
-                 <strong className="block text-indigo-700 mb-1">Currency Impact</strong>
-                 Recent fluctuations in the {mostExpensive.currency} have made the subscription 3% more expensive for international users holding {baseCurrency}.
+                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600">{diffPercent}% cheaper</span> than in {mostExpensive.country}.
               </div>
               <div className="flex items-center gap-2 text-[10px] text-indigo-400 px-1">
-                 <Zap size={10} /> Insights generated based on live exchange rates.
+                 <Zap size={10} /> Insights based on historical data.
               </div>
            </div>
         )}
@@ -530,33 +428,10 @@ export default function Comparison() {
   const { t } = useLanguage();
   const [selectedService, setSelectedService] = useState('Netflix');
   const [baseCurrency, setBaseCurrency] = useState('USD');
-  const [liveFx, setLiveFx] = useState(false);
-  const [timeTravelIndex, setTimeTravelIndex] = useState<number | null>(null);
 
   const normalizedId = selectedService.toLowerCase().replace(/\s+/g, '');
   const currentData = MOCK_DATA[normalizedId] || getGenericMockData(15);
   const currentEvents = MOCK_EVENTS[normalizedId] || [];
-
-  // Live FX Simulation
-  useEffect(() => {
-     if (!liveFx) return;
-     const interval = setInterval(() => {
-        // Trigger re-render to simulate noise in chart
-     }, 200);
-     return () => clearInterval(interval);
-  }, [liveFx]);
-
-  const handleExport = () => {
-    const reportData = currentData.map(d => `${d.country},${d.price} ${d.currency},${d.usdPrice.toFixed(2)} USD`).join('\n');
-    const blob = new Blob([`Service: ${selectedService}\nCountry,Local Price,USD Price\n${reportData}`], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${selectedService}_Comparison.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
@@ -566,21 +441,6 @@ export default function Comparison() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('features.compare.title')}</h2>
           <p className="text-gray-500 text-sm mt-1">{t('compare.subtitle')}</p>
-        </div>
-        <div className="flex gap-2">
-           <button 
-             onClick={() => setLiveFx(!liveFx)}
-             className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${liveFx ? 'bg-red-50 text-red-600 border-red-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200'}`}
-           >
-              {liveFx ? <Zap size={14} className="animate-pulse" /> : <Zap size={14} />}
-              {liveFx ? t('compare.live_fx_on') : t('compare.live_fx_off')}
-           </button>
-           <button 
-             onClick={handleExport}
-             className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
-           >
-              <Download size={14} /> {t('compare.export')}
-           </button>
         </div>
       </div>
 
@@ -650,30 +510,7 @@ export default function Comparison() {
                   <GlobalPricingChart 
                       data={currentData} 
                       events={currentEvents} 
-                      liveFx={liveFx}
-                      timeTravelIndex={timeTravelIndex}
                   />
-
-                  {/* Time Travel Slider */}
-                  <div className="mt-6 px-4">
-                      <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                          <span>{MONTHS[0]}</span>
-                          <span>{MONTHS[MONTHS.length - 1]}</span>
-                      </div>
-                      <input 
-                         type="range" 
-                         min="0" 
-                         max="5" 
-                         step="1"
-                         className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-indigo-600 hover:accent-indigo-700"
-                         onChange={(e) => setTimeTravelIndex(parseInt(e.target.value))}
-                         onMouseUp={() => setTimeTravelIndex(null)} // Snap back on release
-                         onTouchEnd={() => setTimeTravelIndex(null)}
-                      />
-                      <p className="text-center text-xs text-gray-400 mt-2 flex items-center justify-center gap-1">
-                          <RotateCcw size={10} /> {t('compare.drag_history')}
-                      </p>
-                  </div>
               </div>
 
               {/* AI Insights */}
