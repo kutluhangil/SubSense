@@ -4,8 +4,7 @@ import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, P
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
-// --- Static Data & Configuration ---
-
+// ... (Keep existing static data CATEGORIES and FAQS exactly as they are) ...
 const CATEGORIES = [
   { 
     id: 'start', 
@@ -221,8 +220,7 @@ const FAQS = [
   }
 ];
 
-// --- Sub-Components ---
-
+// ... (Keep BackgroundVisual and SmartHelpAssistant as they are) ...
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   // Returns a subtle SVG pattern based on category
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none transition-all duration-700 ease-in-out";
@@ -405,12 +403,17 @@ export default function HelpCenter() {
   const [searchQuery, setSearchQuery] = useState('');
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [feedbackState, setFeedbackState] = useState<Record<string, 'up' | 'down' | null>>({});
   const { t } = useLanguage();
 
   const toggleItem = (id: string) => {
     setOpenItems(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
+  };
+
+  const handleFeedback = (id: string, type: 'up' | 'down') => {
+    setFeedbackState(prev => ({ ...prev, [id]: type }));
   };
 
   const filteredFaqs = FAQS.filter(faq => {
@@ -538,8 +541,21 @@ export default function HelpCenter() {
                                       {faq.answer}
                                       <div className="mt-4 pt-3 border-t border-gray-200/50 flex items-center gap-4">
                                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Was this helpful?</span>
-                                         <button className="text-gray-400 hover:text-green-500 transition-colors"><ThumbsUp size={14} /></button>
-                                         <button className="text-gray-400 hover:text-red-500 transition-colors"><ThumbsDown size={14} /></button>
+                                         <button 
+                                            onClick={() => handleFeedback(faq.id, 'up')}
+                                            className={`transition-colors ${feedbackState[faq.id] === 'up' ? 'text-green-500' : 'text-gray-400 hover:text-green-500'}`}
+                                         >
+                                            <ThumbsUp size={14} className={feedbackState[faq.id] === 'up' ? 'fill-current' : ''} />
+                                         </button>
+                                         <button 
+                                            onClick={() => handleFeedback(faq.id, 'down')}
+                                            className={`transition-colors ${feedbackState[faq.id] === 'down' ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
+                                         >
+                                            <ThumbsDown size={14} className={feedbackState[faq.id] === 'down' ? 'fill-current' : ''} />
+                                         </button>
+                                         {feedbackState[faq.id] && (
+                                            <span className="text-[10px] text-gray-400 animate-in fade-in">Thanks for your feedback!</span>
+                                         )}
                                       </div>
                                    </div>
                                 </div>

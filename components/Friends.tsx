@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, MapPin, UserPlus, MoreHorizontal, MessageCircle, UserMinus } from 'lucide-react';
+import { Search, MapPin, UserPlus, MoreHorizontal, MessageCircle, UserMinus, X, Send, CheckCircle, Edit3, Plus, Minus, Clock } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -37,12 +37,7 @@ export interface Friend {
   recentActivity: { action: string; date: string; type: 'add' | 'remove' | 'update' }[];
 }
 
-export default function Friends() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const { t, formatPrice } = useLanguage();
-
-  const friends: Friend[] = [
+const INITIAL_FRIENDS: Friend[] = [
     {
       id: 1,
       name: 'Sarah Jenkins',
@@ -121,10 +116,43 @@ export default function Friends() {
     }
   ];
 
+export default function Friends() {
+  const [friends, setFriends] = useState(INITIAL_FRIENDS);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const { t, formatPrice } = useLanguage();
+
   const filteredFriends = friends.filter(friend => 
     friend.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     friend.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleRemoveFriend = (id: number) => {
+    if (window.confirm("Are you sure you want to remove this friend?")) {
+        setFriends(prev => prev.filter(f => f.id !== id));
+        setActiveDropdown(null);
+    }
+  };
+
+  const handleSendMessage = (friend: Friend) => {
+    setSelectedFriend(friend);
+    setIsMessageModalOpen(true);
+    setActiveDropdown(null);
+  };
+
+  const handleViewProfile = (friend: Friend) => {
+    setSelectedFriend(friend);
+    setActiveDropdown(null);
+  };
+
+  const handleAddFriendSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Friend request sent! (Mock)");
+    setIsAddModalOpen(false);
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -148,7 +176,10 @@ export default function Friends() {
                 className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white w-full md:w-64 transition-all"
                 />
             </div>
-            <button className="flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm">
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm"
+            >
                 <UserPlus size={16} />
                 <span className="hidden sm:inline">{t('friends.add_btn')}</span>
             </button>
@@ -160,8 +191,8 @@ export default function Friends() {
         {filteredFriends.map((friend) => (
           <div 
             key={friend.id} 
-            onClick={() => setSelectedFriend(friend)}
-            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 group cursor-pointer hover:-translate-y-1"
+            onClick={() => handleViewProfile(friend)}
+            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 group cursor-pointer hover:-translate-y-1 relative"
           >
             {/* Card Header */}
             <div className="flex justify-between items-start mb-4">
@@ -185,12 +216,22 @@ export default function Friends() {
                   <p className="text-xs text-gray-500">{friend.username}</p>
                 </div>
               </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); }} 
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-50 transition-colors"
-              >
-                <MoreHorizontal size={18} />
-              </button>
+              <div className="relative">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === friend.id ? null : friend.id); }} 
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                    <MoreHorizontal size={18} />
+                </button>
+                {activeDropdown === friend.id && (
+                    <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                       <button onClick={(e) => { e.stopPropagation(); handleViewProfile(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">View Profile</button>
+                       <button onClick={(e) => { e.stopPropagation(); handleSendMessage(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Send Message</button>
+                       <div className="h-px bg-gray-50 my-1"></div>
+                       <button onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>
+                    </div>
+                )}
+              </div>
             </div>
 
             {/* Stats */}
@@ -221,14 +262,14 @@ export default function Friends() {
             {/* Actions */}
             <div className="flex gap-2 pt-4 border-t border-gray-50">
                <button 
-                 onClick={(e) => { e.stopPropagation(); /* Add logic */ }}
+                 onClick={(e) => { e.stopPropagation(); handleSendMessage(friend); }}
                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                >
                   <MessageCircle size={14} className="mr-2" />
                   {t('friend.message')}
                </button>
                <button 
-                 onClick={(e) => { e.stopPropagation(); /* Add logic */ }}
+                 onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }}
                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors"
                >
                   <UserMinus size={14} className="mr-2" />
@@ -239,11 +280,56 @@ export default function Friends() {
         ))}
       </div>
 
+      {/* Profile Modal */}
       <ProfileCardModal 
-        isOpen={!!selectedFriend}
+        isOpen={!!selectedFriend && !isMessageModalOpen}
         onClose={() => setSelectedFriend(null)}
         user={selectedFriend ? mapFriendToProfile(selectedFriend) : null}
       />
+
+      {/* Add Friend Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative">
+              <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('friends.add_btn')}</h3>
+              <form onSubmit={handleAddFriendSubmit}>
+                 <div className="mb-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Username or Email</label>
+                    <input type="text" placeholder="@username or email" className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required />
+                 </div>
+                 <button type="submit" className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all">Send Request</button>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {isMessageModalOpen && selectedFriend && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col h-[400px]">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                 <div className="flex items-center gap-3">
+                    <img src={selectedFriend.avatar} alt="" className="w-8 h-8 rounded-full" />
+                    <span className="font-bold text-gray-900">{selectedFriend.name}</span>
+                 </div>
+                 <button onClick={() => setIsMessageModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              </div>
+              <div className="flex-1 p-4 bg-gray-50 overflow-y-auto">
+                 <div className="text-center text-xs text-gray-400 my-4">Today</div>
+                 <div className="flex justify-end mb-2">
+                    <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-br-none text-sm max-w-[80%]">
+                       Hey! Saw you added YouTube Premium. Is it worth it?
+                    </div>
+                 </div>
+              </div>
+              <div className="p-3 border-t border-gray-100 flex gap-2">
+                 <input type="text" placeholder="Type a message..." className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-400" />
+                 <button className="p-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800"><Send size={18} /></button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

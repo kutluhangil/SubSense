@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
@@ -34,6 +34,12 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
     document.body.removeChild(link);
   };
 
+  const handleLogoutAll = () => {
+    if (window.confirm("Are you sure you want to log out of all devices?")) {
+        alert("All other sessions have been invalidated.");
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -60,7 +66,7 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                             <h4 className="text-sm font-bold text-indigo-900">{t('settings.smart_suggestions')}</h4>
                             <p className="text-xs text-indigo-700/60">{t('settings.smart_suggestions_desc')}</p>
                          </div>
-                         <Toggle defaultChecked color="bg-indigo-600" />
+                         <Toggle id="smart_suggestions" defaultChecked color="bg-indigo-600" />
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -97,21 +103,21 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                             <h4 className="text-sm font-medium text-gray-900">{t('settings.payment_due')}</h4>
                             <p className="text-xs text-gray-500">3 days before renewal</p>
                         </div>
-                        <Toggle defaultChecked />
+                        <Toggle id="notify_payment" defaultChecked />
                     </div>
                     <div className="flex items-center justify-between">
                         <div>
                             <h4 className="text-sm font-medium text-gray-900">{t('settings.price_alerts')}</h4>
                             <p className="text-xs text-gray-500">Global price changes</p>
                         </div>
-                        <Toggle defaultChecked />
+                        <Toggle id="notify_price" defaultChecked />
                     </div>
                     <div className="flex items-center justify-between">
                         <div>
                             <h4 className="text-sm font-medium text-gray-900">{t('settings.weekly_digest')}</h4>
                             <p className="text-xs text-gray-500">Summary via email</p>
                         </div>
-                        <Toggle />
+                        <Toggle id="notify_digest" />
                     </div>
                 </div>
             </div>
@@ -140,15 +146,15 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                          </div>
                          <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.show_stats')}</span>
-                            <Toggle defaultChecked />
+                            <Toggle id="priv_stats" defaultChecked />
                          </div>
                          <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.show_subs')}</span>
-                            <Toggle defaultChecked />
+                            <Toggle id="priv_subs" defaultChecked />
                          </div>
                          <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700 pl-6">{t('settings.allow_requests')}</span>
-                            <Toggle defaultChecked />
+                            <Toggle id="priv_requests" defaultChecked />
                          </div>
                     </div>
                 </div>
@@ -203,7 +209,10 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                         </div>
                     </div>
                     
-                    <button className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 border border-red-100 bg-red-50 hover:bg-red-100 py-2.5 rounded-xl transition-colors">
+                    <button 
+                        onClick={handleLogoutAll}
+                        className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 border border-red-100 bg-red-50 hover:bg-red-100 py-2.5 rounded-xl transition-colors"
+                    >
                         <LogOut size={16} /> {t('settings.logout_all')}
                     </button>
                 </div>
@@ -216,11 +225,22 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
   );
 }
 
-const Toggle = ({ defaultChecked = false, color = "bg-gray-900" }: { defaultChecked?: boolean, color?: string }) => {
-  const [enabled, setEnabled] = useState(defaultChecked);
+const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900" }: { id: string, defaultChecked?: boolean, color?: string }) => {
+  // Initialize state from localStorage or default
+  const [enabled, setEnabled] = useState(() => {
+      const saved = localStorage.getItem(`setting_${id}`);
+      return saved !== null ? JSON.parse(saved) : defaultChecked;
+  });
+
+  const toggle = () => {
+      const newVal = !enabled;
+      setEnabled(newVal);
+      localStorage.setItem(`setting_${id}`, JSON.stringify(newVal));
+  };
+
   return (
     <button 
-      onClick={() => setEnabled(!enabled)}
+      onClick={toggle}
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? color : 'bg-gray-200'}`}
     >
       <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-4.5' : 'translate-x-1'}`} style={{ transform: enabled ? 'translateX(18px)' : 'translateX(2px)' }} />

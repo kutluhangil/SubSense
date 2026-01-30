@@ -5,6 +5,7 @@ import BrandIcon from './BrandIcon';
 import { ALL_SUBSCRIPTIONS } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
 
+// ... (Keep existing Types, Constants, and MOCK_DATA) ...
 // --- Types & Constants ---
 
 interface PricingData {
@@ -71,6 +72,7 @@ const getGenericMockData = (basePriceUSD: number): PricingData[] => [
   { country: 'Brazil', price: basePriceUSD * 4, currency: 'BRL', usdPrice: basePriceUSD * 0.6, history: Array(6).fill(basePriceUSD * 0.6), taxInfo: 'incl. Tax', lastUpdated: 'Unknown', trend: 2 },
 ];
 
+// ... (Keep existing Helper Functions and Components exactly as they are) ...
 // --- Helper Functions ---
 const generateSmoothPath = (points: {x: number, y: number}[]) => {
   if (points.length === 0) return '';
@@ -544,6 +546,18 @@ export default function Comparison() {
      return () => clearInterval(interval);
   }, [liveFx]);
 
+  const handleExport = () => {
+    const reportData = currentData.map(d => `${d.country},${d.price} ${d.currency},${d.usdPrice.toFixed(2)} USD`).join('\n');
+    const blob = new Blob([`Service: ${selectedService}\nCountry,Local Price,USD Price\n${reportData}`], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${selectedService}_Comparison.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
       
@@ -561,7 +575,10 @@ export default function Comparison() {
               {liveFx ? <Zap size={14} className="animate-pulse" /> : <Zap size={14} />}
               {liveFx ? t('compare.live_fx_on') : t('compare.live_fx_off')}
            </button>
-           <button className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors">
+           <button 
+             onClick={handleExport}
+             className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 transition-colors"
+           >
               <Download size={14} /> {t('compare.export')}
            </button>
         </div>

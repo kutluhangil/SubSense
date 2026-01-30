@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { User, MapPin, Globe, Mail, Phone, Camera, Edit2, Link as LinkIcon, Calendar, Activity, CheckCircle, Zap, Sun, Moon, Monitor, Check, Trophy, Wallet, Flame, Clock, Brain, Tv, CreditCard, Palette, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, MapPin, Globe, Mail, Phone, Camera, Edit2, Link as LinkIcon, Calendar, Activity, CheckCircle, Zap, Sun, Moon, Monitor, Check, Trophy, Wallet, Flame, Clock, Brain, Tv, CreditCard, Palette, ArrowRight, X } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Mock Data
@@ -44,9 +44,27 @@ const BADGES = [
 
 export default function Profile() {
   const { t, formatPrice } = useLanguage();
-  const [user, setUser] = useState(INITIAL_USER);
+  const [user, setUser] = useState(() => {
+      const savedTheme = localStorage.getItem('userThemePreference');
+      return { ...INITIAL_USER, theme: savedTheme || 'system' };
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Theme Logic
+  useEffect(() => {
+    const applyTheme = (theme: string) => {
+        if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('userThemePreference', theme);
+    };
+    applyTheme(user.theme);
+  }, [user.theme]);
 
   const handleInputChange = (field: string, value: string) => {
     setUser(prev => ({ ...prev, [field]: value }));
@@ -56,6 +74,10 @@ export default function Profile() {
     setIsEditing(false);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleCoverClick = () => {
+    fileInputRef.current?.click();
   };
 
   const earnedBadges = BADGES.filter(b => b.earned);
@@ -70,9 +92,13 @@ export default function Profile() {
            <div className="h-48 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
               <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                 <button className="bg-black/30 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-black/50 transition-colors flex items-center gap-2">
+                 <button 
+                   onClick={handleCoverClick}
+                   className="bg-black/30 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-black/50 transition-colors flex items-center gap-2"
+                 >
                     <Camera size={14} /> {t('profile.edit_cover')}
                  </button>
+                 <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={() => alert("Cover photo updated (Mock)")} />
               </div>
            </div>
 
@@ -255,22 +281,19 @@ export default function Profile() {
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 block">{t('profile.theme')}</label>
                         <div className="flex bg-gray-100 p-1 rounded-xl w-fit">
                            <button 
-                             onClick={() => isEditing && handleInputChange('theme', 'light')}
-                             disabled={!isEditing}
+                             onClick={() => handleInputChange('theme', 'light')}
                              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${user.theme === 'light' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                            >
                               <Sun size={14} /> {t('profile.theme_light')}
                            </button>
                            <button 
-                             onClick={() => isEditing && handleInputChange('theme', 'dark')}
-                             disabled={!isEditing}
+                             onClick={() => handleInputChange('theme', 'dark')}
                              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${user.theme === 'dark' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                            >
                               <Moon size={14} /> {t('profile.theme_dark')}
                            </button>
                            <button 
-                             onClick={() => isEditing && handleInputChange('theme', 'system')}
-                             disabled={!isEditing}
+                             onClick={() => handleInputChange('theme', 'system')}
                              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${user.theme === 'system' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                            >
                               <Monitor size={14} /> {t('profile.theme_system')}
@@ -335,7 +358,10 @@ export default function Profile() {
                        <Trophy size={18} className="text-gray-400" /> {t('profile.achievements')}
                     </h3>
                     {earnedBadges.length > 4 && (
-                       <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md transition-colors flex items-center gap-1">
+                       <button 
+                         onClick={() => setIsAchievementsOpen(true)}
+                         className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
+                       >
                           {t('profile.view_all')} <ArrowRight size={10} />
                        </button>
                     )}
@@ -396,6 +422,42 @@ export default function Profile() {
          <CheckCircle size={18} className="text-green-400" />
          <span className="font-medium text-sm">{t('profile.saved_success')}</span>
       </div>
+
+      {/* Achievements Modal */}
+      {isAchievementsOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 relative max-h-[80vh] overflow-y-auto">
+              <button onClick={() => setIsAchievementsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                 <Trophy className="text-yellow-500" /> All Achievements
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {BADGES.map((badge) => (
+                    <div key={badge.id} className={`flex items-start gap-4 p-4 rounded-xl border ${badge.earned ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'}`}>
+                       <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${badge.color} text-white shadow-md flex-shrink-0`}>
+                          <badge.icon size={20} />
+                       </div>
+                       <div>
+                          <h4 className="font-bold text-gray-900 text-sm">{badge.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{badge.desc}</p>
+                          <div className="mt-2">
+                             {badge.earned ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                   <Check size={10} /> Earned
+                                </span>
+                             ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                   Locked
+                                </span>
+                             )}
+                          </div>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
