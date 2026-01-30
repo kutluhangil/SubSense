@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>SubscriptionHub - Global Subscription Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,6 +16,19 @@
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
+              // Semantic Tokens linked to CSS Variables
+              app: 'var(--bg-app)',
+              card: 'var(--bg-card)',
+              sidebar: 'var(--bg-sidebar)',
+              
+              primary: 'var(--text-primary)',
+              secondary: 'var(--text-secondary)',
+              muted: 'var(--text-muted)',
+              
+              subtle: 'var(--border-subtle)',
+              'subtle-hover': 'var(--border-subtle-hover)',
+              
+              // Raw grays for utility if needed (legacy support)
               gray: {
                 50: '#f9fafb',
                 100: '#f3f4f6',
@@ -45,27 +58,68 @@
     </script>
     <style>
       :root {
-        --bg-app: #f9fafb;
-        --bg-card: #ffffff;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --border-subtle: #f3f4f6;
+        /* Light Theme (Default) */
+        --bg-app: #f9fafb;       /* gray-50 */
+        --bg-card: #ffffff;      /* white */
+        --bg-sidebar: #ffffff;   /* white */
+        
+        --text-primary: #111827; /* gray-900 */
+        --text-secondary: #4b5563; /* gray-600 */
+        --text-muted: #9ca3af;   /* gray-400 */
+        
+        --border-subtle: #f3f4f6; /* gray-100 */
+        --border-subtle-hover: #e5e7eb; /* gray-200 */
+        
         --chart-grid: #f3f4f6;
+        --overlay-bg: rgba(255, 255, 255, 0.8);
       }
+
       [data-theme='dark'] {
-        --bg-app: #111827; /* gray-900 */
-        --bg-card: #1f2937; /* gray-800 */
+        /* Dark Theme (Matches Profile Page Aesthetic) */
+        --bg-app: #111827;       /* gray-900 */
+        --bg-card: #1f2937;      /* gray-800 */
+        --bg-sidebar: #1f2937;   /* gray-800 - Unified with card for sidebar */
+        
         --text-primary: #f9fafb; /* gray-50 */
-        --text-secondary: #9ca3af; /* gray-400 */
+        --text-secondary: #d1d5db; /* gray-300 */
+        --text-muted: #9ca3af;   /* gray-400 */
+        
         --border-subtle: #374151; /* gray-700 */
+        --border-subtle-hover: #4b5563; /* gray-600 */
+        
         --chart-grid: #374151;
+        --overlay-bg: rgba(31, 41, 55, 0.8);
       }
+
+      /* Global Smooth Theme Transition */
+      body, div, nav, aside, section, article, header, footer, 
+      button, input, textarea, select, table, tr, td, th, span, p, h1, h2, h3, h4, h5, h6 {
+        transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+        transition-duration: 300ms;
+        transition-timing-function: ease-in-out;
+      }
+
       body {
         background-color: var(--bg-app);
         color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* Scrollbar Styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-subtle-hover);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
       }
     </style>
   <script type="importmap">

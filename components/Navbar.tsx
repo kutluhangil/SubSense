@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
@@ -22,7 +23,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+    <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-subtle transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -37,20 +38,20 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
           <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
             <button 
               onClick={() => handleNav('features')} 
-              className={`text-sm font-medium transition-colors ${currentPage === 'features' ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-900'}`}
+              className={`text-sm font-medium transition-colors ${currentPage === 'features' ? 'text-primary font-semibold' : 'text-secondary hover:text-primary'}`}
             >
               {t('nav.features')}
             </button>
             <div className="flex items-center space-x-4 ml-4 rtl:space-x-reverse rtl:ml-0 rtl:mr-4">
               <button 
                 onClick={() => onOpenAuth('login')}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-sm font-medium text-secondary hover:text-primary transition-colors"
               >
                 {t('nav.login')}
               </button>
               <button 
                 onClick={() => onOpenAuth('signup')}
-                className="text-sm font-medium bg-gray-900 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition-colors shadow-sm hover:shadow-md"
+                className="text-sm font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-full hover:opacity-90 transition-all shadow-sm hover:shadow-md"
               >
                 {t('nav.signup')}
               </button>
@@ -61,7 +62,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
           <div className="flex items-center md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-secondary hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500"
             >
               <span className="sr-only">Open main menu</span>
               {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
@@ -72,11 +73,11 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-white border-b border-gray-100">
+        <div className="md:hidden bg-card border-b border-subtle">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <button 
               onClick={() => handleNav('features')} 
-              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-secondary hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               {t('nav.features')}
             </button>
@@ -85,7 +86,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
                 onOpenAuth('login');
                 setIsOpen(false);
               }}
-              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+              className="block w-full text-left rtl:text-right px-3 py-2 rounded-md text-base font-medium text-secondary hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               {t('nav.login')}
             </button>
@@ -94,7 +95,7 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
                 onOpenAuth('signup');
                 setIsOpen(false);
               }}
-              className="block w-full px-3 py-2 mt-4 text-center rounded-md text-base font-medium bg-gray-900 text-white hover:bg-gray-800"
+              className="block w-full px-3 py-3 mt-4 text-center rounded-md text-base font-bold bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:opacity-90"
             >
               {t('nav.signup')}
             </button>

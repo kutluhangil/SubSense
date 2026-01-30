@@ -43,7 +43,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
+        <div key={index} className="bg-card rounded-2xl p-6 border border-subtle shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-4">
             <div className={`p-3 rounded-xl ${stat.color}`}>
               <stat.icon size={22} />
@@ -59,14 +59,14 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
               </span>
             )}
              {stat.trend === 'neutral' && (
-              <span className="flex items-center text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+              <span className="flex items-center text-xs font-medium text-secondary bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
                 {stat.change}
               </span>
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.label}</p>
-            <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
+            <p className="text-sm font-medium text-secondary mb-1">{stat.label}</p>
+            <h3 className="text-3xl font-bold text-primary">{stat.value}</h3>
             
             {/* Micro Graph for Forecast Card */}
             {stat.hasGraph && (
