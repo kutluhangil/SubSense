@@ -69,17 +69,19 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   if (width === 0) return <div ref={containerRef} className="h-[200px] w-full" />;
 
   const convertedData = data.map(d => ({ ...d, value: convertPrice(d.value) }));
-  const maxValue = Math.max(...convertedData.map(d => d.value)) * 1.1;
+  // Handle case where max value is 0
+  const maxVal = Math.max(...convertedData.map(d => d.value));
+  const maxValue = maxVal > 0 ? maxVal * 1.1 : 100;
   const minValue = 0;
   
   const points = convertedData.map((d, i) => ({
-    x: padding.left + (i / (data.length - 1)) * drawWidth,
+    x: padding.left + (i / (Math.max(1, data.length - 1))) * drawWidth,
     y: padding.top + drawHeight - ((d.value - minValue) / (maxValue - minValue)) * drawHeight,
     ...d
   }));
 
   const pathD = generateSmoothPath(points);
-  const fillPath = `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`;
+  const fillPath = points.length > 0 ? `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z` : '';
 
   return (
     <div ref={containerRef} className="h-[200px] w-full relative select-none">
@@ -164,22 +166,17 @@ const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscr
 const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v: number) => string, subscriptions: Subscription[] }) => {
    const data = useMemo(() => {
       const map: Record<string, number> = {};
-      const source = subscriptions.length > 0 ? subscriptions : [
-         { name: 'Netflix', price: 19.99, type: 'netflix' },
-         { name: 'Spotify', price: 14.99, type: 'spotify' },
-         { name: 'Adobe', price: 54.99, type: 'adobe' },
-         { name: 'Amazon', price: 12.99, type: 'amazon' },
-      ] as Subscription[];
-
-      source.forEach(sub => {
-         const key = sub.name; 
-         map[key] = (map[key] || 0) + sub.price;
+      
+      subscriptions.forEach(sub => {
+         const key = sub.category || 'Other'; 
+         const monthlyPrice = sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
+         map[key] = (map[key] || 0) + monthlyPrice;
       });
 
       return Object.entries(map)
         .map(([name, value]) => {
-           const type = name.toLowerCase().replace(/\s+/g, '');
-           const color = BRAND_COLORS[type] || ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'][Math.floor(Math.random()*5)];
+           // Assign colors randomly based on name hash for consistency
+           const color = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'][name.length % 5];
            return { name, value, color };
         })
         .sort((a,b) => b.value - a.value)
@@ -188,6 +185,8 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
 
    const total = data.reduce((a, b) => a + b.value, 0);
    let cumulativePercent = 0;
+
+   if (data.length === 0) return <div className="flex items-center justify-center h-full text-xs text-gray-400">No data available</div>;
 
    return (
     <div className="flex items-start gap-6 h-full">
@@ -260,13 +259,6 @@ const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string 
 };
 
 const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
-  const displaySubs = subscriptions.length > 0 ? subscriptions : [
-     { name: 'Netflix', startDate: '2021-01-01', type: 'netflix' },
-     { name: 'Spotify', startDate: '2022-03-15', type: 'spotify' },
-     { name: 'Adobe', startDate: '2023-06-01', type: 'adobe' },
-     { name: 'Amazon Prime', startDate: '2023-01-10', type: 'amazon' }
-  ];
-
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-fit">
       <div className="flex items-center justify-between mb-6">
@@ -274,42 +266,46 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
             <Clock size={18} className="text-gray-400" /> Subscription Lifetime
         </h3>
       </div>
-      <div className="space-y-6">
-         {displaySubs.slice(0, 5).map((sub, i) => {
-            const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
-            const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
-            const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
-            const mockDuration = `${Math.floor(width / 8)}m`; 
-            
-            return (
-                <div key={i} className="flex items-center gap-4 group">
-                   <div className="w-32 flex items-center gap-3 flex-shrink-0">
-                      <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                         <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
-                      </div>
-                      <div className="min-w-0">
-                         <p className="text-xs font-bold text-gray-900 truncate" title={sub.name}>{sub.name}</p>
-                         <p className="text-[10px] text-gray-400">Active</p>
-                      </div>
-                   </div>
-                   
-                   <div className="flex-1 relative h-6 flex items-center">
-                      <div className="absolute left-0 right-0 h-1.5 bg-gray-50 rounded-full"></div>
-                      <div 
-                         className="absolute left-0 h-2 rounded-full transition-all duration-1000 ease-out group-hover:h-2.5 shadow-sm opacity-90"
-                         style={{ width: `${width}%`, backgroundColor: color }}
-                      ></div>
-                      <div 
-                         className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                         style={{ left: `${width}%` }}
-                      >
-                         {mockDuration}
-                      </div>
-                   </div>
-                </div>
-            );
-         })}
-      </div>
+      {subscriptions.length === 0 ? (
+          <div className="text-center text-xs text-gray-400 py-8">Add subscriptions to view lifetime timeline</div>
+      ) : (
+        <div className="space-y-6">
+            {subscriptions.slice(0, 5).map((sub, i) => {
+                const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
+                const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
+                const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
+                const mockDuration = `${Math.floor(width / 8)}m`; 
+                
+                return (
+                    <div key={i} className="flex items-center gap-4 group">
+                    <div className="w-32 flex items-center gap-3 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                            <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-900 truncate" title={sub.name}>{sub.name}</p>
+                            <p className="text-[10px] text-gray-400">Active</p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex-1 relative h-6 flex items-center">
+                        <div className="absolute left-0 right-0 h-1.5 bg-gray-50 rounded-full"></div>
+                        <div 
+                            className="absolute left-0 h-2 rounded-full transition-all duration-1000 ease-out group-hover:h-2.5 shadow-sm opacity-90"
+                            style={{ width: `${width}%`, backgroundColor: color }}
+                        ></div>
+                        <div 
+                            className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ left: `${width}%` }}
+                        >
+                            {mockDuration}
+                        </div>
+                    </div>
+                    </div>
+                );
+            })}
+        </div>
+      )}
     </div>
   );
 };
@@ -533,14 +529,37 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
     document.body.removeChild(link);
   };
 
-  const personalTrendData = [
-    { label: 'Jan', value: 1850, prevValue: 1700 },
-    { label: 'Feb', value: 2100, prevValue: 1850 },
-    { label: 'Mar', value: 1950, prevValue: 2100 },
-    { label: 'Apr', value: 2400, prevValue: 1950 },
-    { label: 'May', value: 2250, prevValue: 2400 },
-    { label: 'Jun', value: 2800, prevValue: 2250 },
-  ];
+  // Derive Trend Data from real subscriptions
+  const personalTrendData = useMemo(() => {
+    const today = new Date();
+    const months = [];
+    
+    // Create last 6 months buckets
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        months.push(d.toLocaleString('default', { month: 'short' }));
+    }
+
+    // Calculate current monthly total
+    let currentMonthlyTotal = 0;
+    subscriptions.forEach(sub => {
+        if(sub.status === 'Active') {
+            currentMonthlyTotal += sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
+        }
+    });
+
+    // Simulate trend with slight random variance for MVP visual appeal
+    // In a real backend app, this would query historical snapshots
+    return months.map((m, i) => {
+        const variance = (Math.random() - 0.5) * (currentMonthlyTotal * 0.1); // +/- 5% variance
+        const val = Math.max(0, currentMonthlyTotal + (i < 5 ? variance : 0)); // Ensure last month matches current total
+        return {
+            label: m,
+            value: val,
+            prevValue: val * 0.9
+        };
+    });
+  }, [subscriptions]);
 
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 

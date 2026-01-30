@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   X, LayoutGrid, Users, CreditCard, PieChart, 
   ArrowRightLeft, LogOut
@@ -24,6 +24,28 @@ const DEMO_SUBSCRIPTIONS: Subscription[] = [
 export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps) {
   const { t } = useLanguage();
   const [currentView, setCurrentView] = useState('dashboard');
+
+  const metrics = useMemo(() => {
+    let monthlyTotal = 0;
+    let yearlyTotalForecast = 0;
+    
+    DEMO_SUBSCRIPTIONS.forEach(sub => {
+      // Normalize to monthly cost
+      if (sub.cycle === 'Monthly') {
+        monthlyTotal += sub.price;
+        yearlyTotalForecast += sub.price * 12;
+      } else {
+        monthlyTotal += sub.price / 12;
+        yearlyTotalForecast += sub.price;
+      }
+    });
+
+    return {
+      monthlySpend: monthlyTotal,
+      activeCount: DEMO_SUBSCRIPTIONS.length,
+      yearlyForecast: yearlyTotalForecast
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -91,7 +113,11 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
            <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50">
               {currentView === 'dashboard' ? (
                  <div className="space-y-8 animate-in fade-in duration-300">
-                    <StatsCards />
+                    <StatsCards 
+                      monthly={metrics.monthlySpend}
+                      active={metrics.activeCount}
+                      forecast={metrics.yearlyForecast}
+                    />
                     <div className="space-y-4">
                        <h3 className="font-bold text-gray-900 text-lg">{t('dashboard.active_subs')}</h3>
                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

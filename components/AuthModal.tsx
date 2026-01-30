@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import LegalModal from './LegalModal';
 
@@ -8,14 +8,16 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode: 'login' | 'signup';
-  onLogin?: () => void;
+  onLoginSubmit?: (email: string, password: string) => boolean;
+  onSignupSubmit?: (name: string, email: string, password: string) => boolean;
   onSimulateReset?: () => void;
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSimulateReset }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit, onSignupSubmit, onSimulateReset }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
   const { t } = useLanguage();
   
@@ -44,28 +46,46 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
     if (isOpen) {
         setMode(initialMode);
         setShowPassword(false);
-        if (initialMode !== 'login' && initialMode !== 'signup') {
-           setMode('login');
-        }
+        setErrorMsg(null);
+        setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
     }
   }, [initialMode, isOpen]);
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setErrorMsg(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMsg(null);
     
+    // Simulate network delay for UX
     setTimeout(() => {
-      setIsSubmitting(false);
       if (mode === 'forgot-password') {
         setMode('email-sent');
-      } else if (onLogin) {
-        onLogin();
+        setIsSubmitting(false);
+      } else if (mode === 'login' && onLoginSubmit) {
+        const success = onLoginSubmit(formData.email, formData.password);
+        if (!success) {
+          setErrorMsg("Invalid email or password");
+          setIsSubmitting(false);
+        }
+        // If success, parent component handles close/redirect
+      } else if (mode === 'signup' && onSignupSubmit) {
+        if (formData.password !== formData.confirmPassword) {
+           setErrorMsg("Passwords do not match");
+           setIsSubmitting(false);
+           return;
+        }
+        const success = onSignupSubmit(formData.fullName, formData.email, formData.password);
+        if (!success) {
+           setErrorMsg("Account already exists with this email");
+           setIsSubmitting(false);
+        }
       }
-    }, 1500);
+    }, 800);
   };
 
   const isValidEmail = (email: string) => {
@@ -125,6 +145,13 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                 )}
               </div>
 
+              {errorMsg && (
+                <div className="mb-6 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 animate-in slide-in-from-top-2">
+                   <AlertCircle size={16} />
+                   {errorMsg}
+                </div>
+              )}
+
               {mode === 'login' && (
                   <form className="space-y-5" onSubmit={handleSubmit}>
                     <div>
@@ -137,6 +164,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                             placeholder="name@example.com"
                             value={formData.email}
                             onChange={(e) => handleChange('email', e.target.value)}
+                            required
                           />
                       </div>
                     </div>
@@ -148,6 +176,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                             type="password" 
                             className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white placeholder-gray-400"
                             placeholder="••••••••"
+                            value={formData.password}
+                            onChange={(e) => handleChange('password', e.target.value)}
+                            required
                           />
                       </div>
                     </div>
@@ -160,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         Forgot password?
                       </button>
                     </div>
-                    <button type="submit" className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center transform active:scale-[0.98]">
+                    <button type="submit" disabled={isSubmitting} className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                       {isSubmitting ? 'Logging in...' : t('auth.submit_login')} 
                       {!isSubmitting && <ArrowRight size={18} className="ml-2" />}
                     </button>
