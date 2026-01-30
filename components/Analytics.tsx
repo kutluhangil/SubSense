@@ -22,7 +22,6 @@ interface AnalyticsProps {
   totalSaved?: number;
 }
 
-// ... (Keep existing Helper Functions and Visual Components exactly as they are) ...
 // --- Helper Functions ---
 const generateSmoothPath = (points: {x: number, y: number}[]) => {
   if (points.length === 0) return '';
@@ -62,12 +61,13 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  const height = 240;
-  const padding = { top: 20, bottom: 30, left: 40, right: 20 };
+  // Explicit reduced height to eliminate empty space
+  const height = 180; 
+  const padding = { top: 20, bottom: 20, left: 35, right: 15 }; // Tighter padding
   const drawWidth = width - padding.left - padding.right;
   const drawHeight = height - padding.top - padding.bottom;
 
-  if (width === 0) return <div ref={containerRef} className="h-60 w-full" />;
+  if (width === 0) return <div ref={containerRef} className="h-[180px] w-full" />;
 
   const convertedData = data.map(d => ({ ...d, value: convertPrice(d.value) }));
   const maxValue = Math.max(...convertedData.map(d => d.value)) * 1.1;
@@ -83,7 +83,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   const fillPath = `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`;
 
   return (
-    <div ref={containerRef} className="h-60 w-full relative select-none">
+    <div ref={containerRef} className="h-[180px] w-full relative select-none">
        <svg width={width} height={height} className="overflow-visible">
           <defs>
              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
@@ -97,7 +97,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
              return (
                 <g key={i}>
                    <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#F3F4F6" strokeDasharray="4 4" />
-                   <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-gray-400 font-medium">{Math.round(maxValue * t)}</text>
+                   <text x={padding.left - 8} y={y + 3} textAnchor="end" className="text-[9px] fill-gray-400 font-medium">{Math.round(maxValue * t)}</text>
                 </g>
              );
           })}
@@ -119,7 +119,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
           
           {/* X Axis Labels */}
           {points.map((p, i) => (
-             <text key={i} x={p.x} y={height} textAnchor="middle" className="text-[10px] fill-gray-400 uppercase font-bold tracking-wider">{p.label}</text>
+             <text key={i} x={p.x} y={height - 5} textAnchor="middle" className="text-[9px] fill-gray-400 uppercase font-bold tracking-wider">{p.label}</text>
           ))}
        </svg>
        
@@ -294,34 +294,45 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
         </h3>
         <span className="text-xs text-gray-400 font-medium">Joined vs Duration</span>
       </div>
-      <div className="space-y-5">
+      <div className="space-y-6">
          {displaySubs.slice(0, 5).map((sub, i) => {
-            const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); // Mock visual width
+            // Mock visual width relative to a pretend "max duration"
+            const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
             const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
             const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
+            const mockDuration = `${Math.floor(width / 8)}m`; // Mock duration text
             
             return (
-                <div key={i} className="relative h-8 w-full flex items-center group">
-                   {/* Background Track */}
-                   <div className="absolute left-0 right-0 h-1 bg-gray-50 rounded-full top-1/2 -translate-y-1/2"></div>
-                   
-                   {/* Active Bar */}
-                   <div 
-                      className="absolute left-0 h-2 rounded-full transition-all duration-1000 group-hover:h-3 opacity-80"
-                      style={{ width: `${width}%`, backgroundColor: color }}
-                   ></div>
-                   
-                   {/* Icon Indicator */}
-                   <div 
-                      className="relative z-10 flex items-center justify-center w-8 h-8 bg-white rounded-full border border-gray-100 shadow-sm transition-transform group-hover:scale-110"
-                      style={{ marginLeft: `calc(${width}% - 16px)` }}
-                   >
-                      <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
+                <div key={i} className="flex items-center gap-4 group">
+                   {/* Left Col: Label - Fixed width to prevent overlap */}
+                   <div className="w-32 flex items-center gap-3 flex-shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                         <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
+                      </div>
+                      <div className="min-w-0">
+                         <p className="text-xs font-bold text-gray-900 truncate" title={sub.name}>{sub.name}</p>
+                         <p className="text-[10px] text-gray-400">Active</p>
+                      </div>
                    </div>
                    
-                   {/* Label */}
-                   <div className="ml-4 flex flex-col justify-center">
-                      <span className="text-xs font-bold text-gray-900">{sub.name}</span>
+                   {/* Right Col: Bar Track */}
+                   <div className="flex-1 relative h-6 flex items-center">
+                      {/* Track */}
+                      <div className="absolute left-0 right-0 h-1.5 bg-gray-50 rounded-full"></div>
+                      
+                      {/* Active Progress */}
+                      <div 
+                         className="absolute left-0 h-2 rounded-full transition-all duration-1000 ease-out group-hover:h-2.5 shadow-sm opacity-90"
+                         style={{ width: `${width}%`, backgroundColor: color }}
+                      ></div>
+                      
+                      {/* Tooltip/Label at end of bar */}
+                      <div 
+                         className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                         style={{ left: `${width}%` }}
+                      >
+                         {mockDuration}
+                      </div>
                    </div>
                 </div>
             );
@@ -675,8 +686,9 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
+         {/* Reduced Height Spending Trend Card */}
+         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-base font-bold text-gray-900">{t('analytics.trend')}</h3>
                 <p className="text-xs text-gray-500">{t('analytics.trend_desc')}</p>
@@ -688,6 +700,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             </div>
             <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
          </div>
+         
          <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
                <div className="flex items-center justify-between mb-6">
