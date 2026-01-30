@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Calendar, Edit2, TrendingUp, TrendingDown, Bell, Lightbulb, Trash2, Check } from 'lucide-react';
+import { X, Calendar, Edit2, TrendingUp, TrendingDown, Bell, Lightbulb, Trash2, Check, ExternalLink } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -28,6 +29,16 @@ interface SubscriptionModalProps {
   onSave: (updatedSub: Subscription) => void;
   onDelete: (id: number) => void;
 }
+
+// Static cancel links
+const CANCEL_LINKS: Record<string, string> = {
+  'netflix': 'https://www.netflix.com/cancelplan',
+  'spotify': 'https://www.spotify.com/account/cancel/',
+  'amazon': 'https://www.amazon.com/gp/help/customer/display.html?nodeId=G57V745LBUAWDQ78',
+  'youtube': 'https://www.youtube.com/paid_memberships',
+  'adobe': 'https://account.adobe.com/plans',
+  'apple': 'https://support.apple.com/en-us/HT202039',
+};
 
 // Helper to find accent color
 const getAccentColor = (type: string, name: string) => {
@@ -311,6 +322,18 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
     ? `+${trendPercent.toFixed(1)}%` 
     : `${trendPercent.toFixed(1)}%`;
 
+  // --- CANCEL LINK LOGIC ---
+  const getCancelLink = () => {
+    // Basic fuzzy matching
+    for (const key in CANCEL_LINKS) {
+      if (subscription.type.toLowerCase().includes(key) || subscription.name.toLowerCase().includes(key)) {
+        return CANCEL_LINKS[key];
+      }
+    }
+    // Fallback search
+    return `https://www.google.com/search?q=how+to+cancel+${encodeURIComponent(subscription.name)}+subscription`;
+  };
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
@@ -536,13 +559,27 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                      </div>
                  </div>
 
-                 {/* Delete Button */}
-                 <button 
-                   onClick={handleDelete}
-                   className="w-full py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-100"
-                 >
-                    <Trash2 size={16} /> {t('modal.delete')}
-                 </button>
+                 {/* Action Buttons */}
+                 <div className="space-y-3">
+                    {/* Cancel Guide Link */}
+                    <a 
+                      href={getCancelLink()} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="w-full py-3 rounded-xl font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 border border-gray-200"
+                    >
+                       <ExternalLink size={16} /> How to Cancel
+                    </a>
+                    <p className="text-[10px] text-center text-gray-400">Redirects to provider's site. We do not automate cancellation.</p>
+
+                    {/* Delete Button */}
+                    <button 
+                      onClick={handleDelete}
+                      className="w-full py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-100"
+                    >
+                        <Trash2 size={16} /> {t('modal.delete')}
+                    </button>
+                 </div>
 
               </div>
            </div>

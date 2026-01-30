@@ -47,6 +47,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
+  // Budget & Savings State
+  const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({
+    'Entertainment': 50,
+    'Productivity': 100,
+    'Shopping': 200,
+    'Tools': 50
+  });
+  const [savingsGoal, setSavingsGoal] = useState(20); // Monthly savings goal
+  const [totalSaved, setTotalSaved] = useState(0); // Tracked savings from deletions
+
   const { t, formatPrice } = useLanguage();
 
   const filteredSubscriptions = useMemo(() => {
@@ -59,6 +69,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   };
 
   const handleSubDelete = (id: number) => {
+    const subToDelete = subscriptions.find(s => s.id === id);
+    if (subToDelete) {
+        // Add monthly price to saved amount (simple heuristic: if yearly, divide by 12)
+        const monthlyValue = subToDelete.cycle === 'Yearly' ? subToDelete.price / 12 : subToDelete.price;
+        setTotalSaved(prev => prev + monthlyValue);
+    }
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   };
 
@@ -284,9 +300,18 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           </div>
         );
       case 'friends': return <Friends />;
-      case 'analytics': return <Analytics />;
+      case 'analytics': return (
+        <Analytics 
+          subscriptions={subscriptions} 
+          budgetLimits={budgetLimits} 
+          setBudgetLimits={setBudgetLimits}
+          savingsGoal={savingsGoal}
+          setSavingsGoal={setSavingsGoal}
+          totalSaved={totalSaved}
+        />
+      );
       case 'compare': return <Comparison />;
-      case 'settings': return <SettingsPage />;
+      case 'settings': return <SettingsPage subscriptions={subscriptions} />;
       case 'help': return <HelpCenter />;
       case 'profile': return <Profile />;
       case 'subscriptions': return (

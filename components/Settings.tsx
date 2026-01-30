@@ -1,10 +1,38 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Check } from 'lucide-react';
+import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Subscription } from './SubscriptionModal';
 
-export default function Settings() {
+export default function Settings({ subscriptions = [] }: { subscriptions?: Subscription[] }) {
   const { t } = useLanguage();
+
+  const handleExportCSV = () => {
+    const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
+    const rows = subscriptions.map(sub => [
+        sub.name,
+        sub.category || "Uncategorized",
+        sub.price.toFixed(2),
+        sub.currency,
+        sub.cycle,
+        sub.nextDate,
+        sub.status
+    ]);
+
+    const csvContent = [
+        headers.join(","),
+        ...rows.map(e => e.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "subscription_hub_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
@@ -123,6 +151,24 @@ export default function Settings() {
                             <Toggle defaultChecked />
                          </div>
                     </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
+                    <FileText className="text-gray-400" size={20} />
+                    <h3 className="text-base font-bold text-gray-900">Data & Export</h3>
+                </div>
+                <div className="p-6 space-y-4">
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                       Download a copy of your subscription data for your personal records or for use in other applications.
+                    </p>
+                    <button 
+                      onClick={handleExportCSV}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-900 border border-gray-200 bg-white hover:bg-gray-50 py-2.5 rounded-xl transition-colors"
+                    >
+                        <Download size={16} /> Export as CSV
+                    </button>
                 </div>
             </div>
 
