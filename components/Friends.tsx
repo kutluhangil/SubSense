@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, MapPin, UserPlus, MoreHorizontal, UserMinus, X, Check, Copy } from 'lucide-react';
+import { Search, MapPin, UserPlus, MoreHorizontal, UserMinus, X, Check, Copy, Users } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -37,92 +37,14 @@ export interface Friend {
   recentActivity: { action: string; date: string; type: 'add' | 'remove' | 'update' }[];
 }
 
-const INITIAL_FRIENDS: Friend[] = [
-    {
-      id: 1,
-      name: 'Sarah Jenkins',
-      username: '@sarahj',
-      country: 'United States',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-      totalSubs: 8,
-      sharedSubs: ['netflix', 'spotify', 'amazon'],
-      status: 'online',
-      currency: 'USD',
-      totalSpent: 3450.50,
-      monthlySpend: 95.00,
-      about: 'Digital nomad and streaming enthusiast. Always looking for the best family plan deals.',
-      tags: ['streaming', 'music', 'productivity'],
-      recentActivity: [
-        { action: 'Added Disney+ Bundle', date: '2 days ago', type: 'add' },
-        { action: 'Upgraded Spotify Family', date: '1 week ago', type: 'update' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'David Chen',
-      username: '@dchen_88',
-      country: 'Canada',
-      avatar: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-      totalSubs: 12,
-      sharedSubs: ['adobe', 'apple'],
-      status: 'away',
-      currency: 'CAD',
-      totalSpent: 1499.35,
-      monthlySpend: 145.30,
-      about: 'Designer by day, gamer by night. Tracking all my creative tools here.',
-      tags: ['design', 'gaming', 'software'],
-      recentActivity: [
-        { action: 'Cancelled Figma Pro', date: 'Yesterday', type: 'remove' },
-        { action: 'Renewed Adobe Creative Cloud', date: '3 days ago', type: 'update' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Emma Wilson',
-      username: '@em_wilson',
-      country: 'United Kingdom',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-      totalSubs: 5,
-      sharedSubs: ['netflix', 'youtube'],
-      status: 'offline',
-      currency: 'GBP',
-      totalSpent: 850.00,
-      monthlySpend: 45.50,
-      about: 'Minimalist. Only keeping what brings joy.',
-      tags: ['minimalism', 'video', 'news'],
-      recentActivity: [
-        { action: 'Added YouTube Premium', date: '1 month ago', type: 'add' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'Marcus Johnson',
-      username: '@mjohnson',
-      country: 'Germany',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-      totalSubs: 15,
-      sharedSubs: ['spotify', 'google', 'amazon', 'apple'],
-      status: 'online',
-      currency: 'EUR',
-      totalSpent: 5200.00,
-      monthlySpend: 210.00,
-      about: 'Tech geek tracking SaaS subscriptions for my startup and personal use.',
-      tags: ['tech', 'saas', 'business'],
-      recentActivity: [
-        { action: 'Added Notion AI', date: '5 hours ago', type: 'add' },
-        { action: 'Downgraded Netflix', date: '2 weeks ago', type: 'update' },
-        { action: 'Removed Slack Huddle', date: '3 weeks ago', type: 'remove' }
-      ]
-    }
-  ];
-
 export default function Friends() {
-  const [friends, setFriends] = useState(INITIAL_FRIENDS);
+  // Start with empty friends list for honest MVP state
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { t, formatPrice } = useLanguage();
+  const { t } = useLanguage();
 
   const filteredFriends = friends.filter(friend => 
     friend.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -143,7 +65,9 @@ export default function Friends() {
 
   const handleAddFriendSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Friend request sent! (Mock)");
+    // In a real app, this would query a backend. 
+    // For local MVP, we just show an alert that the user wasn't found (since there are no other users).
+    alert("User not found. (In this local MVP, you cannot add real friends yet.)");
     setIsAddModalOpen(false);
   };
 
@@ -180,101 +104,120 @@ export default function Friends() {
       </div>
 
       {/* Friends Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredFriends.map((friend) => (
-          <div 
-            key={friend.id} 
-            onClick={() => handleViewProfile(friend)}
-            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 group cursor-pointer hover:-translate-y-1 relative"
-          >
-            {/* Card Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <img 
-                    src={friend.avatar} 
-                    alt={friend.name} 
-                    className={`w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm ring-2 ${
-                        friend.status === 'online' ? 'ring-green-500' : 
-                        friend.status === 'away' ? 'ring-blue-500' : 'ring-gray-200'
-                    }`}
-                  />
-                  <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
-                      friend.status === 'online' ? 'bg-green-500' : 
-                      friend.status === 'away' ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}></div>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{friend.name}</h3>
-                  <p className="text-xs text-gray-500">{friend.username}</p>
-                </div>
-              </div>
-              <div className="relative">
-                <button 
-                    onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === friend.id ? null : friend.id); }} 
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-50 transition-colors"
-                >
-                    <MoreHorizontal size={18} />
-                </button>
-                {activeDropdown === friend.id && (
-                    <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                       <button onClick={(e) => { e.stopPropagation(); handleViewProfile(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">View Profile</button>
-                       <div className="h-px bg-gray-50 my-1"></div>
-                       <button onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>
+      {filteredFriends.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredFriends.map((friend) => (
+            <div 
+                key={friend.id} 
+                onClick={() => handleViewProfile(friend)}
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 group cursor-pointer hover:-translate-y-1 relative"
+            >
+                {/* Card Header */}
+                <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-4">
+                    <div className="relative">
+                    <img 
+                        src={friend.avatar} 
+                        alt={friend.name} 
+                        className={`w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm ring-2 ${
+                            friend.status === 'online' ? 'ring-green-500' : 
+                            friend.status === 'away' ? 'ring-blue-500' : 'ring-gray-200'
+                        }`}
+                    />
+                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                        friend.status === 'online' ? 'bg-green-500' : 
+                        friend.status === 'away' ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}></div>
                     </div>
-                )}
-              </div>
-            </div>
+                    <div>
+                    <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{friend.name}</h3>
+                    <p className="text-xs text-gray-500">{friend.username}</p>
+                    </div>
+                </div>
+                <div className="relative">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === friend.id ? null : friend.id); }} 
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-50 transition-colors"
+                    >
+                        <MoreHorizontal size={18} />
+                    </button>
+                    {activeDropdown === friend.id && (
+                        <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                        <button onClick={(e) => { e.stopPropagation(); handleViewProfile(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">View Profile</button>
+                        <div className="h-px bg-gray-50 my-1"></div>
+                        <button onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>
+                        </div>
+                    )}
+                </div>
+                </div>
 
-            {/* Stats */}
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="flex items-center text-xs text-gray-500">
-                <MapPin size={14} className="mr-1" />
-                {friend.country}
-              </div>
-              <div className="w-px h-3 bg-gray-200"></div>
-              <div className="text-xs font-medium text-gray-700">
-                {friend.totalSubs} {t('friends.subscriptions')}
-              </div>
-            </div>
+                {/* Stats */}
+                <div className="flex items-center space-x-4 mb-6">
+                <div className="flex items-center text-xs text-gray-500">
+                    <MapPin size={14} className="mr-1" />
+                    {friend.country}
+                </div>
+                <div className="w-px h-3 bg-gray-200"></div>
+                <div className="text-xs font-medium text-gray-700">
+                    {friend.totalSubs} {t('friends.subscriptions')}
+                </div>
+                </div>
 
-            {/* Shared Subscriptions */}
-            <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">{t('friends.shared_with_you')}</p>
-              <div className="flex -space-x-2">
-                {friend.sharedSubs.map((sub, index) => (
-                  <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white shadow-sm flex items-center justify-center overflow-hidden z-10 hover:z-20 transition-all hover:scale-110">
-                     <BrandIcon type={sub} className="w-full h-full p-1.5" noBackground />
-                  </div>
-                ))}
-                {friend.sharedSubs.length === 0 && <span className="text-xs text-gray-400 italic pl-1">{t('friends.none')}</span>}
-              </div>
-            </div>
+                {/* Shared Subscriptions */}
+                <div className="mb-6">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-2">{t('friends.shared_with_you')}</p>
+                <div className="flex -space-x-2">
+                    {friend.sharedSubs.map((sub, index) => (
+                    <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-white shadow-sm flex items-center justify-center overflow-hidden z-10 hover:z-20 transition-all hover:scale-110">
+                        <BrandIcon type={sub} className="w-full h-full p-1.5" noBackground />
+                    </div>
+                    ))}
+                    {friend.sharedSubs.length === 0 && <span className="text-xs text-gray-400 italic pl-1">{t('friends.none')}</span>}
+                </div>
+                </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-gray-50">
-               <button 
-                 onClick={(e) => { 
-                     e.stopPropagation(); 
-                     navigator.clipboard.writeText(`https://subscriptionhub.app/u/${friend.username}`);
-                     alert("Profile link copied!");
-                 }}
-                 className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-               >
-                  <Copy size={14} className="mr-2" />
-                  Share Profile
-               </button>
-               <button 
-                 onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }}
-                 className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors"
-               >
-                  <UserMinus size={14} className="mr-2" />
-                  {t('friends.remove')}
-               </button>
+                {/* Actions */}
+                <div className="flex gap-2 pt-4 border-t border-gray-50">
+                <button 
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigator.clipboard.writeText(`https://subscriptionhub.app/u/${friend.username}`);
+                        alert("Profile link copied!");
+                    }}
+                    className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                    <Copy size={14} className="mr-2" />
+                    Share Profile
+                </button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }}
+                    className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors"
+                >
+                    <UserMinus size={14} className="mr-2" />
+                    {t('friends.remove')}
+                </button>
+                </div>
             </div>
-          </div>
-        ))}
-      </div>
+            ))}
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                <Users size={32} className="text-gray-300" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No friends added yet</h3>
+            <p className="text-sm text-gray-500 mb-6 text-center max-w-xs">
+                Add friends to compare subscription costs and see what services they use.
+            </p>
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-all"
+            >
+                Add Your First Friend
+            </button>
+        </div>
+      )}
 
       {/* Profile Modal */}
       <ProfileCardModal 

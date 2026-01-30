@@ -13,9 +13,11 @@ import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
+import OnboardingTour from './OnboardingTour';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
+import { EXCHANGE_RATES } from '../utils/currency';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -34,6 +36,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const userKey = user?.email || 'guest';
   
   // Persisted State: Subscriptions (Scoped to User)
+  // Initializes empty for new users
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.subscriptions`);
@@ -57,9 +60,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [savingsGoal, setSavingsGoal] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.savingsGoal`);
-      return saved ? parseFloat(saved) : 20;
+      return saved ? parseFloat(saved) : 0; // Default to 0 for new users
     } catch (e) {
-      return 20;
+      return 0;
     }
   });
 
@@ -67,11 +70,22 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [totalSaved, setTotalSaved] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.totalSaved`);
-      return saved ? parseFloat(saved) : 0;
+      return saved ? parseFloat(saved) : 0; // Default to 0 for new users
     } catch (e) {
       return 0;
     }
   });
+
+  // Onboarding State
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+     const hasSeen = localStorage.getItem(`subscriptionhub.${userKey}.hasSeenOnboarding`);
+     return !hasSeen;
+  });
+
+  const handleOnboardingComplete = () => {
+     setShowOnboarding(false);
+     localStorage.setItem(`subscriptionhub.${userKey}.hasSeenOnboarding`, 'true');
+  };
 
   // Persistence Effects (Write)
   useEffect(() => {
@@ -90,29 +104,45 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
   }, [totalSaved, userKey]);
 
-  // Derived Metrics (Real-time)
+  // Derived Metrics (Real-time) - UPDATED to handle multi-currency
   const metrics = useMemo(() => {
-    let monthlyTotal = 0;
-    let yearlyTotalForecast = 0;
+    let monthlyTotalUSD = 0;
+    let yearlyTotalForecastUSD = 0;
+    let lifetimeSpendUSD = 0;
     
     // Filter active subscriptions only for cost calc
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
     activeSubs.forEach(sub => {
+      // Get Exchange Rate for this subscription's currency (Default to 1 if USD or unknown)
+      const rate = EXCHANGE_RATES[sub.currency] || 1;
+      
+      // Convert Price to Base USD
+      const priceInUSD = sub.price / rate;
+
       // Normalize to monthly cost
       if (sub.cycle === 'Monthly') {
-        monthlyTotal += sub.price;
-        yearlyTotalForecast += sub.price * 12;
+        monthlyTotalUSD += priceInUSD;
+        yearlyTotalForecastUSD += priceInUSD * 12;
       } else {
-        monthlyTotal += sub.price / 12;
-        yearlyTotalForecast += sub.price;
+        monthlyTotalUSD += priceInUSD / 12;
+        yearlyTotalForecastUSD += priceInUSD;
+      }
+
+      // Calculate lifetime spend based on history
+      if (sub.history && sub.history.length > 0) {
+          const historyTotal = sub.history.reduce((a, b) => a + b, 0);
+          lifetimeSpendUSD += historyTotal / rate; // Convert history total to USD
+      } else {
+          lifetimeSpendUSD += priceInUSD; // At least first payment
       }
     });
 
     return {
-      monthlySpend: monthlyTotal,
+      monthlySpend: monthlyTotalUSD,
       activeCount: activeSubs.length,
-      yearlyForecast: yearlyTotalForecast
+      yearlyForecast: yearlyTotalForecastUSD,
+      lifetimeSpend: lifetimeSpendUSD
     };
   }, [subscriptions]);
 
@@ -126,7 +156,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   
   // Notification State
   const [notifications, setNotifications] = useState([
-    { id: 1, text: "Welcome to SubscriptionHub!", time: "Just now", read: false, type: 'info' },
+    { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
   ]);
 
   const { t, formatPrice } = useLanguage();
@@ -148,10 +178,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const handleSubDelete = (id: number) => {
     const subToDelete = subscriptions.find(s => s.id === id);
     if (subToDelete) {
-        // Add monthly price to saved amount (simple heuristic: if yearly, divide by 12)
-        const monthlyValue = subToDelete.cycle === 'Yearly' ? subToDelete.price / 12 : subToDelete.price;
-        setTotalSaved(prev => prev + monthlyValue);
-        showToast(`Subscription deleted. You saved ${formatPrice(monthlyValue)}/mo!`);
+        // Calculate savings (convert to USD for consistent saving tracking, though simple addition is fine for MVP)
+        const rate = EXCHANGE_RATES[subToDelete.currency] || 1;
+        const priceInUSD = subToDelete.price / rate;
+        const monthlyValueUSD = subToDelete.cycle === 'Yearly' ? priceInUSD / 12 : priceInUSD;
+        
+        setTotalSaved(prev => prev + monthlyValueUSD);
+        showToast(`Subscription deleted. Savings updated!`);
     }
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   };
@@ -175,8 +208,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
               } else {
                   current.setFullYear(current.getFullYear() + 1);
               }
+              // Also add to history for lifetime tracking
+              const newHistory = [...(sub.history || []), sub.price];
+              
               showToast(`${sub.name} marked as paid. Next date updated.`);
-              return { ...sub, nextDate: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) };
+              return { 
+                  ...sub, 
+                  nextDate: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                  history: newHistory
+              };
           }
           return sub;
       }));
@@ -275,7 +315,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
                         <div className="flex justify-between items-baseline mb-0.5">
                         <h4 className="text-sm font-semibold text-gray-900 truncate pr-2">{sub.name}</h4>
-                        <span className="text-xs font-bold text-gray-900">{formatPrice(sub.price)}</span>
+                        <span className="text-xs font-bold text-gray-900">
+                            {/* Display price in original currency for the list item */}
+                            {sub.currency === 'USD' ? '$' : sub.currency === 'EUR' ? '€' : sub.currency === 'GBP' ? '£' : sub.currency + ' '}
+                            {sub.price.toFixed(2)}
+                        </span>
                         </div>
                         <div className="flex justify-between items-center">
                         <span className="text-[10px] text-gray-500">{sub.nextDate}</span>
@@ -305,7 +349,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         let total = 0;
         subscriptions.forEach(sub => {
             const cat = sub.category || 'Other';
-            const cost = sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
+            const rate = EXCHANGE_RATES[sub.currency] || 1;
+            const priceInUSD = sub.price / rate; // Normalize to USD for percentage calc
+            const cost = sub.cycle === 'Monthly' ? priceInUSD : priceInUSD / 12;
+            
             cats[cat] = (cats[cat] || 0) + cost;
             total += cost;
         });
@@ -422,6 +469,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                    </div>
 
                    <button 
+                     data-tour="add-btn"
                      onClick={() => setIsAddModalOpen(true)}
                      className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm hover:shadow-md active:scale-95"
                    >
@@ -431,11 +479,14 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 </div>
              </div>
 
-             <StatsCards 
-                monthly={metrics.monthlySpend} 
-                active={metrics.activeCount} 
-                forecast={metrics.yearlyForecast} 
-             />
+             <div data-tour="stats-cards">
+                {/* StatsCards now receive normalized USD values, and will convert them to user preference internally */}
+                <StatsCards 
+                    monthly={metrics.monthlySpend} 
+                    active={metrics.activeCount} 
+                    forecast={metrics.yearlyForecast} 
+                />
+             </div>
 
              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                 <div className="lg:col-span-2 space-y-6">
@@ -473,12 +524,19 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           savingsGoal={savingsGoal}
           setSavingsGoal={setSavingsGoal}
           totalSaved={totalSaved}
+          lifetimeSpend={metrics.lifetimeSpend}
         />
       );
       case 'compare': return <Comparison />;
       case 'settings': return <SettingsPage subscriptions={subscriptions} />;
       case 'help': return <HelpCenter />;
-      case 'profile': return <Profile />;
+      case 'profile': return (
+        <Profile 
+            user={user} 
+            subscriptions={subscriptions}
+            userKey={userKey}
+        />
+      );
       case 'subscriptions': return (
         <div className="space-y-6">
            <h2 className="text-2xl font-bold text-gray-900">{t('features.subscriptions.title')}</h2>
@@ -538,6 +596,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          onClose={() => setIsCalendarOpen(false)} 
          subscriptions={subscriptions} 
        />
+
+       {/* Onboarding Tour */}
+       {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
 
        {/* Global Toast */}
        {toastMsg && (

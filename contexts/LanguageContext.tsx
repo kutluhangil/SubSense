@@ -3,11 +3,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { translations, LanguageCode } from '../utils/translations';
 import { EXCHANGE_RATES, CURRENCY_LOCALES } from '../utils/currency';
 
+export type ThemeOption = 'light' | 'dark' | 'system';
+
 interface LanguageContextType {
   currentLanguage: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
   currentCurrency: string;
   setCurrency: (currency: string) => void;
+  currentTheme: ThemeOption;
+  setTheme: (theme: ThemeOption) => void;
   t: (key: string) => string;
   dir: 'ltr' | 'rtl';
   formatPrice: (amountInUSD: number) => string;
@@ -18,11 +22,10 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialize from localStorage or default
+  // --- Language State ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('userLanguagePreference');
-      // Validate saved language to match LanguageCode type
       if (saved === 'en' || saved === 'tr') {
         return saved;
       }
@@ -30,6 +33,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return 'en';
   });
 
+  // --- Currency State ---
   const [currentCurrency, setCurrentCurrency] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('userCurrencyPreference');
@@ -38,22 +42,62 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return 'USD';
   });
 
+  // --- Theme State ---
+  const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('userThemePreference');
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
+        return saved;
+      }
+    }
+    return 'system';
+  });
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Direction logic
-  // Cast to string to avoid TypeScript error since 'ar' is not currently in LanguageCode
   const dir = (currentLanguage as string) === 'ar' ? 'rtl' : 'ltr';
 
-  // Persistence Effects
+  // --- Effects ---
+
+  // Persist Language & Direction
   useEffect(() => {
     localStorage.setItem('userLanguagePreference', currentLanguage);
     document.documentElement.lang = currentLanguage;
     document.documentElement.dir = dir;
   }, [currentLanguage, dir]);
 
+  // Persist Currency
   useEffect(() => {
     localStorage.setItem('userCurrencyPreference', currentCurrency);
   }, [currentCurrency]);
+
+  // Persist & Apply Theme
+  useEffect(() => {
+    localStorage.setItem('userThemePreference', currentTheme);
+    
+    const applyTheme = () => {
+      const isDark = 
+        currentTheme === 'dark' || 
+        (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    // Listener for system changes if in 'system' mode
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (currentTheme === 'system') applyTheme();
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [currentTheme]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -70,6 +114,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const handleSetCurrency = (curr: string) => {
     setCurrentCurrency(curr);
     showToast(`Currency changed to ${curr}`);
+  };
+
+  const handleSetTheme = (theme: ThemeOption) => {
+    setCurrentTheme(theme);
+    // showToast(`Theme changed to ${theme}`);
   };
 
   const t = (key: string): string => {
@@ -96,12 +145,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         maximumFractionDigits: 2
       }).format(convertedAmount);
     } catch (e) {
-      // Fallback if locale/currency combo is invalid
       return `${currentCurrency} ${convertedAmount.toFixed(2)}`;
     }
   };
 
-  // Date Logic
   const formatDate = (dateString: string): string => {
     const locale = CURRENCY_LOCALES[currentLanguage] || 'en-US';
     try {
@@ -118,6 +165,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       setLanguage: handleSetLanguage, 
       currentCurrency,
       setCurrency: handleSetCurrency,
+      currentTheme,
+      setTheme: handleSetTheme,
       t, 
       dir,
       formatPrice,
@@ -125,7 +174,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       formatDate
     }}>
       {children}
-      {/* Toast Notification */}
       <div 
         className={`fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all duration-300 pointer-events-none z-[100] ${
           toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'

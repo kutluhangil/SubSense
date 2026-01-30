@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, CheckCircle, DollarSign, RefreshCw } from 'lucide-react';
+import { X, Calendar, CheckCircle, DollarSign, AlertCircle } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SubscriptionDetail, BRAND_COLORS, CURRENCIES } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
+import { EXCHANGE_RATES } from '../utils/currency';
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
@@ -20,23 +21,45 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
   const [cycle, setCycle] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [name, setName] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  // Reset form when service changes
+  // Reset form when service changes or modal opens
   useEffect(() => {
-    if (service) {
-      setPrice(service.price || '');
-      setCurrency(service.currency || 'USD');
-      setName(service.name || '');
-      setCycle('Monthly');
-      setStartDate(new Date().toISOString().split('T')[0]);
-    } else {
-        // Custom subscription default
-        setPrice('');
-        setCurrency('USD');
-        setName('');
+    if (isOpen) {
+        if (service) {
+            // Do NOT prefill price as per requirement
+            setPrice(''); 
+            // Default to service currency if known, else USD, but allow user to change
+            setCurrency(service.currency || 'USD');
+            setName(service.name || '');
+        } else {
+            // Custom subscription default
+            setPrice('');
+            setCurrency('USD');
+            setName('');
+        }
         setCycle('Monthly');
+        setStartDate(new Date().toISOString().split('T')[0]);
+        setError(null);
     }
   }, [service, isOpen]);
+
+  // Handle Currency Change with Calculation
+  const handleCurrencyChange = (newCurrency: string) => {
+    if (price && !isNaN(parseFloat(price))) {
+        // Calculate new price based on FX rates
+        const currentRate = EXCHANGE_RATES[currency] || 1;
+        const newRate = EXCHANGE_RATES[newCurrency] || 1;
+        
+        // Base USD value
+        const valInUSD = parseFloat(price) / currentRate;
+        // New Value
+        const valInNew = valInUSD * newRate;
+        
+        setPrice(valInNew.toFixed(2));
+    }
+    setCurrency(newCurrency);
+  };
 
   if (!isOpen) return null;
 
@@ -44,8 +67,19 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
   const brandKey = (service?.type || 'default').toLowerCase().replace(/\s+/g, '');
   const brandColor = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
 
+  const validate = () => {
+      if (!name.trim()) return "Service name is required.";
+      if (!price || parseFloat(price) <= 0) return "Price must be greater than 0.";
+      if (!startDate) return "First payment date is required.";
+      return null;
+  };
+
   const handleSave = () => {
-    if (!name || !price) return; // Simple validation
+    const validationError = validate();
+    if (validationError) {
+        setError(validationError);
+        return;
+    }
 
     const priceVal = parseFloat(price);
     const dateObj = new Date(startDate);
@@ -54,7 +88,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
     // Construct final subscription object
     const newSub: any = {
         name: name,
-        price: priceVal, // Converted price logic normally happens in backend, here we store raw
+        price: priceVal, 
         originalPrice: priceVal,
         currency: currency,
         cycle: cycle,
@@ -62,7 +96,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
         type: service?.type || 'default',
         status: 'Active',
         billingDay: billingDay,
-        category: 'Uncategorized', // Default
+        category: 'Uncategorized', 
         history: [priceVal]
     };
 
@@ -106,7 +140,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                     <input 
                         type="text" 
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={(e) => { setName(e.target.value); setError(null); }}
                         placeholder="Service Name"
                         className="text-xl font-bold text-gray-900 text-center border-b border-gray-300 focus:border-gray-900 outline-none w-full pb-1"
                         autoFocus
@@ -122,8 +156,8 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                         <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">Currency</label>
                         <select 
                             value={currency}
-                            onChange={(e) => setCurrency(e.target.value)}
-                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900"
+                            onChange={(e) => handleCurrencyChange(e.target.value)}
+                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900 cursor-pointer"
                         >
                             {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
                         </select>
@@ -131,13 +165,17 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                     <div className="col-span-2">
                         <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">Price</label>
                         <div className="relative">
-                            <DollarSign size={16} className="absolute left-3 top-3 text-gray-400" />
+                            <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">
+                                {CURRENCIES.find(c => c.code === currency)?.symbol}
+                            </span>
                             <input 
                                 type="number" 
                                 value={price}
-                                onChange={(e) => setPrice(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-gray-900"
+                                onChange={(e) => { setPrice(e.target.value); setError(null); }}
+                                className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-gray-900 placeholder-gray-400"
                                 placeholder="0.00"
+                                step="0.01"
+                                min="0"
                             />
                         </div>
                     </div>
@@ -165,22 +203,28 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                     <div>
                         <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">First Payment</label>
                         <div className="relative">
-                            <Calendar size={16} className="absolute left-3 top-3 text-gray-400" />
+                            <Calendar size={16} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
                             <input 
                                 type="date" 
                                 value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900"
+                                onChange={(e) => { setStartDate(e.target.value); setError(null); }}
+                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900 cursor-pointer"
                             />
                         </div>
                     </div>
                 </div>
             </div>
 
+            {error && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 animate-in slide-in-from-top-1">
+                    <AlertCircle size={14} />
+                    {error}
+                </div>
+            )}
+
             <button 
                 onClick={handleSave}
-                disabled={!price || (service ? false : !name)}
-                className="w-full mt-8 py-3.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full mt-8 py-3.5 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
                 style={{ backgroundColor: brandColor }}
             >
                 <CheckCircle size={20} />

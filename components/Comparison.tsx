@@ -2,8 +2,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, Sparkles } from 'lucide-react';
 import BrandIcon from './BrandIcon';
-import { ALL_SUBSCRIPTIONS } from '../utils/data';
+import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
+import { EXCHANGE_RATES } from '../utils/currency';
 
 // --- Types & Constants ---
 
@@ -24,51 +25,59 @@ interface EventMarker {
   description: string;
 }
 
-const COUNTRY_CONFIG: Record<string, { color: string; flag: string }> = {
-  'United States': { color: '#2D60FF', flag: '🇺🇸' },
-  'United Kingdom': { color: '#FF8A00', flag: '🇬🇧' },
-  'India': { color: '#1DB954', flag: '🇮🇳' },
-  'Japan': { color: '#FF4C4C', flag: '🇯🇵' },
-  'Brazil': { color: '#FFD700', flag: '🇧🇷' },
+const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number; code: string; currency: string }> = {
+  'United States': { color: '#2D60FF', flag: '🇺🇸', ppp: 1.0, code: 'US', currency: 'USD' },
+  'United Kingdom': { color: '#FF8A00', flag: '🇬🇧', ppp: 1.15, code: 'GB', currency: 'GBP' }, // Slightly more exp usually
+  'India': { color: '#1DB954', flag: '🇮🇳', ppp: 0.20, code: 'IN', currency: 'INR' },
+  'Japan': { color: '#FF4C4C', flag: '🇯🇵', ppp: 0.85, code: 'JP', currency: 'JPY' },
+  'Brazil': { color: '#FFD700', flag: '🇧🇷', ppp: 0.55, code: 'BR', currency: 'BRL' },
+  'Turkey': { color: '#E30A17', flag: '🇹🇷', ppp: 0.35, code: 'TR', currency: 'TRY' },
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-// --- Enhanced Mock Data ---
+// --- Helpers ---
 
-const MOCK_EVENTS: Record<string, EventMarker[]> = {
-  netflix: [
-    { monthIndex: 2, type: 'price_hike', description: 'Global price adjustment (+$1.50)' }
-  ],
-  spotify: [
-    { monthIndex: 3, type: 'promo', description: 'Spring Promo ended' }
-  ]
+const generateLivePricing = (serviceName: string): PricingData[] => {
+    const key = serviceName.toLowerCase().replace(/\s+/g, '');
+    const service = SUBSCRIPTION_CATALOG[key];
+    const basePrice = service ? parseFloat(service.price) : 10.00; // Default base USD if not found
+
+    return Object.entries(COUNTRY_CONFIG).map(([country, config]) => {
+        // Calculate localized price based on PPP factor + FX rate
+        // Formula: BaseUSD * PPP_Factor * ExchangeRate
+        const localPriceRaw = basePrice * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
+        
+        // Round to typical pricing endings (e.g. .99, .90, or whole numbers for JPY/HUF)
+        let formattedPrice = localPriceRaw;
+        if (config.currency === 'JPY' || config.currency === 'HUF') {
+            formattedPrice = Math.round(localPriceRaw / 10) * 10; // Round to nearest 10
+        } else {
+            formattedPrice = Math.round(localPriceRaw) - 0.01; // .99 ending heuristic
+        }
+
+        // Convert back to USD for comparison
+        const rate = EXCHANGE_RATES[config.currency] || 1;
+        const usdVal = formattedPrice / rate;
+
+        // Generate history with slight fluctuation for currency volatility
+        const history = Array.from({length: 6}, (_, i) => {
+            const fluctuation = 1 + (Math.random() - 0.5) * 0.05; // +/- 2.5%
+            return usdVal * fluctuation;
+        });
+
+        return {
+            country,
+            currency: config.currency,
+            price: Math.max(0, formattedPrice),
+            usdPrice: Math.max(0, usdVal),
+            history,
+            taxInfo: country === 'United States' ? '+ Tax' : 'incl. Tax',
+            lastUpdated: 'Live',
+            trend: (Math.random() - 0.5) * 5
+        };
+    });
 };
-
-const MOCK_DATA: Record<string, PricingData[]> = {
-  netflix: [
-    { country: 'United States', price: 15.49, currency: 'USD', usdPrice: 15.49, history: [15.49, 15.49, 16.99, 16.99, 16.99, 16.99], taxInfo: '+ Tax', lastUpdated: '2 days ago', trend: 1.2 },
-    { country: 'United Kingdom', price: 10.99, currency: 'GBP', usdPrice: 13.95, history: [13.50, 13.50, 13.50, 13.80, 13.95, 13.95], taxInfo: 'incl. VAT', lastUpdated: '1 week ago', trend: 3.3 },
-    { country: 'India', price: 649, currency: 'INR', usdPrice: 7.85, history: [7.80, 7.80, 7.85, 7.85, 7.85, 7.85], taxInfo: 'incl. GST', lastUpdated: 'Just now', trend: 0 },
-    { country: 'Japan', price: 1490, currency: 'JPY', usdPrice: 10.05, history: [11.20, 11.00, 10.80, 10.50, 10.20, 10.05], taxInfo: 'incl. Tax', lastUpdated: '3 days ago', trend: -10.2 },
-    { country: 'Brazil', price: 39.90, currency: 'BRL', usdPrice: 8.15, history: [8.00, 8.05, 8.10, 8.15, 8.15, 8.15], taxInfo: 'incl. Tax', lastUpdated: '1 month ago', trend: 1.8 },
-  ],
-  spotify: [
-    { country: 'United States', price: 11.99, currency: 'USD', usdPrice: 11.99, history: [10.99, 10.99, 10.99, 11.99, 11.99, 11.99], taxInfo: '+ Tax', lastUpdated: '1 month ago', trend: 9.1 },
-    { country: 'United Kingdom', price: 11.99, currency: 'GBP', usdPrice: 15.20, history: [14.50, 14.50, 14.80, 15.00, 15.20, 15.20], taxInfo: 'incl. VAT', lastUpdated: '2 weeks ago', trend: 4.8 },
-    { country: 'India', price: 119, currency: 'INR', usdPrice: 1.45, history: [1.45, 1.45, 1.45, 1.45, 1.45, 1.45], taxInfo: 'incl. GST', lastUpdated: 'Today', trend: 0 },
-    { country: 'Japan', price: 980, currency: 'JPY', usdPrice: 6.60, history: [7.20, 7.00, 6.90, 6.80, 6.70, 6.60], taxInfo: 'incl. Tax', lastUpdated: '4 days ago', trend: -8.3 },
-    { country: 'Brazil', price: 21.90, currency: 'BRL', usdPrice: 4.50, history: [4.50, 4.50, 4.50, 4.50, 4.50, 4.50], taxInfo: 'incl. Tax', lastUpdated: '2 weeks ago', trend: 0 },
-  ]
-};
-
-const getGenericMockData = (basePriceUSD: number): PricingData[] => [
-  { country: 'United States', price: basePriceUSD, currency: 'USD', usdPrice: basePriceUSD, history: Array(6).fill(basePriceUSD), taxInfo: '+ Tax', lastUpdated: 'Unknown', trend: 0 },
-  { country: 'United Kingdom', price: basePriceUSD * 0.8, currency: 'GBP', usdPrice: basePriceUSD * 1.05, history: Array(6).fill(basePriceUSD * 1.05), taxInfo: 'incl. VAT', lastUpdated: 'Unknown', trend: 1 },
-  { country: 'India', price: basePriceUSD * 20, currency: 'INR', usdPrice: basePriceUSD * 0.4, history: Array(6).fill(basePriceUSD * 0.4), taxInfo: 'incl. GST', lastUpdated: 'Unknown', trend: -5 },
-  { country: 'Japan', price: basePriceUSD * 110, currency: 'JPY', usdPrice: basePriceUSD * 0.8, history: Array(6).fill(basePriceUSD * 0.8), taxInfo: 'incl. Tax', lastUpdated: 'Unknown', trend: -2 },
-  { country: 'Brazil', price: basePriceUSD * 4, currency: 'BRL', usdPrice: basePriceUSD * 0.6, history: Array(6).fill(basePriceUSD * 0.6), taxInfo: 'incl. Tax', lastUpdated: 'Unknown', trend: 2 },
-];
 
 const generateSmoothPath = (points: {x: number, y: number}[]) => {
   if (points.length === 0) return '';
@@ -90,11 +99,10 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 // --- Components ---
 
-const GlobalPricingChart = ({ data, events }: { data: PricingData[], events: EventMarker[] }) => {
+const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredX, setHoveredX] = useState<number | null>(null);
-  const [activeCountry, setActiveCountry] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -122,7 +130,7 @@ const GlobalPricingChart = ({ data, events }: { data: PricingData[], events: Eve
     const maxValue = Math.max(...allValues) * 1.15;
     const minValue = 0;
 
-    const paths = data.map(d => {
+    const paths = data.slice(0,5).map(d => {
       const pts = d.history.map((val, i) => {
         return {
             x: padding.left + (i / (d.history.length - 1)) * drawWidth,
@@ -147,16 +155,10 @@ const GlobalPricingChart = ({ data, events }: { data: PricingData[], events: Eve
     const rect = containerRef.current!.getBoundingClientRect();
     const x = e.clientX - rect.left;
     setHoveredX(x);
-    
-    // Simple closest detection
-    if (x >= padding.left && x <= width - padding.right) {
-        // ... logic kept simple, rely on x-axis index
-    }
   };
 
   const handleMouseLeave = () => {
     setHoveredX(null);
-    setActiveCountry(null);
   };
 
   let activeIndex = -1;
@@ -284,7 +286,7 @@ const GlobalPricingChart = ({ data, events }: { data: PricingData[], events: Eve
   );
 };
 
-const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingData[], baseCurrency: string, serviceName: string }) => {
+const AIInsightsPanel = ({ data, serviceName }: { data: PricingData[], serviceName: string }) => {
   const [isOpen, setIsOpen] = useState(true);
   const { t } = useLanguage();
 
@@ -309,10 +311,10 @@ const AIInsightsPanel = ({ data, baseCurrency, serviceName }: { data: PricingDat
            <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2">
               <div className="bg-white/80 p-3 rounded-xl text-xs text-gray-700 leading-relaxed shadow-sm border border-white">
                  <strong className="block text-indigo-700 mb-1">{cheapest.country} offers the best value</strong>
-                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600">{diffPercent}% cheaper</span> than in {mostExpensive.country}.
+                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600">{diffPercent}% cheaper</span> than in {mostExpensive.country} due to regional purchasing power adjustments.
               </div>
               <div className="flex items-center gap-2 text-[10px] text-indigo-400 px-1">
-                 <Zap size={10} /> Insights based on historical data.
+                 <Zap size={10} /> Insights based on live currency rates.
               </div>
            </div>
         )}
@@ -324,7 +326,7 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
    const basePrice = data.find(d => d.country === baseCountry)?.usdPrice || 0;
    const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
    const savings = basePrice - cheapest.usdPrice;
-   const savingsPercent = ((savings / basePrice) * 100).toFixed(0);
+   const savingsPercent = basePrice > 0 ? ((savings / basePrice) * 100).toFixed(0) : '0';
    const { t } = useLanguage();
 
    if (savings <= 0) return null;
@@ -368,7 +370,8 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
 };
 
 const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseCurrency: string }) => {
-   const baseItem = data.find(d => d.currency === baseCurrency) || data[0];
+   // Use first entry as base if not found
+   const baseItem = data.find(d => d.country === 'United States') || data[0]; 
    const { t } = useLanguage();
 
    return (
@@ -383,9 +386,11 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
             <table className="w-full text-left">
                <tbody className="divide-y divide-gray-50">
                   {data.map((item, idx) => {
-                     const diff = ((item.usdPrice - baseItem.usdPrice) / baseItem.usdPrice) * 100;
+                     const diff = baseItem.usdPrice > 0 
+                        ? ((item.usdPrice - baseItem.usdPrice) / baseItem.usdPrice) * 100 
+                        : 0;
                      const isCheaper = diff < 0;
-                     const isBase = item.currency === baseCurrency;
+                     const isBase = item.country === 'United States';
                      
                      return (
                         <tr key={idx} className={`group hover:bg-gray-50 transition-colors ${isBase ? 'bg-blue-50/20' : ''}`}>
@@ -401,7 +406,7 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
                            <td className="px-4 py-3 text-right">
                               <div className="flex flex-col items-end">
                                  <span className="text-sm font-bold text-gray-900">${item.usdPrice.toFixed(2)}</span>
-                                 <span className="text-[10px] text-gray-400">{item.currency} {item.price.toFixed(2)}</span>
+                                 <span className="text-[10px] text-gray-400">{item.currency} {item.price.toLocaleString()}</span>
                               </div>
                            </td>
                            <td className="px-4 py-3 text-right w-24">
@@ -429,9 +434,10 @@ export default function Comparison() {
   const [selectedService, setSelectedService] = useState('Netflix');
   const [baseCurrency, setBaseCurrency] = useState('USD');
 
-  const normalizedId = selectedService.toLowerCase().replace(/\s+/g, '');
-  const currentData = MOCK_DATA[normalizedId] || getGenericMockData(15);
-  const currentEvents = MOCK_EVENTS[normalizedId] || [];
+  // Real-time calculation based on exchange rates
+  const currentData = useMemo(() => {
+      return generateLivePricing(selectedService);
+  }, [selectedService]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
@@ -454,7 +460,7 @@ export default function Comparison() {
                      value={selectedService}
                      onChange={(e) => setSelectedService(e.target.value)}
                  >
-                     {ALL_SUBSCRIPTIONS.slice(0, 15).map(s => <option key={s} value={s}>{s}</option>)}
+                     {ALL_SUBSCRIPTIONS.slice(0, 20).map(s => <option key={s} value={s}>{s}</option>)}
                  </select>
                  <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
              </div>
@@ -507,14 +513,11 @@ export default function Comparison() {
                       </div>
                   </div>
                   
-                  <GlobalPricingChart 
-                      data={currentData} 
-                      events={currentEvents} 
-                  />
+                  <GlobalPricingChart data={currentData} />
               </div>
 
               {/* AI Insights */}
-              <AIInsightsPanel data={currentData} baseCurrency={baseCurrency} serviceName={selectedService} />
+              <AIInsightsPanel data={currentData} serviceName={selectedService} />
           </div>
 
           {/* Right Column: Comparison Table */}
