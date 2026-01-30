@@ -19,7 +19,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
   const { t } = useLanguage();
   
-  // Form Data State
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
@@ -31,7 +30,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
     agreedToTerms: false
   });
 
-  // Password strength visual logic
   const passwordStrength = React.useMemo(() => {
     const pwd = formData.password;
     if (!pwd) return 0;
@@ -39,14 +37,13 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
     if (pwd.length > 7) score++;
     if (pwd.match(/[0-9]/)) score++;
     if (pwd.match(/[^a-zA-Z0-9]/)) score++;
-    return score; // 0 to 3
+    return score;
   }, [formData.password]);
 
   useEffect(() => {
     if (isOpen) {
         setMode(initialMode);
         setShowPassword(false);
-        // Reset email-sent state when reopening
         if (initialMode !== 'login' && initialMode !== 'signup') {
            setMode('login');
         }
@@ -61,13 +58,12 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       if (mode === 'forgot-password') {
         setMode('email-sent');
       } else if (onLogin) {
-        onLogin(); // Triggers global login state in App
+        onLogin();
       }
     }, 1500);
   };
@@ -81,16 +77,13 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
   return (
      <>
      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-        {/* Backdrop */}
         <div 
           className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
           onClick={onClose}
         ></div>
         
-        {/* Modal Card */}
         <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden transform transition-all scale-100 opacity-100 animate-in zoom-in-95 duration-200 border border-gray-100">
            
-           {/* Close Button */}
            <button 
              onClick={onClose}
              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 transition-colors z-20"
@@ -98,10 +91,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
              <X size={20} />
            </button>
 
-           {/* Scrollable Content Area */}
            <div className="overflow-y-auto p-8 custom-scrollbar relative">
               
-              {/* --- Header Section --- */}
               <div className="text-center mb-8">
                 {mode === 'login' && (
                   <>
@@ -134,9 +125,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                 )}
               </div>
 
-              {/* --- Forms --- */}
-
-              {/* Login Form */}
               {mode === 'login' && (
                   <form className="space-y-5" onSubmit={handleSubmit}>
                     <div>
@@ -179,7 +167,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                   </form>
               )}
 
-              {/* Forgot Password Form */}
               {mode === 'forgot-password' && (
                   <form className="space-y-6" onSubmit={handleSubmit}>
                     <div>
@@ -211,7 +198,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                   </form>
               )}
 
-              {/* Email Sent Confirmation */}
               {mode === 'email-sent' && (
                   <div className="space-y-4">
                      <button 
@@ -224,7 +210,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                      <div className="text-center">
                         <p className="text-xs text-gray-400">Didn't receive the email? <button className="text-gray-900 font-bold hover:underline">Click to resend</button></p>
                         
-                        {/* Demo Trigger Link */}
                         <div className="mt-6 pt-4 border-t border-gray-100">
                            <button 
                              onClick={() => onSimulateReset && onSimulateReset()}
@@ -237,11 +222,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                   </div>
               )}
 
-              {/* Signup Form */}
               {mode === 'signup' && (
                   <form className="space-y-4" onSubmit={handleSubmit}>
                      
-                     {/* Full Name */}
                      <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Full Name</label>
                         <div className="relative group">
@@ -257,7 +240,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      </div>
 
-                     {/* Username */}
                      <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Username</label>
                         <input 
@@ -270,7 +252,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         />
                      </div>
 
-                     {/* Email */}
                      <div className="space-y-1">
                         <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Email Address</label>
                         <div className="relative group">
@@ -286,7 +267,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      </div>
 
-                     {/* Password Group */}
                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1 col-span-2 sm:col-span-1">
                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Password</label>
@@ -326,7 +306,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      </div>
                      
-                     {/* Strength Indicator */}
                      {formData.password && (
                         <div className="flex gap-1.5 h-1.5 mt-2 px-1">
                            <div className={`flex-1 rounded-full transition-colors duration-300 ${passwordStrength >= 1 ? 'bg-red-400' : 'bg-gray-200'}`}></div>
@@ -335,7 +314,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      )}
 
-                     {/* Country & Year */}
                      <div className="grid grid-cols-5 gap-4">
                         <div className="space-y-1 col-span-3">
                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Country</label>
@@ -369,10 +347,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
                         </div>
                      </div>
 
-                     {/* Terms - Fixed Layout */}
                      <div className="pt-2">
                         <div className="flex items-start gap-3">
-                           <div className="flex h-5 items-center">
+                           <div className="flex h-5 items-center mt-0.5">
                              <input
                                id="terms"
                                type="checkbox"
@@ -420,7 +397,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
 
            </div>
 
-           {/* Footer: Switch Modes */}
            <div className="bg-gray-50 p-4 text-center border-t border-gray-100 text-xs font-medium text-gray-500">
              {(mode === 'login' || mode === 'forgot-password' || mode === 'email-sent') && (
                <>
@@ -448,7 +424,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLogin, onSim
         </div>
      </div>
 
-     {/* Legal Modal Overlay */}
      {legalModalType && (
         <LegalModal 
            isOpen={true} 

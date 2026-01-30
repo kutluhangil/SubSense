@@ -8,7 +8,6 @@ export default function Settings() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h2>
@@ -18,10 +17,8 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN */}
         <div className="xl:col-span-2 space-y-8">
             
-            {/* AI Settings */}
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
                  <div className="px-6 py-4 border-b border-indigo-100/50 flex items-center gap-3">
                     <Zap className="text-indigo-600" size={20} />
@@ -43,7 +40,7 @@ export default function Settings() {
                             <h4 className="text-sm font-bold text-indigo-900">{t('settings.focus_area')}</h4>
                             <p className="text-xs text-indigo-700/60">{t('settings.focus_area_desc')}</p>
                          </div>
-                         <select className="bg-white border border-indigo-200 text-indigo-900 text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
+                         <select className="bg-white border border-indigo-200 text-indigo-900 text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer">
                             <option>Budget Saving</option>
                             <option>Global Comparison</option>
                             <option>Social Trends</option>
@@ -51,15 +48,16 @@ export default function Settings() {
                     </div>
 
                     <div className="flex items-start gap-3 p-3 bg-white/60 rounded-xl border border-indigo-100">
-                        <input type="checkbox" id="train-ai" className="mt-0.5 text-indigo-600 rounded focus:ring-indigo-500" defaultChecked />
-                        <label htmlFor="train-ai" className="text-xs text-indigo-800 leading-snug cursor-pointer">
+                        <div className="flex h-5 items-center mt-0.5">
+                            <input type="checkbox" id="train-ai" className="text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" defaultChecked />
+                        </div>
+                        <label htmlFor="train-ai" className="text-xs text-indigo-800 leading-snug cursor-pointer select-none">
                             {t('settings.train_ai')}
                         </label>
                     </div>
                 </div>
             </div>
 
-            {/* Notifications */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
                     <Bell className="text-gray-400" size={20} />
@@ -92,10 +90,8 @@ export default function Settings() {
 
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="space-y-8">
             
-            {/* Privacy & Visibility */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
                     <Eye className="text-gray-400" size={20} />
@@ -108,7 +104,7 @@ export default function Settings() {
                                 <Globe size={16} className="text-gray-400" />
                                 <span className="text-sm font-medium text-gray-900">Profile Visibility</span>
                             </div>
-                            <select className="bg-gray-50 border border-gray-200 text-gray-900 text-xs font-medium rounded-lg px-2 py-1 focus:outline-none">
+                            <select className="bg-gray-50 border border-gray-200 text-gray-900 text-xs font-medium rounded-lg px-2 py-1 focus:outline-none cursor-pointer">
                                 <option>Public</option>
                                 <option>Friends Only</option>
                                 <option>Private</option>
@@ -130,7 +126,6 @@ export default function Settings() {
                 </div>
             </div>
 
-            {/* Security Log */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/50">
                     <Shield className="text-gray-400" size={20} />
@@ -162,14 +157,6 @@ export default function Settings() {
                         </div>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                        <div className="flex items-center gap-2">
-                           <Lock size={16} className="text-gray-400" />
-                           <span className="text-sm font-medium text-gray-700">{t('settings.two_step')}</span>
-                        </div>
-                        <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">{t('settings.setup')}</button>
-                    </div>
-
                     <button className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 border border-red-100 bg-red-50 hover:bg-red-100 py-2.5 rounded-xl transition-colors">
                         <LogOut size={16} /> {t('settings.logout_all')}
                     </button>

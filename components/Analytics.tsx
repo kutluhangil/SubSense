@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock } from 'lucide-react';
+import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2 } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
@@ -37,6 +37,81 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 };
 
 // --- Components ---
+
+const SmartBudgetMonitor = ({ formatPrice }: { formatPrice: (v: number) => string }) => {
+  // Mock Data for Budgets
+  const budgets = [
+    { category: 'Entertainment', limit: 60, spent: 48.97, color: 'bg-blue-500', icon: 'netflix' },
+    { category: 'Productivity', limit: 100, spent: 104.99, color: 'bg-purple-500', icon: 'adobe' },
+    { category: 'Shopping', limit: 50, spent: 14.99, color: 'bg-green-500', icon: 'amazon' },
+    { category: 'Music', limit: 20, spent: 10.99, color: 'bg-rose-500', icon: 'spotify' },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <Target size={18} className="text-gray-400" /> Smart Budget Monitor
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">Monthly limits per category</p>
+        </div>
+        <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+          Edit Limits
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {budgets.map((item, idx) => {
+          const percentage = Math.min((item.spent / item.limit) * 100, 100);
+          const isOverBudget = item.spent > item.limit;
+          
+          return (
+            <div key={idx} className="group">
+              <div className="flex justify-between items-end mb-2">
+                <div className="flex items-center gap-3">
+                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 border border-gray-100 group-hover:scale-110 transition-transform`}>
+                      <BrandIcon type={item.icon} className="w-5 h-5" noBackground />
+                   </div>
+                   <div>
+                      <span className="block text-sm font-bold text-gray-900">{item.category}</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Limit: {formatPrice(item.limit)}</span>
+                   </div>
+                </div>
+                <div className="text-right">
+                   <span className={`text-sm font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                      {formatPrice(item.spent)}
+                   </span>
+                   <span className="text-[10px] text-gray-400 ml-1">/ mo</span>
+                </div>
+              </div>
+              
+              <div className="relative h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                 <div 
+                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${isOverBudget ? 'bg-red-500' : item.color}`}
+                    style={{ width: `${percentage}%` }}
+                 ></div>
+                 {/* Striped pattern overlay for texture */}
+                 <div className="absolute inset-0 w-full h-full opacity-10 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem]"></div>
+              </div>
+
+              {isOverBudget && (
+                 <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium text-red-600 animate-in fade-in slide-in-from-left-2">
+                    <AlertCircle size={10} /> You've exceeded your budget by {formatPrice(item.spent - item.limit)}
+                 </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
+         <span>Total Budget: <span className="font-bold text-gray-900">{formatPrice(230)}</span></span>
+         <span>Used: <span className="font-bold text-gray-900">{formatPrice(179.94)}</span> (78%)</span>
+      </div>
+    </div>
+  );
+};
 
 const SubscriptionLifetimeTimeline = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -544,14 +619,22 @@ export default function Analytics() {
                </div>
                <CostDistributionChart formatPrice={formatPrice} />
             </div>
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            {/* New Budget Monitor Added Here */}
+            <SmartBudgetMonitor formatPrice={formatPrice} />
+         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <div className="lg:col-span-2">
+            <SubscriptionLifetimeTimeline />
+         </div>
+         <div className="lg:col-span-1 h-full">
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">
                <h3 className="text-base font-bold text-gray-900 mb-4">{t('analytics.global_compare')}</h3>
                <ComparisonWidget formatPrice={formatPrice} />
             </div>
          </div>
       </div>
-
-      <SubscriptionLifetimeTimeline />
 
       <div>
          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
