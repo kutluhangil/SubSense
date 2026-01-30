@@ -119,13 +119,18 @@ export interface SubscriptionDetail {
   netWorth?: string; // Estimated valuation
   coordinates?: { lat: number; lng: number }; // For map
   website?: string; // For fetching logo
+  // New fields for Explorer
+  globalUserCount?: string;
+  parentCompany?: string;
+  milestones?: string[];
+  subsidiaries?: string;
 }
 
 export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
   "netflix": {
     id: "netflix",
     name: "Netflix",
-    description: "Netflix is a global streaming service offering a wide variety of award-winning TV shows, movies, anime, documentaries, and more.",
+    description: "Netflix is the world's leading streaming entertainment service with millions of paid memberships in over 190 countries enjoying TV series, documentaries, feature films and mobile games across a wide variety of genres and languages.",
     foundedYear: "1997",
     founders: "Reed Hastings, Marc Randolph",
     ceo: "Ted Sarandos, Greg Peters",
@@ -133,14 +138,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "15.49",
     currency: "USD",
     type: "netflix",
-    netWorth: "260000000000", // ~$260B
+    netWorth: "260 Billion",
+    globalUserCount: "260 Million+",
     website: "netflix.com",
+    milestones: ["1997: Founded as DVD rental service", "2007: Introduced streaming", "2013: Launched first original series House of Cards", "2016: Expanded globally to 190 countries"],
     coordinates: { lat: 37.2266, lng: -121.9746 }
   },
   "spotify": {
     id: "spotify",
     name: "Spotify",
-    description: "Spotify is a digital music, podcast, and video service that gives you access to millions of songs and other content from creators all over the world.",
+    description: "Spotify is a digital music, podcast, and video service that gives you access to millions of songs and other content from creators all over the world. It reinvented the music industry by offering a legal alternative to piracy.",
     foundedYear: "2006",
     founders: "Daniel Ek, Martin Lorentzon",
     ceo: "Daniel Ek",
@@ -148,14 +155,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "10.99",
     currency: "USD",
     type: "spotify",
-    netWorth: "65000000000", // ~$65B
+    netWorth: "65 Billion",
+    globalUserCount: "600 Million+",
     website: "spotify.com",
+    milestones: ["2006: Founded in Stockholm", "2008: Launched in Europe", "2011: Launched in US", "2019: Reached 100M paid subscribers"],
     coordinates: { lat: 59.3346, lng: 18.0632 }
   },
   "youtube premium": {
     id: "youtube",
     name: "YouTube Premium",
-    description: "YouTube Premium is a subscription service offered by YouTube that provides ad-free access to content across the service.",
+    description: "YouTube Premium is a subscription service offered by YouTube that provides ad-free access to content across the service, as well as access to premium YouTube Originals.",
     foundedYear: "2005",
     founders: "Chad Hurley, Steve Chen, Jawed Karim",
     ceo: "Neal Mohan",
@@ -163,14 +172,17 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "13.99",
     currency: "USD",
     type: "youtube",
-    netWorth: "2000000000000", // Alphabet ~$2T
+    netWorth: "2 Trillion (Alphabet)",
+    globalUserCount: "100 Million+",
+    parentCompany: "Alphabet Inc.",
     website: "youtube.com",
+    milestones: ["2005: First video uploaded", "2006: Acquired by Google", "2015: Launched YouTube Red (now Premium)", "2024: Surpassed 100M subscribers"],
     coordinates: { lat: 37.6275, lng: -122.4274 }
   },
   "amazon prime": {
     id: "amazon",
     name: "Amazon Prime",
-    description: "Amazon Prime provides free fast delivery, video streaming, music, and more.",
+    description: "Amazon Prime provides free fast delivery, video streaming, music, and more. It is one of the most successful subscription bundles in history.",
     foundedYear: "2005",
     founders: "Jeff Bezos",
     ceo: "Andy Jassy",
@@ -178,8 +190,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "14.99",
     currency: "USD",
     type: "amazon",
-    netWorth: "2000000000000", // Amazon ~$2T
+    netWorth: "2 Trillion",
+    globalUserCount: "200 Million+",
+    parentCompany: "Amazon.com Inc.",
     website: "amazon.com",
+    milestones: ["2005: Prime launched", "2011: Prime Video added", "2014: Prime Music added", "2021: Reached 200M subscribers"],
     coordinates: { lat: 47.6152, lng: -122.3382 }
   },
   "adobe creative cloud": {
@@ -193,14 +208,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "54.99",
     currency: "USD",
     type: "adobe",
-    netWorth: "220000000000", // ~$220B
+    netWorth: "220 Billion",
+    globalUserCount: "30 Million+",
     website: "adobe.com",
+    milestones: ["1982: Founded", "1990: Photoshop launched", "2013: Shifted entirely to subscription model", "2023: Integrated Firefly AI"],
     coordinates: { lat: 37.3307, lng: -121.8941 }
   },
   "apple tv+": {
     id: "appletv",
     name: "Apple TV+",
-    description: "Apple TV+ is an American subscription streaming service owned and operated by Apple Inc.",
+    description: "Apple TV+ is an American subscription streaming service owned and operated by Apple Inc. It features original shows and films.",
     foundedYear: "2019",
     founders: "Apple Inc.",
     ceo: "Tim Cook",
@@ -208,8 +225,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "9.99",
     currency: "USD",
     type: "apple",
-    netWorth: "3000000000000", // Apple ~$3T
+    netWorth: "3 Trillion (Apple)",
+    globalUserCount: "25 Million+ (Est.)",
+    parentCompany: "Apple Inc.",
     website: "apple.com",
+    milestones: ["2019: Service launched", "2022: Won Best Picture Oscar for CODA", "2023: Expanded live sports with MLS"],
     coordinates: { lat: 37.3346, lng: -122.0090 }
   },
   "canva pro": {
@@ -223,8 +243,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "14.99",
     currency: "USD",
     type: "canva",
-    netWorth: "26000000000", // ~$26B
+    netWorth: "26 Billion",
+    globalUserCount: "135 Million (MAU)",
     website: "canva.com",
+    milestones: ["2013: Launched", "2015: Reached 4M users", "2021: Valued at $40B", "2023: Magic Studio AI launch"],
     coordinates: { lat: -33.8838, lng: 151.2108 }
   },
   "hepsiburada premium": {
@@ -238,59 +260,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "29.90",
     currency: "TRY",
     type: "hepsiburada",
-    netWorth: "300000000", // ~$300M (Market Cap)
+    netWorth: "300 Million",
+    globalUserCount: "12 Million+",
     website: "hepsiburada.com",
+    milestones: ["2000: Founded", "2021: IPO on NASDAQ", "2022: Premium launched"],
     coordinates: { lat: 41.0082, lng: 28.9784 }
-  },
-  "trendyol elite": {
-    id: "trendyol",
-    name: "Trendyol Elite",
-    description: "Trendyol is one of the largest e-commerce platforms in Turkey. Elite status offers special perks and delivery options.",
-    foundedYear: "2010",
-    founders: "Demet Mutlu",
-    ceo: "Çağlayan Çetin",
-    headquarters: "Istanbul, Turkey",
-    price: "0.00",
-    currency: "TRY",
-    type: "trendyol",
-    netWorth: "16500000000", // ~$16.5B
-    website: "trendyol.com",
-    coordinates: { lat: 41.1099, lng: 29.0253 }
-  },
-  "blutv": {
-    id: "blutv",
-    name: "BluTV",
-    description: "BluTV is a Turkish subscription video-on-demand service offering local and international series, movies, and live TV.",
-    foundedYear: "2015",
-    founders: "Aydın Doğan Yalçındağ",
-    ceo: "Deniz Şaşmaz Oflaz",
-    headquarters: "Istanbul, Turkey",
-    price: "99.90",
-    currency: "TRY",
-    type: "blutv",
-    netWorth: "Unknown", // Private/Subsidiary
-    website: "blutv.com",
-    coordinates: { lat: 41.0082, lng: 28.9784 }
-  },
-  "exxen": {
-    id: "exxen",
-    name: "Exxen",
-    description: "Exxen is a Turkish digital streaming platform founded by Acun Ilıcalı, featuring original content and sports.",
-    foundedYear: "2021",
-    founders: "Acun Ilıcalı",
-    ceo: "Acun Ilıcalı",
-    headquarters: "Istanbul, Turkey",
-    price: "129.90",
-    currency: "TRY",
-    type: "exxen",
-    netWorth: "Unknown", // Private
-    website: "exxen.com",
-    coordinates: { lat: 41.1120, lng: 29.0200 }
   },
   "xbox game pass": {
     id: "gamepass",
     name: "Xbox Game Pass",
-    description: "Microsoft's video game subscription service offering a rotating catalog of games from a range of publishers.",
+    description: "Microsoft's video game subscription service offering a rotating catalog of games from a range of publishers and premium services like EA Play.",
     foundedYear: "2017",
     founders: "Microsoft",
     ceo: "Phil Spencer (Xbox)",
@@ -298,14 +277,17 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "16.99",
     currency: "USD",
     type: "gamepass",
-    netWorth: "3000000000000", // Microsoft ~$3T
+    netWorth: "3 Trillion (Microsoft)",
+    globalUserCount: "34 Million+",
+    parentCompany: "Microsoft",
     website: "xbox.com",
+    milestones: ["2017: Launched", "2019: Game Pass for PC", "2020: Included xCloud streaming", "2022: Acquired Activision Blizzard"],
     coordinates: { lat: 47.6740, lng: -122.1215 }
   },
   "disney+": {
     id: "disney",
     name: "Disney+",
-    description: "The streaming home for Disney, Pixar, Marvel, Star Wars, National Geographic, and more.",
+    description: "The dedicated streaming home for movies and shows from Disney, Pixar, Marvel, Star Wars, and National Geographic.",
     foundedYear: "2019",
     founders: "The Walt Disney Company",
     ceo: "Bob Iger",
@@ -313,8 +295,29 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "13.99",
     currency: "USD",
     type: "disney",
-    netWorth: "200000000000", // Disney ~$200B
+    netWorth: "200 Billion",
+    globalUserCount: "150 Million+",
+    parentCompany: "The Walt Disney Company",
     website: "disneyplus.com",
+    milestones: ["2019: Launched", "2020: 50M subscribers in 5 months", "2024: Integrated Hulu content"],
     coordinates: { lat: 34.1561, lng: -118.3243 }
+  },
+  "chatgpt plus": {
+    id: "chatgpt",
+    name: "ChatGPT Plus",
+    description: "A subscription plan for ChatGPT that offers faster response times, priority access to new features like GPT-4, and higher usage limits.",
+    foundedYear: "2015 (OpenAI)",
+    founders: "Sam Altman, Elon Musk, et al.",
+    ceo: "Sam Altman",
+    headquarters: "San Francisco, California, USA",
+    price: "20.00",
+    currency: "USD",
+    type: "chatgpt",
+    netWorth: "80 Billion (OpenAI)",
+    globalUserCount: "180 Million (MAU)",
+    parentCompany: "OpenAI",
+    website: "openai.com",
+    milestones: ["2015: OpenAI Founded", "2022: ChatGPT Released", "2023: GPT-4 Launched", "2024: Sora announced"],
+    coordinates: { lat: 37.7648, lng: -122.4194 }
   }
 };
