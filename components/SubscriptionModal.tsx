@@ -4,12 +4,13 @@ import { X, Calendar, Edit2, TrendingUp, TrendingDown, Bell, Lightbulb, Trash2, 
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, CURRENCIES } from '../utils/data';
+import { EXCHANGE_RATES } from '../utils/currency';
 
 export interface Subscription {
   id: number;
   name: string;
   plan: string;
-  price: number; // Converted price (Base USD)
+  price: number; 
   originalPrice?: number; // Price in original currency
   currency: string; // Original currency code
   cycle: 'Monthly' | 'Yearly';
@@ -19,7 +20,7 @@ export interface Subscription {
   nickname?: string;
   notes?: string;
   billingDay?: number;
-  history?: number[]; // Mock price history
+  history?: number[];
   category?: string;
   reminderEnabled?: boolean;
 }
@@ -31,16 +32,6 @@ interface SubscriptionModalProps {
   onSave: (updatedSub: Subscription) => void;
   onDelete: (id: number) => void;
 }
-
-// Static cancel links
-const CANCEL_LINKS: Record<string, string> = {
-  'netflix': 'https://www.netflix.com/cancelplan',
-  'spotify': 'https://www.spotify.com/account/cancel/',
-  'amazon': 'https://www.amazon.com/gp/help/customer/display.html?nodeId=G57V745LBUAWDQ78',
-  'youtube': 'https://www.youtube.com/paid_memberships',
-  'adobe': 'https://account.adobe.com/plans',
-  'apple': 'https://support.apple.com/en-us/HT202039',
-};
 
 // Helper to find accent color
 const getAccentColor = (type: string, name: string) => {
@@ -57,21 +48,8 @@ const getAccentColor = (type: string, name: string) => {
   return BRAND_COLORS['default'];
 };
 
-const PriceHistoryChart = ({ data, accentColor }: { data: number[], accentColor: string }) => {
-  const { formatPrice } = useLanguage();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  
-  if (!data || data.length === 0) return null;
-
-  return (
-    <div className="relative w-full h-[140px] select-none bg-gray-50/50 rounded-xl flex items-center justify-center border border-gray-100">
-       <p className="text-xs text-gray-400 font-medium">Price history chart unavailable for this plan.</p>
-    </div>
-  );
-};
-
 export default function SubscriptionModal({ isOpen, onClose, subscription, onSave, onDelete }: SubscriptionModalProps) {
-  const { t, convertPrice: convertToUserCurrency } = useLanguage();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<Partial<Subscription>>({});
   const [isSaveHovered, setIsSaveHovered] = useState(false);
 
@@ -83,9 +61,11 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
         notes: subscription.notes || '',
         billingDay: subscription.billingDay || new Date(subscription.nextDate).getDate() || 1,
         reminderEnabled: subscription.reminderEnabled ?? true,
-        // Ensure editable fields are populated
-        originalPrice: subscription.originalPrice || subscription.price,
-        currency: subscription.currency || 'USD'
+        // Ensure editable fields are populated. If originalPrice missing, fallback to price
+        originalPrice: subscription.originalPrice ?? subscription.price,
+        currency: subscription.currency || 'USD',
+        // Make sure we have a float for price editing
+        price: subscription.price
       });
     }
   }, [subscription, isOpen]);
@@ -101,15 +81,38 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Currency conversion handling for edit mode
+  const handleCurrencyChange = (newCurrency: string) => {
+      const currentPrice = formData.originalPrice;
+      const currentCurrency = formData.currency || 'USD';
+
+      if (currentPrice !== undefined && !isNaN(currentPrice)) {
+          const currentRate = EXCHANGE_RATES[currentCurrency] || 1;
+          const newRate = EXCHANGE_RATES[newCurrency] || 1;
+          
+          const valInUSD = currentPrice / currentRate;
+          const valInNew = valInUSD * newRate;
+          
+          setFormData(prev => ({
+              ...prev,
+              currency: newCurrency,
+              originalPrice: parseFloat(valInNew.toFixed(2))
+          }));
+      } else {
+          setFormData(prev => ({ ...prev, currency: newCurrency }));
+      }
+  };
+
   const handleSave = () => {
     if (formData) {
-      // Logic: Update price based on currency (Mock conversion logic would go here in a real app)
-      // For MVP, we just save the values. The main app handles the "base currency" logic usually.
-      // Here we assume price = originalPrice for simplicity unless we had real exchange rates in this file.
+      // In edit mode, price and originalPrice are effectively the same concept 
+      // (the amount user pays in their specific currency).
+      // We ensure 'price' property reflects this updated amount.
       const finalData: Subscription = {
           ...subscription,
           ...formData,
-          price: formData.originalPrice || formData.price || 0 // Simple assignment for MVP
+          price: formData.originalPrice || formData.price || 0,
+          originalPrice: formData.originalPrice || formData.price || 0
       } as Subscription;
       
       onSave(finalData);
@@ -211,7 +214,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                              <select 
                                value={formData.billingDay}
                                onChange={(e) => handleChange('billingDay', parseInt(e.target.value))}
-                               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white"
+                               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white cursor-pointer"
                              >
                                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                                   <option key={day} value={day}>{day}</option>
@@ -226,8 +229,8 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('footer.currency')}</label>
                              <select 
                                value={formData.currency}
-                               onChange={(e) => handleChange('currency', e.target.value)}
-                               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white"
+                               onChange={(e) => handleCurrencyChange(e.target.value)}
+                               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 bg-white cursor-pointer"
                              >
                                 {CURRENCIES.map(curr => (
                                    <option key={curr.code} value={curr.code}>{curr.code}</option>
@@ -236,14 +239,19 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                           </div>
                           <div className="col-span-3">
                              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">{t('modal.price')}</label>
-                             <input 
-                               type="number" 
-                               step="0.01"
-                               value={formData.originalPrice}
-                               onChange={(e) => handleChange('originalPrice', parseFloat(e.target.value))}
-                               className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all font-medium"
-                               placeholder="0.00"
-                             />
+                             <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">
+                                    {CURRENCIES.find(c => c.code === formData.currency)?.symbol}
+                                </span>
+                                <input 
+                                    type="number" 
+                                    step="0.01"
+                                    value={formData.originalPrice}
+                                    onChange={(e) => handleChange('originalPrice', parseFloat(e.target.value))}
+                                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all font-medium"
+                                    placeholder="0.00"
+                                />
+                             </div>
                           </div>
                        </div>
 
@@ -262,7 +270,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                          onClick={handleSave}
                          onMouseEnter={() => setIsSaveHovered(true)}
                          onMouseLeave={() => setIsSaveHovered(false)}
-                         className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-gray-900/10 mt-2 border border-transparent"
+                         className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-gray-900/10 mt-2 border border-transparent active:scale-95"
                          style={{ 
                            backgroundColor: isSaveHovered ? accentColor : undefined,
                            color: isSaveHovered ? '#ffffff' : undefined,

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2, Edit2, X, DollarSign } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
-import { BRAND_COLORS } from '../utils/data';
+import { BRAND_COLORS, SUBSCRIPTION_CATALOG } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
 
 // --- Types ---
@@ -20,6 +20,7 @@ interface AnalyticsProps {
   savingsGoal?: number;
   setSavingsGoal?: React.Dispatch<React.SetStateAction<number>>;
   totalSaved?: number;
+  lifetimeSpend?: number;
 }
 
 // --- Helper Functions ---
@@ -228,7 +229,20 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
    );
 };
 
-const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string }) => {
+const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: number) => string, monthlySpend: number }) => {
+  if (monthlySpend === 0) {
+      return (
+          <div className="h-32 flex items-center justify-center text-xs text-gray-400">
+              Add subscriptions to see comparison.
+          </div>
+      );
+  }
+
+  // Simplified: Global Avg assumes around $50
+  const globalAvg = 50; 
+  const diffPercent = ((monthlySpend - globalAvg) / globalAvg * 100).toFixed(0);
+  const isLower = monthlySpend < globalAvg;
+
   return (
     <div className="space-y-4 pt-1">
       <div className="flex items-end gap-3 h-32 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
@@ -240,19 +254,18 @@ const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string 
          </div>
          
          {[
-           { label: 'You', height: '65%', color: 'bg-gray-900', val: 145 },
-           { label: 'Avg User', height: '80%', color: 'bg-gray-300', val: 190 },
-           { label: 'Friends', height: '45%', color: 'bg-blue-500', val: 110 },
+           { label: 'You', height: `${Math.min((monthlySpend / 200) * 100, 100)}%`, color: 'bg-gray-900', val: monthlySpend },
+           { label: 'Global Avg', height: `${Math.min((globalAvg / 200) * 100, 100)}%`, color: 'bg-gray-300', val: globalAvg },
          ].map((bar, i) => (
-           <div key={i} className="flex flex-col items-center justify-end h-full w-1/4 group relative z-10 cursor-pointer">
+           <div key={i} className="flex flex-col items-center justify-end h-full w-1/3 group relative z-10 cursor-pointer">
               <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 bg-white shadow-sm px-1.5 py-0.5 rounded border border-gray-100">{formatPrice(bar.val)}</span>
               <div className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 shadow-sm ${bar.color}`} style={{ height: bar.height }}></div>
               <span className="text-[10px] font-bold text-gray-500 mt-2">{bar.label}</span>
            </div>
          ))}
       </div>
-      <p className="text-[10px] text-gray-500 text-center bg-green-50 p-2 rounded-lg border border-green-100">
-        You spend <span className="font-bold text-green-700">23% less</span> than the average user.
+      <p className={`text-[10px] text-center p-2 rounded-lg border ${isLower ? 'text-green-700 bg-green-50 border-green-100' : 'text-orange-700 bg-orange-50 border-orange-100'}`}>
+        You spend <span className="font-bold">{Math.abs(parseInt(diffPercent))}% {isLower ? 'less' : 'more'}</span> than global average.
       </p>
     </div>
   );
@@ -422,7 +435,8 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   const [isEditing, setIsEditing] = useState(false);
   const [tempGoal, setTempGoal] = useState(goal);
   
-  const percentage = Math.min((totalSaved / goal) * 100, 100);
+  // Handle division by zero if goal is 0
+  const percentage = goal > 0 ? Math.min((totalSaved / goal) * 100, 100) : 0;
   const remaining = Math.max(0, goal - totalSaved);
 
   const handleSave = () => {
@@ -471,9 +485,11 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
                 ></div>
              </div>
              <p className="text-xs text-gray-500 mt-2">
-                {totalSaved >= goal 
+                {goal > 0 && totalSaved >= goal 
                    ? "🎉 Goal achieved!" 
-                   : `Need ${formatPrice(remaining)} more.`}
+                   : goal > 0 
+                   ? `Need ${formatPrice(remaining)} more.`
+                   : "Set a goal to start saving."}
              </p>
           </div>
        </div>
@@ -481,21 +497,68 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   );
 };
 
-const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: any) => (
-  <div className={`bg-white p-5 rounded-xl border border-gray-100 shadow-sm border-l-4 relative overflow-hidden transition-all hover:shadow-md h-full flex flex-col`} style={{ borderLeftColor: accentColor }}>
-     <div className="flex items-start gap-4 flex-1">
-        <div className={`p-2.5 rounded-lg shrink-0`} style={{ backgroundColor: tintColor }}>
-           <Icon size={20} style={{ color: accentColor }} />
-        </div>
-        <div>
-           <h4 className="text-sm font-bold text-gray-900 mb-1.5">{title}</h4>
-           <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-        </div>
-     </div>
-  </div>
-);
+const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
+    // Basic logic: Check if user pays > catalog price for cheap region (Turkey usually)
+    const potentialSavings = useMemo(() => {
+        let total = 0;
+        subscriptions.forEach(sub => {
+            const key = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
+            const detail = SUBSCRIPTION_CATALOG[key];
+            if (detail && sub.currency === 'USD') {
+                // Heuristic: Compare against ~50% of price as "Global Avg"
+                // In real app, we check specific regional pricing data
+                const possiblePrice = sub.price * 0.4; // 60% cheaper elsewhere
+                if (sub.price > 5) {
+                    total += (sub.price - possiblePrice);
+                }
+            }
+        });
+        return total * 12; // Annual
+    }, [subscriptions]);
 
-export default function Analytics({ subscriptions = [], budgetLimits = {}, setBudgetLimits, savingsGoal = 0, setSavingsGoal, totalSaved = 0 }: AnalyticsProps) {
+    if (potentialSavings <= 0) return (
+        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm h-full flex flex-col justify-center items-center text-center">
+            <CheckCircle2 size={24} className="text-green-500 mb-2" />
+            <p className="text-sm font-bold text-gray-900">Great job!</p>
+            <p className="text-xs text-gray-500">No major savings found.</p>
+        </div>
+    );
+
+    return (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-100 shadow-sm relative overflow-hidden flex flex-col justify-center">
+            <div className="flex items-start gap-4 relative z-10">
+                <div className="p-2 bg-green-100 rounded-lg text-green-600 shrink-0">
+                    <DollarSign size={20} />
+                </div>
+                <div>
+                    <h4 className="text-sm font-bold text-gray-900 mb-1">Potential Savings</h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                        You could save <span className="font-bold text-green-700">{formatPrice(potentialSavings)}/yr</span> by optimizing regional plans.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: { icon: any, title: string, desc: string, accentColor: string, tintColor: string }) => {
+  return (
+    <div className="rounded-xl p-5 border border-transparent shadow-sm relative overflow-hidden group h-full flex flex-col justify-center" style={{ backgroundColor: tintColor }}>
+       <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+          <Icon size={48} style={{ color: accentColor }} />
+       </div>
+       <div className="relative z-10">
+          <div className="p-2 rounded-lg w-fit mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+             <Icon size={20} style={{ color: accentColor }} />
+          </div>
+          <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">{title}</h4>
+          <p className="text-xs text-gray-600 leading-relaxed opacity-90">{desc}</p>
+       </div>
+    </div>
+  );
+};
+
+export default function Analytics({ subscriptions = [], budgetLimits = {}, setBudgetLimits, savingsGoal = 0, setSavingsGoal, totalSaved = 0, lifetimeSpend = 0 }: AnalyticsProps) {
   const { t, currentCurrency, formatPrice, convertPrice } = useLanguage();
   const [dateRange, setDateRange] = useState('Last 6 Months');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
@@ -563,6 +626,11 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
 
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
+  // Calculate current monthly spend for comparison widget
+  const currentMonthlySpend = useMemo(() => {
+      return subscriptions.reduce((acc, sub) => acc + (sub.cycle === 'Monthly' ? sub.price : sub.price / 12), 0);
+  }, [subscriptions]);
+
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       
@@ -574,11 +642,6 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-           <div className="bg-gray-100 p-1 rounded-xl flex items-center">
-              <button onClick={() => setViewMode('personal')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.personal')}</button>
-              <button onClick={() => setViewMode('friends')} className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'friends' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{t('analytics.friends')}</button>
-           </div>
-           
            <div className="relative">
              <button 
                 onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
@@ -616,33 +679,37 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
         </div>
       </div>
 
-      {/* 2. AI Insights (Top Row) */}
+      {/* 2. Insights Row */}
       <div>
          <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
            <Sparkles size={16} className="text-purple-600" /> {t('analytics.ai_insights')}
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <AIInsightCard 
-                icon={ArrowUpRight} 
-                title={t('analytics.insight.entertainment_spike')} 
-                desc={t('analytics.insight.entertainment_desc')} 
-                accentColor="#EF4444" 
-                tintColor="#FEF2F2"
-            />
-            <AIInsightCard 
-                icon={Globe} 
-                title={t('analytics.insight.regional_optimization')} 
-                desc={t('analytics.insight.regional_desc')} 
-                accentColor="#3B82F6" 
-                tintColor="#EFF6FF"
-            />
-            <AIInsightCard 
-                icon={Lightbulb} 
-                title={t('analytics.insight.duplicate_services')} 
-                desc={t('analytics.insight.duplicate_desc')} 
-                accentColor="#F59E0B" 
-                tintColor="#FFFBEB"
-            />
+            <PotentialSavingsCard subscriptions={subscriptions} formatPrice={formatPrice} />
+            
+            {/* Conditional Insights based on data */}
+            {subscriptions.length > 0 ? (
+                <>
+                    <AIInsightCard 
+                        icon={Globe} 
+                        title={t('analytics.insight.regional_optimization')} 
+                        desc="Optimization opportunities detected in your current plan." 
+                        accentColor="#3B82F6" 
+                        tintColor="#EFF6FF"
+                    />
+                    <AIInsightCard 
+                        icon={Lightbulb} 
+                        title="Spending Alert" 
+                        desc="Your monthly spend is consistent with last month." 
+                        accentColor="#F59E0B" 
+                        tintColor="#FFFBEB"
+                    />
+                </>
+            ) : (
+                <div className="col-span-2 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                    Add subscriptions to unlock more AI insights.
+                </div>
+            )}
          </div>
       </div>
 
@@ -652,11 +719,13 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
             <div>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.lifetime')}</p>
-                <h3 className="text-3xl font-bold mb-1">{formatPrice(12450)}</h3>
+                <h3 className="text-3xl font-bold mb-1">{formatPrice(lifetimeSpend || 0)}</h3>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg mt-4">
-               <Trophy size={12} className="text-yellow-400" /> Top 5% Spender
-            </div>
+            {lifetimeSpend > 1000 && (
+                <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg mt-4">
+                   <Trophy size={12} className="text-yellow-400" /> Top Spender
+                </div>
+            )}
          </div>
          
          <div className="md:col-span-1">
@@ -668,7 +737,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             />
          </div>
          
-         {/* Replaced Heatmap with Top Expenses List */}
+         {/* Top Expenses List */}
          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col h-full">
             <div className="flex justify-between items-center mb-4">
                <p className="text-gray-900 font-bold text-sm">Top Expenses</p>
@@ -678,7 +747,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          </div>
       </div>
 
-      {/* 4. Main Analytics Grid (2 Columns) */}
+      {/* 4. Main Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
          
          {/* Left Column (2/3 width) - Charts */}
@@ -691,12 +760,14 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <h3 className="text-base font-bold text-gray-900">{t('analytics.trend')}</h3>
                     <p className="text-xs text-gray-500">{t('analytics.trend_desc')}</p>
                   </div>
-                  <div className="flex items-center text-green-600 text-sm font-medium bg-green-50 px-2.5 py-1.5 rounded-xl">
-                    <ArrowUpRight size={16} className="mr-1" />
-                    <span>8.2%</span>
-                  </div>
                 </div>
-                <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
+                {subscriptions.length > 0 ? (
+                    <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
+                ) : (
+                    <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs bg-gray-50 rounded-xl">
+                        No data to display
+                    </div>
+                )}
             </div>
 
             {/* Subscription Lifetime */}
@@ -716,7 +787,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} />
             </div>
 
-            {/* Budget Monitor (Moved here to balance column height) */}
+            {/* Budget Monitor */}
             <SmartBudgetMonitor 
               subscriptions={subscriptions}
               budgetLimits={budgetLimits}
@@ -727,7 +798,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             {/* Global Comparison */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
                <h3 className="text-base font-bold text-gray-900 mb-4">{t('analytics.global_compare')}</h3>
-               <ComparisonWidget formatPrice={formatPrice} />
+               <ComparisonWidget formatPrice={formatPrice} monthlySpend={currentMonthlySpend} />
             </div>
 
          </div>

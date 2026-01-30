@@ -54,6 +54,38 @@ function AppContent() {
   };
 
   const handleLogin = (email: string, passwordHash: string) => {
+    // DEV ONLY -- REMOVE BEFORE PRODUCTION
+    // Hardcoded Admin Bypass for Testing
+    if (email === 'admin@admin.com' && passwordHash === 'Admin23.') {
+        const adminUser: User = { 
+            name: 'Dev Admin', 
+            email: 'admin@admin.com', 
+            passwordHash: 'Admin23.' 
+        };
+        
+        // Ensure admin is in the users list so session persistence works on refresh
+        const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
+        if (!users.find((u: User) => u.email === email)) {
+            users.push(adminUser);
+            localStorage.setItem('subscriptionhub.users', JSON.stringify(users));
+            
+            // Initialize default admin data if not present (prevents crashes on fresh storage)
+            if (!localStorage.getItem(`subscriptionhub.${email}.subscriptions`)) {
+                 localStorage.setItem(`subscriptionhub.${email}.subscriptions`, JSON.stringify([]));
+                 localStorage.setItem(`subscriptionhub.${email}.budgetLimits`, JSON.stringify({
+                    'Entertainment': 50, 'Productivity': 100, 'Shopping': 200, 'Tools': 50
+                 }));
+            }
+        }
+
+        localStorage.setItem('subscriptionhub.session', email);
+        setCurrentUser(adminUser);
+        setIsAuthOpen(false);
+        setCurrentPage('home');
+        return true;
+    }
+    // END DEV ONLY
+
     const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
     const user = users.find((u: User) => u.email === email && u.passwordHash === passwordHash);
     
