@@ -9,6 +9,7 @@ import SettingsPage from './Settings';
 import Comparison from './Comparison';
 import HelpCenter from './HelpCenter';
 import Profile from './Profile';
+import Discover from './Discover';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
@@ -498,6 +499,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         />
       );
       case 'compare': return <Comparison />;
+      case 'discover': return <Discover />;
       case 'settings': return <SettingsPage subscriptions={subscriptions} />;
       case 'help': return <HelpCenter />;
       case 'profile': return (
