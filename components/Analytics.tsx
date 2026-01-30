@@ -1,15 +1,25 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, Lightbulb, Users, Globe, Trophy, Sparkles, TrendingUp, Clock, Target, AlertCircle, CheckCircle2, Edit2, X } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS } from '../utils/data';
+import { Subscription } from './SubscriptionModal';
 
 // --- Types ---
 interface DataPoint {
   label: string;
   value: number; // Base USD
   prevValue: number; // Base USD
+}
+
+interface AnalyticsProps {
+  subscriptions?: Subscription[];
+  budgetLimits?: Record<string, number>;
+  setBudgetLimits?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  savingsGoal?: number;
+  setSavingsGoal?: React.Dispatch<React.SetStateAction<number>>;
+  totalSaved?: number;
 }
 
 // --- Helper Functions ---
@@ -36,407 +46,167 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
   return path;
 };
 
-// --- Components ---
-
-const SmartBudgetMonitor = ({ formatPrice }: { formatPrice: (v: number) => string }) => {
-  // Mock Data for Budgets
-  const budgets = [
-    { category: 'Entertainment', limit: 60, spent: 48.97, color: 'bg-blue-500', icon: 'netflix' },
-    { category: 'Productivity', limit: 100, spent: 104.99, color: 'bg-purple-500', icon: 'adobe' },
-    { category: 'Shopping', limit: 50, spent: 14.99, color: 'bg-green-500', icon: 'amazon' },
-    { category: 'Music', limit: 20, spent: 10.99, color: 'bg-rose-500', icon: 'spotify' },
-  ];
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Target size={18} className="text-gray-400" /> Smart Budget Monitor
-          </h3>
-          <p className="text-xs text-gray-500 mt-1">Monthly limits per category</p>
-        </div>
-        <button className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-          Edit Limits
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        {budgets.map((item, idx) => {
-          const percentage = Math.min((item.spent / item.limit) * 100, 100);
-          const isOverBudget = item.spent > item.limit;
-          
-          return (
-            <div key={idx} className="group">
-              <div className="flex justify-between items-end mb-2">
-                <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 border border-gray-100 group-hover:scale-110 transition-transform`}>
-                      <BrandIcon type={item.icon} className="w-5 h-5" noBackground />
-                   </div>
-                   <div>
-                      <span className="block text-sm font-bold text-gray-900">{item.category}</span>
-                      <span className="text-[10px] text-gray-400 font-medium">Limit: {formatPrice(item.limit)}</span>
-                   </div>
-                </div>
-                <div className="text-right">
-                   <span className={`text-sm font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
-                      {formatPrice(item.spent)}
-                   </span>
-                   <span className="text-[10px] text-gray-400 ml-1">/ mo</span>
-                </div>
-              </div>
-              
-              <div className="relative h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                 <div 
-                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${isOverBudget ? 'bg-red-500' : item.color}`}
-                    style={{ width: `${percentage}%` }}
-                 ></div>
-                 {/* Striped pattern overlay for texture */}
-                 <div className="absolute inset-0 w-full h-full opacity-10 bg-[linear-gradient(45deg,rgba(255,255,255,.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,.15)_50%,rgba(255,255,255,.15)_75%,transparent_75%,transparent)] bg-[length:1rem_1rem]"></div>
-              </div>
-
-              {isOverBudget && (
-                 <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium text-red-600 animate-in fade-in slide-in-from-left-2">
-                    <AlertCircle size={10} /> You've exceeded your budget by {formatPrice(item.spent - item.limit)}
-                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
-         <span>Total Budget: <span className="font-bold text-gray-900">{formatPrice(230)}</span></span>
-         <span>Used: <span className="font-bold text-gray-900">{formatPrice(179.94)}</span> (78%)</span>
-      </div>
-    </div>
-  );
-};
-
-const SubscriptionLifetimeTimeline = () => {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Mock Data - In a real app this would come from the subscription list
-  const subscriptions = [
-    { name: 'Netflix', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 3, 5, 15)).toISOString(), type: 'netflix' },
-    { name: 'Spotify', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 2, 0, 20)).toISOString(), type: 'spotify' },
-    { name: 'Adobe Creative Cloud', startDate: new Date(new Date().setFullYear(new Date().getFullYear() - 1, 2, 10)).toISOString(), type: 'adobe' },
-    { name: 'Amazon Prime', startDate: new Date(new Date().setMonth(new Date().getMonth() - 18)).toISOString(), type: 'amazon' },
-    { name: 'YouTube Premium', startDate: new Date(new Date().setMonth(new Date().getMonth() - 8)).toISOString(), type: 'youtube' },
-    { name: 'ChatGPT Plus', startDate: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(), type: 'chatgpt' }
-  ];
-
-  const today = new Date();
-  const timelineStart = new Date(today.getFullYear() - 3, today.getMonth(), 1); // 3 years ago
-  const totalDuration = today.getTime() - timelineStart.getTime();
-
-  // Helper to calculate position percentage
-  const getPosition = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const diff = date.getTime() - timelineStart.getTime();
-    return Math.max(0, (diff / totalDuration) * 100);
-  };
-
-  const getDurationWidth = (dateStr: string) => {
-    const start = getPosition(dateStr);
-    return 100 - start; // Extends to "now" (100%)
-  };
-
-  const getDurationText = (dateStr: string) => {
-      const start = new Date(dateStr);
-      const diffTime = Math.abs(today.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      const years = Math.floor(diffDays / 365);
-      const months = Math.floor((diffDays % 365) / 30);
-      
-      if (years > 0) return `${years}y ${months}m`;
-      return `${months}m`;
-  };
-
-  // Generate Year Markers
-  const yearMarkers = [];
-  const startYear = timelineStart.getFullYear();
-  const endYear = today.getFullYear();
-  
-  for (let y = startYear; y <= endYear; y++) {
-      const date = new Date(y, 0, 1);
-      if (date >= timelineStart) {
-          yearMarkers.push({ label: y.toString(), left: getPosition(date.toISOString()) });
-      }
-  }
-
-  return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Clock size={18} className="text-gray-400" /> Subscription Lifetime
-        </h3>
-        <span className="text-xs text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded-md">Scroll to view history</span>
-      </div>
-
-      <div className="relative w-full overflow-x-auto pb-4" ref={scrollContainerRef}>
-        <div className="min-w-[600px] relative pr-16">
-            
-            {/* Timeline Header (Years) */}
-            <div className="h-8 border-b border-gray-100 relative mb-6 text-xs font-semibold text-gray-400 select-none">
-                {yearMarkers.map((marker) => (
-                    <div 
-                        key={marker.label} 
-                        className="absolute bottom-0 border-l border-gray-200 pl-2 pb-1"
-                        style={{ left: `${marker.left}%` }}
-                    >
-                        {marker.label}
-                    </div>
-                ))}
-                <div className="absolute right-0 bottom-0 bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold translate-y-1/2 z-10">Now</div>
-            </div>
-
-            {/* Subscriptions Lines */}
-            <div className="space-y-5">
-                {subscriptions.map((sub, index) => {
-                    const left = getPosition(sub.startDate);
-                    const width = getDurationWidth(sub.startDate);
-                    const brandColor = BRAND_COLORS[sub.type] || BRAND_COLORS['default'];
-
-                    return (
-                        <div key={index} className="relative h-8 flex items-center group">
-                            {/* Dotted Guide Line */}
-                            <div className="absolute left-0 right-0 h-px bg-gray-100 top-1/2 -z-10 border-t border-dashed border-gray-200"></div>
-
-                            {/* The Bar */}
-                            <div 
-                                className="absolute h-2.5 rounded-l-full shadow-sm group-hover:h-3.5 transition-all duration-300 opacity-80 group-hover:opacity-100"
-                                style={{ 
-                                    left: `${left}%`, 
-                                    width: `${width}%`,
-                                    background: `linear-gradient(90deg, ${brandColor}40 0%, ${brandColor} 100%)`
-                                }}
-                            ></div>
-
-                            {/* Start Point (Icon) */}
-                            <div 
-                                className="absolute flex items-center gap-3 transition-all duration-300 z-10 group-hover:scale-110 cursor-pointer"
-                                style={{ left: `${left}%`, transform: 'translateX(-50%)' }}
-                            >
-                                <div className="w-8 h-8 bg-white rounded-full border border-gray-100 shadow-md flex items-center justify-center p-1.5 relative group/icon">
-                                    <BrandIcon type={sub.type} className="w-full h-full" noBackground />
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover/icon:opacity-100 transition-opacity whitespace-nowrap z-30 pointer-events-none">
-                                        Started {new Date(sub.startDate).toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Duration Label (floating right end) */}
-                            <div 
-                                className="absolute text-[10px] font-bold text-gray-500 bg-white/90 px-1.5 py-0.5 rounded shadow-sm border border-gray-100 right-0 translate-x-full ml-2"
-                            >
-                                {getDurationText(sub.startDate)}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Current Time Line */}
-            <div className="absolute top-0 bottom-0 right-0 w-0.5 bg-blue-500/20 z-0 border-r border-dashed border-blue-400"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
+// --- Visual Components ---
 
 const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurrency }: { data: DataPoint[], color?: string, convertPrice: (v: number) => number, currentCurrency: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [width, setWidth] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        setDimensions({ width, height });
-      }
-    };
-    updateDimensions();
-    const resizeObserver = new ResizeObserver(updateDimensions);
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
+    const updateWidth = () => setWidth(containerRef.current?.offsetWidth || 0);
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  const { width, height } = dimensions;
-  const chartPadding = { top: 20, right: 10, bottom: 30, left: 50 };
+  const height = 240;
+  const padding = { top: 20, bottom: 30, left: 40, right: 20 };
+  const drawWidth = width - padding.left - padding.right;
+  const drawHeight = height - padding.top - padding.bottom;
 
-  const { points, pathD, fillPath, maxValue } = useMemo(() => {
-    if (width === 0 || height === 0) return { points: [], pathD: '', fillPath: '', maxValue: 0 };
+  if (width === 0) return <div ref={containerRef} className="h-60 w-full" />;
 
-    // Convert values for chart
-    const convertedData = data.map(d => ({
-        ...d,
-        value: convertPrice(d.value),
-        prevValue: convertPrice(d.prevValue)
-    }));
+  const convertedData = data.map(d => ({ ...d, value: convertPrice(d.value) }));
+  const maxValue = Math.max(...convertedData.map(d => d.value)) * 1.1;
+  const minValue = 0;
+  
+  const points = convertedData.map((d, i) => ({
+    x: padding.left + (i / (data.length - 1)) * drawWidth,
+    y: padding.top + drawHeight - ((d.value - minValue) / (maxValue - minValue)) * drawHeight,
+    ...d
+  }));
 
-    const max = Math.max(...convertedData.map(d => d.value)) * 1.1;
-    const min = 0;
-    const drawWidth = width - chartPadding.left - chartPadding.right;
-    const drawHeight = height - chartPadding.top - chartPadding.bottom;
-
-    const pts = convertedData.map((d, i) => ({
-      x: chartPadding.left + (i / (convertedData.length - 1)) * drawWidth,
-      y: chartPadding.top + drawHeight - ((d.value - min) / (max - min)) * drawHeight,
-      ...d
-    }));
-
-    const path = generateSmoothPath(pts);
-    const fill = `${path} L ${pts[pts.length-1].x} ${chartPadding.top + drawHeight} L ${chartPadding.left} ${chartPadding.top + drawHeight} Z`;
-    
-    return { points: pts, pathD: path, fillPath: fill, maxValue: max };
-  }, [data, width, height, chartPadding, convertPrice]);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current || width === 0) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const drawWidth = width - chartPadding.left - chartPadding.right;
-    const chartX = x - chartPadding.left;
-    if (chartX < -10 || chartX > drawWidth + 10) return;
-    const rawIndex = (chartX / drawWidth) * (data.length - 1);
-    const index = Math.round(Math.max(0, Math.min(data.length - 1, rawIndex)));
-    setHoveredIndex(index);
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setHoveredIndex(null);
-  };
-
-  const hoveredPoint = hoveredIndex !== null ? points[hoveredIndex] : null;
+  const pathD = generateSmoothPath(points);
+  const fillPath = `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`;
 
   return (
-    <div 
-        ref={containerRef}
-        className="h-72 w-full relative group/chart cursor-crosshair select-none"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-    >
-      {width > 0 && height > 0 && (
-        <svg 
-            width={width} 
-            height={height} 
-            viewBox={`0 0 ${width} ${height}`} 
-            className="absolute inset-0 overflow-visible"
-        >
-           <defs>
+    <div ref={containerRef} className="h-60 w-full relative select-none">
+       <svg width={width} height={height} className="overflow-visible">
+          <defs>
              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-               <stop offset="0%" stopColor={color} stopOpacity="0.15" />
-               <stop offset="100%" stopColor={color} stopOpacity="0" />
+                <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                <stop offset="100%" stopColor={color} stopOpacity="0" />
              </linearGradient>
-           </defs>
-
-           {[0, 0.25, 0.5, 0.75, 1].map((tick, i) => {
-               const y = chartPadding.top + (height - chartPadding.top - chartPadding.bottom) * (1 - tick);
-               const val = Math.round(maxValue * tick);
-               return (
-                   <g key={i}>
-                       <line x1={chartPadding.left} y1={y} x2={width - chartPadding.right} y2={y} stroke="#F3F4F6" strokeDasharray="4 4" />
-                       <text x={chartPadding.left - 10} y={y} dy="3" textAnchor="end" className="text-[10px] fill-gray-400 font-medium">
-                           {val.toLocaleString()}
-                       </text>
-                   </g>
-               );
-           })}
-           <path d={fillPath} fill="url(#trendGradient)" className="transition-opacity duration-300 hidden sm:block" />
-           <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-sm" />
-           {isHovering && hoveredPoint && (
-             <line x1={hoveredPoint.x} y1={chartPadding.top} x2={hoveredPoint.x} y2={height - chartPadding.bottom} stroke={color} strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-           )}
-           {points.map((p, i) => {
-             const isHovered = hoveredIndex === i;
+          </defs>
+          {/* Grid */}
+          {[0, 0.5, 1].map((t, i) => {
+             const y = padding.top + drawHeight * (1 - t);
              return (
-               <circle key={i} cx={p.x} cy={p.y} r={isHovered ? 4 : 3} fill={color} stroke="white" strokeWidth={isHovered ? 2 : 1.5} className={`transition-all duration-200 ${isHovered ? 'shadow-md' : ''}`} />
+                <g key={i}>
+                   <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#F3F4F6" strokeDasharray="4 4" />
+                   <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-gray-400 font-medium">{Math.round(maxValue * t)}</text>
+                </g>
              );
-           })}
-           {points.map((p, i) => (
-               <text key={i} x={p.x} y={height - 10} textAnchor="middle" className={`text-[10px] font-medium uppercase tracking-wide fill-gray-400 transition-colors ${hoveredIndex === i ? 'fill-gray-900 font-bold' : ''}`}>
-                   {p.label}
-               </text>
-           ))}
-        </svg>
-      )}
-      {isHovering && hoveredPoint && (
-         <div className="absolute z-20 pointer-events-none transition-all duration-100 ease-out" style={{ left: hoveredPoint.x, top: hoveredPoint.y, transform: `translate(-50%, -140%)` }}>
-            <div className="bg-[#0f0f14]/95 text-white rounded-md px-3 py-2 shadow-none border border-white/10 w-max min-w-[100px]">
-                <div className="flex items-center justify-between gap-4 mb-0.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{hoveredPoint.label}</span>
-                    <span className={`text-[10px] font-bold ${((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? 'text-green-400' : 'text-red-400'}`}>
-                        {((hoveredPoint.value - hoveredPoint.prevValue) >= 0) ? '+' : ''}
-                        {Math.abs(((hoveredPoint.value - hoveredPoint.prevValue)/hoveredPoint.prevValue)*100).toFixed(1)}%
-                    </span>
-                </div>
-                <div className="text-base font-bold">{currentCurrency} {hoveredPoint.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#0f0f14]/95"></div>
-            </div>
-         </div>
+          })}
+          
+          <path d={fillPath} fill="url(#trendGradient)" className="transition-all duration-300" />
+          <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
+
+          {/* Interaction Points */}
+          {points.map((p, i) => (
+             <circle 
+                key={i} 
+                cx={p.x} cy={p.y} r={hoveredIndex === i ? 6 : 4} 
+                fill={color} stroke="white" strokeWidth="2"
+                className="transition-all duration-200 cursor-pointer"
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex(null)}
+             />
+          ))}
+          
+          {/* X Axis Labels */}
+          {points.map((p, i) => (
+             <text key={i} x={p.x} y={height} textAnchor="middle" className="text-[10px] fill-gray-400 uppercase font-bold tracking-wider">{p.label}</text>
+          ))}
+       </svg>
+       
+       {/* Tooltip */}
+       {hoveredIndex !== null && points[hoveredIndex] && (
+          <div 
+             className="absolute bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10"
+             style={{ left: points[hoveredIndex].x, top: points[hoveredIndex].y - 12 }}
+          >
+             {currentCurrency} {points[hoveredIndex].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+          </div>
        )}
     </div>
   );
 };
 
 const SpendingHeatmap = () => {
-  const weeks = 14;
-  const days = 7;
-  const getActivity = (w: number, d: number) => {
-    const val = Math.random();
-    if (val > 0.8) return 'bg-gray-900'; 
-    if (val > 0.6) return 'bg-gray-600'; 
-    if (val > 0.4) return 'bg-gray-300'; 
-    return 'bg-gray-100'; 
+  // Generate a consistent pattern for the heatmap
+  const getOpacity = (i: number) => {
+     // Create a pseudo-random looking but deterministic pattern
+     const pattern = Math.abs(Math.sin(i * 12.34) * Math.cos(i * 5.67)); 
+     if (pattern > 0.8) return 0.9;
+     if (pattern > 0.6) return 0.6;
+     if (pattern > 0.4) return 0.3;
+     return 0.1;
   };
-
+  
   return (
-    <div className="flex flex-col h-full justify-between">
-      <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-hide">
-         {Array.from({ length: weeks }).map((_, w) => (
-           <div key={w} className="flex flex-col gap-1">
-             {Array.from({ length: days }).map((_, d) => (
-               <div 
-                 key={`${w}-${d}`} 
-                 className={`w-3 h-3 rounded-[2px] ${getActivity(w, d)} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400 transition-all cursor-pointer`}
-               ></div>
-             ))}
-           </div>
-         ))}
-      </div>
-      <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-2">
-        <span>Less</span>
-        <div className="w-3 h-3 bg-gray-100 rounded-[2px]"></div>
-        <div className="w-3 h-3 bg-gray-300 rounded-[2px]"></div>
-        <div className="w-3 h-3 bg-gray-600 rounded-[2px]"></div>
-        <div className="w-3 h-3 bg-gray-900 rounded-[2px]"></div>
-        <span>More</span>
-      </div>
+    <div className="flex flex-col h-full justify-between py-2">
+       <div className="grid grid-cols-12 gap-1.5">
+          {Array.from({ length: 48 }).map((_, i) => (
+             <div 
+                key={i} 
+                className="w-full aspect-square rounded-[2px] bg-gray-900 transition-all hover:scale-125 hover:ring-2 hover:ring-offset-1 hover:ring-gray-200"
+                style={{ opacity: getOpacity(i) }}
+                title={`Activity Level: ${Math.round(getOpacity(i)*100)}%`}
+             ></div>
+          ))}
+       </div>
+       <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-3 font-medium">
+          <span>Less</span>
+          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-10"></div>
+          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-40"></div>
+          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-70"></div>
+          <div className="w-3 h-3 bg-gray-900 rounded-[1px] opacity-100"></div>
+          <span>More</span>
+       </div>
     </div>
   );
 };
 
-const CostDistributionChart = ({ formatPrice }: { formatPrice: (v:number) => string }) => {
-  const data = [
-    { name: 'Netflix', value: 19.99, color: BRAND_COLORS['netflix'] },
-    { name: 'Spotify', value: 14.99, color: BRAND_COLORS['spotify'] },
-    { name: 'Adobe', value: 54.99, color: BRAND_COLORS['adobe'] },
-    { name: 'Amazon', value: 139.00/12, color: BRAND_COLORS['amazon'] },
-    { name: 'Others', value: 45.00, color: '#9CA3AF' }
-  ];
+const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v: number) => string, subscriptions: Subscription[] }) => {
+   // Calculate real distribution from props or fallback
+   const data = useMemo(() => {
+      const map: Record<string, number> = {};
+      
+      // If no subs, use mock data to show UI
+      const source = subscriptions.length > 0 ? subscriptions : [
+         { name: 'Netflix', price: 19.99, type: 'netflix' },
+         { name: 'Spotify', price: 14.99, type: 'spotify' },
+         { name: 'Adobe', price: 54.99, type: 'adobe' },
+         { name: 'Amazon', price: 12.99, type: 'amazon' },
+      ] as Subscription[];
 
-  const total = data.reduce((acc, curr) => acc + curr.value, 0);
-  let cumulativePercent = 0;
+      source.forEach(sub => {
+         // Group by Name or Category
+         const key = sub.name; 
+         map[key] = (map[key] || 0) + sub.price;
+      });
 
-  return (
-    <div className="flex items-center gap-6">
+      // Convert map to array and sort
+      return Object.entries(map)
+        .map(([name, value]) => {
+           // Find color
+           const type = name.toLowerCase().replace(/\s+/g, '');
+           const color = BRAND_COLORS[type] || ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'][Math.floor(Math.random()*5)];
+           return { name, value, color };
+        })
+        .sort((a,b) => b.value - a.value)
+        .slice(0, 5); // Top 5
+   }, [subscriptions]);
+
+   const total = data.reduce((a, b) => a + b.value, 0);
+   let cumulativePercent = 0;
+
+   return (
+    <div className="flex items-center gap-6 h-full">
       <div className="relative w-32 h-32 flex-shrink-0">
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 transform">
            {data.map((seg, i) => {
@@ -446,6 +216,7 @@ const CostDistributionChart = ({ formatPrice }: { formatPrice: (v:number) => str
               const circumference = 2 * Math.PI * 40; 
               const strokeDasharray = `${pct * circumference} ${circumference}`;
               const strokeDashoffset = -1 * start * circumference;
+              
               return (
                 <circle 
                   key={i} cx="50" cy="50" r="40" fill="none" stroke={seg.color} strokeWidth="12"
@@ -459,17 +230,305 @@ const CostDistributionChart = ({ formatPrice }: { formatPrice: (v:number) => str
           <span className="text-xs font-bold text-gray-900">{formatPrice(total)}</span>
         </div>
       </div>
-      <div className="flex-1 space-y-2">
-         {data.slice(0, 4).map((d, i) => (
+      <div className="flex-1 space-y-2.5">
+         {data.map((d, i) => (
            <div key={i} className="flex items-center justify-between text-xs">
              <div className="flex items-center gap-2">
-               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }}></div>
-               <span className="font-medium text-gray-700">{d.name}</span>
+               <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
+               <span className="font-semibold text-gray-700 truncate max-w-[80px]">{d.name}</span>
              </div>
              <span className="text-gray-500 font-medium">{formatPrice(d.value)}</span>
            </div>
          ))}
       </div>
+    </div>
+   );
+};
+
+const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string }) => {
+  return (
+    <div className="space-y-4 pt-2">
+      <div className="flex items-end gap-3 h-40 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
+         {/* Grid lines background */}
+         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50 z-0">
+           <div className="border-t border-dashed border-gray-100 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 w-full"></div>
+         </div>
+         
+         {[
+           { label: 'You', height: '65%', color: 'bg-gray-900', val: 145 },
+           { label: 'Avg User', height: '80%', color: 'bg-gray-300', val: 190 },
+           { label: 'Friends', height: '45%', color: 'bg-blue-500', val: 110 },
+         ].map((bar, i) => (
+           <div key={i} className="flex flex-col items-center justify-end h-full w-1/4 group relative z-10 cursor-pointer">
+              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 bg-white shadow-sm px-1.5 py-0.5 rounded border border-gray-100">{formatPrice(bar.val)}</span>
+              <div className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 shadow-sm ${bar.color}`} style={{ height: bar.height }}></div>
+              <span className="text-[10px] font-bold text-gray-500 mt-2">{bar.label}</span>
+           </div>
+         ))}
+      </div>
+      <p className="text-xs text-gray-500 text-center bg-green-50 p-2 rounded-lg border border-green-100">
+        You spend <span className="font-bold text-green-700">23% less</span> than the average user in your region.
+      </p>
+    </div>
+  );
+};
+
+const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
+  // Use props or mock if empty
+  const displaySubs = subscriptions.length > 0 ? subscriptions : [
+     { name: 'Netflix', startDate: '2021-01-01', type: 'netflix' },
+     { name: 'Spotify', startDate: '2022-03-15', type: 'spotify' },
+     { name: 'Adobe', startDate: '2023-06-01', type: 'adobe' },
+     { name: 'Amazon Prime', startDate: '2023-01-10', type: 'amazon' }
+  ];
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <Clock size={18} className="text-gray-400" /> Subscription Lifetime
+        </h3>
+        <span className="text-xs text-gray-400 font-medium">Joined vs Duration</span>
+      </div>
+      <div className="space-y-5">
+         {displaySubs.slice(0, 5).map((sub, i) => {
+            const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); // Mock visual width
+            const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
+            const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
+            
+            return (
+                <div key={i} className="relative h-8 w-full flex items-center group">
+                   {/* Background Track */}
+                   <div className="absolute left-0 right-0 h-1 bg-gray-50 rounded-full top-1/2 -translate-y-1/2"></div>
+                   
+                   {/* Active Bar */}
+                   <div 
+                      className="absolute left-0 h-2 rounded-full transition-all duration-1000 group-hover:h-3 opacity-80"
+                      style={{ width: `${width}%`, backgroundColor: color }}
+                   ></div>
+                   
+                   {/* Icon Indicator */}
+                   <div 
+                      className="relative z-10 flex items-center justify-center w-8 h-8 bg-white rounded-full border border-gray-100 shadow-sm transition-transform group-hover:scale-110"
+                      style={{ marginLeft: `calc(${width}% - 16px)` }}
+                   >
+                      <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
+                   </div>
+                   
+                   {/* Label */}
+                   <div className="ml-4 flex flex-col justify-center">
+                      <span className="text-xs font-bold text-gray-900">{sub.name}</span>
+                   </div>
+                </div>
+            );
+         })}
+      </div>
+    </div>
+  );
+};
+
+const SmartBudgetMonitor = ({ 
+  subscriptions = [], 
+  budgetLimits = {}, 
+  setBudgetLimits, 
+  formatPrice 
+}: { 
+  subscriptions: Subscription[], 
+  budgetLimits: Record<string, number>, 
+  setBudgetLimits: any, 
+  formatPrice: (v: number) => string 
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [localLimits, setLocalLimits] = useState(budgetLimits);
+
+  // Calculate spent per category
+  const spendingByCategory = useMemo(() => {
+    const spending: Record<string, number> = {};
+    subscriptions.forEach(sub => {
+      const cat = sub.category || 'Other';
+      const monthlyCost = sub.cycle === 'Yearly' ? sub.price / 12 : sub.price;
+      spending[cat] = (spending[cat] || 0) + monthlyCost;
+    });
+    return spending;
+  }, [subscriptions]);
+
+  const categories = Object.keys(budgetLimits);
+  // FIX: Explicitly cast Object.values results to number[] to avoid "unknown" type errors in reduce
+  const totalBudget = (Object.values(budgetLimits) as number[]).reduce((a, b) => a + b, 0);
+  const totalSpent = (Object.values(spendingByCategory) as number[]).reduce((a, b) => a + b, 0);
+
+  const handleSaveLimits = () => {
+    if (setBudgetLimits) setBudgetLimits(localLimits);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+            <Target size={18} className="text-gray-400" /> Smart Budget Monitor
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">Monthly limits per category</p>
+        </div>
+        <button 
+          onClick={() => setIsEditing(true)}
+          className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+        >
+          Edit Limits
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {categories.map((cat, idx) => {
+          const limit = budgetLimits[cat] || 0;
+          const spent = spendingByCategory[cat] || 0;
+          const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+          const isOverBudget = spent > limit;
+          
+          let barColor = 'bg-blue-500';
+          if (percentage > 80) barColor = 'bg-yellow-500';
+          if (isOverBudget) barColor = 'bg-red-500';
+
+          return (
+            <div key={idx} className="group">
+              <div className="flex justify-between items-end mb-2">
+                <div className="flex items-center gap-3">
+                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 border border-gray-100`}>
+                      <span className="text-[10px] font-bold text-gray-500">{cat.substring(0, 2).toUpperCase()}</span>
+                   </div>
+                   <div>
+                      <span className="block text-sm font-bold text-gray-900">{cat}</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Limit: {formatPrice(limit)}</span>
+                   </div>
+                </div>
+                <div className="text-right">
+                   <span className={`text-sm font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
+                      {formatPrice(spent)}
+                   </span>
+                   <span className="text-[10px] text-gray-400 ml-1">/ mo</span>
+                </div>
+              </div>
+              
+              <div className="relative h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                 <div 
+                    className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
+                    style={{ width: `${percentage}%` }}
+                 ></div>
+              </div>
+
+              {isOverBudget && (
+                 <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium text-red-600 animate-in fade-in slide-in-from-left-2">
+                    <AlertCircle size={10} /> You've exceeded your budget by {formatPrice(spent - limit)}
+                 </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      
+      <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
+         <span>Total Budget: <span className="font-bold text-gray-900">{formatPrice(totalBudget)}</span></span>
+         <span>Used: <span className="font-bold text-gray-900">{formatPrice(totalSpent)}</span> ({totalBudget > 0 ? ((totalSpent/totalBudget)*100).toFixed(0) : 0}%)</span>
+      </div>
+
+      {/* Edit Modal Overlay */}
+      {isEditing && (
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
+           <div className="flex justify-between items-center mb-4">
+              <h4 className="font-bold text-gray-900">Edit Category Limits</h4>
+              <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 rounded-full"><X size={18} /></button>
+           </div>
+           <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+              {categories.map(cat => (
+                 <div key={cat} className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500">{cat}</label>
+                    <div className="relative">
+                       <span className="absolute left-3 top-2.5 text-gray-400">$</span>
+                       <input 
+                         type="number" 
+                         value={localLimits[cat]}
+                         onChange={(e) => setLocalLimits(prev => ({...prev, [cat]: parseFloat(e.target.value) || 0}))}
+                         className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-sm"
+                       />
+                    </div>
+                 </div>
+              ))}
+           </div>
+           <button onClick={handleSaveLimits} className="w-full bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm mt-4 hover:bg-gray-800">
+              Save Limits
+           </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: number, setGoal: any, totalSaved: number, formatPrice: any }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempGoal, setTempGoal] = useState(goal);
+  
+  const percentage = Math.min((totalSaved / goal) * 100, 100);
+  const remaining = Math.max(0, goal - totalSaved);
+
+  const handleSave = () => {
+    if (setGoal) setGoal(tempGoal);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
+       {/* Background decoration */}
+       <div className="absolute top-0 right-0 p-8 bg-green-50 rounded-bl-[100px] opacity-50 transition-all group-hover:scale-110 duration-500"></div>
+       
+       <div className="relative z-10">
+          <div className="flex justify-between items-start mb-4">
+             <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly Savings Goal</p>
+                {isEditing ? (
+                   <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={tempGoal}
+                        onChange={(e) => setTempGoal(parseFloat(e.target.value))}
+                        className="w-24 px-2 py-1 border border-gray-200 rounded text-lg font-bold"
+                        autoFocus
+                      />
+                      <button onClick={handleSave} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">Save</button>
+                   </div>
+                ) : (
+                   <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setIsEditing(true)}>
+                      <h3 className="text-2xl font-bold text-gray-900">{formatPrice(goal)}</h3>
+                      <Edit2 size={14} className="text-gray-300 group-hover/edit:text-gray-500 transition-colors" />
+                   </div>
+                )}
+             </div>
+             <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+                <Trophy size={20} />
+             </div>
+          </div>
+
+          <div className="space-y-2">
+             <div className="flex justify-between text-xs font-medium">
+                <span className="text-gray-600">Saved: {formatPrice(totalSaved)}</span>
+                <span className="text-green-600">{percentage.toFixed(0)}%</span>
+             </div>
+             <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                   className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-1000 ease-out"
+                   style={{ width: `${percentage}%` }}
+                ></div>
+             </div>
+             <p className="text-xs text-gray-500 mt-2">
+                {totalSaved >= goal 
+                   ? "🎉 Goal achieved! Great job optimizing." 
+                   : `You need ${formatPrice(remaining)} more to reach your goal.`}
+             </p>
+          </div>
+       </div>
     </div>
   );
 };
@@ -491,38 +550,38 @@ const AIInsightCard = ({ icon: Icon, title, desc, color }: any) => (
   </div>
 );
 
-const ComparisonWidget = ({ formatPrice }: { formatPrice: (v:number) => string }) => {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-end gap-2 h-32 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
-         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50">
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-         </div>
-         {[
-           { label: 'You', height: '65%', color: 'bg-gray-900', val: 145 },
-           { label: 'Avg User', height: '80%', color: 'bg-gray-300', val: 190 },
-           { label: 'Friends', height: '45%', color: 'bg-blue-500', val: 110 },
-         ].map((bar, i) => (
-           <div key={i} className="flex flex-col items-center justify-end h-full w-1/4 group relative z-10">
-              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5">{formatPrice(bar.val)}</span>
-              <div className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 ${bar.color}`} style={{ height: bar.height }}></div>
-              <span className="text-[10px] font-medium text-gray-400 mt-2">{bar.label}</span>
-           </div>
-         ))}
-      </div>
-      <p className="text-xs text-gray-500 text-center">
-        You spend <span className="font-bold text-green-600">23% less</span> than the average user in your region.
-      </p>
-    </div>
-  );
-};
-
-export default function Analytics() {
+export default function Analytics({ subscriptions = [], budgetLimits = {}, setBudgetLimits, savingsGoal = 0, setSavingsGoal, totalSaved = 0 }: AnalyticsProps) {
   const { t, currentCurrency, formatPrice, convertPrice } = useLanguage();
   const [dateRange, setDateRange] = useState('Last 6 Months');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
+
+  // CSV Export Logic
+  const handleExportCSV = () => {
+    const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
+    const rows = subscriptions.map(sub => [
+        sub.name,
+        sub.category || "Uncategorized",
+        sub.price.toFixed(2),
+        sub.currency,
+        sub.cycle,
+        sub.nextDate,
+        sub.status
+    ]);
+
+    const csvContent = [
+        headers.join(","),
+        ...rows.map(e => e.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "subscription_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const personalTrendData = [
     { label: 'Jan', value: 1850, prevValue: 1700 },
@@ -533,16 +592,6 @@ export default function Analytics() {
     { label: 'Jun', value: 2800, prevValue: 2250 },
   ];
 
-  const friendsTrendData = [
-    { label: 'Jan', value: 1600, prevValue: 1550 },
-    { label: 'Feb', value: 1750, prevValue: 1600 },
-    { label: 'Mar', value: 1800, prevValue: 1750 },
-    { label: 'Apr', value: 1850, prevValue: 1800 },
-    { label: 'May', value: 2000, prevValue: 1850 },
-    { label: 'Jun', value: 2100, prevValue: 2000 },
-  ];
-
-  const currentData = viewMode === 'personal' ? personalTrendData : friendsTrendData;
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
   return (
@@ -564,7 +613,10 @@ export default function Analytics() {
               <span>{dateRange}</span>
               <ChevronDown size={14} className="text-gray-400 ml-1" />
            </button>
-           <button className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm active:scale-95">
+           <button 
+             onClick={handleExportCSV}
+             className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm active:scale-95"
+           >
               <Download size={16} />
               <span className="hidden sm:inline">{t('analytics.export')}</span>
            </button>
@@ -580,13 +632,14 @@ export default function Analytics() {
                <Trophy size={12} className="text-yellow-400" /> Top 5% Spender
             </div>
          </div>
-         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:border-green-200 transition-colors">
-            <div className="flex justify-between items-start mb-2">
-               <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
-               <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+4%</span>
-            </div>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{t('analytics.potential_save')}</p>
-            <h3 className="text-2xl font-bold text-gray-900">{formatPrice(48.00)}<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
+         {/* Savings Goal Card (New) */}
+         <div className="md:col-span-1">
+            <SavingsGoalCard 
+              goal={savingsGoal} 
+              setGoal={setSavingsGoal} 
+              totalSaved={totalSaved} 
+              formatPrice={formatPrice} 
+            />
          </div>
          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col justify-between">
             <div className="flex justify-between items-center mb-2">
@@ -609,7 +662,7 @@ export default function Analytics() {
                 <span>8.2%</span>
               </div>
             </div>
-            <SpendingTrendChart data={currentData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
+            <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
          </div>
          <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
@@ -617,16 +670,21 @@ export default function Analytics() {
                   <h3 className="text-base font-bold text-gray-900">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDistributionChart formatPrice={formatPrice} />
+               <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} />
             </div>
-            {/* New Budget Monitor Added Here */}
-            <SmartBudgetMonitor formatPrice={formatPrice} />
+            {/* Real Budget Monitor */}
+            <SmartBudgetMonitor 
+              subscriptions={subscriptions}
+              budgetLimits={budgetLimits}
+              setBudgetLimits={setBudgetLimits}
+              formatPrice={formatPrice}
+            />
          </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          <div className="lg:col-span-2">
-            <SubscriptionLifetimeTimeline />
+            <SubscriptionLifetimeTimeline subscriptions={subscriptions} />
          </div>
          <div className="lg:col-span-1 h-full">
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">

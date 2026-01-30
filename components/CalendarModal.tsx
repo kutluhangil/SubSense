@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { X, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -23,8 +23,6 @@ export default function CalendarModal({ isOpen, onClose, subscriptions }: Calend
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay(); // 0 = Sun
   
-  // Adjust for Monday start (standard in many regions) or stick to Sunday. Let's do Sunday start for simplicity matching JS.
-  
   const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const handlePrevMonth = () => {
@@ -33,6 +31,39 @@ export default function CalendarModal({ isOpen, onClose, subscriptions }: Calend
 
   const handleNextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const handleExportICS = () => {
+    const events = subscriptions.map(sub => {
+        const nextDate = new Date(sub.nextDate);
+        if (isNaN(nextDate.getTime())) return '';
+        
+        // Format date to YYYYMMDD
+        const dateStr = nextDate.toISOString().replace(/-|:|\.\d\d\d/g, "").split("T")[0];
+        const rrule = sub.cycle === 'Monthly' ? 'FREQ=MONTHLY' : 'FREQ=YEARLY';
+        
+        return `BEGIN:VEVENT
+SUMMARY:${sub.name} Payment
+DTSTART;VALUE=DATE:${dateStr}
+RRULE:${rrule}
+DESCRIPTION:Payment of ${sub.price} ${sub.currency} for ${sub.plan} plan.
+END:VEVENT`;
+    }).join('\n');
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//SubscriptionHub//MVP//EN
+${events}
+END:VCALENDAR`;
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'subscriptions.ics');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Map subscriptions to days
@@ -84,12 +115,21 @@ export default function CalendarModal({ isOpen, onClose, subscriptions }: Calend
                 <p className="text-xs text-gray-500">Overview of your billing cycle</p>
              </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+             <button 
+                onClick={handleExportICS}
+                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                title="Export to Google Calendar, Apple Calendar, or Outlook"
+             >
+                <Download size={14} /> Add to Calendar
+             </button>
+             <button 
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+             >
+                <X size={20} />
+             </button>
+          </div>
         </div>
 
         {/* Calendar Controls */}
