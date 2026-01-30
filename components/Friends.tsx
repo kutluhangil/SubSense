@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, MapPin, UserPlus, MoreHorizontal, MessageCircle, UserMinus, X, Send, CheckCircle, Edit3, Plus, Minus, Clock } from 'lucide-react';
+import { Search, MapPin, UserPlus, MoreHorizontal, UserMinus, X, Check, Copy } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -122,7 +122,6 @@ export default function Friends() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const { t, formatPrice } = useLanguage();
 
   const filteredFriends = friends.filter(friend => 
@@ -135,12 +134,6 @@ export default function Friends() {
         setFriends(prev => prev.filter(f => f.id !== id));
         setActiveDropdown(null);
     }
-  };
-
-  const handleSendMessage = (friend: Friend) => {
-    setSelectedFriend(friend);
-    setIsMessageModalOpen(true);
-    setActiveDropdown(null);
   };
 
   const handleViewProfile = (friend: Friend) => {
@@ -226,7 +219,6 @@ export default function Friends() {
                 {activeDropdown === friend.id && (
                     <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                        <button onClick={(e) => { e.stopPropagation(); handleViewProfile(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">View Profile</button>
-                       <button onClick={(e) => { e.stopPropagation(); handleSendMessage(friend); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900">Send Message</button>
                        <div className="h-px bg-gray-50 my-1"></div>
                        <button onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50">Remove</button>
                     </div>
@@ -262,11 +254,15 @@ export default function Friends() {
             {/* Actions */}
             <div className="flex gap-2 pt-4 border-t border-gray-50">
                <button 
-                 onClick={(e) => { e.stopPropagation(); handleSendMessage(friend); }}
+                 onClick={(e) => { 
+                     e.stopPropagation(); 
+                     navigator.clipboard.writeText(`https://subscriptionhub.app/u/${friend.username}`);
+                     alert("Profile link copied!");
+                 }}
                  className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                >
-                  <MessageCircle size={14} className="mr-2" />
-                  {t('friend.message')}
+                  <Copy size={14} className="mr-2" />
+                  Share Profile
                </button>
                <button 
                  onClick={(e) => { e.stopPropagation(); handleRemoveFriend(friend.id); }}
@@ -282,7 +278,7 @@ export default function Friends() {
 
       {/* Profile Modal */}
       <ProfileCardModal 
-        isOpen={!!selectedFriend && !isMessageModalOpen}
+        isOpen={!!selectedFriend}
         onClose={() => setSelectedFriend(null)}
         user={selectedFriend ? mapFriendToProfile(selectedFriend) : null}
       />
@@ -300,33 +296,6 @@ export default function Friends() {
                  </div>
                  <button type="submit" className="w-full bg-gray-900 text-white py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-all">Send Request</button>
               </form>
-           </div>
-        </div>
-      )}
-
-      {/* Message Modal */}
-      {isMessageModalOpen && selectedFriend && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col h-[400px]">
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                 <div className="flex items-center gap-3">
-                    <img src={selectedFriend.avatar} alt="" className="w-8 h-8 rounded-full" />
-                    <span className="font-bold text-gray-900">{selectedFriend.name}</span>
-                 </div>
-                 <button onClick={() => setIsMessageModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
-              </div>
-              <div className="flex-1 p-4 bg-gray-50 overflow-y-auto">
-                 <div className="text-center text-xs text-gray-400 my-4">Today</div>
-                 <div className="flex justify-end mb-2">
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl rounded-br-none text-sm max-w-[80%]">
-                       Hey! Saw you added YouTube Premium. Is it worth it?
-                    </div>
-                 </div>
-              </div>
-              <div className="p-3 border-t border-gray-100 flex gap-2">
-                 <input type="text" placeholder="Type a message..." className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-400" />
-                 <button className="p-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800"><Send size={18} /></button>
-              </div>
            </div>
         </div>
       )}

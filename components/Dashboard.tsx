@@ -13,9 +13,8 @@ import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, X, Check } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { SubscriptionDetail } from '../utils/data';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -23,11 +22,11 @@ interface DashboardProps {
 
 // Initial Data with Category
 const INITIAL_SUBSCRIPTIONS: Subscription[] = [
-  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, category: 'Entertainment', history: [15.99, 15.99, 17.49, 19.99, 19.99] },
-  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, category: 'Entertainment', history: [12.99, 12.99, 13.99, 14.99, 14.99] },
-  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring', billingDay: 1, category: 'Productivity', history: [52.99, 52.99, 52.99, 54.99, 54.99] },
-  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active', billingDay: 12, category: 'Shopping', history: [119.00, 119.00, 139.00, 139.00, 139.00] },
-  { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, category: 'Entertainment', history: [11.99, 11.99, 11.99, 13.99, 13.99] },
+  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, originalPrice: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, category: 'Entertainment', history: [15.99, 15.99, 17.49, 19.99, 19.99] },
+  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, originalPrice: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, category: 'Entertainment', history: [12.99, 12.99, 13.99, 14.99, 14.99] },
+  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, originalPrice: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring', billingDay: 1, category: 'Productivity', history: [52.99, 52.99, 52.99, 54.99, 54.99] },
+  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, originalPrice: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active', billingDay: 12, category: 'Shopping', history: [119.00, 119.00, 139.00, 139.00, 139.00] },
+  { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, originalPrice: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, category: 'Entertainment', history: [11.99, 11.99, 11.99, 13.99, 13.99] },
 ];
 
 export default function Dashboard({ onLogout }: DashboardProps) {
@@ -39,6 +38,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   
   // Notification State
   const [notifications, setNotifications] = useState([
@@ -64,6 +64,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     return subscriptions.filter(sub => sub.category === activeCategory);
   }, [subscriptions, activeCategory]);
 
+  const showToast = (msg: string) => {
+      setToastMsg(msg);
+      setTimeout(() => setToastMsg(null), 3000);
+  };
+
   const handleSubUpdate = (updatedSub: Subscription) => {
     setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
   };
@@ -74,46 +79,41 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         // Add monthly price to saved amount (simple heuristic: if yearly, divide by 12)
         const monthlyValue = subToDelete.cycle === 'Yearly' ? subToDelete.price / 12 : subToDelete.price;
         setTotalSaved(prev => prev + monthlyValue);
+        showToast(`Subscription deleted. You saved ${formatPrice(monthlyValue)}/mo!`);
     }
     setSubscriptions(prev => prev.filter(s => s.id !== id));
   };
 
-  const handleAddSubscription = (service: SubscriptionDetail) => {
-    const priceVal = parseFloat(service.price);
+  const handleAddSubscription = (newSub: Subscription) => {
+    // Generate new ID
+    const nextId = Math.max(...subscriptions.map(s => s.id), 0) + 1;
+    const finalSub = { ...newSub, id: nextId };
     
-    // Determine category loosely based on type for demo
-    let cat = 'Tools';
-    if (['netflix', 'spotify', 'youtube', 'disney+'].includes(service.type)) cat = 'Entertainment';
-    if (['adobe', 'canva', 'office'].includes(service.type)) cat = 'Productivity';
-    if (['amazon', 'trendyol'].includes(service.type)) cat = 'Shopping';
-
-    const newSub: Subscription = {
-        id: Math.max(...subscriptions.map(s => s.id), 0) + 1,
-        name: service.name,
-        plan: 'Standard',
-        price: priceVal,
-        currency: 'USD',
-        cycle: 'Monthly',
-        nextDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        type: service.type,
-        status: 'Active',
-        billingDay: new Date().getDate(),
-        category: cat,
-        history: [priceVal]
-    };
-    setSubscriptions(prev => [newSub, ...prev]);
+    setSubscriptions(prev => [finalSub, ...prev]);
     setIsAddModalOpen(false);
-    setCurrentView('dashboard'); // Return to dashboard to see new item
+    setCurrentView('dashboard');
+  };
+
+  const handleMarkAsPaid = (id: number) => {
+      setSubscriptions(prev => prev.map(sub => {
+          if (sub.id === id) {
+              const current = new Date(sub.nextDate);
+              // Simple advance logic: Add 1 month or 1 year
+              if (sub.cycle === 'Monthly') {
+                  current.setMonth(current.getMonth() + 1);
+              } else {
+                  current.setFullYear(current.getFullYear() + 1);
+              }
+              showToast(`${sub.name} marked as paid. Next date updated.`);
+              return { ...sub, nextDate: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) };
+          }
+          return sub;
+      }));
   };
 
   // Notification Handlers
   const handleMarkAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (id: number) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    // Could navigate to specific views here
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -128,15 +128,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             onClick={handleMarkAllRead}
             className="text-[10px] text-blue-600 font-medium hover:underline flex items-center gap-1"
           >
-            <Check size={12} /> {t('dashboard.mark_read')}
+            {t('dashboard.mark_read')}
           </button>
        </div>
        <div className="max-h-64 overflow-y-auto">
           {notifications.map(n => (
              <div 
                key={n.id} 
-               onClick={() => handleNotificationClick(n.id)}
-               className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-blue-50/30' : ''}`}
+               className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors ${!n.read ? 'bg-blue-50/30' : ''}`}
              >
                 <div className="flex justify-between items-start">
                    <p className={`text-xs text-gray-800 mb-1 ${!n.read ? 'font-semibold' : ''}`}>{n.text}</p>
@@ -170,42 +169,54 @@ export default function Dashboard({ onLogout }: DashboardProps) {
      </div>
   );
 
-  const UpcomingTimeline = () => (
-     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-           <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-              <Calendar size={16} className="text-gray-400" /> {t('dashboard.upcoming')}
-           </h3>
-           <button 
-             onClick={() => setIsCalendarOpen(true)}
-             className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
-           >
-              {t('dashboard.view_calendar')}
-           </button>
-        </div>
-        <div className="space-y-4">
-           {subscriptions.slice(0, 4).map((sub) => (
-              <div key={sub.id} className="flex items-center gap-3 group cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                 <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
-                 </div>
-                 <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-0.5">
-                       <h4 className="text-sm font-semibold text-gray-900 truncate pr-2">{sub.name}</h4>
-                       <span className="text-xs font-bold text-gray-900">{formatPrice(sub.price)}</span>
+  const UpcomingTimeline = () => {
+     // Sort by soonest
+     const upcoming = [...subscriptions].sort((a,b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()).slice(0, 4);
+
+     return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                <Calendar size={16} className="text-gray-400" /> {t('dashboard.upcoming')}
+            </h3>
+            <button 
+                onClick={() => setIsCalendarOpen(true)}
+                className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 transition-colors"
+            >
+                {t('dashboard.view_calendar')}
+            </button>
+            </div>
+            <div className="space-y-4">
+            {upcoming.map((sub) => (
+                <div key={sub.id} className="flex items-center gap-3 group">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                        <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
                     </div>
-                    <div className="flex justify-between items-center">
-                       <span className="text-[10px] text-gray-500">{sub.nextDate}</span>
-                       <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
-                          {sub.status}
-                       </span>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                        <div className="flex justify-between items-baseline mb-0.5">
+                        <h4 className="text-sm font-semibold text-gray-900 truncate pr-2">{sub.name}</h4>
+                        <span className="text-xs font-bold text-gray-900">{formatPrice(sub.price)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-gray-500">{sub.nextDate}</span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                            {sub.status}
+                        </span>
+                        </div>
                     </div>
-                 </div>
-              </div>
-           ))}
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
+                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Mark as paid"
+                    >
+                        <CheckCircle2 size={16} />
+                    </button>
+                </div>
+            ))}
+            </div>
         </div>
-     </div>
-  );
+     );
+  };
 
   const ExpenseBreakdown = () => (
      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative overflow-hidden">
@@ -408,6 +419,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
          onClose={() => setIsCalendarOpen(false)} 
          subscriptions={subscriptions} 
        />
+
+       {/* Global Toast */}
+       {toastMsg && (
+           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-[100] animate-in slide-in-from-bottom-2 fade-in">
+               <span className="font-medium text-sm">{toastMsg}</span>
+           </div>
+       )}
     </div>
   );
 }

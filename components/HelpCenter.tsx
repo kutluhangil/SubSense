@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, MessageSquare, Send, ThumbsUp, ThumbsDown, X, Monitor } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
@@ -285,117 +285,6 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   }
 };
 
-const SmartHelpAssistant = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string}[]>([
-    { role: 'bot', text: 'Hi! I\'m your SubscriptionHub assistant. Ask me anything about tracking, comparing, or managing your subs.' }
-  ]);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isOpen]);
-
-  const handleSend = () => {
-    if (!query.trim()) return;
-    
-    setMessages(prev => [...prev, { role: 'user', text: query }]);
-    setQuery('');
-    setIsTyping(true);
-
-    // Mock AI Response
-    setTimeout(() => {
-      let response = "I can help with that. Could you provide a bit more detail?";
-      const q = query.toLowerCase();
-      if (q.includes('add') || q.includes('new')) response = "To add a new subscription, go to your Dashboard and click the '+' or 'Add Subscription' button. You can then search for the service or add a custom one.";
-      if (q.includes('compare') || q.includes('price')) response = "You can compare prices globally using the 'Compare' tab in the sidebar. Select a service and see how much it costs in different countries.";
-      if (q.includes('delete') || q.includes('remove')) response = "To remove a subscription, find it in your list, click the three dots icon on the right, and select 'Delete'.";
-      if (q.includes('friend') || q.includes('share')) response = "Navigate to the 'Friends' page to add connections. Once connected, you can see shared subscriptions on their profile.";
-
-      setMessages(prev => [...prev, { role: 'bot', text: response }]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  return (
-    <>
-      {/* Floating Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-50 group"
-      >
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} className="group-hover:animate-pulse" />}
-      </button>
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-24 right-8 w-80 sm:w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-50 animate-in slide-in-from-bottom-4 duration-300">
-           <div className="bg-gray-900 p-4 text-white flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <Monitor size={16} />
-                 </div>
-                 <div>
-                    <h3 className="text-sm font-bold">Smart Assistant</h3>
-                    <p className="text-[10px] text-gray-300 flex items-center gap-1">
-                       <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> Online
-                    </p>
-                 </div>
-              </div>
-           </div>
-
-           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-              {messages.map((msg, i) => (
-                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
-                       msg.role === 'user' 
-                       ? 'bg-blue-600 text-white rounded-br-none' 
-                       : 'bg-white text-gray-700 shadow-sm border border-gray-100 rounded-bl-none'
-                    }`}>
-                       {msg.text}
-                    </div>
-                 </div>
-              ))}
-              {isTyping && (
-                 <div className="flex justify-start">
-                    <div className="bg-white p-3 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 flex gap-1">
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100"></span>
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200"></span>
-                    </div>
-                 </div>
-              )}
-              <div ref={messagesEndRef} />
-           </div>
-
-           <div className="p-4 bg-white border-t border-gray-100">
-              <div className="relative">
-                 <input 
-                    type="text" 
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask a question..."
-                    className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                 />
-                 <button 
-                    onClick={handleSend}
-                    className="absolute right-2 top-2 p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                 >
-                    <Send size={16} />
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
-    </>
-  );
-};
-
 // --- Main Component ---
 
 export default function HelpCenter() {
@@ -607,9 +496,6 @@ export default function HelpCenter() {
            </div>
         </div>
       </div>
-
-      {/* Floating Smart Assistant */}
-      <SmartHelpAssistant />
 
       {/* Contact Support Modal */}
       <ContactSupportModal 

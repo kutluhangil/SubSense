@@ -1,19 +1,22 @@
+
 import React, { useState, useMemo } from 'react';
-import { Search, Mic, Plus } from 'lucide-react';
+import { Search, Mic, Plus, PenTool } from 'lucide-react';
 import FloatingLogoLayer from './FloatingLogoLayer';
 import AddSubscriptionModal from './AddSubscriptionModal';
 import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail, BRAND_COLORS } from '../utils/data';
+import { Subscription } from './SubscriptionModal';
 
 interface SubscriptionSearchPanelProps {
-  onAddSubscription: (service: SubscriptionDetail) => void;
+  onAddSubscription: (service: Subscription) => void;
 }
 
 export default function SubscriptionSearchPanel({ onAddSubscription }: SubscriptionSearchPanelProps) {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedService, setSelectedService] = useState<SubscriptionDetail | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   // Filter subscriptions based on search
@@ -24,13 +27,13 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
   }, [searchTerm]);
 
   const handleSelect = (serviceName: string) => {
-    // Look up detailed info, or create a basic fallback if not in full catalog
+    // Look up detailed info, or create a basic fallback
     const key = serviceName.toLowerCase();
     const detail = Object.values(SUBSCRIPTION_CATALOG).find(s => s.name.toLowerCase() === key || s.id === key) || {
         id: key,
         name: serviceName,
-        description: `${serviceName} is a subscription service.`,
-        foundedYear: "Unknown",
+        description: `${serviceName} subscription.`,
+        foundedYear: "-",
         founders: "-",
         ceo: "-",
         headquarters: "-",
@@ -40,10 +43,17 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
     } as SubscriptionDetail;
 
     setSelectedService(detail);
+    setIsModalOpen(true);
   };
 
-  const handleAdd = (service: SubscriptionDetail) => {
-    onAddSubscription(service);
+  const handleCustomAdd = () => {
+      setSelectedService(null); // Null service implies custom entry in modal
+      setIsModalOpen(true);
+  };
+
+  const handleConfirmAdd = (subscription: Subscription) => {
+    onAddSubscription(subscription);
+    setIsModalOpen(false);
     setSelectedService(null);
     setSearchTerm('');
     setShowToast(true);
@@ -88,7 +98,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
 
             {/* Dropdown Suggestions */}
             {filteredServices.length > 0 && (
-               <div className="absolute top-full left-0 right-0 mt-4 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+               <div className="absolute top-full left-0 right-0 mt-4 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                   <div className="p-2">
                      {filteredServices.map((serviceName, idx) => {
                         const brandKey = serviceName.toLowerCase().replace(/\s+/g, '');
@@ -113,8 +123,13 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
                         );
                      })}
                   </div>
-                  <div className="bg-gray-50 px-4 py-2 text-xs text-gray-400 border-t border-gray-100">
-                     Press Enter to search
+                  <div className="bg-gray-50 px-4 py-3 text-center border-t border-gray-100">
+                     <button 
+                        onClick={handleCustomAdd}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 w-full"
+                     >
+                        <PenTool size={12} /> Create Custom Subscription
+                     </button>
                   </div>
                </div>
             )}
@@ -122,26 +137,34 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
 
          {/* Empty State / Suggestions Tags */}
          {!searchTerm && (
-            <div className="mt-8 flex flex-wrap justify-center gap-2 opacity-60 hover:opacity-100 transition-opacity">
-               {['Netflix', 'Spotify', 'Trendyol', 'Hepsiburada', 'Exxen', 'Disney+'].map(tag => (
-                  <button 
-                     key={tag} 
-                     onClick={() => handleSelect(tag)}
-                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
-                  >
-                     {tag}
-                  </button>
-               ))}
+            <div className="mt-8 flex flex-col items-center gap-4 opacity-80">
+               <div className="flex flex-wrap justify-center gap-2">
+                  {['Netflix', 'Spotify', 'Trendyol', 'Hepsiburada', 'Exxen', 'Disney+'].map(tag => (
+                     <button 
+                        key={tag} 
+                        onClick={() => handleSelect(tag)}
+                        className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+                     >
+                        {tag}
+                     </button>
+                  ))}
+               </div>
+               <button 
+                  onClick={handleCustomAdd}
+                  className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors underline"
+               >
+                  Can't find it? Add custom
+               </button>
             </div>
          )}
       </div>
 
-      {/* Add Modal */}
+      {/* Add Modal (Editable Form) */}
       <AddSubscriptionModal 
-         isOpen={!!selectedService}
-         onClose={() => setSelectedService(null)}
+         isOpen={isModalOpen}
+         onClose={() => setIsModalOpen(false)}
          service={selectedService}
-         onAdd={handleAdd}
+         onAdd={handleConfirmAdd}
       />
 
       {/* Toast Notification */}
@@ -149,7 +172,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
             <Plus size={12} className="text-white" />
          </div>
-         <span className="font-medium text-sm">Subscription {t('search.added_success')}</span>
+         <span className="font-medium text-sm">Subscription added to Dashboard.</span>
       </div>
 
     </div>

@@ -137,30 +137,6 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
               </div>
            </div>
 
-           {/* Connected Integrations */}
-           {user.integrations && user.integrations.length > 0 && (
-             <div className="mb-8 w-full">
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-3">{t('settings.connected')}</p>
-                <div className="flex justify-center gap-3">
-                   {user.integrations.includes('spotify') && (
-                     <div className="w-8 h-8 rounded-full bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954]" title="Spotify">
-                        <Music size={16} />
-                     </div>
-                   )}
-                   {user.integrations.includes('github') && (
-                     <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-900" title="GitHub">
-                        <Github size={16} />
-                     </div>
-                   )}
-                   {user.integrations.includes('website') && (
-                     <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500" title="Portfolio">
-                        <Globe size={16} />
-                     </div>
-                   )}
-                </div>
-             </div>
-           )}
-
            {/* Actions */}
            <div className="flex gap-3 w-full">
               {user.isSelf ? (
@@ -175,8 +151,14 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
                   <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all">
                      <UserPlus size={18} /> {t('profile.add_friend')}
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50 active:scale-95 transition-all">
-                     <MessageCircle size={18} /> {t('profile.message')}
+                  <button 
+                    onClick={() => {
+                        navigator.clipboard.writeText(`https://subscriptionhub.app/u/${user.username}`);
+                        alert("Link copied!");
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                     <LinkIcon size={18} /> Share
                   </button>
                 </>
               )}
