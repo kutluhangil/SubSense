@@ -61,13 +61,12 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  // Explicit reduced height to eliminate empty space
-  const height = 180; 
-  const padding = { top: 20, bottom: 20, left: 35, right: 15 }; // Tighter padding
+  const height = 200; 
+  const padding = { top: 20, bottom: 20, left: 35, right: 15 }; 
   const drawWidth = width - padding.left - padding.right;
   const drawHeight = height - padding.top - padding.bottom;
 
-  if (width === 0) return <div ref={containerRef} className="h-[180px] w-full" />;
+  if (width === 0) return <div ref={containerRef} className="h-[200px] w-full" />;
 
   const convertedData = data.map(d => ({ ...d, value: convertPrice(d.value) }));
   const maxValue = Math.max(...convertedData.map(d => d.value)) * 1.1;
@@ -83,11 +82,11 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   const fillPath = `${pathD} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`;
 
   return (
-    <div ref={containerRef} className="h-[180px] w-full relative select-none">
+    <div ref={containerRef} className="h-[200px] w-full relative select-none">
        <svg width={width} height={height} className="overflow-visible">
           <defs>
              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+                <stop offset="0%" stopColor={color} stopOpacity="0.15" />
                 <stop offset="100%" stopColor={color} stopOpacity="0" />
              </linearGradient>
           </defs>
@@ -138,9 +137,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
 };
 
 const SpendingHeatmap = () => {
-  // Generate a consistent pattern for the heatmap
   const getOpacity = (i: number) => {
-     // Create a pseudo-random looking but deterministic pattern
      const pattern = Math.abs(Math.sin(i * 12.34) * Math.cos(i * 5.67)); 
      if (pattern > 0.8) return 0.9;
      if (pattern > 0.6) return 0.6;
@@ -173,11 +170,8 @@ const SpendingHeatmap = () => {
 };
 
 const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v: number) => string, subscriptions: Subscription[] }) => {
-   // Calculate real distribution from props or fallback
    const data = useMemo(() => {
       const map: Record<string, number> = {};
-      
-      // If no subs, use mock data to show UI
       const source = subscriptions.length > 0 ? subscriptions : [
          { name: 'Netflix', price: 19.99, type: 'netflix' },
          { name: 'Spotify', price: 14.99, type: 'spotify' },
@@ -186,29 +180,26 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
       ] as Subscription[];
 
       source.forEach(sub => {
-         // Group by Name or Category
          const key = sub.name; 
          map[key] = (map[key] || 0) + sub.price;
       });
 
-      // Convert map to array and sort
       return Object.entries(map)
         .map(([name, value]) => {
-           // Find color
            const type = name.toLowerCase().replace(/\s+/g, '');
            const color = BRAND_COLORS[type] || ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'][Math.floor(Math.random()*5)];
            return { name, value, color };
         })
         .sort((a,b) => b.value - a.value)
-        .slice(0, 5); // Top 5
+        .slice(0, 5); 
    }, [subscriptions]);
 
    const total = data.reduce((a, b) => a + b.value, 0);
    let cumulativePercent = 0;
 
    return (
-    <div className="flex items-center gap-6 h-full">
-      <div className="relative w-32 h-32 flex-shrink-0">
+    <div className="flex items-start gap-6 h-full">
+      <div className="relative w-28 h-28 flex-shrink-0 self-center">
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90 transform">
            {data.map((seg, i) => {
               const start = cumulativePercent;
@@ -228,10 +219,10 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
            })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-xs font-bold text-gray-900">{formatPrice(total)}</span>
+          <span className="text-[10px] font-bold text-gray-900">{formatPrice(total)}</span>
         </div>
       </div>
-      <div className="flex-1 space-y-2.5">
+      <div className="flex-1 space-y-2 pt-1">
          {data.map((d, i) => (
            <div key={i} className="flex items-center justify-between text-xs">
              <div className="flex items-center gap-2">
@@ -248,9 +239,8 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
 
 const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string }) => {
   return (
-    <div className="space-y-4 pt-2">
-      <div className="flex items-end gap-3 h-40 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
-         {/* Grid lines background */}
+    <div className="space-y-4 pt-1">
+      <div className="flex items-end gap-3 h-32 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50 z-0">
            <div className="border-t border-dashed border-gray-100 w-full"></div>
            <div className="border-t border-dashed border-gray-100 w-full"></div>
@@ -270,15 +260,14 @@ const ComparisonWidget = ({ formatPrice }: { formatPrice: (v: number) => string 
            </div>
          ))}
       </div>
-      <p className="text-xs text-gray-500 text-center bg-green-50 p-2 rounded-lg border border-green-100">
-        You spend <span className="font-bold text-green-700">23% less</span> than the average user in your region.
+      <p className="text-[10px] text-gray-500 text-center bg-green-50 p-2 rounded-lg border border-green-100">
+        You spend <span className="font-bold text-green-700">23% less</span> than the average user.
       </p>
     </div>
   );
 };
 
 const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
-  // Use props or mock if empty
   const displaySubs = subscriptions.length > 0 ? subscriptions : [
      { name: 'Netflix', startDate: '2021-01-01', type: 'netflix' },
      { name: 'Spotify', startDate: '2022-03-15', type: 'spotify' },
@@ -287,24 +276,21 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
   ];
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-fit">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
             <Clock size={18} className="text-gray-400" /> Subscription Lifetime
         </h3>
-        <span className="text-xs text-gray-400 font-medium">Joined vs Duration</span>
       </div>
       <div className="space-y-6">
          {displaySubs.slice(0, 5).map((sub, i) => {
-            // Mock visual width relative to a pretend "max duration"
             const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
             const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
             const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
-            const mockDuration = `${Math.floor(width / 8)}m`; // Mock duration text
+            const mockDuration = `${Math.floor(width / 8)}m`; 
             
             return (
                 <div key={i} className="flex items-center gap-4 group">
-                   {/* Left Col: Label - Fixed width to prevent overlap */}
                    <div className="w-32 flex items-center gap-3 flex-shrink-0">
                       <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                          <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
@@ -315,18 +301,12 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
                       </div>
                    </div>
                    
-                   {/* Right Col: Bar Track */}
                    <div className="flex-1 relative h-6 flex items-center">
-                      {/* Track */}
                       <div className="absolute left-0 right-0 h-1.5 bg-gray-50 rounded-full"></div>
-                      
-                      {/* Active Progress */}
                       <div 
                          className="absolute left-0 h-2 rounded-full transition-all duration-1000 ease-out group-hover:h-2.5 shadow-sm opacity-90"
                          style={{ width: `${width}%`, backgroundColor: color }}
                       ></div>
-                      
-                      {/* Tooltip/Label at end of bar */}
                       <div 
                          className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
                          style={{ left: `${width}%` }}
@@ -356,7 +336,6 @@ const SmartBudgetMonitor = ({
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
 
-  // Calculate spent per category
   const spendingByCategory = useMemo(() => {
     const spending: Record<string, number> = {};
     subscriptions.forEach(sub => {
@@ -379,22 +358,19 @@ const SmartBudgetMonitor = ({
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Target size={18} className="text-gray-400" /> Smart Budget Monitor
-          </h3>
-          <p className="text-xs text-gray-500 mt-1">Monthly limits per category</p>
-        </div>
+        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+          <Target size={18} className="text-gray-400" /> Smart Budget
+        </h3>
         <button 
           onClick={() => setIsEditing(true)}
-          className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+          className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded transition-colors"
         >
-          Edit Limits
+          Edit
         </button>
       </div>
 
-      <div className="space-y-6">
-        {categories.map((cat, idx) => {
+      <div className="space-y-5">
+        {categories.slice(0,3).map((cat, idx) => {
           const limit = budgetLimits[cat] || 0;
           const spent = spendingByCategory[cat] || 0;
           const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
@@ -406,51 +382,27 @@ const SmartBudgetMonitor = ({
 
           return (
             <div key={idx} className="group">
-              <div className="flex justify-between items-end mb-2">
-                <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50 border border-gray-100`}>
-                      <span className="text-[10px] font-bold text-gray-500">{cat.substring(0, 2).toUpperCase()}</span>
-                   </div>
-                   <div>
-                      <span className="block text-sm font-bold text-gray-900">{cat}</span>
-                      <span className="text-[10px] text-gray-400 font-medium">Limit: {formatPrice(limit)}</span>
-                   </div>
-                </div>
-                <div className="text-right">
-                   <span className={`text-sm font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-900'}`}>
-                      {formatPrice(spent)}
-                   </span>
-                   <span className="text-[10px] text-gray-400 ml-1">/ mo</span>
-                </div>
+              <div className="flex justify-between items-end mb-1.5">
+                <span className="text-xs font-bold text-gray-900">{cat}</span>
+                <span className={`text-[10px] font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-500'}`}>
+                   {formatPrice(spent)} <span className="text-gray-300">/</span> {formatPrice(limit)}
+                </span>
               </div>
-              
-              <div className="relative h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                  <div 
                     className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
                     style={{ width: `${percentage}%` }}
                  ></div>
               </div>
-
-              {isOverBudget && (
-                 <div className="mt-1.5 flex items-center gap-1.5 text-[10px] font-medium text-red-600 animate-in fade-in slide-in-from-left-2">
-                    <AlertCircle size={10} /> You've exceeded your budget by {formatPrice(spent - limit)}
-                 </div>
-              )}
             </div>
           );
         })}
       </div>
       
-      <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
-         <span>Total Budget: <span className="font-bold text-gray-900">{formatPrice(totalBudget)}</span></span>
-         <span>Used: <span className="font-bold text-gray-900">{formatPrice(totalSpent)}</span> ({totalBudget > 0 ? ((totalSpent/totalBudget)*100).toFixed(0) : 0}%)</span>
-      </div>
-
-      {/* Edit Modal Overlay */}
       {isEditing && (
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-gray-900">Edit Category Limits</h4>
+              <h4 className="font-bold text-gray-900">Edit Limits</h4>
               <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 rounded-full"><X size={18} /></button>
            </div>
            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
@@ -470,7 +422,7 @@ const SmartBudgetMonitor = ({
               ))}
            </div>
            <button onClick={handleSaveLimits} className="w-full bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm mt-4 hover:bg-gray-800">
-              Save Limits
+              Save
            </button>
         </div>
       )}
@@ -491,14 +443,11 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group">
-       {/* Background decoration */}
-       <div className="absolute top-0 right-0 p-8 bg-green-50 rounded-bl-[100px] opacity-50 transition-all group-hover:scale-110 duration-500"></div>
-       
+    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group h-full flex flex-col justify-between">
        <div className="relative z-10">
           <div className="flex justify-between items-start mb-4">
              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly Savings Goal</p>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Savings Goal</p>
                 {isEditing ? (
                    <div className="flex items-center gap-2">
                       <input 
@@ -535,8 +484,8 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
              </div>
              <p className="text-xs text-gray-500 mt-2">
                 {totalSaved >= goal 
-                   ? "🎉 Goal achieved! Great job optimizing." 
-                   : `You need ${formatPrice(remaining)} more to reach your goal.`}
+                   ? "🎉 Goal achieved!" 
+                   : `Need ${formatPrice(remaining)} more.`}
              </p>
           </div>
        </div>
@@ -544,17 +493,14 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   );
 };
 
-const AIInsightCard = ({ icon: Icon, title, desc, color }: any) => (
-  <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
-     <div className={`absolute top-0 left-0 w-1 h-full ${color}`}></div>
-     <div className="flex items-start gap-3">
-        <div className={`p-2 rounded-lg bg-gray-50 group-hover:bg-white transition-colors`}>
-           <Icon size={18} className="text-gray-900" />
+const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: any) => (
+  <div className={`bg-white p-5 rounded-xl border border-gray-100 shadow-sm border-l-4 relative overflow-hidden transition-all hover:shadow-md h-full flex flex-col`} style={{ borderLeftColor: accentColor }}>
+     <div className="flex items-start gap-4 flex-1">
+        <div className={`p-2.5 rounded-lg shrink-0`} style={{ backgroundColor: tintColor }}>
+           <Icon size={20} style={{ color: accentColor }} />
         </div>
         <div>
-           <h4 className="text-sm font-bold text-gray-900 mb-1 flex items-center gap-2">
-             {title} <Sparkles size={12} className="text-yellow-500" />
-           </h4>
+           <h4 className="text-sm font-bold text-gray-900 mb-1.5">{title}</h4>
            <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
         </div>
      </div>
@@ -607,8 +553,9 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-500">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       
+      {/* 1. Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('analytics.title')}</h2>
@@ -658,16 +605,49 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
+      {/* 2. AI Insights (Top Row) */}
+      <div>
+         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+           <Sparkles size={16} className="text-purple-600" /> {t('analytics.ai_insights')}
+         </h3>
+         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <AIInsightCard 
+                icon={ArrowUpRight} 
+                title={t('analytics.insight.entertainment_spike')} 
+                desc={t('analytics.insight.entertainment_desc')} 
+                accentColor="#EF4444" 
+                tintColor="#FEF2F2"
+            />
+            <AIInsightCard 
+                icon={Globe} 
+                title={t('analytics.insight.regional_optimization')} 
+                desc={t('analytics.insight.regional_desc')} 
+                accentColor="#3B82F6" 
+                tintColor="#EFF6FF"
+            />
+            <AIInsightCard 
+                icon={Lightbulb} 
+                title={t('analytics.insight.duplicate_services')} 
+                desc={t('analytics.insight.duplicate_desc')} 
+                accentColor="#F59E0B" 
+                tintColor="#FFFBEB"
+            />
+         </div>
+      </div>
+
+      {/* 3. Summary Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group h-full flex flex-col justify-between">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.lifetime')}</p>
-            <h3 className="text-3xl font-bold mb-1">{formatPrice(12450)}</h3>
-            <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg">
+            <div>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.lifetime')}</p>
+                <h3 className="text-3xl font-bold mb-1">{formatPrice(12450)}</h3>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg mt-4">
                <Trophy size={12} className="text-yellow-400" /> Top 5% Spender
             </div>
          </div>
-         {/* Savings Goal Card (New) */}
+         
          <div className="md:col-span-1">
             <SavingsGoalCard 
               goal={savingsGoal} 
@@ -676,7 +656,8 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
               formatPrice={formatPrice} 
             />
          </div>
-         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col justify-between">
+         
+         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col justify-between h-full">
             <div className="flex justify-between items-center mb-2">
                <p className="text-gray-900 font-bold text-sm">{t('analytics.heatmap')}</p>
                <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">{t('analytics.heatmap_desc')}</span>
@@ -685,23 +666,36 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Reduced Height Spending Trend Card */}
-         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-base font-bold text-gray-900">{t('analytics.trend')}</h3>
-                <p className="text-xs text-gray-500">{t('analytics.trend_desc')}</p>
-              </div>
-              <div className="flex items-center text-green-600 text-sm font-medium bg-green-50 px-2.5 py-1.5 rounded-xl">
-                <ArrowUpRight size={16} className="mr-1" />
-                <span>8.2%</span>
-              </div>
-            </div>
-            <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
-         </div>
+      {/* 4. Main Analytics Grid (2 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
          
-         <div className="space-y-6">
+         {/* Left Column (2/3 width) - Charts */}
+         <div className="lg:col-span-2 space-y-6">
+            
+            {/* Spending Trend */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">{t('analytics.trend')}</h3>
+                    <p className="text-xs text-gray-500">{t('analytics.trend_desc')}</p>
+                  </div>
+                  <div className="flex items-center text-green-600 text-sm font-medium bg-green-50 px-2.5 py-1.5 rounded-xl">
+                    <ArrowUpRight size={16} className="mr-1" />
+                    <span>8.2%</span>
+                  </div>
+                </div>
+                <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
+            </div>
+
+            {/* Subscription Lifetime */}
+            <SubscriptionLifetimeTimeline subscriptions={subscriptions} />
+
+         </div>
+
+         {/* Right Column (1/3 width) - Widgets */}
+         <div className="lg:col-span-1 flex flex-col gap-6">
+            
+            {/* Cost Distribution */}
             <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
                <div className="flex items-center justify-between mb-6">
                   <h3 className="text-base font-bold text-gray-900">{t('analytics.cost_dist')}</h3>
@@ -709,37 +703,23 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                </div>
                <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} />
             </div>
-            {/* Real Budget Monitor */}
+
+            {/* Budget Monitor (Moved here to balance column height) */}
             <SmartBudgetMonitor 
               subscriptions={subscriptions}
               budgetLimits={budgetLimits}
               setBudgetLimits={setBudgetLimits}
               formatPrice={formatPrice}
             />
-         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         <div className="lg:col-span-2">
-            <SubscriptionLifetimeTimeline subscriptions={subscriptions} />
-         </div>
-         <div className="lg:col-span-1 h-full">
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-full">
+            {/* Global Comparison */}
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
                <h3 className="text-base font-bold text-gray-900 mb-4">{t('analytics.global_compare')}</h3>
                <ComparisonWidget formatPrice={formatPrice} />
             </div>
-         </div>
-      </div>
 
-      <div>
-         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-           <Sparkles size={20} className="text-purple-600" /> {t('analytics.ai_insights')}
-         </h3>
-         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <AIInsightCard icon={ArrowUpRight} title={t('analytics.insight.entertainment_spike')} desc={t('analytics.insight.entertainment_desc')} color="bg-red-500" />
-            <AIInsightCard icon={Globe} title={t('analytics.insight.regional_optimization')} desc={t('analytics.insight.regional_desc')} color="bg-blue-500" />
-            <AIInsightCard icon={Lightbulb} title={t('analytics.insight.duplicate_services')} desc={t('analytics.insight.duplicate_desc')} color="bg-yellow-500" />
          </div>
+
       </div>
     </div>
   );
