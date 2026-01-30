@@ -51,7 +51,7 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
     <div className="overflow-x-visible">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400 font-semibold bg-gray-50/50">
+          <tr className="border-b border-gray-100 dark:border-gray-700 text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold bg-gray-50/50 dark:bg-gray-800/50">
             <th className="px-6 py-4 rounded-tl-lg">Service</th>
             <th className="px-6 py-4">Status</th>
             <th className="px-6 py-4">Price</th>
@@ -59,11 +59,11 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
             <th className="px-6 py-4 rounded-tr-lg text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="bg-white">
+        <tbody className="bg-white dark:bg-gray-800">
           {displaySubs.map((sub) => (
             <tr 
               key={sub.id} 
-              className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
+              className="hover:bg-gray-50/80 dark:hover:bg-gray-700/50 transition-colors group cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0"
               onClick={() => onSelectSubscription && onSelectSubscription(sub)}
             >
               <td className="px-6 py-4">
@@ -72,30 +72,30 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                      <BrandIcon type={sub.type} className="w-10 h-10 shadow-sm rounded-xl" />
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 text-sm">{sub.name}</div>
-                    <div className="text-xs text-gray-500">{sub.plan}</div>
+                    <div className="font-medium text-gray-900 dark:text-white text-sm">{sub.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{sub.plan}</div>
                   </div>
                 </div>
               </td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   sub.status === 'Active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
+                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
                 }`}>
                   {sub.status}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-gray-900">{formatPrice(sub.price)}</div>
-                <div className="text-xs text-gray-500">{sub.cycle}</div>
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">{formatPrice(sub.price)}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{sub.cycle}</div>
               </td>
-              <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+              <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 {formatDate(sub.nextDate)}
               </td>
               <td className="px-6 py-4 text-right relative">
                 <button 
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   onClick={(e) => handleDropdownClick(e, sub.id)}
                 >
                   <MoreHorizontal size={18} />
@@ -103,23 +103,23 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 
                 {/* Dropdown Menu */}
                 {activeDropdown === sub.id && (
-                    <div ref={dropdownRef} className="absolute right-8 top-8 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                    <div ref={dropdownRef} className="absolute right-8 top-8 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                        <button 
                          onClick={(e) => handleAction(e, 'edit', sub)}
-                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2"
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                        >
                           <Edit2 size={14} /> Edit Subscription
                        </button>
                        <button 
                          onClick={(e) => handleAction(e, 'edit', sub)}
-                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2"
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                        >
                           <Eye size={14} /> View Details
                        </button>
-                       <div className="h-px bg-gray-50 my-1"></div>
+                       <div className="h-px bg-gray-50 dark:bg-gray-700 my-1"></div>
                        <button 
                          onClick={(e) => handleAction(e, 'delete', sub)}
-                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2"
+                         className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                        >
                           <Trash2 size={14} /> Remove
                        </button>

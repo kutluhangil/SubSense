@@ -19,7 +19,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
       change: '+0.0%', // Could calculate this if history existed
       trend: 'neutral',
       icon: DollarSign,
-      color: 'bg-blue-50 text-blue-600'
+      color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
     },
     {
       label: t('stats.active'),
@@ -27,7 +27,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
       change: 'Active',
       trend: 'neutral',
       icon: Calendar,
-      color: 'bg-purple-50 text-purple-600'
+      color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
     },
     {
       label: t('stats.forecast'),
@@ -35,7 +35,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
       change: 'Projected',
       trend: 'up',
       icon: TrendingUp, 
-      color: 'bg-green-50 text-green-600',
+      color: 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400',
       hasGraph: true
     }
   ];
@@ -43,30 +43,30 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200">
+        <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
           <div className="flex items-start justify-between mb-4">
             <div className={`p-3 rounded-xl ${stat.color}`}>
               <stat.icon size={22} />
             </div>
             {stat.trend === 'up' && (
-              <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+              <span className="flex items-center text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
                 <TrendingUp size={12} className="mr-1" /> {stat.change}
               </span>
             )}
             {stat.trend === 'down' && (
-              <span className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+              <span className="flex items-center text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-full">
                 <TrendingDown size={12} className="mr-1" /> {stat.change}
               </span>
             )}
              {stat.trend === 'neutral' && (
-              <span className="flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+              <span className="flex items-center text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
                 {stat.change}
               </span>
             )}
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 mb-1">{stat.label}</p>
-            <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.label}</p>
+            <h3 className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
             
             {/* Micro Graph for Forecast Card */}
             {stat.hasGraph && (
@@ -90,7 +90,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
                         </linearGradient>
                      </defs>
                   </svg>
-                  <p className="text-[10px] text-green-700 mt-1 font-medium">Spending trend: <span className="font-bold">Projected based on active subs</span></p>
+                  <p className="text-[10px] text-green-700 dark:text-green-400 mt-1 font-medium">Spending trend: <span className="font-bold">Projected based on active subs</span></p>
                </div>
             )}
           </div>

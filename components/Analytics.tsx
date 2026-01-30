@@ -53,6 +53,12 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { currentTheme } = useLanguage();
+
+  // Adjust line color for dark mode if using default
+  const strokeColor = currentTheme === 'dark' || (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) 
+    ? (color === '#111827' ? '#e5e7eb' : color) 
+    : color;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -89,8 +95,8 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
        <svg width={width} height={height} className="overflow-visible">
           <defs>
              <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity="0.15" />
-                <stop offset="100%" stopColor={color} stopOpacity="0" />
+                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.15" />
+                <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
              </linearGradient>
           </defs>
           {/* Grid */}
@@ -98,21 +104,21 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
              const y = padding.top + drawHeight * (1 - t);
              return (
                 <g key={i}>
-                   <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#F3F4F6" strokeDasharray="4 4" />
-                   <text x={padding.left - 8} y={y + 3} textAnchor="end" className="text-[9px] fill-gray-400 font-medium">{Math.round(maxValue * t)}</text>
+                   <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--chart-grid)" strokeDasharray="4 4" />
+                   <text x={padding.left - 8} y={y + 3} textAnchor="end" className="text-[9px] fill-gray-400 dark:fill-gray-500 font-medium">{Math.round(maxValue * t)}</text>
                 </g>
              );
           })}
           
           <path d={fillPath} fill="url(#trendGradient)" className="transition-all duration-300" />
-          <path d={pathD} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
+          <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
 
           {/* Interaction Points */}
           {points.map((p, i) => (
              <circle 
                 key={i} 
                 cx={p.x} cy={p.y} r={hoveredIndex === i ? 6 : 4} 
-                fill={color} stroke="white" strokeWidth="2"
+                fill={strokeColor} stroke="var(--bg-card)" strokeWidth="2"
                 className="transition-all duration-200 cursor-pointer"
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
@@ -121,18 +127,18 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
           
           {/* X Axis Labels */}
           {points.map((p, i) => (
-             <text key={i} x={p.x} y={height - 5} textAnchor="middle" className="text-[9px] fill-gray-400 uppercase font-bold tracking-wider">{p.label}</text>
+             <text key={i} x={p.x} y={height - 5} textAnchor="middle" className="text-[9px] fill-gray-400 dark:fill-gray-500 uppercase font-bold tracking-wider">{p.label}</text>
           ))}
        </svg>
        
        {/* Tooltip */}
        {hoveredIndex !== null && points[hoveredIndex] && (
           <div 
-             className="absolute bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10"
+             className="absolute bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10"
              style={{ left: points[hoveredIndex].x, top: points[hoveredIndex].y - 12 }}
           >
              {currentCurrency} {points[hoveredIndex].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45"></div>
+             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-white rotate-45"></div>
           </div>
        )}
     </div>
@@ -148,15 +154,15 @@ const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscr
             {sorted.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center border border-gray-100 dark:border-gray-600">
                             <BrandIcon type={sub.type} className="w-5 h-5" noBackground />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-gray-900">{sub.name}</p>
-                            <p className="text-[10px] text-gray-500">{sub.category}</p>
+                            <p className="text-xs font-bold text-gray-900 dark:text-white">{sub.name}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{sub.category}</p>
                         </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-900">{formatPrice(sub.price)}</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white">{formatPrice(sub.price)}</span>
                 </div>
             ))}
             {sorted.length === 0 && <p className="text-xs text-gray-400 text-center">No subscriptions yet.</p>}
@@ -211,7 +217,7 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
            })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[10px] font-bold text-gray-900">{formatPrice(total)}</span>
+          <span className="text-[10px] font-bold text-gray-900 dark:text-white">{formatPrice(total)}</span>
         </div>
       </div>
       <div className="flex-1 space-y-2 pt-1">
@@ -219,9 +225,9 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
            <div key={i} className="flex items-center justify-between text-xs">
              <div className="flex items-center gap-2">
                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: d.color }}></div>
-               <span className="font-semibold text-gray-700 truncate max-w-[80px]">{d.name}</span>
+               <span className="font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[80px]">{d.name}</span>
              </div>
-             <span className="text-gray-500 font-medium">{formatPrice(d.value)}</span>
+             <span className="text-gray-500 dark:text-gray-400 font-medium">{formatPrice(d.value)}</span>
            </div>
          ))}
       </div>
@@ -245,26 +251,26 @@ const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: numb
 
   return (
     <div className="space-y-4 pt-1">
-      <div className="flex items-end gap-3 h-32 w-full px-4 justify-between border-b border-gray-100 pb-0 relative">
+      <div className="flex items-end gap-3 h-32 w-full px-4 justify-between border-b border-gray-100 dark:border-gray-700 pb-0 relative">
          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-50 z-0">
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
-           <div className="border-t border-dashed border-gray-100 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 dark:border-gray-700 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 dark:border-gray-700 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 dark:border-gray-700 w-full"></div>
+           <div className="border-t border-dashed border-gray-100 dark:border-gray-700 w-full"></div>
          </div>
          
          {[
-           { label: 'You', height: `${Math.min((monthlySpend / 200) * 100, 100)}%`, color: 'bg-gray-900', val: monthlySpend },
-           { label: 'Global Avg', height: `${Math.min((globalAvg / 200) * 100, 100)}%`, color: 'bg-gray-300', val: globalAvg },
+           { label: 'You', height: `${Math.min((monthlySpend / 200) * 100, 100)}%`, color: 'bg-gray-900 dark:bg-white', val: monthlySpend },
+           { label: 'Global Avg', height: `${Math.min((globalAvg / 200) * 100, 100)}%`, color: 'bg-gray-300 dark:bg-gray-600', val: globalAvg },
          ].map((bar, i) => (
            <div key={i} className="flex flex-col items-center justify-end h-full w-1/3 group relative z-10 cursor-pointer">
-              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 bg-white shadow-sm px-1.5 py-0.5 rounded border border-gray-100">{formatPrice(bar.val)}</span>
+              <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 bg-white dark:bg-gray-700 dark:text-gray-300 shadow-sm px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-600">{formatPrice(bar.val)}</span>
               <div className={`w-full rounded-t-lg transition-all duration-500 hover:opacity-90 shadow-sm ${bar.color}`} style={{ height: bar.height }}></div>
-              <span className="text-[10px] font-bold text-gray-500 mt-2">{bar.label}</span>
+              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-2">{bar.label}</span>
            </div>
          ))}
       </div>
-      <p className={`text-[10px] text-center p-2 rounded-lg border ${isLower ? 'text-green-700 bg-green-50 border-green-100' : 'text-orange-700 bg-orange-50 border-orange-100'}`}>
+      <p className={`text-[10px] text-center p-2 rounded-lg border ${isLower ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-100 dark:border-green-800' : 'text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/30 border-orange-100 dark:border-orange-800'}`}>
         You spend <span className="font-bold">{Math.abs(parseInt(diffPercent))}% {isLower ? 'less' : 'more'}</span> than global average.
       </p>
     </div>
@@ -273,9 +279,9 @@ const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: numb
 
 const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-fit">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden h-fit">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Clock size={18} className="text-gray-400" /> Subscription Lifetime
         </h3>
       </div>
@@ -292,17 +298,17 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
                 return (
                     <div key={i} className="flex items-center gap-4 group">
                     <div className="w-32 flex items-center gap-3 flex-shrink-0">
-                        <div className="w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                        <div className="w-8 h-8 rounded-xl bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
                             <BrandIcon type={sub.type || sub.name} className="w-5 h-5" noBackground />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-900 truncate" title={sub.name}>{sub.name}</p>
+                            <p className="text-xs font-bold text-gray-900 dark:text-white truncate" title={sub.name}>{sub.name}</p>
                             <p className="text-[10px] text-gray-400">Active</p>
                         </div>
                     </div>
                     
                     <div className="flex-1 relative h-6 flex items-center">
-                        <div className="absolute left-0 right-0 h-1.5 bg-gray-50 rounded-full"></div>
+                        <div className="absolute left-0 right-0 h-1.5 bg-gray-50 dark:bg-gray-700 rounded-full"></div>
                         <div 
                             className="absolute left-0 h-2 rounded-full transition-all duration-1000 ease-out group-hover:h-2.5 shadow-sm opacity-90"
                             style={{ width: `${width}%`, backgroundColor: color }}
@@ -357,14 +363,14 @@ const SmartBudgetMonitor = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 relative">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+        <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Target size={18} className="text-gray-400" /> Smart Budget
         </h3>
         <button 
           onClick={() => setIsEditing(true)}
-          className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded transition-colors"
+          className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded transition-colors"
         >
           Edit
         </button>
@@ -384,12 +390,12 @@ const SmartBudgetMonitor = ({
           return (
             <div key={idx} className="group">
               <div className="flex justify-between items-end mb-1.5">
-                <span className="text-xs font-bold text-gray-900">{cat}</span>
-                <span className={`text-[10px] font-bold ${isOverBudget ? 'text-red-600' : 'text-gray-500'}`}>
-                   {formatPrice(spent)} <span className="text-gray-300">/</span> {formatPrice(limit)}
+                <span className="text-xs font-bold text-gray-900 dark:text-white">{cat}</span>
+                <span className={`text-[10px] font-bold ${isOverBudget ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                   {formatPrice(spent)} <span className="text-gray-300 dark:text-gray-600">/</span> {formatPrice(limit)}
                 </span>
               </div>
-              <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="relative h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                  <div 
                     className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
                     style={{ width: `${percentage}%` }}
@@ -401,28 +407,28 @@ const SmartBudgetMonitor = ({
       </div>
       
       {isEditing && (
-        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
+        <div className="absolute inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-gray-900">Edit Limits</h4>
-              <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 rounded-full"><X size={18} /></button>
+              <h4 className="font-bold text-gray-900 dark:text-white">Edit Limits</h4>
+              <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"><X size={18} /></button>
            </div>
            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
               {categories.map(cat => (
                  <div key={cat} className="space-y-1">
-                    <label className="text-xs font-bold text-gray-500">{cat}</label>
+                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400">{cat}</label>
                     <div className="relative">
                        <span className="absolute left-3 top-2.5 text-gray-400">$</span>
                        <input 
                          type="number" 
                          value={localLimits[cat]}
                          onChange={(e) => setLocalLimits(prev => ({...prev, [cat]: parseFloat(e.target.value) || 0}))}
-                         className="w-full pl-6 pr-3 py-2 border border-gray-200 rounded-lg text-sm"
+                         className="w-full pl-6 pr-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm"
                        />
                     </div>
                  </div>
               ))}
            </div>
-           <button onClick={handleSaveLimits} className="w-full bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm mt-4 hover:bg-gray-800">
+           <button onClick={handleSaveLimits} className="w-full bg-gray-900 dark:bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm mt-4 hover:bg-gray-800 dark:hover:bg-blue-700">
               Save
            </button>
         </div>
@@ -445,46 +451,46 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden group h-full flex flex-col justify-between">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group h-full flex flex-col justify-between">
        <div className="relative z-10">
           <div className="flex justify-between items-start mb-4">
              <div>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Savings Goal</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Savings Goal</p>
                 {isEditing ? (
                    <div className="flex items-center gap-2">
                       <input 
                         type="number" 
                         value={tempGoal}
                         onChange={(e) => setTempGoal(parseFloat(e.target.value))}
-                        className="w-24 px-2 py-1 border border-gray-200 rounded text-lg font-bold"
+                        className="w-24 px-2 py-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-lg font-bold"
                         autoFocus
                       />
                       <button onClick={handleSave} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">Save</button>
                    </div>
                 ) : (
                    <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setIsEditing(true)}>
-                      <h3 className="text-2xl font-bold text-gray-900">{formatPrice(goal)}</h3>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(goal)}</h3>
                       <Edit2 size={14} className="text-gray-300 group-hover/edit:text-gray-500 transition-colors" />
                    </div>
                 )}
              </div>
-             <div className="w-10 h-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+             <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center">
                 <Trophy size={20} />
              </div>
           </div>
 
           <div className="space-y-2">
              <div className="flex justify-between text-xs font-medium">
-                <span className="text-gray-600">Saved: {formatPrice(totalSaved)}</span>
-                <span className="text-green-600">{percentage.toFixed(0)}%</span>
+                <span className="text-gray-600 dark:text-gray-300">Saved: {formatPrice(totalSaved)}</span>
+                <span className="text-green-600 dark:text-green-400">{percentage.toFixed(0)}%</span>
              </div>
-             <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+             <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div 
                    className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-1000 ease-out"
                    style={{ width: `${percentage}%` }}
                 ></div>
              </div>
-             <p className="text-xs text-gray-500 mt-2">
+             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 {goal > 0 && totalSaved >= goal 
                    ? "🎉 Goal achieved!" 
                    : goal > 0 
@@ -517,23 +523,23 @@ const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: S
     }, [subscriptions]);
 
     if (potentialSavings <= 0) return (
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm h-full flex flex-col justify-center items-center text-center">
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm h-full flex flex-col justify-center items-center text-center">
             <CheckCircle2 size={24} className="text-green-500 mb-2" />
-            <p className="text-sm font-bold text-gray-900">Great job!</p>
-            <p className="text-xs text-gray-500">No major savings found.</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Great job!</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">No major savings found.</p>
         </div>
     );
 
     return (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-100 shadow-sm relative overflow-hidden flex flex-col justify-center">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 p-5 rounded-xl border border-green-100 dark:border-green-800/30 shadow-sm relative overflow-hidden flex flex-col justify-center">
             <div className="flex items-start gap-4 relative z-10">
-                <div className="p-2 bg-green-100 rounded-lg text-green-600 shrink-0">
+                <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg text-green-600 dark:text-green-400 shrink-0">
                     <DollarSign size={20} />
                 </div>
                 <div>
-                    <h4 className="text-sm font-bold text-gray-900 mb-1">Potential Savings</h4>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                        You could save <span className="font-bold text-green-700">{formatPrice(potentialSavings)}/yr</span> by optimizing regional plans.
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Potential Savings</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                        You could save <span className="font-bold text-green-700 dark:text-green-400">{formatPrice(potentialSavings)}/yr</span> by optimizing regional plans.
                     </p>
                 </div>
             </div>
@@ -543,16 +549,20 @@ const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: S
 
 const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: { icon: any, title: string, desc: string, accentColor: string, tintColor: string }) => {
   return (
-    <div className="rounded-xl p-5 border border-transparent shadow-sm relative overflow-hidden group h-full flex flex-col justify-center" style={{ backgroundColor: tintColor }}>
+    <div className="rounded-xl p-5 border border-transparent shadow-sm relative overflow-hidden group h-full flex flex-col justify-center bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700" 
+         style={{ 
+             // Override background for colored effect, but use opacity for dark mode compat
+             backgroundImage: `linear-gradient(to bottom right, ${tintColor}80, ${tintColor}40)` 
+         }}>
        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
           <Icon size={48} style={{ color: accentColor }} />
        </div>
        <div className="relative z-10">
-          <div className="p-2 rounded-lg w-fit mb-3" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+          <div className="p-2 rounded-lg w-fit mb-3 bg-white/60 dark:bg-gray-900/30 backdrop-blur-sm">
              <Icon size={20} style={{ color: accentColor }} />
           </div>
-          <h4 className="text-sm font-bold text-gray-900 mb-1 leading-tight">{title}</h4>
-          <p className="text-xs text-gray-600 leading-relaxed opacity-90">{desc}</p>
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1 leading-tight">{title}</h4>
+          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed opacity-90">{desc}</p>
        </div>
     </div>
   );
@@ -637,15 +647,15 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
       {/* 1. Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('analytics.title')}</h2>
-          <p className="text-gray-500 text-sm mt-1">{t('analytics.subtitle')}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('analytics.title')}</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t('analytics.subtitle')}</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
            <div className="relative">
              <button 
                 onClick={() => setIsDateDropdownOpen(!isDateDropdownOpen)}
-                className="flex items-center space-x-2 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors shadow-sm"
+                className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
              >
                 <Calendar size={16} className="text-gray-400" />
                 <span>{dateRange}</span>
@@ -654,12 +664,12 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
              {isDateDropdownOpen && (
                <>
                  <div className="fixed inset-0 z-10" onClick={() => setIsDateDropdownOpen(false)}></div>
-                 <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                 <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                     {['Last 30 Days', 'Last 3 Months', 'Last 6 Months', 'Last 12 Months'].map(option => (
                        <button
                          key={option}
                          onClick={() => { setDateRange(option); setIsDateDropdownOpen(false); }}
-                         className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                         className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                        >
                          {option}
                        </button>
@@ -671,7 +681,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
 
            <button 
              onClick={handleExportCSV}
-             className="flex items-center space-x-2 bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-all shadow-sm active:scale-95"
+             className="flex items-center space-x-2 bg-gray-900 dark:bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 dark:hover:bg-blue-700 transition-all shadow-sm active:scale-95"
            >
               <Download size={16} />
               <span className="hidden sm:inline">{t('analytics.export')}</span>
@@ -681,8 +691,8 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
 
       {/* 2. Insights Row */}
       <div>
-         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
-           <Sparkles size={16} className="text-purple-600" /> {t('analytics.ai_insights')}
+         <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+           <Sparkles size={16} className="text-purple-600 dark:text-purple-400" /> {t('analytics.ai_insights')}
          </h3>
          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <PotentialSavingsCard subscriptions={subscriptions} formatPrice={formatPrice} />
@@ -706,7 +716,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     />
                 </>
             ) : (
-                <div className="col-span-2 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                <div className="col-span-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 text-xs">
                     Add subscriptions to unlock more AI insights.
                 </div>
             )}
@@ -738,10 +748,10 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          </div>
          
          {/* Top Expenses List */}
-         <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm md:col-span-2 flex flex-col h-full">
+         <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm md:col-span-2 flex flex-col h-full">
             <div className="flex justify-between items-center mb-4">
-               <p className="text-gray-900 font-bold text-sm">Top Expenses</p>
-               <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-full">High Impact</span>
+               <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
+               <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">High Impact</span>
             </div>
             <TopExpensesList subscriptions={subscriptions} formatPrice={formatPrice} />
          </div>
@@ -754,17 +764,17 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          <div className="lg:col-span-2 space-y-6">
             
             {/* Spending Trend */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm h-fit">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-gray-900">{t('analytics.trend')}</h3>
-                    <p className="text-xs text-gray-500">{t('analytics.trend_desc')}</p>
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.trend')}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.trend_desc')}</p>
                   </div>
                 </div>
                 {subscriptions.length > 0 ? (
                     <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
                 ) : (
-                    <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs bg-gray-50 rounded-xl">
+                    <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs bg-gray-50 dark:bg-gray-900 rounded-xl">
                         No data to display
                     </div>
                 )}
@@ -779,9 +789,9 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          <div className="lg:col-span-1 flex flex-col gap-6">
             
             {/* Cost Distribution */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm h-fit">
                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-base font-bold text-gray-900">{t('analytics.cost_dist')}</h3>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
                <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} />
@@ -796,8 +806,8 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             />
 
             {/* Global Comparison */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm h-fit">
-               <h3 className="text-base font-bold text-gray-900 mb-4">{t('analytics.global_compare')}</h3>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm h-fit">
+               <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">{t('analytics.global_compare')}</h3>
                <ComparisonWidget formatPrice={formatPrice} monthlySpend={currentMonthlySpend} />
             </div>
 

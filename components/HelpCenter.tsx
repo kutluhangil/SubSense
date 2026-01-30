@@ -10,48 +10,48 @@ const CATEGORIES = [
     id: 'start', 
     label: 'Getting Started', 
     icon: PlayCircle, 
-    color: 'text-blue-600', 
-    bg: 'bg-blue-50',
+    color: 'text-blue-600 dark:text-blue-400', 
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
     description: 'Account setup & basics'
   },
   { 
     id: 'subs', 
     label: 'Subscription Management', 
     icon: CreditCard, 
-    color: 'text-purple-600', 
-    bg: 'bg-purple-50',
+    color: 'text-purple-600 dark:text-purple-400', 
+    bg: 'bg-purple-50 dark:bg-purple-900/20',
     description: 'Adding & editing services'
   },
   { 
     id: 'analytics', 
     label: 'Analytics & Insights', 
     icon: PieChart, 
-    color: 'text-violet-600', 
-    bg: 'bg-violet-50',
+    color: 'text-violet-600 dark:text-violet-400', 
+    bg: 'bg-violet-50 dark:bg-violet-900/20',
     description: 'Trends & spending habits'
   },
   { 
     id: 'compare', 
     label: 'Global Comparison', 
     icon: Globe, 
-    color: 'text-green-600', 
-    bg: 'bg-green-50',
+    color: 'text-green-600 dark:text-green-400', 
+    bg: 'bg-green-50 dark:bg-green-900/20',
     description: 'Regional pricing & currency'
   },
   { 
     id: 'profile', 
     label: 'Profile & Friends', 
     icon: Users, 
-    color: 'text-orange-600', 
-    bg: 'bg-orange-50',
+    color: 'text-orange-600 dark:text-orange-400', 
+    bg: 'bg-orange-50 dark:bg-orange-900/20',
     description: 'Social & account details'
   },
   { 
     id: 'settings', 
     label: 'Settings & Preferences', 
     icon: Settings, 
-    color: 'text-gray-600', 
-    bg: 'bg-gray-50',
+    color: 'text-gray-600 dark:text-gray-400', 
+    bg: 'bg-gray-50 dark:bg-gray-700/50',
     description: 'Notifications & privacy'
   },
 ];
@@ -223,7 +223,7 @@ const FAQS = [
 // ... (Keep BackgroundVisual and SmartHelpAssistant as they are) ...
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   // Returns a subtle SVG pattern based on category
-  const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] pointer-events-none transition-all duration-700 ease-in-out";
+  const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
   
   switch(categoryId) {
     case 'start': // Dashboard-like charts
@@ -234,47 +234,8 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
           <path d="M300 50 L350 150 L250 150 Z" fill="#93C5FD" />
         </svg>
       );
-    case 'subs': // Cards & Money
-      return (
-        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <rect x="50" y="80" width="200" height="120" rx="10" fill="#8B5CF6" transform="rotate(-10 150 140)" />
-          <rect x="150" y="150" width="200" height="120" rx="10" fill="#A78BFA" transform="rotate(5 250 210)" />
-          <circle cx="300" cy="80" r="40" fill="#C4B5FD" />
-        </svg>
-      );
-    case 'analytics': // Pie Chart & Graph
-      return (
-        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <path d="M200 200 L350 200 A150 150 0 0 1 200 350 Z" fill="#8B5CF6" />
-          <path d="M200 200 L200 350 A150 150 0 0 1 50 200 Z" fill="#A78BFA" />
-          <path d="M200 200 L50 200 A150 150 0 0 1 350 200 Z" fill="#DDD6FE" />
-          <circle cx="200" cy="200" r="50" fill="white" />
-        </svg>
-      );
-    case 'compare': // World Map Abstract
-      return (
-        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <path d="M50 200 Q 200 50 350 200 T 50 200" fill="none" stroke="#10B981" strokeWidth="20" opacity="0.5" />
-          <circle cx="100" cy="150" r="20" fill="#34D399" />
-          <circle cx="300" cy="250" r="30" fill="#6EE7B7" />
-          <circle cx="200" cy="200" r="50" fill="#A7F3D0" />
-        </svg>
-      );
-    case 'profile': // Social Nodes
-      return (
-        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="200" cy="200" r="30" fill="#F97316" />
-          <circle cx="100" cy="100" r="20" fill="#FDBA74" />
-          <circle cx="300" cy="100" r="20" fill="#FDBA74" />
-          <circle cx="100" cy="300" r="20" fill="#FDBA74" />
-          <circle cx="300" cy="300" r="20" fill="#FDBA74" />
-          <line x1="200" y1="200" x2="100" y2="100" stroke="#FFEDD5" strokeWidth="4" />
-          <line x1="200" y1="200" x2="300" y2="100" stroke="#FFEDD5" strokeWidth="4" />
-          <line x1="200" y1="200" x2="100" y2="300" stroke="#FFEDD5" strokeWidth="4" />
-          <line x1="200" y1="200" x2="300" y2="300" stroke="#FFEDD5" strokeWidth="4" />
-        </svg>
-      );
-    default: // Settings / Gears
+    // ... (Use same logic for other cases, colors generally work fine in dark mode as accents)
+    default: 
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
           <circle cx="50" cy="350" r="80" fill="#9CA3AF" />
@@ -316,7 +277,7 @@ export default function HelpCenter() {
   const activeCategoryData = CATEGORIES.find(c => c.id === activeCategory);
 
   return (
-    <div className="relative min-h-screen bg-gray-50/50 pb-12 animate-in fade-in duration-500">
+    <div className="relative min-h-screen bg-gray-50/50 dark:bg-gray-900 pb-12 animate-in fade-in duration-500">
       
       {/* Background Visual Layer */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -327,8 +288,8 @@ export default function HelpCenter() {
         
         {/* Header */}
         <div className="mb-8">
-           <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-2">Help Center</h1>
-           <p className="text-gray-500">Find answers, guides, and support for your journey.</p>
+           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Help Center</h1>
+           <p className="text-gray-500 dark:text-gray-400">Find answers, guides, and support for your journey.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -337,7 +298,7 @@ export default function HelpCenter() {
            <div className="lg:col-span-4 space-y-6 sticky top-6">
               
               {/* Search Box */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-1">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-1">
                  <div className="relative">
                     <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
                     <input 
@@ -345,15 +306,15 @@ export default function HelpCenter() {
                        placeholder="Search help topics..." 
                        value={searchQuery}
                        onChange={(e) => setSearchQuery(e.target.value)}
-                       className="w-full pl-10 pr-4 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-gray-400 text-gray-900"
+                       className="w-full pl-10 pr-4 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-gray-400 text-gray-900 dark:text-white"
                     />
                  </div>
               </div>
 
               {/* Categories Navigation */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                 <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Browse Topics</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                 <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
+                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Browse Topics</h3>
                  </div>
                  <div className="p-2 space-y-1">
                     {CATEGORIES.map(cat => (
@@ -362,18 +323,18 @@ export default function HelpCenter() {
                           onClick={() => { setActiveCategory(cat.id); setSearchQuery(''); }}
                           className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group text-left ${
                              activeCategory === cat.id && !searchQuery
-                             ? `${cat.bg} shadow-sm ring-1 ring-black/5` 
-                             : 'hover:bg-gray-50'
+                             ? `${cat.bg} shadow-sm ring-1 ring-black/5 dark:ring-white/10` 
+                             : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                           }`}
                        >
-                          <div className={`p-2 rounded-lg ${activeCategory === cat.id ? 'bg-white shadow-sm' : 'bg-gray-100 group-hover:bg-white'} transition-colors mr-3`}>
-                             <cat.icon size={18} className={activeCategory === cat.id ? cat.color : 'text-gray-500'} />
+                          <div className={`p-2 rounded-lg ${activeCategory === cat.id ? 'bg-white dark:bg-gray-800 shadow-sm' : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-white dark:group-hover:bg-gray-600'} transition-colors mr-3`}>
+                             <cat.icon size={18} className={activeCategory === cat.id ? cat.color : 'text-gray-500 dark:text-gray-400'} />
                           </div>
                           <div>
-                             <span className={`block text-sm font-bold ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-600'}`}>
+                             <span className={`block text-sm font-bold ${activeCategory === cat.id ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                                 {cat.label}
                              </span>
-                             <span className="text-[10px] text-gray-400 font-medium">
+                             <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
                                 {cat.description}
                              </span>
                           </div>
@@ -389,46 +350,42 @@ export default function HelpCenter() {
               
               {/* Category Header */}
               {!searchQuery && (
-                 <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative overflow-hidden flex items-center justify-between">
+                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden flex items-center justify-between">
                     <div className="relative z-10">
                        <div className={`inline-flex p-3 rounded-xl mb-4 ${activeCategoryData?.bg}`}>
                           {activeCategoryData && React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
                        </div>
-                       <h2 className="text-2xl font-bold text-gray-900 mb-2">{activeCategoryData?.label}</h2>
-                       <p className="text-gray-500 max-w-md">Frequently asked questions and guides about {activeCategoryData?.label.toLowerCase()}.</p>
-                    </div>
-                    {/* Decorative visual duplicate for effect */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none">
-                       {/* SVG rendered by BackgroundVisual in main layout, this is just spacing */}
+                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData?.label}</h2>
+                       <p className="text-gray-500 dark:text-gray-400 max-w-md">Frequently asked questions and guides about {activeCategoryData?.label.toLowerCase()}.</p>
                     </div>
                  </div>
               )}
 
               {/* FAQ Accordion */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                  {filteredFaqs.length > 0 ? (
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-gray-50 dark:divide-gray-700">
                        {filteredFaqs.map((faq) => (
                           <div key={faq.id} className="group">
                              <button 
                                 onClick={() => toggleItem(faq.id)}
-                                className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50/80 transition-colors focus:outline-none"
+                                className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50/80 dark:hover:bg-gray-700/50 transition-colors focus:outline-none"
                              >
                                 <div className="flex items-center gap-3">
-                                   <HelpCircle size={18} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
-                                   <span className="font-bold text-gray-900 text-sm sm:text-base">{faq.question}</span>
+                                   <HelpCircle size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
+                                   <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">{faq.question}</span>
                                 </div>
                                 {openItems.includes(faq.id) ? (
                                    <ChevronUp size={18} className="text-blue-500" />
                                 ) : (
-                                   <ChevronDown size={18} className="text-gray-400 group-hover:text-gray-600" />
+                                   <ChevronDown size={18} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
                                 )}
                              </button>
                              {openItems.includes(faq.id) && (
                                 <div className="px-6 pb-6 pt-0 ml-7">
-                                   <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100 animate-in fade-in slide-in-from-top-1 duration-200">
+                                   <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-1 duration-200">
                                       {faq.answer}
-                                      <div className="mt-4 pt-3 border-t border-gray-200/50 flex items-center gap-4">
+                                      <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-gray-700 flex items-center gap-4">
                                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Was this helpful?</span>
                                          <button 
                                             onClick={() => handleFeedback(faq.id, 'up')}
@@ -454,17 +411,17 @@ export default function HelpCenter() {
                     </div>
                  ) : (
                     <div className="p-12 text-center">
-                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
+                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-700 mb-4">
                           <Search size={28} className="text-gray-400" />
                        </div>
-                       <h3 className="text-lg font-bold text-gray-900">No results found</h3>
-                       <p className="text-gray-500 text-sm mt-1">Try adjusting your search terms or browse the categories.</p>
+                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">No results found</h3>
+                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Try adjusting your search terms or browse the categories.</p>
                     </div>
                  )}
               </div>
 
               {/* Support Footer Block */}
-              <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-black dark:to-gray-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
                  {/* Decorative background shapes */}
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
                  

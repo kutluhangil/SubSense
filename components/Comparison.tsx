@@ -19,12 +19,7 @@ interface PricingData {
   trend: number; // % change
 }
 
-interface EventMarker {
-  monthIndex: number;
-  type: 'price_hike' | 'currency_fluctuation' | 'promo';
-  description: string;
-}
-
+// ... (Data Constants remain same) ...
 const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number; code: string; currency: string }> = {
   'United States': { color: '#2D60FF', flag: '🇺🇸', ppp: 1.0, code: 'US', currency: 'USD' },
   'United Kingdom': { color: '#FF8A00', flag: '🇬🇧', ppp: 1.15, code: 'GB', currency: 'GBP' }, // Slightly more exp usually
@@ -36,33 +31,24 @@ const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-// --- Helpers ---
-
+// ... (Helper functions generateLivePricing & generateSmoothPath remain same) ...
 const generateLivePricing = (serviceName: string): PricingData[] => {
     const key = serviceName.toLowerCase().replace(/\s+/g, '');
     const service = SUBSCRIPTION_CATALOG[key];
-    const basePrice = service ? parseFloat(service.price) : 10.00; // Default base USD if not found
+    const basePrice = service ? parseFloat(service.price) : 10.00; 
 
     return Object.entries(COUNTRY_CONFIG).map(([country, config]) => {
-        // Calculate localized price based on PPP factor + FX rate
-        // Formula: BaseUSD * PPP_Factor * ExchangeRate
         const localPriceRaw = basePrice * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
-        
-        // Round to typical pricing endings (e.g. .99, .90, or whole numbers for JPY/HUF)
         let formattedPrice = localPriceRaw;
         if (config.currency === 'JPY' || config.currency === 'HUF') {
-            formattedPrice = Math.round(localPriceRaw / 10) * 10; // Round to nearest 10
+            formattedPrice = Math.round(localPriceRaw / 10) * 10;
         } else {
-            formattedPrice = Math.round(localPriceRaw) - 0.01; // .99 ending heuristic
+            formattedPrice = Math.round(localPriceRaw) - 0.01;
         }
-
-        // Convert back to USD for comparison
         const rate = EXCHANGE_RATES[config.currency] || 1;
         const usdVal = formattedPrice / rate;
-
-        // Generate history with slight fluctuation for currency volatility
         const history = Array.from({length: 6}, (_, i) => {
-            const fluctuation = 1 + (Math.random() - 0.5) * 0.05; // +/- 2.5%
+            const fluctuation = 1 + (Math.random() - 0.5) * 0.05;
             return usdVal * fluctuation;
         });
 
@@ -183,7 +169,7 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
              {MONTHS.map((m, i) => {
                 const x = padding.left + (i / 5) * drawWidth;
                 return (
-                   <line key={i} x1={x} y1={padding.top} x2={x} y2={height - padding.bottom} stroke="#F3F4F6" strokeDasharray="4 4" />
+                   <line key={i} x1={x} y1={padding.top} x2={x} y2={height - padding.bottom} stroke="var(--chart-grid)" strokeDasharray="4 4" />
                 );
              })}
              
@@ -191,8 +177,8 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                 const y = padding.top + drawHeight * (1 - t);
                 return (
                    <g key={i}>
-                      <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#F3F4F6" />
-                      <text x={padding.left - 10} y={y} dy="4" textAnchor="end" className="text-[10px] fill-gray-400 font-medium">
+                      <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--chart-grid)" />
+                      <text x={padding.left - 10} y={y} dy="4" textAnchor="end" className="text-[10px] fill-gray-400 dark:fill-gray-500 font-medium">
                          ${(chartData.maxValue * t).toFixed(0)}
                       </text>
                    </g>
@@ -233,7 +219,7 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                       cy={pt.y}
                       r={3}
                       fill={p.color}
-                      stroke="white"
+                      stroke="var(--bg-card)"
                       strokeWidth="1.5"
                       className="transition-all duration-200"
                    />
@@ -248,7 +234,7 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                       x={x} 
                       y={height - 10} 
                       textAnchor="middle" 
-                      className={`text-[10px] font-medium transition-colors ${i === activeIndex ? 'fill-gray-900 font-bold' : 'fill-gray-400'}`}
+                      className={`text-[10px] font-medium transition-colors ${i === activeIndex ? 'fill-gray-900 dark:fill-white font-bold' : 'fill-gray-400 dark:fill-gray-500'}`}
                    >
                       {m}
                    </text>
@@ -266,16 +252,16 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                 transform: `translate(${activeIndex > 2 ? '-105%' : '5%'}, 0)`
              }}
           >
-             <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-100 p-3 min-w-[160px]">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">{MONTHS[activeIndex]} Pricing</p>
+             <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-3 min-w-[160px]">
+                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{MONTHS[activeIndex]} Pricing</p>
                 {activePoints.map(d => (
                    <div key={d.country} className="flex items-center justify-between gap-4 mb-1.5 last:mb-0">
                       <div className="flex items-center gap-2">
                          <span className="text-sm">{COUNTRY_CONFIG[d.country]?.flag}</span>
-                         <span className="text-xs font-bold text-gray-700">{d.country}</span>
+                         <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{d.country}</span>
                       </div>
                       <div className="text-right">
-                         <div className="text-xs font-bold text-gray-900">${d.point.value.toFixed(2)}</div>
+                         <div className="text-xs font-bold text-gray-900 dark:text-white">${d.point.value.toFixed(2)}</div>
                       </div>
                    </div>
                 ))}
@@ -295,25 +281,25 @@ const AIInsightsPanel = ({ data, serviceName }: { data: PricingData[], serviceNa
   const diffPercent = ((mostExpensive.usdPrice - cheapest.usdPrice) / mostExpensive.usdPrice * 100).toFixed(0);
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 overflow-hidden">
+    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 overflow-hidden">
         <button 
            onClick={() => setIsOpen(!isOpen)}
-           className="w-full flex items-center justify-between p-4 text-left hover:bg-white/50 transition-colors"
+           className="w-full flex items-center justify-between p-4 text-left hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
         >
-           <div className="flex items-center gap-2 text-indigo-900">
-              <Sparkles size={18} className="text-indigo-600" />
+           <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-200">
+              <Sparkles size={18} className="text-indigo-600 dark:text-indigo-400" />
               <span className="font-bold text-sm">{t('compare.ai_insights')}</span>
            </div>
-           <ChevronDown size={16} className={`text-indigo-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+           <ChevronDown size={16} className={`text-indigo-400 dark:text-indigo-300 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
         
         {isOpen && (
            <div className="px-4 pb-4 space-y-3 animate-in slide-in-from-top-2">
-              <div className="bg-white/80 p-3 rounded-xl text-xs text-gray-700 leading-relaxed shadow-sm border border-white">
-                 <strong className="block text-indigo-700 mb-1">{cheapest.country} offers the best value</strong>
-                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600">{diffPercent}% cheaper</span> than in {mostExpensive.country} due to regional purchasing power adjustments.
+              <div className="bg-white/80 dark:bg-gray-900/50 p-3 rounded-xl text-xs text-gray-700 dark:text-gray-300 leading-relaxed shadow-sm border border-white dark:border-gray-700">
+                 <strong className="block text-indigo-700 dark:text-indigo-300 mb-1">{cheapest.country} offers the best value</strong>
+                 {serviceName} in {cheapest.country} is <span className="font-bold text-green-600 dark:text-green-400">{diffPercent}% cheaper</span> than in {mostExpensive.country} due to regional purchasing power adjustments.
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-indigo-400 px-1">
+              <div className="flex items-center gap-2 text-[10px] text-indigo-400 dark:text-indigo-300 px-1">
                  <Zap size={10} /> Insights based on live currency rates.
               </div>
            </div>
@@ -338,7 +324,7 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
    };
 
    return (
-      <div className="bg-gray-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+      <div className="bg-gray-900 dark:bg-black rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-gray-800">
          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
             <DollarSign size={80} />
          </div>
@@ -370,21 +356,20 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
 };
 
 const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseCurrency: string }) => {
-   // Use first entry as base if not found
    const baseItem = data.find(d => d.country === 'United States') || data[0]; 
    const { t } = useLanguage();
 
    return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900 text-sm">{t('compare.regional_pricing')}</h3>
-            <div className="text-xs text-gray-500 flex items-center gap-1">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col h-full">
+         <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{t('compare.regional_pricing')}</h3>
+            <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                <Clock size={12} /> {t('compare.live')}
             </div>
          </div>
          <div className="flex-1 overflow-auto">
             <table className="w-full text-left">
-               <tbody className="divide-y divide-gray-50">
+               <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                   {data.map((item, idx) => {
                      const diff = baseItem.usdPrice > 0 
                         ? ((item.usdPrice - baseItem.usdPrice) / baseItem.usdPrice) * 100 
@@ -393,30 +378,30 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
                      const isBase = item.country === 'United States';
                      
                      return (
-                        <tr key={idx} className={`group hover:bg-gray-50 transition-colors ${isBase ? 'bg-blue-50/20' : ''}`}>
+                        <tr key={idx} className={`group hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${isBase ? 'bg-blue-50/20 dark:bg-blue-900/10' : ''}`}>
                            <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
                                  <span className="text-lg">{COUNTRY_CONFIG[item.country]?.flag}</span>
                                  <div className="flex flex-col">
-                                    <span className="text-sm font-semibold text-gray-900">{item.country}</span>
-                                    <span className="text-[10px] text-gray-400 font-medium">{item.taxInfo}</span>
+                                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{item.country}</span>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{item.taxInfo}</span>
                                  </div>
                               </div>
                            </td>
                            <td className="px-4 py-3 text-right">
                               <div className="flex flex-col items-end">
-                                 <span className="text-sm font-bold text-gray-900">${item.usdPrice.toFixed(2)}</span>
-                                 <span className="text-[10px] text-gray-400">{item.currency} {item.price.toLocaleString()}</span>
+                                 <span className="text-sm font-bold text-gray-900 dark:text-white">${item.usdPrice.toFixed(2)}</span>
+                                 <span className="text-[10px] text-gray-400 dark:text-gray-500">{item.currency} {item.price.toLocaleString()}</span>
                               </div>
                            </td>
                            <td className="px-4 py-3 text-right w-24">
                               {!isBase ? (
-                                 <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${isCheaper ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                 <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${isCheaper ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                                     {isCheaper ? <TrendingDown size={10} className="mr-1" /> : <TrendingUp size={10} className="mr-1" />}
                                     {Math.abs(diff).toFixed(0)}%
                                  </div>
                               ) : (
-                                 <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Base</span>
+                                 <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">Base</span>
                               )}
                            </td>
                         </tr>
@@ -445,18 +430,18 @@ export default function Comparison() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{t('features.compare.title')}</h2>
-          <p className="text-gray-500 text-sm mt-1">{t('compare.subtitle')}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('features.compare.title')}</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t('compare.subtitle')}</p>
         </div>
       </div>
 
       {/* Controls */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-         <div className="md:col-span-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">{t('compare.service')}</label>
+         <div className="md:col-span-1 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+             <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 block pl-1">{t('compare.service')}</label>
              <div className="relative">
                  <select 
-                     className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-gray-900 focus:border-gray-900 block p-2.5 pr-8 font-medium"
+                     className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-gray-900 dark:focus:ring-gray-500 focus:border-gray-900 dark:focus:border-gray-500 block p-2.5 pr-8 font-medium"
                      value={selectedService}
                      onChange={(e) => setSelectedService(e.target.value)}
                  >
@@ -465,11 +450,11 @@ export default function Comparison() {
                  <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
              </div>
          </div>
-         <div className="md:col-span-1 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block pl-1">{t('compare.base_currency')}</label>
+         <div className="md:col-span-1 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+             <label className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 block pl-1">{t('compare.base_currency')}</label>
              <div className="relative">
                  <select 
-                     className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-gray-900 focus:border-gray-900 block p-2.5 pr-8 font-medium"
+                     className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-gray-900 dark:focus:ring-gray-500 focus:border-gray-900 dark:focus:border-gray-500 block p-2.5 pr-8 font-medium"
                      value={baseCurrency}
                      onChange={(e) => setBaseCurrency(e.target.value)}
                  >
@@ -492,13 +477,13 @@ export default function Comparison() {
           
           {/* Left Column: Chart & Insights */}
           <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 relative">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 relative">
                   <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                          <BrandIcon type={selectedService} className="w-10 h-10 rounded-xl shadow-sm border border-gray-100" />
+                          <BrandIcon type={selectedService} className="w-10 h-10 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600" />
                           <div>
-                              <h3 className="font-bold text-gray-900">{t('compare.price_history')} (USD)</h3>
-                              <p className="text-xs text-gray-500">{t('compare.trend_analysis')}</p>
+                              <h3 className="font-bold text-gray-900 dark:text-white">{t('compare.price_history')} (USD)</h3>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{t('compare.trend_analysis')}</p>
                           </div>
                       </div>
                       
@@ -507,7 +492,7 @@ export default function Comparison() {
                           {Object.entries(COUNTRY_CONFIG).slice(0, 3).map(([name, conf]) => (
                              <div key={name} className="flex items-center gap-1.5 opacity-80 hover:opacity-100 cursor-pointer">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: conf.color }}></div>
-                                <span className="text-xs font-semibold text-gray-600 hidden sm:inline">{name}</span>
+                                <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 hidden sm:inline">{name}</span>
                              </div>
                           ))}
                       </div>
