@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
@@ -29,9 +29,77 @@ const INITIAL_SUBSCRIPTIONS: Subscription[] = [
   { id: 5, name: 'YouTube Premium', plan: 'Individual', price: 13.99, originalPrice: 13.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 15, 2023', type: 'youtube', status: 'Active', billingDay: 15, category: 'Entertainment', history: [11.99, 11.99, 11.99, 13.99, 13.99] },
 ];
 
+const DEFAULT_BUDGET_LIMITS = {
+  'Entertainment': 50,
+  'Productivity': 100,
+  'Shopping': 200,
+  'Tools': 50
+};
+
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(INITIAL_SUBSCRIPTIONS);
+  
+  // Persisted State: Subscriptions
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
+    try {
+      const saved = localStorage.getItem('subscriptionhub.subscriptions');
+      return saved ? JSON.parse(saved) : INITIAL_SUBSCRIPTIONS;
+    } catch (e) {
+      return INITIAL_SUBSCRIPTIONS;
+    }
+  });
+
+  // Persisted State: Budget Limits
+  const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('subscriptionhub.budgetLimits');
+      return saved ? JSON.parse(saved) : DEFAULT_BUDGET_LIMITS;
+    } catch (e) {
+      return DEFAULT_BUDGET_LIMITS;
+    }
+  });
+
+  // Persisted State: Savings Goal
+  const [savingsGoal, setSavingsGoal] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('subscriptionhub.savingsGoal');
+      return saved ? parseFloat(saved) : 20;
+    } catch (e) {
+      return 20;
+    }
+  });
+
+  // Persisted State: Total Saved
+  const [totalSaved, setTotalSaved] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('subscriptionhub.totalSaved');
+      return saved ? parseFloat(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  // Persistence Effects
+  useEffect(() => {
+    try {
+      localStorage.setItem('subscriptionhub.subscriptions', JSON.stringify(subscriptions));
+    } catch (e) {
+      console.error('Failed to save subscriptions');
+    }
+  }, [subscriptions]);
+
+  useEffect(() => {
+    localStorage.setItem('subscriptionhub.budgetLimits', JSON.stringify(budgetLimits));
+  }, [budgetLimits]);
+
+  useEffect(() => {
+    localStorage.setItem('subscriptionhub.savingsGoal', savingsGoal.toString());
+  }, [savingsGoal]);
+
+  useEffect(() => {
+    localStorage.setItem('subscriptionhub.totalSaved', totalSaved.toString());
+  }, [totalSaved]);
+
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -46,16 +114,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 2, text: "Spotify Duo plan price will increase next month.", time: "5h ago", read: false, type: 'info' },
     { id: 3, text: "1 subscription is expiring soon.", time: "1d ago", read: true, type: 'warning' },
   ]);
-  
-  // Budget & Savings State
-  const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>({
-    'Entertainment': 50,
-    'Productivity': 100,
-    'Shopping': 200,
-    'Tools': 50
-  });
-  const [savingsGoal, setSavingsGoal] = useState(20); // Monthly savings goal
-  const [totalSaved, setTotalSaved] = useState(0); // Tracked savings from deletions
 
   const { t, formatPrice } = useLanguage();
 

@@ -45,7 +45,7 @@ const BADGES = [
 export default function Profile() {
   const { t, formatPrice } = useLanguage();
   const [user, setUser] = useState(() => {
-      const savedTheme = localStorage.getItem('userThemePreference');
+      const savedTheme = localStorage.getItem('subscriptionhub.theme');
       return { ...INITIAL_USER, theme: savedTheme || 'system' };
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -61,7 +61,7 @@ export default function Profile() {
         } else {
             document.documentElement.classList.remove('dark');
         }
-        localStorage.setItem('userThemePreference', theme);
+        localStorage.setItem('subscriptionhub.theme', theme);
     };
     applyTheme(user.theme);
   }, [user.theme]);
