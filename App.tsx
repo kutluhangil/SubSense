@@ -11,6 +11,7 @@ import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { migrateLocalData } from './utils/firestore';
+import { WifiOff } from 'lucide-react';
 
 // Types for user interface consistency
 export interface User {
@@ -28,6 +29,19 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
   const { setCurrency } = useLanguage();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // --- Network Status ---
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // --- Migration Logic ---
   useEffect(() => {
@@ -119,50 +133,57 @@ function AppContent() {
     uid: currentUser.uid
   } : null;
 
-  if (appUser) {
-    return <Dashboard user={appUser} onLogout={handleLogout} />;
-  }
-
-  if (currentPage === 'reset-password') {
-    return (
-      <div className="min-h-screen bg-white text-gray-900 flex flex-col">
-        <ResetPasswordPage onLoginClick={() => {
-          setCurrentPage('home');
-          openAuth('login');
-        }} />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
-      <Navbar 
-        onOpenAuth={openAuth} 
-        onNavigate={(page) => setCurrentPage(page as any)} 
-        currentPage={currentPage as 'home' | 'features'}
-      />
-      <main className="flex-grow flex flex-col">
-        {currentPage === 'home' ? (
-          <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
-        ) : (
-          <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
-        )}
-      </main>
-      <Footer />
-      <AuthModal 
-        isOpen={isAuthOpen} 
-        onClose={() => setIsAuthOpen(false)} 
-        initialMode={authMode}
-        onLoginSubmit={handleLogin}
-        onSignupSubmit={handleSignup}
-        onSimulateReset={handleSimulateReset}
-      />
-      <DemoModal 
-        isOpen={isDemoOpen}
-        onClose={closeDemo}
-        onSignup={() => openAuth('signup')}
-      />
-    </div>
+    <>
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-xs font-bold text-center py-1 z-[100] flex items-center justify-center gap-2 animate-in slide-in-from-top-1">
+          <WifiOff size={12} />
+          You are offline. Showing cached data.
+        </div>
+      )}
+      
+      {appUser ? (
+        <Dashboard user={appUser} onLogout={handleLogout} />
+      ) : (
+        <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
+          {currentPage === 'reset-password' ? (
+             <ResetPasswordPage onLoginClick={() => {
+                setCurrentPage('home');
+                openAuth('login');
+             }} />
+          ) : (
+            <>
+              <Navbar 
+                onOpenAuth={openAuth} 
+                onNavigate={(page) => setCurrentPage(page as any)} 
+                currentPage={currentPage as 'home' | 'features'}
+              />
+              <main className="flex-grow flex flex-col">
+                {currentPage === 'home' ? (
+                  <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
+                ) : (
+                  <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
+                )}
+              </main>
+              <Footer />
+            </>
+          )}
+          <AuthModal 
+            isOpen={isAuthOpen} 
+            onClose={() => setIsAuthOpen(false)} 
+            initialMode={authMode}
+            onLoginSubmit={handleLogin}
+            onSignupSubmit={handleSignup}
+            onSimulateReset={handleSimulateReset}
+          />
+          <DemoModal 
+            isOpen={isDemoOpen}
+            onClose={closeDemo}
+            onSignup={() => openAuth('signup')}
+          />
+        </div>
+      )}
+    </>
   );
 }
 

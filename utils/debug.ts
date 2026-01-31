@@ -1,7 +1,10 @@
 
 // CENTRAL DEBUG CONFIGURATION
 // Auto-detect production environment to silence logs
-export const DEBUG_MODE = process.env.NODE_ENV !== 'production';
+
+// Safely access import.meta.env.DEV
+// @ts-ignore
+export const DEBUG_MODE = (import.meta && import.meta.env && import.meta.env.DEV) || false;
 
 type LogCategory = 
   | 'SUBSCRIPTION_CREATE'
