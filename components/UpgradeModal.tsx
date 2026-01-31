@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { X, Check, Star, ShieldCheck, Zap } from 'lucide-react';
+import { X, Check, Star, ShieldCheck, Zap, AlertCircle, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { createCheckoutSession, startFreeTrial } from '../utils/stripe';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -9,19 +10,35 @@ interface UpgradeModalProps {
 }
 
 export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
-  const { upgradeToPro } = useAuth();
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+  const { currentUser } = useAuth();
+  const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('year');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleUpgrade = async () => {
+    if (!currentUser) return;
     setIsProcessing(true);
+    setError(null);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      await upgradeToPro();
+      await createCheckoutSession(currentUser.uid, billingCycle);
       onClose();
     } catch (e) {
       console.error(e);
+      setError("Payment initialization failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTrial = async () => {
+    if (!currentUser) return;
+    setIsProcessing(true);
+    try {
+      await startFreeTrial(currentUser.uid);
+      onClose();
+    } catch (e) {
+      console.error(e);
+      setError("Could not start trial. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -53,23 +70,19 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/10">
                  <Star className="text-yellow-400 fill-current" size={24} />
               </div>
-              <h2 className="text-3xl font-bold mb-4 leading-tight">Unlock the full power of your data.</h2>
+              <h2 className="text-3xl font-bold mb-4 leading-tight">Stop wasting money on duplicate apps.</h2>
               <p className="text-indigo-100 text-sm leading-relaxed mb-8">
-                 SubscriptionHub Pro gives you the intelligence to save money, not just track it. Join thousands of power users optimizing their digital life.
+                 SubscriptionHub Pro automatically detects redundant services and helps you switch to annual billing for instant savings.
               </p>
               
               <div className="space-y-4">
                  <div className="flex items-center gap-3">
-                    <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
-                    <span className="text-sm font-medium">AI-Powered Savings Insights</span>
+                    <div className="p-1 bg-white/20 rounded-full"><Copy size={12} /></div>
+                    <span className="text-sm font-medium">Redundancy Detector</span>
                  </div>
                  <div className="flex items-center gap-3">
                     <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
-                    <span className="text-sm font-medium">Advanced Retention Analytics</span>
-                 </div>
-                 <div className="flex items-center gap-3">
-                    <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
-                    <span className="text-sm font-medium">Smart Price Change Alerts</span>
+                    <span className="text-sm font-medium">Billing Cycle Optimization</span>
                  </div>
                  <div className="flex items-center gap-3">
                     <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
@@ -93,18 +106,18 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               
               <div className="inline-flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl relative">
                  <button 
-                   onClick={() => setBillingCycle('monthly')}
-                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'monthly' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
+                   onClick={() => setBillingCycle('month')}
+                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'month' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
                  >
                     Monthly
                  </button>
                  <button 
-                   onClick={() => setBillingCycle('yearly')}
-                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'yearly' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
+                   onClick={() => setBillingCycle('year')}
+                   className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'year' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
                  >
                     Yearly
                  </button>
-                 {billingCycle === 'yearly' && (
+                 {billingCycle === 'year' && (
                     <span className="absolute -top-3 -right-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-bounce">
                        SAVE 37%
                     </span>
@@ -117,15 +130,21 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                  <div className="flex items-start justify-center gap-1 text-gray-900 dark:text-white mb-2">
                     <span className="text-2xl font-bold mt-1">$</span>
                     <span className="text-6xl font-black tracking-tight">
-                       {billingCycle === 'monthly' ? '3.99' : '2.49'}
+                       {billingCycle === 'month' ? '3.99' : '2.49'}
                     </span>
                     <span className="text-xl font-medium text-gray-400 self-end mb-1">/mo</span>
                  </div>
                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {billingCycle === 'monthly' ? 'Billed monthly' : 'Billed $29.99 yearly'}
+                    {billingCycle === 'month' ? 'Billed monthly' : 'Billed $29.99 yearly'}
                  </p>
               </div>
            </div>
+
+           {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs rounded-lg flex items-center gap-2">
+                 <AlertCircle size={14} /> {error}
+              </div>
+           )}
 
            <div className="space-y-4">
               <button 
@@ -136,11 +155,20 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                  {isProcessing ? (
                     <>Processing...</>
                  ) : (
-                    <>Start 7-Day Free Trial <Zap size={18} className="fill-white" /></>
+                    <>Subscribe Now <Zap size={18} className="fill-white" /></>
                  )}
               </button>
-              <p className="text-center text-xs text-gray-400 dark:text-gray-500">
-                 No charge until trial ends. We'll remind you 2 days before.
+              
+              <button
+                onClick={handleTrial}
+                disabled={isProcessing}
+                className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-bold py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+              >
+                 Start 7-Day Free Trial (No Card)
+              </button>
+
+              <p className="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-2">
+                 Payments are processed securely by Stripe. You can cancel anytime from settings.
               </p>
            </div>
         </div>

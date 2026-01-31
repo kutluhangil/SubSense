@@ -1,7 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
-import { Sparkles, Lightbulb, Lock } from 'lucide-react';
-import { generateDashboardInsights } from '../utils/gemini';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Sparkles, Lightbulb, Lock, ArrowRight, AlertTriangle, TrendingUp } from 'lucide-react';
+import { generateDashboardInsights, AIInsight } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,15 +12,30 @@ interface AIInsightsCardProps {
 }
 
 export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
-  const [insights, setInsights] = useState<string[]>([]);
+  const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   
-  const { currentCurrency, currentLanguage, t } = useLanguage();
-  const { isPro } = useAuth(); // Check plan status
+  const { currentCurrency, currentLanguage, t, formatPrice } = useLanguage();
+  const { isPro } = useAuth();
+
+  // Heuristic calculation for the "Teaser" (Free users)
+  // We calculate a conservative estimate locally to show value without API cost
+  const potentialSavingsTeaser = useMemo(() => {
+    if (subscriptions.length === 0) return 0;
+    
+    let savings = 0;
+    subscriptions.forEach(sub => {
+        // Simple heuristic: If monthly & > 10, assume 15% savings potential
+        if (sub.cycle === 'Monthly' && sub.price > 10) {
+            savings += (sub.price * 12) * 0.15;
+        }
+    });
+    return savings;
+  }, [subscriptions]);
 
   useEffect(() => {
-    // If not pro, don't fetch insights to save API quota & perform gating logic
+    // Only fetch real AI insights if Pro
     if (!isPro) {
         setLoading(false);
         return;
@@ -29,10 +44,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
     let mounted = true;
     const fetchInsights = async () => {
       if (subscriptions.length === 0) {
-        if (mounted) {
-            setInsights([t('ai.insight.default')]);
-            setLoading(false);
-        }
+        if (mounted) setLoading(false);
         return;
       }
       
@@ -48,48 +60,65 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
     return () => { mounted = false; };
   }, [subscriptions, currentCurrency, currentLanguage, t, isPro]);
 
-  // Locked State for Free Users
+  // --- LOCKED STATE (Free Users) ---
   if (!isPro) {
       return (
         <>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden mb-8 group cursor-pointer" onClick={() => setIsUpgradeOpen(true)}>
-            {/* Blurry Content Layer */}
-            <div className="filter blur-[3px] opacity-50 select-none pointer-events-none" aria-hidden="true">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-                            <Sparkles className="w-5 h-5 text-indigo-500" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg text-gray-900 dark:text-white">AI Analysis</h3>
-                            <p className="text-[10px] text-gray-500">Live Insights</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                        <Lightbulb className="w-4 h-4 text-gray-400" />
-                        <p className="text-sm text-gray-600 dark:text-gray-300">You could save $120/year by switching to annual billing on Netflix.</p>
-                    </div>
-                    <div className="flex items-start gap-3">
-                        <Lightbulb className="w-4 h-4 text-gray-400" />
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Unused subscription detected: Adobe Creative Cloud.</p>
-                    </div>
-                </div>
-            </div>
+        <div 
+            className="relative bg-white dark:bg-gray-800 rounded-2xl p-1 overflow-hidden mb-8 border border-gray-100 dark:border-gray-700 shadow-sm group cursor-pointer" 
+            onClick={() => setIsUpgradeOpen(true)}
+        >
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#4F46E5_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-            {/* Locked Overlay */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-b from-transparent via-white/60 to-white/90 dark:via-gray-900/60 dark:to-gray-900/90">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-full shadow-lg mb-3 ring-4 ring-indigo-50 dark:ring-indigo-900/20">
-                    <Lock size={20} className="text-indigo-600 dark:text-indigo-400" />
+            <div className="relative p-5">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-gray-900 dark:bg-white rounded-lg">
+                            <Sparkles className="w-4 h-4 text-white dark:text-gray-900" />
+                        </div>
+                        <span className="font-bold text-gray-900 dark:text-white text-sm tracking-wide">AI Insights</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                        <Lock size={12} className="text-gray-500 dark:text-gray-400" />
+                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Pro</span>
+                    </div>
                 </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1">Unlock AI Insights</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 max-w-xs text-center">
-                    Get personalized savings recommendations and alerts with Pro.
-                </p>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-full transition-colors shadow-lg shadow-indigo-600/20">
-                    Upgrade to Pro
-                </button>
+
+                {/* Blurred Content Simulation */}
+                <div className="space-y-4 filter blur-[5px] opacity-60 select-none">
+                    <div className="flex gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full shrink-0"></div>
+                        <div className="space-y-2 w-full">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                        <div className="w-10 h-10 bg-orange-100 rounded-full shrink-0"></div>
+                        <div className="space-y-2 w-full">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Call to Action Overlay */}
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 dark:bg-gray-900/60 backdrop-blur-[2px]">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 text-center max-w-xs transform transition-transform group-hover:scale-105">
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                            Potential Savings Found
+                        </p>
+                        <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-4">
+                            {potentialSavingsTeaser > 0 ? formatPrice(potentialSavingsTeaser) : '$100+'}
+                            <span className="text-sm font-medium text-gray-400">/yr</span>
+                        </h3>
+                        <button className="w-full bg-gray-900 dark:bg-white hover:bg-gray-800 text-white dark:text-gray-900 text-sm font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                            Unlock Insights <ArrowRight size={14} />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
@@ -97,51 +126,68 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
       );
   }
 
-  // Active State for Pro Users
+  // --- PRO STATE ---
   return (
-    <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden mb-8 border border-indigo-700/50 group">
-      {/* Animated Background Shimmer */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+    <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-indigo-900 dark:to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden mb-8 border border-white/10">
       
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -ml-32 -mb-32 pointer-events-none"></div>
 
       <div className="relative z-10">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md border border-white/10">
-              <Sparkles className="w-5 h-5 text-indigo-300" />
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md border border-white/10 shadow-inner">
+              <Sparkles className="w-5 h-5 text-yellow-300" />
             </div>
             <div>
-              <h3 className="font-bold text-lg leading-none">Gemini Intelligence</h3>
-              <p className="text-[10px] text-indigo-300 font-medium uppercase tracking-wider mt-1">Live Spending Analysis</p>
+              <h3 className="font-bold text-lg leading-none tracking-tight">Smart Insights</h3>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">
+                Optimized by Gemini
+              </p>
             </div>
-          </div>
-          <div className="bg-black/30 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
-             <span className="relative flex h-2 w-2">
-               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-             </span>
-             <span className="text-[10px] font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-white">
-                {t('ai.powered_by')}
-             </span>
           </div>
         </div>
 
-        <div className="space-y-3 min-h-[80px]">
+        <div className="space-y-4">
           {loading ? (
-            <div className="space-y-3 animate-pulse">
-               <div className="h-4 bg-white/10 rounded w-3/4"></div>
-               <div className="h-4 bg-white/10 rounded w-5/6"></div>
-               <div className="h-4 bg-white/10 rounded w-2/3"></div>
+            <div className="space-y-4 animate-pulse">
+               <div className="h-16 bg-white/5 rounded-xl border border-white/5"></div>
+               <div className="h-16 bg-white/5 rounded-xl border border-white/5"></div>
             </div>
-          ) : (
+          ) : insights.length > 0 ? (
             insights.map((insight, idx) => (
-              <div key={idx} className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 150}ms` }}>
-                <Lightbulb className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-indigo-50 font-medium leading-snug">{insight}</p>
+              <div 
+                key={idx} 
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/5 hover:bg-white/15 transition-colors group"
+              >
+                <div className="flex justify-between items-start gap-4">
+                    <div className="flex items-start gap-3">
+                        <div className={`mt-1 p-1.5 rounded-lg ${insight.type === 'redundancy' ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
+                            {insight.type === 'redundancy' ? <AlertTriangle size={16} /> : <TrendingUp size={16} />}
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-sm text-gray-100 leading-tight mb-1">{insight.title}</h4>
+                            <p className="text-xs text-gray-400 leading-relaxed">{insight.description}</p>
+                        </div>
+                    </div>
+                    {insight.estimatedSavings && (
+                        <div className="flex flex-col items-end shrink-0">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold">Save</span>
+                            <span className="text-sm font-bold text-white bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                                {insight.estimatedSavings}
+                            </span>
+                        </div>
+                    )}
+                </div>
               </div>
             ))
+          ) : (
+            <div className="text-center py-6 text-gray-400 text-xs bg-white/5 rounded-xl border border-white/5 border-dashed">
+                <Lightbulb className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                <p>No optimization opportunities found yet.</p>
+                <p>Add more subscriptions to activate analysis.</p>
+            </div>
           )}
         </div>
       </div>

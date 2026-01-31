@@ -34,6 +34,10 @@ export type AnalyticsEvent =
   | 'ai_opened'
   | 'ai_query_submitted'
   
+  // Payments
+  | 'checkout_started'
+  | 'portal_opened'
+  
   // System & Monitoring
   | 'app_error'
   | 'performance_metric'

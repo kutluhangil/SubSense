@@ -3,43 +3,42 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Helper function to check if the user is accessing their own data
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
     // USERS COLLECTION
-    // Users can only read/write their own document
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
       
-      // SUBSCRIPTIONS SUB-COLLECTION
-      // Nested under users to ensure ownership hierarchy
+      // Allow update ONLY if NOT modifying the 'plan' object (Subscription status)
+      // This prevents users from manually setting themselves to 'pro' via client SDK
+      allow update: if isOwner(userId) 
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
+        
+      // Allow create (initial signup)
+      allow create: if isOwner(userId);
+      
+      // SUBSCRIPTIONS SUB-COLLECTION (User's tracked items)
       match /subscriptions/{subscriptionId} {
         allow read, write: if isOwner(userId);
       }
     }
 
-    // FEEDBACK COLLECTION
-    // Write-only for authenticated users. No public reads.
-    // This prevents users from seeing other users' feedback.
     match /feedback/{feedbackId} {
       allow create: if isAuthenticated();
-      allow read, update, delete: if false; // Admin only (via backend SDK)
+      allow read, update, delete: if false; 
     }
     
-    // BETA FEEDBACK COLLECTION
     match /beta_feedback/{feedbackId} {
       allow create: if isAuthenticated();
       allow read, update, delete: if false;
     }
 
-    // Default deny
     match /{document=**} {
       allow read, write: if false;
     }
