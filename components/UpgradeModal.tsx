@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { X, Check, Star, ShieldCheck, Zap, AlertCircle, Copy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession, startFreeTrial } from '../utils/stripe';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface UpgradeModalProps {
 
 export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
   const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('year');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,23 +72,23 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-6 backdrop-blur-md border border-white/10">
                  <Star className="text-yellow-400 fill-current" size={24} />
               </div>
-              <h2 className="text-3xl font-bold mb-4 leading-tight">Stop wasting money on duplicate apps.</h2>
+              <h2 className="text-3xl font-bold mb-4 leading-tight">{t('upgrade.title')}</h2>
               <p className="text-indigo-100 text-sm leading-relaxed mb-8">
-                 SubscriptionHub Pro automatically detects redundant services and helps you switch to annual billing for instant savings.
+                 {t('upgrade.subtitle')}
               </p>
               
               <div className="space-y-4">
                  <div className="flex items-center gap-3">
                     <div className="p-1 bg-white/20 rounded-full"><Copy size={12} /></div>
-                    <span className="text-sm font-medium">Redundancy Detector</span>
+                    <span className="text-sm font-medium">{t('upgrade.feature.redundancy')}</span>
                  </div>
                  <div className="flex items-center gap-3">
                     <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
-                    <span className="text-sm font-medium">Billing Cycle Optimization</span>
+                    <span className="text-sm font-medium">{t('upgrade.feature.cycle')}</span>
                  </div>
                  <div className="flex items-center gap-3">
                     <div className="p-1 bg-white/20 rounded-full"><Check size={12} /></div>
-                    <span className="text-sm font-medium">Priority Support</span>
+                    <span className="text-sm font-medium">{t('upgrade.feature.support')}</span>
                  </div>
               </div>
            </div>
@@ -94,7 +96,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
            <div className="relative z-10 mt-8 pt-8 border-t border-white/10">
               <div className="flex items-center gap-2 text-xs text-indigo-200">
                  <ShieldCheck size={14} />
-                 <span>Secure payment via Stripe. Cancel anytime.</span>
+                 <span>{t('upgrade.secure_note')}</span>
               </div>
            </div>
         </div>
@@ -102,24 +104,24 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         {/* Right Side: Pricing */}
         <div className="md:w-7/12 p-8 bg-white dark:bg-gray-900 flex flex-col">
            <div className="text-center mb-8">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Choose your plan</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">{t('upgrade.plan_choose')}</h3>
               
               <div className="inline-flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl relative">
                  <button 
                    onClick={() => setBillingCycle('month')}
                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'month' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
                  >
-                    Monthly
+                    {t('upgrade.monthly')}
                  </button>
                  <button 
                    onClick={() => setBillingCycle('year')}
                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${billingCycle === 'year' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'}`}
                  >
-                    Yearly
+                    {t('upgrade.yearly')}
                  </button>
                  {billingCycle === 'year' && (
                     <span className="absolute -top-3 -right-3 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-bounce">
-                       SAVE 37%
+                       {t('upgrade.save_percent')}
                     </span>
                  )}
               </div>
@@ -135,7 +137,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                     <span className="text-xl font-medium text-gray-400 self-end mb-1">/mo</span>
                  </div>
                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {billingCycle === 'month' ? 'Billed monthly' : 'Billed $29.99 yearly'}
+                    {billingCycle === 'month' ? t('upgrade.billed_monthly') : t('upgrade.billed_yearly')}
                  </p>
               </div>
            </div>
@@ -153,9 +155,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-bold py-4 rounded-xl shadow-xl shadow-indigo-600/20 transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                  {isProcessing ? (
-                    <>Processing...</>
+                    <>{t('upgrade.processing')}</>
                  ) : (
-                    <>Subscribe Now <Zap size={18} className="fill-white" /></>
+                    <>{t('upgrade.cta')} <Zap size={18} className="fill-white" /></>
                  )}
               </button>
               
@@ -164,11 +166,11 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 disabled={isProcessing}
                 className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-bold py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
               >
-                 Start 7-Day Free Trial (No Card)
+                 {t('upgrade.trial_cta')}
               </button>
 
               <p className="text-center text-[10px] text-gray-400 dark:text-gray-500 mt-2">
-                 Payments are processed securely by Stripe. You can cancel anytime from settings.
+                 {t('upgrade.secure_note')}
               </p>
            </div>
         </div>

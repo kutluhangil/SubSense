@@ -11,7 +11,7 @@ interface NavbarProps {
   currentPage?: 'home' | 'features';
 }
 
-export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }: NavbarProps) {
+const Navbar = ({ onOpenAuth, onNavigate, currentPage = 'home' }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useLanguage();
 
@@ -110,4 +110,6 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
       )}
     </nav>
   );
-}
+};
+
+export default React.memo(Navbar);

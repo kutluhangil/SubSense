@@ -428,7 +428,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 <div>
                    <h1 className="text-2xl font-bold text-primary tracking-tight">{t('dashboard.title')}</h1>
                    <p className="text-secondary text-sm mt-1">
-                      {subscriptionsLoading ? <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Syncing...</span> : `Welcome back, ${user.name}.`}
+                      {subscriptionsLoading 
+                        ? <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> {t('dashboard.syncing')}</span> 
+                        : t('dashboard.welcome').replace('{name}', user.name)}
                    </p>
                 </div>
                 
@@ -491,18 +493,18 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                >
                                   {previewCurrency ? (
                                      <>
-                                        <Eye size={12} /> Preview: {previewCurrency}
+                                        <Eye size={12} /> {t('dashboard.preview_mode')}: {previewCurrency}
                                      </>
                                   ) : (
                                      <>
-                                        <EyeOff size={12} /> Preview Currency
+                                        <EyeOff size={12} /> {t('dashboard.preview_currency')}
                                      </>
                                   )}
                                </button>
 
                                {/* Tooltip */}
                                <div className="absolute left-0 bottom-full mb-2 w-56 p-3 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                  This is a display-only preview. Your subscriptions remain saved in their original currencies. No data is modified.
+                                  {t('dashboard.preview_tooltip')}
                                   <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900"></div>
                                </div>
 
@@ -513,7 +515,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                     <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                                        <button 
                                           onClick={() => { setPreviewCurrency(null); setIsPreviewSelectorOpen(false); }}
-                                          className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'}`}
+                                          className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'} `}
                                        >
                                           Off (Original)
                                           {!previewCurrency && <CheckCircle2 size={12} />}
@@ -544,22 +546,22 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                          {subscriptionsLoading ? (
                             <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center h-96">
                                 <Loader2 size={32} className="animate-spin mb-3 text-indigo-500" />
-                                <p className="text-sm font-medium">Syncing your subscriptions...</p>
+                                <p className="text-sm font-medium">{t('dashboard.syncing')}</p>
                             </div>
                          ) : filteredSubscriptions.length === 0 ? (
                             <div className="p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
                                 <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
                                     <Plus size={32} className="text-gray-400" />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No subscriptions yet</h3>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('dashboard.empty_title')}</h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
-                                    Start tracking your recurring expenses to unlock insights.
+                                    {t('dashboard.empty_desc')}
                                 </p>
                                 <button 
                                     onClick={() => setIsAddModalOpen(true)}
                                     className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
                                 >
-                                    <Plus size={16} /> Add First Subscription
+                                    <Plus size={16} /> {t('dashboard.add_first')}
                                 </button>
                             </div>
                          ) : (
