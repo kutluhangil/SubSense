@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency'; 
 import { User } from '../App';
-import { useFeedback } from '../contexts/FeedbackContext'; // Import
+import { useFeedback } from '../contexts/FeedbackContext'; 
 import { updateUserSettings } from '../utils/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from './UpgradeModal';
+import { createPortalSession } from '../utils/stripe';
 
 interface SettingsProps {
   subscriptions?: Subscription[];
@@ -21,7 +22,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
   const { currentUser, userProfile, isPro } = useAuth();
   const [showToast, setShowToast] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-  const { openFeedback } = useFeedback(); // Hook
+  const { openFeedback } = useFeedback(); 
 
   const handleExportCSV = () => {
     const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
@@ -75,6 +76,24 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
       }
   };
 
+  const handleManageSubscription = async () => {
+      await createPortalSession();
+  };
+
+  // Helper to format subscription dates safely
+  const getRenewalDate = () => {
+      if (!userProfile?.plan?.currentPeriodEnd) return "Unknown";
+      try {
+          // Handle both Firestore Timestamp and ISO string
+          const date = typeof userProfile.plan.currentPeriodEnd === 'string' 
+            ? new Date(userProfile.plan.currentPeriodEnd) 
+            : userProfile.plan.currentPeriodEnd.toDate();
+          return date.toLocaleDateString();
+      } catch (e) {
+          return "Unknown";
+      }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -88,35 +107,53 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
         
         <div className="xl:col-span-2 space-y-8">
             
-            {/* Subscription Plan */}
+            {/* Subscription Plan Card */}
             <div className={`rounded-2xl border shadow-sm overflow-hidden ${isPro ? 'bg-gradient-to-r from-indigo-900 to-purple-900 border-indigo-700' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}>
                 <div className={`px-6 py-4 border-b flex items-center gap-3 ${isPro ? 'border-indigo-700/50 bg-black/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30'}`}>
                     <CreditCard className={isPro ? 'text-indigo-300' : 'text-gray-400'} size={20} />
                     <h3 className={`text-base font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Subscription Plan</h3>
                 </div>
-                <div className="p-6 flex items-center justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <h4 className={`text-lg font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                                {isPro ? 'Pro Plan' : 'Free Plan'}
-                            </h4>
-                            {isPro && <span className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>}
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h4 className={`text-lg font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                                    {isPro ? 'Pro Plan' : 'Free Plan'}
+                                </h4>
+                                {isPro && (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${userProfile?.plan?.status === 'trial' ? 'bg-blue-400 text-white' : 'bg-yellow-400 text-black'}`}>
+                                        {userProfile?.plan?.status === 'trial' ? 'TRIAL' : 'ACTIVE'}
+                                    </span>
+                                )}
+                            </div>
+                            <p className={`text-sm ${isPro ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {isPro 
+                                    ? `Next billing: ${getRenewalDate()} (${userProfile?.plan?.interval || 'month'}ly)` 
+                                    : 'Upgrade to unlock advanced AI insights.'
+                                }
+                            </p>
                         </div>
-                        <p className={`text-sm ${isPro ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
-                            {isPro ? 'Next billing date: Oct 24, 2024' : 'Upgrade to unlock advanced AI insights.'}
-                        </p>
+                        {isPro ? (
+                            <button 
+                                onClick={handleManageSubscription}
+                                className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors flex items-center gap-2"
+                            >
+                                Manage <ExternalLink size={14} />
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={() => setIsUpgradeOpen(true)}
+                                className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
+                            >
+                                Upgrade <Star size={14} className="fill-current" />
+                            </button>
+                        )}
                     </div>
-                    {isPro ? (
-                        <button className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors">
-                            Manage
-                        </button>
-                    ) : (
-                        <button 
-                            onClick={() => setIsUpgradeOpen(true)}
-                            className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
-                        >
-                            Upgrade <Star size={14} className="fill-current" />
-                        </button>
+                    {isPro && userProfile?.plan?.cancelAtPeriodEnd && (
+                        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-xs text-white flex items-center gap-2">
+                            <Calendar size={14} />
+                            Your subscription will end on {getRenewalDate()}.
+                        </div>
                     )}
                 </div>
             </div>

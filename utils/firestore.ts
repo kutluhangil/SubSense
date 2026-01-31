@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   doc, 
@@ -11,7 +12,8 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
-  increment
+  increment,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
@@ -20,12 +22,22 @@ import { trackEvent } from './analytics';
 
 // --- Types ---
 
+export interface SubscriptionPlan {
+  type: 'free' | 'pro';
+  status: 'active' | 'trial' | 'past_due' | 'canceled' | 'expired';
+  interval?: 'month' | 'year';
+  currentPeriodEnd?: any; // Firestore Timestamp or ISO string
+  cancelAtPeriodEnd?: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+}
+
 export interface UserProfileData {
   uid: string;
   email: string;
   displayName: string | null;
   createdAt: any;
-  termsAcceptedAt?: string; // Compliance timestamp
+  termsAcceptedAt?: string;
   preferences: {
     language: string;
     theme: string;
@@ -38,21 +50,14 @@ export interface UserProfileData {
     monthlySpend: number;
     annualSpend: number;
   };
-  // Internal Analytics
   analytics?: {
-    lastActiveAt: any; // Timestamp
+    lastActiveAt: any;
     sessionCount: number;
-    signupDate: string; // ISO String
+    signupDate: string;
     churnRisk?: boolean;
     featureUsage?: Record<string, number>;
   };
-  // Monetization
-  plan?: {
-    type: 'free' | 'pro';
-    status: 'active' | 'canceled' | 'expired' | 'trial';
-    since: any; // Timestamp
-    expiresAt?: any; // Timestamp
-  };
+  plan: SubscriptionPlan;
 }
 
 // --- Local Fallback Logic ---
@@ -87,13 +92,12 @@ export const initializeUserDocument = async (
   const localKey = `${FALLBACK_KEY_PREFIX}profile_${user.uid}`;
   const now = new Date().toISOString();
   
-  // Default Profile Structure
   const newProfile: UserProfileData = {
     uid: user.uid,
     email: user.email || '',
     displayName: user.displayName,
     createdAt: now,
-    termsAcceptedAt: now, // Capture consent time
+    termsAcceptedAt: now,
     preferences: {
       baseCurrency: additionalData?.currency || 'USD',
       language: 'en',
@@ -114,8 +118,7 @@ export const initializeUserDocument = async (
     },
     plan: {
       type: 'free',
-      status: 'active',
-      since: now
+      status: 'active'
     }
   };
 
@@ -141,13 +144,11 @@ export const initializeUserDocument = async (
       return userSnap.data() as UserProfileData;
     }
 
-    // Attempt to create in Firestore
     try {
       await setDoc(userRef, {
         ...newProfile,
         createdAt: serverTimestamp(),
-        'analytics.lastActiveAt': serverTimestamp(),
-        'plan.since': serverTimestamp()
+        'analytics.lastActiveAt': serverTimestamp()
       });
     } catch (e: any) {
       if (e.code === 'permission-denied') {
@@ -162,7 +163,6 @@ export const initializeUserDocument = async (
     return newProfile;
   } catch (error) {
     console.error("Error initializing user document:", error);
-    // Ultimate fallback to ensure app doesn't crash
     setLocalData(localKey, newProfile);
     return newProfile;
   }
@@ -204,20 +204,23 @@ export const updateUserSettings = async (uid: string, settings: any) => {
   }
 };
 
-export const updateUserPlan = async (uid: string, planData: UserProfileData['plan']) => {
+export const updateUserPlan = async (uid: string, planData: Partial<UserProfileData['plan']>) => {
   try {
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, { plan: planData });
   } catch (error) {
     console.error("Error updating plan:", error);
+    // Fallback for demo/local environment without write permissions to 'plan' specifically
+    const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
+    const current = getLocalData<UserProfileData>(localKey);
+    if (current) {
+       current.plan = { ...current.plan, ...planData };
+       setLocalData(localKey, current);
+    }
     throw error;
   }
 };
 
-/**
- * Updates user activity metrics (Last Active, Session Count)
- * Used for Retention and Churn analysis.
- */
 export const updateUserActivity = async (uid: string) => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -226,21 +229,13 @@ export const updateUserActivity = async (uid: string) => {
       'analytics.sessionCount': increment(1)
     });
   } catch (error) {
-    // Fail silently for analytics updates
-    // console.warn("Failed to update activity stats", error);
+    // Fail silently
   }
 };
 
-/**
- * Updates feature usage counters.
- * @param uid User ID
- * @param feature Feature key (e.g., 'dashboard_view', 'add_sub')
- */
 export const updateFeatureUsage = async (uid: string, feature: string) => {
   try {
-    // Check opt-out first (quick check against local storage, assuming sync)
     if (localStorage.getItem('analytics_opt_out') === 'true') return;
-
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, {
       [`analytics.featureUsage.${feature}`]: increment(1)
@@ -259,7 +254,6 @@ export const getUserSubscriptions = async (uid: string): Promise<Subscription[]>
     const subs: Subscription[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data();
-      // Only include if valid
       if (validateSubscription(data as Partial<Subscription>)) {
         subs.push({ id: doc.id, ...data } as unknown as Subscription);
       }
@@ -278,7 +272,6 @@ export const getUserSubscriptions = async (uid: string): Promise<Subscription[]>
 };
 
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
-  // 1. Guardrail: Validate Data before Write
   if (!validateSubscription(subscription as Partial<Subscription>)) {
     console.error("Attempted to add invalid subscription. Operation blocked.");
     throw new Error("Invalid subscription data. Please check fields.");
@@ -291,10 +284,7 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    
-    // Analytics Hook: Update feature usage
     updateFeatureUsage(uid, 'subscription_added');
-    
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
       console.warn("Firestore write denied. Adding subscription locally.");
@@ -311,7 +301,6 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
 };
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
-  // 1. Guardrail: Validate Data before Write (if update contains vital fields)
   if (data.price !== undefined && (typeof data.price !== 'number' || data.price < 0)) throw new Error("Invalid price update");
   if (data.currency && typeof data.currency !== 'string') throw new Error("Invalid currency update");
 
@@ -319,7 +308,6 @@ export const updateSubscription = async (uid: string, subId: number | string, da
     if (typeof subId === 'number') {
         throw { code: 'permission-denied' }; 
     }
-
     const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...updateData } = data as any;
@@ -363,7 +351,6 @@ export const deleteSubscription = async (uid: string, subId: number | string) =>
   }
 };
 
-// Realtime Listener
 export const listenToUserSubscriptions = (
   uid: string, 
   onChange: (subs: Subscription[]) => void,
@@ -388,11 +375,8 @@ export const listenToUserSubscriptions = (
       const subs: Subscription[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        // Guardrail: Filter invalid docs from stream
         if (validateSubscription(data as Partial<Subscription>)) {
             subs.push({ id: doc.id, ...data } as unknown as Subscription);
-        } else {
-            console.warn("Skipping invalid subscription document:", doc.id);
         }
       });
       onChange(subs);
@@ -403,9 +387,6 @@ export const listenToUserSubscriptions = (
         const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
         onChange(localData.filter(validateSubscription));
         fallbackEvents.addEventListener('local-update', handleLocalUpdate);
-        
-        // Do NOT call onError here as we have handled the fallback gracefully
-        // if (onError) onError(error); 
       } else {
         console.error("Firestore snapshot error:", error);
         if (onError) onError(error);
@@ -424,12 +405,10 @@ export const listenToUserSubscriptions = (
   };
 };
 
-// --- Migration Tool ---
 export const migrateLocalData = async (uid: string, localSubs: Subscription[]) => {
   if (!localSubs || localSubs.length === 0) return;
   
   const promises = localSubs.map(sub => {
-      // Validate before migration
       if (validateSubscription(sub)) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { id, ...rest } = sub;

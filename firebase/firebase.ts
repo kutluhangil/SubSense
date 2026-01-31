@@ -1,6 +1,7 @@
 
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
+import "firebase/compat/functions"; // Import Functions
 import { initializeFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getPerformance } from "firebase/performance";
@@ -34,6 +35,12 @@ const firebaseConfig = {
 export const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
 
 export const auth = app.auth();
+export const functions = app.functions(); // Export functions instance
+
+// Connect to emulators if in localhost (Optional, useful for dev)
+if (window.location.hostname === "localhost") {
+  // functions.useEmulator("localhost", 5001);
+}
 
 // Initialize Firestore
 let dbInstance;
