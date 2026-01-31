@@ -15,6 +15,8 @@ import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
 import BrandIcon from './BrandIcon';
 import OnboardingTour from './OnboardingTour';
+import AIAssistant from './AIAssistant';
+import AIInsightsCard from './AIInsightsCard';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
@@ -140,6 +142,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isAIOpen, setIsAIOpen] = useState(false);
   
   const [notifications, setNotifications] = useState([
     { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
@@ -414,6 +417,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       case 'dashboard':
         return (
           <div className="animate-in fade-in duration-500">
+             
+             {/* AI Insights Card */}
+             <AIInsightsCard subscriptions={subscriptions} />
+
              <div className="mb-8 flex items-center justify-between relative">
                 <div>
                    <h1 className="text-2xl font-bold text-primary tracking-tight">{t('dashboard.title')}</h1>
@@ -528,7 +535,12 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
        
        {/* Sidebar - Hidden on mobile, controlled via state */}
        <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0 h-full`}>
-          <Sidebar onLogout={onLogout} currentView={currentView} onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }} />
+          <Sidebar 
+            onLogout={onLogout} 
+            currentView={currentView} 
+            onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }} 
+            onOpenAI={() => setIsAIOpen(!isAIOpen)}
+          />
        </div>
 
        {/* Mobile Overlay */}
@@ -543,9 +555,16 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 <Menu size={24} />
              </button>
              <span className="font-bold text-primary text-lg">SubscriptionHub</span>
-             <button onClick={() => setIsAddModalOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Plus size={24} />
-             </button>
+             <div className="flex items-center gap-2">
+               {/* Mobile AI Trigger */}
+               <button onClick={() => setIsAIOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <span className="sr-only">AI Assistant</span>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"></path></svg>
+               </button>
+               <button onClick={() => setIsAddModalOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <Plus size={24} />
+               </button>
+             </div>
           </header>
 
           {/* Main Content Area */}
@@ -567,6 +586,14 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          isOpen={isCalendarOpen} 
          onClose={() => setIsCalendarOpen(false)} 
          subscriptions={subscriptions} 
+       />
+
+       {/* AI Assistant */}
+       <AIAssistant 
+         isOpen={isAIOpen}
+         onClose={() => setIsAIOpen(false)}
+         subscriptions={subscriptions}
+         currentPage={currentView}
        />
 
        {/* Onboarding Tour */}
