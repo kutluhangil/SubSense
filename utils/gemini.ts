@@ -4,21 +4,65 @@ import { convertAmount } from "./currency";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+/**
+ * Prepares a strictly typed and converted payload for Gemini.
+ * Ensures the AI never guesses exchange rates.
+ */
+const prepareGeminiPayload = (subscriptions: any[], baseCurrency: string) => {
+  const convertedSubs = subscriptions.map(s => {
+    const originalCost = s.price;
+    const convertedCost = convertAmount(s.price, s.currency, baseCurrency);
+    
+    // Normalize to monthly cost for fair comparison
+    const monthlyCost = s.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
+
+    return {
+      name: s.name,
+      originalCost: `${originalCost} ${s.currency}`,
+      convertedMonthlyCost: parseFloat(monthlyCost.toFixed(2)),
+      billingCycle: s.cycle,
+      category: s.category || 'Uncategorized'
+    };
+  });
+
+  const totalMonthly = convertedSubs.reduce((acc, s) => acc + s.convertedMonthlyCost, 0);
+  const totalYearly = totalMonthly * 12;
+
+  return {
+    baseCurrency,
+    subscriptions: convertedSubs,
+    totals: {
+      monthly: parseFloat(totalMonthly.toFixed(2)),
+      yearly: parseFloat(totalYearly.toFixed(2))
+    }
+  };
+};
+
 export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD') => {
   try {
-    // Pre-process subscription data to include normalized values
-    const subData = subscriptions.map(s => {
-      const normalizedPrice = convertAmount(s.price, s.currency, baseCurrency);
-      return `${s.name} (${s.price} ${s.currency}, approx ${normalizedPrice.toFixed(2)} ${baseCurrency}, ${s.cycle})`;
-    }).join('; ');
+    const payload = prepareGeminiPayload(subscriptions, baseCurrency);
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze these subscriptions: [${subData}]. User's Base Currency is ${baseCurrency}.
-      Provide 3 short, actionable, single-sentence financial insights or savings opportunities. 
-      Focus on spending patterns, potential duplicates, or high-value items relative to the base currency.
-      Do not use markdown formatting.
-      Return strictly a JSON array of strings.`,
+      contents: `
+      CONTEXT:
+      You are a financial analyst for a subscription manager app.
+      
+      DATA:
+      ${JSON.stringify(payload, null, 2)}
+      
+      TASK:
+      Provide 3 short, high-value financial insights based on the data above.
+      
+      RULES:
+      1. Speak ONLY in ${baseCurrency}. All 'convertedMonthlyCost' values are already in ${baseCurrency}.
+      2. Do NOT perform currency conversions yourself. Trust the provided data.
+      3. Focus on:
+         - Top spending categories.
+         - Annual savings opportunities (e.g. switching monthly to yearly).
+         - Anomalies or high-cost single items.
+      4. Output strict JSON array of strings. No markdown.
+      `,
       config: {
         responseMimeType: 'application/json',
       }
@@ -39,24 +83,29 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
 
 export const chatWithGemini = async (history: any[], userMessage: string, contextData: any) => {
   try {
-    const systemInstruction = `You are SubscriptionHub AI, a smart financial companion. 
-    You help users track, manage, and optimize recurring expenses.
-    
-    Current User Context:
-    - Base Currency: ${contextData.baseCurrency}
-    - Subscriptions: ${JSON.stringify(contextData.subscriptions)}
-    - Total Monthly Spend: ${contextData.monthlySpend} ${contextData.baseCurrency}
-    - Current Page: ${contextData.currentPage}
+    const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
 
-    Rules:
-    1. Be concise, helpful, and data-driven.
-    2. Speak ONLY in the user's base currency (${contextData.baseCurrency}) unless explaining a conversion.
-    3. Explain spending patterns and offer alternatives.
-    4. Answer "why" questions based on the provided data.
-    5. NEVER perform destructive actions (canceling, deleting).
-    6. NEVER give specific financial investment advice.
+    const systemInstruction = `
+    ROLE:
+    You are SubscriptionHub AI, a smart financial companion.
     
-    Tone: Professional, calm, trustworthy, premium.`;
+    STRICT CURRENCY RULE:
+    - The user's base currency is ${payload.baseCurrency}.
+    - All monetary values provided in the context are ALREADY converted to ${payload.baseCurrency}.
+    - NEVER try to convert currencies yourself. Use the 'convertedMonthlyCost' values.
+    - If a user asks about an original price, you can reference the 'originalCost' field.
+    
+    CONTEXT DATA:
+    ${JSON.stringify(payload)}
+    
+    BEHAVIOR:
+    1. Be concise and helpful.
+    2. Explain costs in the context of the user's local economy if relevant (e.g. purchasing power).
+    3. If asked "How much do I spend?", use the totals provided in the context.
+    4. Never perform destructive actions.
+    
+    Tone: Professional, calm, trustworthy.
+    `;
 
     const chat = ai.chats.create({
       model: 'gemini-3-pro-preview',

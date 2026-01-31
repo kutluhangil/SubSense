@@ -17,9 +17,10 @@ import BrandIcon from './BrandIcon';
 import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, DollarSign } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
+import CurrencySelector from './CurrencySelector';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -78,7 +79,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
      return !hasSeen;
   });
 
-  const { t, formatPrice, convert, currentCurrency } = useLanguage();
+  const { t, formatPrice, convert, currentCurrency, setCurrency } = useLanguage();
 
   const handleOnboardingComplete = () => {
      setShowOnboarding(false);
@@ -144,6 +145,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
   
   const [notifications, setNotifications] = useState([
     { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
@@ -552,6 +554,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              </button>
              <span className="font-bold text-primary text-lg">SubscriptionHub</span>
              <div className="flex items-center gap-2">
+               {/* Mobile Currency Switch */}
+               <button onClick={() => setIsCurrencyModalOpen(true)} className="text-primary p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <span className="text-xs font-bold">{currentCurrency}</span>
+               </button>
                {/* Mobile AI Trigger */}
                <button onClick={() => setIsAIOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
                   <span className="sr-only">AI Assistant</span>
@@ -590,6 +596,14 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          onClose={() => setIsAIOpen(false)}
          subscriptions={subscriptions}
          currentPage={currentView}
+       />
+
+       {/* Currency Switcher */}
+       <CurrencySelector 
+         isOpen={isCurrencyModalOpen} 
+         onClose={() => setIsCurrencyModalOpen(false)} 
+         selectedCurrency={currentCurrency}
+         onSelect={setCurrency}
        />
 
        {/* Onboarding Tour */}
