@@ -25,3 +25,20 @@ export const CURRENCY_LOCALES: Record<string, string> = {
   "zh": "zh-CN",
   "ar": "ar-SA"
 };
+
+/**
+ * Converts an amount from one currency to another using static rates.
+ * @param amount The value to convert
+ * @param fromCurrency ISO code of source currency
+ * @param toCurrency ISO code of target currency
+ * @returns Converted amount
+ */
+export const convertAmount = (amount: number, fromCurrency: string, toCurrency: string): number => {
+  const fromRate = EXCHANGE_RATES[fromCurrency] || 1;
+  const toRate = EXCHANGE_RATES[toCurrency] || 1;
+  
+  // Convert to USD (Base) then to Target
+  // Amount / FromRate = USD Value
+  // USD Value * ToRate = Target Value
+  return (amount / fromRate) * toRate;
+};

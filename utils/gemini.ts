@@ -1,17 +1,22 @@
 
 import { GoogleGenAI } from "@google/genai";
+import { convertAmount } from "./currency";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export const generateDashboardInsights = async (subscriptions: any[]) => {
+export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD') => {
   try {
-    const subData = subscriptions.map(s => `${s.name} (${s.price} ${s.currency}, ${s.cycle})`).join(', ');
+    // Pre-process subscription data to include normalized values
+    const subData = subscriptions.map(s => {
+      const normalizedPrice = convertAmount(s.price, s.currency, baseCurrency);
+      return `${s.name} (${s.price} ${s.currency}, approx ${normalizedPrice.toFixed(2)} ${baseCurrency}, ${s.cycle})`;
+    }).join('; ');
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze these subscriptions: [${subData}]. 
+      contents: `Analyze these subscriptions: [${subData}]. User's Base Currency is ${baseCurrency}.
       Provide 3 short, actionable, single-sentence financial insights or savings opportunities. 
-      Focus on spending patterns, potential duplicates, or high-value items.
+      Focus on spending patterns, potential duplicates, or high-value items relative to the base currency.
       Do not use markdown formatting.
       Return strictly a JSON array of strings.`,
       config: {
@@ -38,17 +43,18 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     You help users track, manage, and optimize recurring expenses.
     
     Current User Context:
+    - Base Currency: ${contextData.baseCurrency}
     - Subscriptions: ${JSON.stringify(contextData.subscriptions)}
-    - Total Monthly Spend: ${contextData.monthlySpend}
+    - Total Monthly Spend: ${contextData.monthlySpend} ${contextData.baseCurrency}
     - Current Page: ${contextData.currentPage}
 
     Rules:
     1. Be concise, helpful, and data-driven.
-    2. Explain spending patterns and offer alternatives.
-    3. Answer "why" questions based on the provided data.
-    4. NEVER perform destructive actions (canceling, deleting).
-    5. NEVER give specific financial investment advice.
-    6. If asked to delete or change something, explain how the user can do it manually.
+    2. Speak ONLY in the user's base currency (${contextData.baseCurrency}) unless explaining a conversion.
+    3. Explain spending patterns and offer alternatives.
+    4. Answer "why" questions based on the provided data.
+    5. NEVER perform destructive actions (canceling, deleting).
+    6. NEVER give specific financial investment advice.
     
     Tone: Professional, calm, trustworthy, premium.`;
 

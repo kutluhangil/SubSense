@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, Lightbulb, RefreshCw } from 'lucide-react';
 import { generateDashboardInsights } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AIInsightsCardProps {
   subscriptions: Subscription[];
@@ -11,6 +12,7 @@ interface AIInsightsCardProps {
 export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
   const [insights, setInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currentCurrency } = useLanguage();
 
   useEffect(() => {
     let mounted = true;
@@ -24,7 +26,8 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
       }
       
       setLoading(true);
-      const results = await generateDashboardInsights(subscriptions);
+      // Pass current base currency to ensure insights are relevant
+      const results = await generateDashboardInsights(subscriptions, currentCurrency);
       if (mounted) {
         setInsights(results);
         setLoading(false);
@@ -33,7 +36,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
 
     fetchInsights();
     return () => { mounted = false; };
-  }, [subscriptions]);
+  }, [subscriptions, currentCurrency]);
 
   return (
     <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden mb-8 border border-indigo-700/50 group">
