@@ -1,13 +1,11 @@
-
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import firebase from 'firebase/app';
+import 'firebase/auth';
+import 'firebase/firestore';
 
 // Safe access to environment variables
 const getEnvVar = (key: string) => {
   try {
     // Check import.meta.env (Vite)
-    // Cast to any to avoid TS errors if Vite types aren't fully loaded in all contexts
     const meta = import.meta as any;
     if (meta && meta.env && meta.env[key]) {
       return meta.env[key];
@@ -22,14 +20,20 @@ const getEnvVar = (key: string) => {
   return undefined;
 };
 
-// Check if we have a valid configuration
 const apiKey = getEnvVar('VITE_FIREBASE_API_KEY');
 const authDomain = getEnvVar('VITE_FIREBASE_AUTH_DOMAIN');
 
-const isConfigValid = apiKey && authDomain;
+// Enhanced validation to catch placeholders like "....." or "xxxxx"
+const isPlaceholder = (val: string | undefined) => {
+    if (!val) return true;
+    return val.includes('.....') || val.includes('xxxxx') || val.startsWith('my-app');
+}
+
+// Check if we have a valid configuration
+const isConfigValid = apiKey && authDomain && !isPlaceholder(apiKey) && !isPlaceholder(authDomain);
 
 if (!isConfigValid) {
-  console.warn("Firebase configuration is missing or incomplete. Check your .env file. Using mock config to prevent crash.");
+  console.warn("Firebase configuration is missing or invalid (detected placeholders). Using dummy config to prevent crash. Please update your .env file with real credentials.");
 }
 
 // Use real config or a placeholder to prevent immediate crash
@@ -50,6 +54,10 @@ const firebaseConfig = isConfigValid ? {
   appId: "1:000000000000:web:0000000000000000000000"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Initialize Firebase (check if already initialized)
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+export const auth = firebase.auth();
+export const db = firebase.firestore();

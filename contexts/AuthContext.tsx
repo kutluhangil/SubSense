@@ -1,18 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged,
-  updateProfile
-} from 'firebase/auth';
+import firebase from 'firebase/app';
 import { auth } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, UserProfileData } from '../utils/firestore';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: firebase.User | null;
   userProfile: UserProfileData | null;
   loading: boolean;
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
@@ -31,49 +23,50 @@ export function useAuth() {
 }
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
     // 1. Create Auth User
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // 2. Update Profile (Display Name)
-    await updateProfile(user, { displayName: name });
+    if (user) {
+      // 2. Update Profile (Display Name)
+      await user.updateProfile({ displayName: name });
 
-    // 3. Initialize Firestore Document for User
-    // We pass the auth user object and the extra data needed for preferences
-    const profile = await initializeUserDocument(
-      { uid: user.uid, email: user.email, displayName: name },
-      { currency, region }
-    );
-    
-    // Update local state immediately
-    setCurrentUser(user);
-    setUserProfile(profile);
+      // 3. Initialize Firestore Document for User
+      // We pass the auth user object and the extra data needed for preferences
+      const profile = await initializeUserDocument(
+        { uid: user.uid, email: user.email, displayName: name },
+        { currency, region }
+      );
+      
+      // Update local state immediately
+      setCurrentUser(user);
+      setUserProfile(profile);
+    }
   }
 
   // Log In
   function login(email: string, password: string) {
-    return signInWithEmailAndPassword(auth, email, password).then(async (cred) => {
-      // Profile fetch is handled by onAuthStateChanged, but we can do a quick optimistic check if needed
-      // For now, rely on the observer for single source of truth
+    return auth.signInWithEmailAndPassword(email, password).then(async (cred) => {
+      // Profile fetch is handled by onAuthStateChanged
     });
   }
 
   // Log Out
   function logout() {
-    return signOut(auth).then(() => {
+    return auth.signOut().then(() => {
       setUserProfile(null);
       setCurrentUser(null);
     });
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
       
       if (user) {
@@ -85,6 +78,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       
       setLoading(false);
+    }, (error) => {
+      console.error("Auth state observer error:", error);
+      setLoading(false); // Ensure app loads even if auth fails
     });
     return unsubscribe;
   }, []);
