@@ -17,10 +17,10 @@ import BrandIcon from './BrandIcon';
 import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, DollarSign } from 'lucide-react';
+import CurrencySelector from './CurrencySelector';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
-import CurrencySelector from './CurrencySelector';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -110,8 +110,12 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
     activeSubs.forEach(sub => {
+      // Ensure strict numeric type before conversion
+      const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
+      const validPrice = isNaN(rawPrice) ? 0 : rawPrice;
+
       // Normalize to Base Currency
-      const priceInBase = convert(sub.price, sub.currency);
+      const priceInBase = convert(validPrice, sub.currency || 'USD');
 
       if (sub.cycle === 'Monthly') {
         monthlyTotal += priceInBase;
@@ -123,7 +127,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
       if (sub.history && sub.history.length > 0) {
           const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-          lifetimeSpend += convert(historyTotal, sub.currency);
+          lifetimeSpend += convert(historyTotal, sub.currency || 'USD');
       } else {
           lifetimeSpend += priceInBase; 
       }
@@ -166,6 +170,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   const handleSubDelete = (id: number) => {
+    // Optimistic UI update and logic for savings
     const subToDelete = subscriptions.find(s => s.id === id);
     if (subToDelete) {
         const monthlyValueBase = subToDelete.cycle === 'Yearly' 
@@ -175,7 +180,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         setTotalSaved(prev => prev + monthlyValueBase);
         showToast(`Subscription deleted. Savings updated!`);
     }
-    setSubscriptions(prev => prev.filter(s => s.id !== id));
+    
+    // Strict State Update
+    const newSubscriptions = subscriptions.filter(s => s.id !== id);
+    setSubscriptions(newSubscriptions);
+    
+    // Explicit Persistence (redundant with useEffect but ensures sync)
+    localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(newSubscriptions));
   };
 
   const handleAddSubscription = (newSub: Subscription) => {

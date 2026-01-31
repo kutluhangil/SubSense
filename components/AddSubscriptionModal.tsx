@@ -110,24 +110,24 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
         onClick={onClose}
       ></div>
 
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 max-h-[90vh]">
+      <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 dark:border-gray-800 max-h-[90vh]">
         
         {/* Header */}
         <div 
             className="h-24 relative flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${brandColor}20 0%, white 100%)` }}
+            style={{ background: `linear-gradient(135deg, ${brandColor}20 0%, var(--bg-card) 100%)` }}
         >
             <button 
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 rounded-full hover:bg-white/50 transition-colors z-10"
+                className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full hover:bg-white/50 dark:hover:bg-black/30 transition-colors z-10"
             >
                 <X size={20} />
             </button>
-            <div className="w-20 h-20 bg-white rounded-2xl shadow-lg border-4 border-white flex items-center justify-center absolute -bottom-10 transform">
+            <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-4 border-white dark:border-gray-800 flex items-center justify-center absolute -bottom-10 transform">
                 {service ? (
                     <BrandIcon type={service.type} className="w-12 h-12" noBackground />
                 ) : (
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 font-bold text-xl">?</div>
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 dark:text-gray-500 font-bold text-xl">?</div>
                 )}
             </div>
         </div>
@@ -135,44 +135,44 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
         <div className="flex-1 overflow-y-auto pt-14 pb-8 px-8">
             <div className="text-center mb-6">
                 {service ? (
-                    <h2 className="text-xl font-bold text-gray-900">{service.name}</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{service.name}</h2>
                 ) : (
                     <input 
                         type="text" 
                         value={name}
                         onChange={(e) => { setName(e.target.value); setError(null); }}
                         placeholder="Service Name"
-                        className="text-xl font-bold text-gray-900 text-center border-b border-gray-300 focus:border-gray-900 outline-none w-full pb-1"
+                        className="text-xl font-bold text-gray-900 dark:text-white text-center border-b border-gray-300 dark:border-gray-700 focus:border-gray-900 dark:focus:border-white bg-transparent outline-none w-full pb-1"
                         autoFocus
                     />
                 )}
-                <p className="text-xs text-gray-500 mt-1">Configure your subscription details</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Configure your subscription details</p>
             </div>
 
             <div className="space-y-5">
                 {/* Price & Currency */}
                 <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-1">
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">Currency</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-1.5">Currency</label>
                         <select 
                             value={currency}
                             onChange={(e) => handleCurrencyChange(e.target.value)}
-                            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900 cursor-pointer"
+                            className="w-full p-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:border-gray-900 dark:focus:border-white cursor-pointer"
                         >
                             {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
                         </select>
                     </div>
                     <div className="col-span-2">
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">Price</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-1.5">Price</label>
                         <div className="relative">
-                            <span className="absolute left-3 top-2.5 text-gray-400 font-bold text-sm">
+                            <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 font-bold text-sm">
                                 {CURRENCIES.find(c => c.code === currency)?.symbol}
                             </span>
                             <input 
                                 type="number" 
                                 value={price}
                                 onChange={(e) => { setPrice(e.target.value); setError(null); }}
-                                className="w-full pl-8 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-gray-900 placeholder-gray-400"
+                                className="w-full pl-8 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl text-sm font-semibold focus:outline-none focus:border-gray-900 dark:focus:border-white placeholder-gray-400"
                                 placeholder="0.00"
                                 step="0.01"
                                 min="0"
@@ -184,31 +184,31 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                 {/* Cycle & Date */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">Billing Cycle</label>
-                        <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200">
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-1.5">Billing Cycle</label>
+                        <div className="flex bg-gray-50 dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
                             <button 
                                 onClick={() => setCycle('Monthly')}
-                                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${cycle === 'Monthly' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+                                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${cycle === 'Monthly' ? 'bg-white dark:bg-gray-600 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 Monthly
                             </button>
                             <button 
                                 onClick={() => setCycle('Yearly')}
-                                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${cycle === 'Yearly' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}
+                                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${cycle === 'Yearly' ? 'bg-white dark:bg-gray-600 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 Yearly
                             </button>
                         </div>
                     </div>
                     <div>
-                        <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1.5">First Payment</label>
+                        <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 mb-1.5">First Payment</label>
                         <div className="relative">
-                            <Calendar size={16} className="absolute left-3 top-3 text-gray-400 pointer-events-none" />
+                            <Calendar size={16} className="absolute left-3 top-3 text-gray-400 dark:text-gray-500 pointer-events-none" />
                             <input 
                                 type="date" 
                                 value={startDate}
                                 onChange={(e) => { setStartDate(e.target.value); setError(null); }}
-                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900 cursor-pointer"
+                                className="w-full pl-9 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:border-gray-900 dark:focus:border-white cursor-pointer"
                             />
                         </div>
                     </div>
@@ -216,7 +216,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
             </div>
 
             {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 animate-in slide-in-from-top-1">
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 dark:text-red-400 animate-in slide-in-from-top-1">
                     <AlertCircle size={14} />
                     {error}
                 </div>
