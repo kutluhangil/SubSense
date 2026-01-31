@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown, AlertTriangle, Database, Info } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown, AlertTriangle, Database, Info, ServerOff, WifiOff } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
@@ -28,6 +28,14 @@ const CATEGORIES = [
     color: 'text-violet-600 dark:text-violet-400', 
     bg: 'bg-violet-50 dark:bg-violet-900/20',
     description: 'Trends & generated history'
+  },
+  { 
+    id: 'limitations', 
+    label: 'Known Limitations', 
+    icon: AlertTriangle, 
+    color: 'text-amber-600 dark:text-amber-400', 
+    bg: 'bg-amber-50 dark:bg-amber-900/20',
+    description: 'MVP boundaries & transparency'
   },
   { 
     id: 'compare', 
@@ -116,7 +124,39 @@ const FAQS = [
     answer: "The Savings Goal widget compares your 'Total Saved' value (accumulated from deleted subscriptions) against a manual target you set. It is a motivational tool, not a financial ledger."
   },
 
-  // D. Compare Page
+  // D. Limitations (New Section)
+  {
+    id: 'limit-storage',
+    category: 'limitations',
+    question: 'Data & Persistence',
+    answer: "SubscriptionHub operates entirely in your browser. There is no cloud sync. If you use the app in Incognito mode or clear your browser data, your subscriptions will be lost. There is no 'password recovery' because we do not store your password."
+  },
+  {
+    id: 'limit-currency',
+    category: 'limitations',
+    question: 'Currency & Pricing',
+    answer: "Exchange rates are based on periodic snapshots and are not live market rates. Comparisons are for informational purposes only and may vary from actual bank charges."
+  },
+  {
+    id: 'limit-analytics',
+    category: 'limitations',
+    question: 'Analytics Accuracy',
+    answer: "Historical charts are simulated projections based on your current active subscriptions. The app does not know about payments you made before you added a subscription."
+  },
+  {
+    id: 'limit-friends',
+    category: 'limitations',
+    question: 'Friends & Social Features',
+    answer: "The 'Friends' section is currently a conceptual demo. The profiles shown are simulated. You cannot currently send messages, add real users, or sync data with others."
+  },
+  {
+    id: 'limit-support',
+    category: 'limitations',
+    question: 'Support Availability',
+    answer: "The 'Contact Support' form is currently simulated. While we value feedback, there is no guaranteed response time for this MVP release."
+  },
+
+  // E. Compare Page
   {
     id: 'compare-data',
     category: 'compare',
@@ -130,7 +170,7 @@ const FAQS = [
     answer: "The 'Potential Annual Savings' calculator is currently disabled while we improve our multi-currency normalization logic to ensure accuracy. It will be re-enabled in a future update."
   },
 
-  // E. Friends & Social
+  // F. Friends & Social
   {
     id: 'demo-status',
     category: 'social',
@@ -144,7 +184,7 @@ const FAQS = [
     answer: "Since the social feature is a demo, no actual data is shared over the internet. Your subscription details remain private on your device."
   },
 
-  // F. Settings
+  // G. Settings
   {
     id: 'csv-export',
     category: 'settings',
@@ -162,6 +202,13 @@ const FAQS = [
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
   switch(categoryId) {
+    case 'limitations':
+      return (
+        <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+           <path d="M200 50 L350 350 L50 350 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="10 5" />
+           <circle cx="200" cy="200" r="50" fill="currentColor" opacity="0.5" />
+        </svg>
+      );
     case 'start':
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -205,7 +252,9 @@ export default function HelpCenter() {
     <div className="relative min-h-screen bg-gray-50/50 dark:bg-gray-900 pb-12 animate-in fade-in duration-500">
       
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-         <BackgroundVisual categoryId={activeCategory} />
+         <div className={activeCategory === 'limitations' ? 'text-amber-500' : 'text-gray-900 dark:text-white'}>
+            <BackgroundVisual categoryId={activeCategory} />
+         </div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -281,6 +330,22 @@ export default function HelpCenter() {
                  </div>
               )}
 
+              {/* Special Warning Banner for Limitations */}
+              {activeCategory === 'limitations' && !searchQuery && (
+                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl p-6 flex items-start gap-4 animate-in slide-in-from-top-2">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-lg shrink-0">
+                       <ServerOff size={20} />
+                    </div>
+                    <div>
+                       <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-1">MVP Notice</h3>
+                       <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                          SubscriptionHub is currently in MVP (Minimum Viable Product) stage. 
+                          Features listed below have intentional boundaries to ensure a stable, reliable local experience without backend complexity.
+                       </p>
+                    </div>
+                 </div>
+              )}
+
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                  {filteredFaqs.length > 0 ? (
                     <div className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -291,7 +356,11 @@ export default function HelpCenter() {
                                 className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50/80 dark:hover:bg-gray-700/50 transition-colors focus:outline-none"
                              >
                                 <div className="flex items-center gap-3">
-                                   <HelpCircle size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
+                                   {faq.category === 'limitations' ? (
+                                      <AlertTriangle size={18} className="text-amber-500 dark:text-amber-400" />
+                                   ) : (
+                                      <HelpCircle size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
+                                   )}
                                    <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">{faq.question}</span>
                                 </div>
                                 {openItems.includes(faq.id) ? (
@@ -302,7 +371,11 @@ export default function HelpCenter() {
                              </button>
                              {openItems.includes(faq.id) && (
                                 <div className="px-6 pb-6 pt-0 ml-7">
-                                   <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-1 duration-200">
+                                   <div className={`text-sm leading-relaxed p-4 rounded-xl border animate-in fade-in slide-in-from-top-1 duration-200 ${
+                                      faq.category === 'limitations' 
+                                      ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30 text-amber-900 dark:text-amber-100'
+                                      : 'bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                                   }`}>
                                       {faq.answer}
                                    </div>
                                 </div>

@@ -37,6 +37,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         {navItems.map((item) => (
           <button
             key={item.id}
+            data-tour={`nav-${item.id}`}
             onClick={() => onNavigate && onNavigate(item.id)}
             className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
               currentView === item.id
@@ -68,6 +69,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         
         <p className="px-4 text-xs font-semibold text-muted uppercase tracking-wider mb-4">{t('sidebar.account')}</p>
         <button 
+          data-tour="nav-settings"
           onClick={() => onNavigate && onNavigate('settings')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
             currentView === 'settings' 
