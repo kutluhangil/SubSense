@@ -5,6 +5,7 @@ import BrandIcon from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
 import { EXCHANGE_RATES, CURRENCY_DATA, convertAmount } from '../utils/currency';
+import { debugLog } from '../utils/debug';
 
 // --- Types & Constants ---
 
@@ -318,50 +319,10 @@ const AIInsightsPanel = ({ data, serviceName, baseCurrencySymbol }: { data: Pric
 };
 
 const SavingsComparisonBox = ({ data, baseCountry = 'United States', baseCurrencySymbol }: { data: PricingData[], baseCountry?: string, baseCurrencySymbol: string }) => {
-   const basePrice = data.find(d => d.country === baseCountry)?.displayPrice || 0;
-   const cheapest = data.reduce((prev, curr) => prev.displayPrice < curr.displayPrice ? prev : curr);
-   const savings = basePrice - cheapest.displayPrice;
-   const savingsPercent = basePrice > 0 ? ((savings / basePrice) * 100).toFixed(0) : '0';
-   const { t } = useLanguage();
-
-   if (savings <= 0) return null;
-
-   const formatMessage = (template: string, ...args: string[]) => {
-     return template.replace(/{(\d+)}/g, (match, number) => {
-       return typeof args[number] !== 'undefined' ? args[number] : match;
-     });
-   };
-
-   return (
-      <div className="bg-gray-900 dark:bg-black rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-gray-800">
-         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <DollarSign size={80} />
-         </div>
-         
-         <div className="relative z-10">
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('compare.potential_savings')}</p>
-            <div className="flex items-baseline gap-1 mb-1">
-               <span className="text-4xl font-bold">{baseCurrencySymbol}{(savings * 12).toFixed(2)}</span>
-               <span className="text-sm text-gray-400">/ year</span>
-            </div>
-            <div className="flex items-center gap-2 mb-4">
-               <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">
-                  {t('compare.save')} {savingsPercent}%
-               </span>
-               <span className="text-xs text-gray-400">{t('compare.vs')} {baseCountry}</span>
-            </div>
-
-            <p className="text-xs text-gray-300 leading-relaxed border-t border-gray-800 pt-3 mt-3">
-               {formatMessage(
-                 t('compare.switching_msg'), 
-                 `${baseCountry}`, 
-                 `${cheapest.country}`, 
-                 `${baseCurrencySymbol}${savings.toFixed(2)}`
-               )}
-            </p>
-         </div>
-      </div>
-   );
+   // TEMP: Disabled until robust currency logic is verified.
+   // Returning null hides this misleading section.
+   debugLog('COMPARE_CALC', 'Potential Annual Savings Calculation Disabled', { reason: 'Pending currency logic validation' });
+   return null; 
 };
 
 const RegionalPriceTable = ({ data, baseCurrencySymbol }: { data: PricingData[], baseCurrencySymbol: string }) => {
@@ -438,6 +399,7 @@ export default function Comparison() {
 
   // Real-time calculation based on exchange rates and selected base currency
   const currentData = useMemo(() => {
+      debugLog('COMPARE_CALC', `Recalculating comparison for ${selectedService}`, { baseCurrency });
       return generateLivePricing(selectedService, baseCurrency);
   }, [selectedService, baseCurrency]);
 

@@ -6,6 +6,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { SubscriptionDetail, BRAND_COLORS, CURRENCIES } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
 import { EXCHANGE_RATES } from '../utils/currency';
+import { debugLog } from '../utils/debug';
 
 interface AddSubscriptionModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
         setCycle('Monthly');
         setStartDate(new Date().toISOString().split('T')[0]);
         setError(null);
+        debugLog('SUBSCRIPTION_CREATE', 'Modal Opened', { serviceName: service?.name });
     }
   }, [service, isOpen]);
 
@@ -100,6 +102,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
         history: [priceVal]
     };
 
+    debugLog('SUBSCRIPTION_CREATE', 'User committed new subscription', newSub);
     onAdd(newSub);
   };
 

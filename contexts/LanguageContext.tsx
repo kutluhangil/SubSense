@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, LanguageCode } from '../utils/translations';
 import { EXCHANGE_RATES, CURRENCY_LOCALES, convertAmount } from '../utils/currency';
+import { debugLog } from '../utils/debug';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -69,6 +70,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Persist Currency
   useEffect(() => {
     localStorage.setItem('userCurrencyPreference', currentCurrency);
+    debugLog('CURRENCY_CONVERSION', `Base currency set to ${currentCurrency}`);
   }, [currentCurrency]);
 
   // Persist & Apply Theme
@@ -82,6 +84,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
       const root = document.documentElement;
       
+      debugLog('THEME_SYNC', `Applying Theme: ${currentTheme}`, { isDarkResolved: isDark });
+
       if (isDark) {
         root.classList.add('dark');
         root.setAttribute('data-theme', 'dark');
@@ -132,7 +136,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   // Convert amount from ANY currency to User Base Currency
   const convert = (amount: number, fromCurrency: string): number => {
-    return convertAmount(amount, fromCurrency, currentCurrency);
+    const result = convertAmount(amount, fromCurrency, currentCurrency);
+    // Optional: Verbose logging for specific debugging
+    // debugLog('CURRENCY_CONVERSION', `Converting ${amount} ${fromCurrency} -> ${currentCurrency}`, { result });
+    return result;
   };
 
   // Format price. If currencyCode provided, use it. Otherwise use Base Currency.
