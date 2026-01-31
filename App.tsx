@@ -10,6 +10,7 @@ import DemoModal from './components/DemoModal';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { FeedbackProvider } from './contexts/FeedbackContext'; // Import
 import { migrateLocalData } from './utils/firestore';
 import { WifiOff } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
@@ -201,7 +202,9 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <AppContent />
+        <FeedbackProvider>
+          <AppContent />
+        </FeedbackProvider>
       </LanguageProvider>
     </AuthProvider>
   );

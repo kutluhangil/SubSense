@@ -8,3 +8,17 @@ export const FEATURES = {
   COMPARE_SAVINGS: true,
   REALTIME_FX: false, // Uses static rates for now
 };
+
+export const FEATURE_FLAGS = {
+  enableNewAnalyticsUI: false,
+  enableExperimentalAI: true,
+  enableNewCompareLogic: false,
+};
+
+export const FEEDBACK_CATEGORIES = [
+  { id: 'bug', label: 'Report a Bug', icon: '🐛' },
+  { id: 'idea', label: 'Feature Idea', icon: '💡' },
+  { id: 'confusing', label: 'Confusing UI', icon: '🤔' },
+  { id: 'praise', label: 'Praise', icon: '❤️' },
+  { id: 'other', label: 'Other', icon: '📝' },
+];
