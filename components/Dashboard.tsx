@@ -23,6 +23,13 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
 import { debugLog } from '../utils/debug';
 import { convertAmount, CURRENCY_DATA } from '../utils/currency';
+import { useAuth } from '../contexts/AuthContext';
+import { 
+  subscribeToSubscriptions, 
+  addSubscription, 
+  updateSubscription, 
+  deleteSubscription 
+} from '../utils/firestore';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -37,21 +44,29 @@ const DEFAULT_BUDGET_LIMITS = {
 };
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
+  const { currentUser } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
-  const userKey = user?.email || 'guest';
   
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
-    try {
-      const saved = localStorage.getItem(`subscriptionhub.${userKey}.subscriptions`);
-      const parsed = saved ? JSON.parse(saved) : [];
-      debugLog('PERSISTENCE_LOAD', `Loaded ${parsed.length} subscriptions`, parsed);
-      return parsed;
-    } catch (e) {
-      console.error("Failed to load subscriptions", e);
-      return [];
-    }
-  });
+  // Real-time Subscriptions State
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loadingSubs, setLoadingSubs] = useState(true);
 
+  // Firestore Sync
+  useEffect(() => {
+    if (currentUser) {
+      const unsubscribe = subscribeToSubscriptions(currentUser.uid, (data) => {
+        setSubscriptions(data);
+        setLoadingSubs(false);
+      });
+      return () => unsubscribe();
+    } else {
+      setSubscriptions([]);
+      setLoadingSubs(false);
+    }
+  }, [currentUser]);
+
+  // Local state only for simpler preferences not critically synced yet (can be moved to Firestore later)
+  const userKey = user?.email || 'guest';
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.budgetLimits`);
@@ -95,11 +110,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   useEffect(() => {
-    debugLog('PERSISTENCE_SAVE', `Saving ${subscriptions.length} subscriptions to storage`, subscriptions);
-    localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(subscriptions));
-  }, [subscriptions, userKey]);
-
-  useEffect(() => {
     localStorage.setItem(`subscriptionhub.${userKey}.budgetLimits`, JSON.stringify(budgetLimits));
   }, [budgetLimits, userKey]);
 
@@ -119,7 +129,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
-    // Determine which currency to calculate totals in (Preview vs Base)
     const targetCurrency = previewCurrency || currentCurrency;
 
     debugLog('CURRENCY_AGGREGATION', 'Starting metrics calculation', { 
@@ -129,11 +138,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     });
 
     activeSubs.forEach(sub => {
-      // Ensure strict numeric type before conversion
       const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
       const validPrice = isNaN(rawPrice) ? 0 : rawPrice;
 
-      // Normalize to Target Currency
       const priceInTarget = convertAmount(validPrice, sub.currency || 'USD', targetCurrency);
 
       if (sub.cycle === 'Monthly') {
@@ -150,12 +157,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       } else {
           lifetimeSpend += priceInTarget; 
       }
-    });
-
-    debugLog('CURRENCY_AGGREGATION', 'Calculation Complete', {
-      monthlySpend: monthlyTotal,
-      yearlyForecast: yearlyTotalForecast,
-      lifetimeSpend: lifetimeSpend
     });
 
     return {
@@ -191,83 +192,57 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const handleSubUpdate = (updatedSub: Subscription) => {
-    debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription', updatedSub);
-    setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
-  };
+  // --- CRUD Handlers utilizing Firestore ---
 
-  const handleSubDelete = useCallback((id: number) => {
-    console.log('[REMOVE_HANDLER_START] Triggered for ID:', id);
-    debugLog('REMOVE_ACTION', `Attempting to remove subscription ID: ${id}`);
-
-    // 1. Optimistic calculation update (safe to use current state for calc only)
-    const subToDelete = subscriptions.find(s => s.id === id);
-    if (subToDelete) {
-        debugLog('REMOVE_ACTION', 'Found subscription to delete', subToDelete);
-        const monthlyValueBase = subToDelete.cycle === 'Yearly' 
-            ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency) 
-            : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
-        
-        setTotalSaved(prev => prev + monthlyValueBase);
-    } else {
-        debugLog('REMOVE_ACTION', 'WARNING: ID not found in current closure state (might be expected during race conditions)', { id });
+  const handleSubUpdate = async (updatedSub: Subscription) => {
+    if (currentUser) {
+      debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription in Firestore', updatedSub);
+      await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
+      // Local state is updated via listener
     }
-    
-    // 2. Strict State Update using Functional Update (Prevents Stale Closure Bugs)
-    setSubscriptions(prevSubscriptions => {
-        console.log('[REMOVE_STATE_BEFORE] Count:', prevSubscriptions.length);
-        const newSubscriptions = prevSubscriptions.filter(s => s.id !== id);
-        console.log('[REMOVE_STATE_AFTER] Count:', newSubscriptions.length);
-        
-        debugLog('REMOVE_ACTION', 'State updated', { 
-            prevCount: prevSubscriptions.length, 
-            newCount: newSubscriptions.length 
-        });
-
-        // 3. Immediate Persistence (Redundant safety net)
-        try {
-            localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(newSubscriptions));
-            debugLog('REMOVE_ACTION', 'Immediate persistence successful');
-        } catch (e) {
-            console.error("Failed to persist deletion", e);
-        }
-        
-        return newSubscriptions;
-    });
-
-    showToast(`Subscription removed.`);
-    // Close modal if open
-    setSelectedSub(null);
-  }, [subscriptions, userKey, currentCurrency]);
-
-  const handleAddSubscription = (newSub: Subscription) => {
-    const finalSub = { ...newSub, id: Date.now() };
-    debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription', finalSub);
-    setSubscriptions(prev => [finalSub, ...prev]);
-    setIsAddModalOpen(false);
-    setCurrentView('dashboard');
   };
 
-  const handleMarkAsPaid = (id: number) => {
-      setSubscriptions(prev => prev.map(sub => {
-          if (sub.id === id) {
-              const current = new Date(sub.nextDate);
-              if (sub.cycle === 'Monthly') {
-                  current.setMonth(current.getMonth() + 1);
-              } else {
-                  current.setFullYear(current.getFullYear() + 1);
-              }
-              const newHistory = [...(sub.history || []), sub.price];
-              
-              showToast(`${sub.name} marked as paid. Next date updated.`);
-              return { 
-                  ...sub, 
-                  nextDate: current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                  history: newHistory
-              };
+  const handleSubDelete = async (id: number) => {
+    if (currentUser) {
+        debugLog('REMOVE_ACTION', `Attempting to delete subscription ID: ${id}`);
+        // Optimistic Calc
+        const subToDelete = subscriptions.find(s => s.id === id);
+        if (subToDelete) {
+            const monthlyValueBase = subToDelete.cycle === 'Yearly' 
+                ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency) 
+                : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
+            setTotalSaved(prev => prev + monthlyValueBase);
+        }
+        await deleteSubscription(currentUser.uid, id);
+        showToast(`Subscription removed.`);
+        setSelectedSub(null);
+    }
+  };
+
+  const handleAddSubscription = async (newSub: Subscription) => {
+    if (currentUser) {
+        debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription to Firestore', newSub);
+        await addSubscription(currentUser.uid, newSub);
+        setIsAddModalOpen(false);
+        setCurrentView('dashboard');
+    }
+  };
+
+  const handleMarkAsPaid = async (id: number) => {
+      const sub = subscriptions.find(s => s.id === id);
+      if (sub && currentUser) {
+          const current = new Date(sub.nextDate);
+          if (sub.cycle === 'Monthly') {
+              current.setMonth(current.getMonth() + 1);
+          } else {
+              current.setFullYear(current.getFullYear() + 1);
           }
-          return sub;
-      }));
+          const newHistory = [...(sub.history || []), sub.price];
+          const nextDate = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          
+          await updateSubscription(currentUser.uid, id, { nextDate, history: newHistory });
+          showToast(`${sub.name} marked as paid.`);
+      }
   };
 
   const handleMarkAllRead = () => {
@@ -276,6 +251,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  // Components Render... (Unchanged visual logic)
   const NotificationDropdown = () => (
     <div className="absolute right-0 top-12 w-80 bg-card rounded-2xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
        <div className="p-4 border-b border-subtle flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
@@ -524,7 +500,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                     monthly={metrics.monthlySpend} 
                     active={metrics.activeCount} 
                     forecast={metrics.yearlyForecast}
-                    currencyCode={previewCurrency || currentCurrency} // Override display currency if preview active
+                    currencyCode={previewCurrency || currentCurrency} 
                 />
              </div>
 
@@ -631,7 +607,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       case 'settings': return (
         <SettingsPage 
           subscriptions={subscriptions} 
-          onUpdateSubscriptions={setSubscriptions}
+          onUpdateSubscriptions={undefined /* Settings no longer directly updates subs state via prop in this arch, listeners do it */}
           user={user}
         />
       );

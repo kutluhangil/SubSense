@@ -9,40 +9,57 @@ import Dashboard from './components/Dashboard';
 import DemoModal from './components/DemoModal';
 import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { migrateLocalData } from './utils/firestore';
 
-// Types for our local auth system
+// Types for user interface consistency
 export interface User {
   email: string;
   name: string;
-  // In a real app, never store passwords plain text. 
-  // For this local MVP, we store a simple hash or the string itself if strictly local.
-  passwordHash: string; 
+  passwordHash: string; // Kept for interface compat, unused in Firebase
   currency?: string;
+  uid?: string;
 }
 
 function AppContent() {
+  const { currentUser, login, signup, logout } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
-  const { setCurrency, setLanguage } = useLanguage();
+  const { setCurrency } = useLanguage();
 
-  // Load session on mount
+  // --- Migration Logic ---
   useEffect(() => {
-    const sessionEmail = localStorage.getItem('subscriptionhub.session');
-    if (sessionEmail) {
-      const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
-      const user = users.find((u: User) => u.email === sessionEmail);
-      if (user) {
-        setCurrentUser(user);
-        setCurrentPage('home');
-        if (user.currency) {
-            setCurrency(user.currency);
+    if (currentUser) {
+      const hasMigrated = localStorage.getItem(`subscriptionhub.${currentUser.email}.migrated`);
+      
+      if (!hasMigrated) {
+        // Attempt to find legacy data for this email
+        const legacyKey = `subscriptionhub.${currentUser.email}.subscriptions`;
+        const localData = localStorage.getItem(legacyKey);
+        
+        if (localData) {
+          try {
+            const parsedSubs = JSON.parse(localData);
+            if (Array.isArray(parsedSubs) && parsedSubs.length > 0) {
+              console.log("Migrating local data to Firestore...");
+              migrateLocalData(currentUser.uid, parsedSubs).then(() => {
+                localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
+                // Optional: Clear legacy data
+                localStorage.removeItem(legacyKey);
+              });
+            }
+          } catch (e) {
+            console.error("Migration failed", e);
+          }
+        } else {
+           // Mark as migrated to skip check next time even if empty
+           localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
         }
       }
     }
-  }, []);
+  }, [currentUser]);
 
   const openAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -58,89 +75,23 @@ function AppContent() {
     setIsDemoOpen(false);
   };
 
-  const handleLogin = (email: string, passwordHash: string) => {
-    // DEV ONLY -- REMOVE BEFORE PRODUCTION
-    // Hardcoded Admin Bypass for Testing
-    if (email === 'admin@admin.com' && passwordHash === 'Admin23.') {
-        const adminUser: User = { 
-            name: 'Dev Admin', 
-            email: 'admin@admin.com', 
-            passwordHash: 'Admin23.',
-            currency: 'USD'
-        };
-        
-        // Ensure admin is in the users list so session persistence works on refresh
-        const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
-        if (!users.find((u: User) => u.email === email)) {
-            users.push(adminUser);
-            localStorage.setItem('subscriptionhub.users', JSON.stringify(users));
-            
-            // Initialize default admin data if not present (prevents crashes on fresh storage)
-            if (!localStorage.getItem(`subscriptionhub.${email}.subscriptions`)) {
-                 localStorage.setItem(`subscriptionhub.${email}.subscriptions`, JSON.stringify([]));
-                 localStorage.setItem(`subscriptionhub.${email}.budgetLimits`, JSON.stringify({
-                    'Entertainment': 50, 'Productivity': 100, 'Shopping': 200, 'Tools': 50
-                 }));
-            }
-        }
-
-        localStorage.setItem('subscriptionhub.session', email);
-        setCurrentUser(adminUser);
-        setCurrency('USD');
-        setIsAuthOpen(false);
-        setCurrentPage('home');
-        return true;
-    }
-    // END DEV ONLY
-
-    const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
-    const user = users.find((u: User) => u.email === email && u.passwordHash === passwordHash);
-    
-    if (user) {
-      localStorage.setItem('subscriptionhub.session', email);
-      setCurrentUser(user);
-      if (user.currency) {
-          setCurrency(user.currency);
-      }
-      setIsAuthOpen(false);
-      setCurrentPage('home');
-      return true;
-    }
-    return false;
-  };
-
-  const handleSignup = (name: string, email: string, passwordHash: string, currency: string) => {
-    const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
-    
-    if (users.find((u: User) => u.email === email)) {
-      return false; // User exists
-    }
-
-    const newUser = { name, email, passwordHash, currency };
-    users.push(newUser);
-    localStorage.setItem('subscriptionhub.users', JSON.stringify(users));
-    
-    // Initialize empty data for new user
-    localStorage.setItem(`subscriptionhub.${email}.subscriptions`, JSON.stringify([]));
-    localStorage.setItem(`subscriptionhub.${email}.budgetLimits`, JSON.stringify({
-      'Entertainment': 50, 'Productivity': 100, 'Shopping': 200, 'Tools': 50
-    }));
-    
-    // Auto login
-    localStorage.setItem('subscriptionhub.session', email);
-    setCurrentUser(newUser);
-    
-    // Immediately set the global currency context
-    setCurrency(currency);
-    
+  // Wrapper for AuthContext login
+  const handleLogin = async (email: string, password: string) => {
+    await login(email, password);
     setIsAuthOpen(false);
     setCurrentPage('home');
-    return true;
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('subscriptionhub.session');
-    setCurrentUser(null);
+  // Wrapper for AuthContext signup
+  const handleSignup = async (name: string, email: string, password: string, currency: string) => {
+    await signup(email, password, name);
+    setCurrency(currency);
+    setIsAuthOpen(false);
+    setCurrentPage('home');
+  };
+
+  const handleLogout = async () => {
+    await logout();
     setCurrentPage('home');
   };
 
@@ -150,8 +101,16 @@ function AppContent() {
     window.scrollTo(0,0);
   };
 
-  if (currentUser) {
-    return <Dashboard user={currentUser} onLogout={handleLogout} />;
+  // Map Firebase user to App User interface
+  const appUser: User | null = currentUser ? {
+    email: currentUser.email || '',
+    name: currentUser.displayName || 'User',
+    passwordHash: '',
+    uid: currentUser.uid
+  } : null;
+
+  if (appUser) {
+    return <Dashboard user={appUser} onLogout={handleLogout} />;
   }
 
   if (currentPage === 'reset-password') {
@@ -199,6 +158,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <LanguageProvider children={<AppContent />} />
+    <AuthProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
