@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
+import { IS_BETA } from '../utils/constants';
 
 interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
@@ -28,10 +29,15 @@ export default function Navbar({ onOpenAuth, onNavigate, currentPage = 'home' }:
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div 
-            className="flex-shrink-0 flex items-center cursor-pointer" 
+            className="flex-shrink-0 flex items-center cursor-pointer gap-3" 
             onClick={() => handleNav('home')}
           >
             <Logo className="h-9" />
+            {IS_BETA && (
+                <span className="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wide border border-blue-100 dark:border-blue-800">
+                    Beta
+                </span>
+            )}
           </div>
 
           {/* Desktop Menu */}
