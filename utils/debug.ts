@@ -14,7 +14,8 @@ type LogCategory =
   | 'THEME_SYNC'
   | 'ANALYTICS_RANGE'
   | 'ANALYTICS_DATA'
-  | 'ANALYTICS_EMPTY';
+  | 'ANALYTICS_EMPTY'
+  | 'AI_LANG';
 
 export const debugLog = (category: LogCategory, message: string, data?: any) => {
   if (!DEBUG_MODE) return;

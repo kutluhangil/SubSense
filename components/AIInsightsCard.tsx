@@ -12,22 +12,22 @@ interface AIInsightsCardProps {
 export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
   const [insights, setInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { currentCurrency } = useLanguage();
+  const { currentCurrency, currentLanguage, t } = useLanguage();
 
   useEffect(() => {
     let mounted = true;
     const fetchInsights = async () => {
       if (subscriptions.length === 0) {
         if (mounted) {
-            setInsights(["Add subscriptions to unlock AI-powered spending insights."]);
+            setInsights([t('ai.insight.default')]);
             setLoading(false);
         }
         return;
       }
       
       setLoading(true);
-      // Pass current base currency to ensure insights are relevant
-      const results = await generateDashboardInsights(subscriptions, currentCurrency);
+      // Pass current base currency and language to ensure insights are strictly localized
+      const results = await generateDashboardInsights(subscriptions, currentCurrency, currentLanguage);
       if (mounted) {
         setInsights(results);
         setLoading(false);
@@ -36,7 +36,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
 
     fetchInsights();
     return () => { mounted = false; };
-  }, [subscriptions, currentCurrency]);
+  }, [subscriptions, currentCurrency, currentLanguage, t]);
 
   return (
     <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden mb-8 border border-indigo-700/50 group">
@@ -64,7 +64,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
              </span>
              <span className="text-[10px] font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-white">
-                POWERED BY GEMINI
+                {t('ai.powered_by')}
              </span>
           </div>
         </div>

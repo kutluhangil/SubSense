@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { X, Shield, FileText, Lock, ServerOff, Database, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LegalModalProps {
   isOpen: boolean;
@@ -9,62 +10,56 @@ interface LegalModalProps {
 }
 
 export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
+  const { t } = useLanguage();
+
   if (!isOpen) return null;
 
   const content = {
     terms: {
-      title: "Terms of Service",
+      title: t('legal.terms.title'),
       icon: FileText,
       updated: "MVP Release v1.0",
-      intro: "SubscriptionHub is a personal, local-first subscription tracking tool. By using this application, you acknowledge that it is a Minimum Viable Product (MVP) operating entirely on your device.",
+      intro: t('legal.intro'),
       sections: [
         {
-          heading: "1. Local-First Usage",
-          text: "This application operates locally in your browser. All data you enter (subscriptions, costs, preferences) is stored in your device's Local Storage. We do not have a backend database, and we do not sync your data to the cloud. If you clear your browser cache, your data will be lost."
+          heading: t('legal.section.local'),
+          text: t('legal.section.local_text')
         },
         {
-          heading: "2. User Responsibility",
-          text: "You are solely responsible for the accuracy of the data you enter. SubscriptionHub calculates totals based on your inputs. It does not connect to your bank accounts or verify payments with service providers."
+          heading: t('legal.section.resp'),
+          text: t('legal.section.resp_text')
         },
         {
-          heading: "3. No Financial Advice",
-          text: "The insights, savings potentials, and comparisons provided by this app are for informational purposes only. They do not constitute professional financial advice. Do not make financial decisions based solely on this app's data."
+          heading: t('legal.section.financial'),
+          text: t('legal.section.financial_text')
         },
         {
-          heading: "4. Feature Availability",
-          text: "As an MVP, some features (like 'Friends' or 'Global Comparison') may use simulated or static data for demonstration purposes. We make no guarantees regarding the real-time accuracy of currency exchange rates or third-party subscription pricing."
+          heading: t('help.faq.limit_currency.q'), // Reusing known limitations text
+          text: t('help.faq.limit_currency.a')
         },
         {
-          heading: "5. Limitation of Liability",
-          text: "SubscriptionHub is provided 'as is' without warranty of any kind. We are not liable for any data loss, financial discrepancies, or missed payments resulting from the use of this tool."
+          heading: "5. Limitation of Liability", // Keeping standard legal header
+          text: "SubscriptionHub is provided 'as is' without warranty of any kind."
         }
       ]
     },
     privacy: {
-      title: "Privacy Policy",
+      title: t('legal.privacy.title'),
       icon: Shield,
       updated: "MVP Release v1.0",
-      intro: "We believe in privacy by design. Because we don't have a server, we can't see your data even if we wanted to.",
+      intro: "We believe in privacy by design.",
       sections: [
         {
-          heading: "1. Data Storage",
-          text: "All user data is stored strictly on your local device (in the browser's Local Storage). We do not transmit your subscription details, financial data, or personal profile to any external server."
+          heading: t('legal.section.privacy_data'),
+          text: t('legal.section.privacy_data_text')
         },
         {
           heading: "2. No Data Collection",
-          text: "We do not collect usage analytics, tracking pixels, or advertising data. We do not sell your data to third parties because we do not possess it."
+          text: "We do not collect usage analytics, tracking pixels, or advertising data."
         },
         {
-          heading: "3. No Account Sync",
-          text: "Since there is no cloud backend, your account exists only on the device where you created it. There is no password recovery via email because we do not store your email or password."
-        },
-        {
-          heading: "4. External Services",
-          text: "The application may request external assets (like logos from Clearbit) directly from your browser. These requests are standard web traffic and are not routed through our servers."
-        },
-        {
-          heading: "5. Data Deletion",
-          text: "You can delete all your data instantly by clearing your browser's 'Local Storage' or using the 'Logout' button, which clears the active session. For complete removal, clear your browser cache."
+          heading: t('help.faq.account.q'),
+          text: t('help.faq.account.a')
         }
       ]
     }
@@ -136,7 +131,7 @@ export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
             onClick={onClose}
             className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm active:scale-95"
           >
-            I Understand
+            {t('legal.close')}
           </button>
         </div>
 
