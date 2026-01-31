@@ -3,6 +3,9 @@ import React from 'react';
 import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
+import { updateFeatureUsage } from '../utils/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import { trackEvent } from '../utils/analytics';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -13,6 +16,17 @@ interface SidebarProps {
 
 export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) {
   const { t } = useLanguage();
+  const { currentUser } = useAuth();
+
+  const handleNavigate = (view: string) => {
+      if (onNavigate) {
+          onNavigate(view);
+          trackEvent('feature_viewed', { feature_name: view });
+          if (currentUser) {
+              updateFeatureUsage(currentUser.uid, `view_${view}`);
+          }
+      }
+  };
 
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: t('sidebar.dashboard') },
@@ -27,7 +41,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-subtle h-full transition-colors duration-300">
       {/* Logo Area */}
-      <div className="h-20 flex items-center px-6 border-b border-subtle cursor-pointer" onClick={() => onNavigate && onNavigate('dashboard')}>
+      <div className="h-20 flex items-center px-6 border-b border-subtle cursor-pointer" onClick={() => handleNavigate('dashboard')}>
         <Logo className="h-8" />
       </div>
 
@@ -38,7 +52,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <button
             key={item.id}
             data-tour={`nav-${item.id}`}
-            onClick={() => onNavigate && onNavigate(item.id)}
+            onClick={() => handleNavigate(item.id)}
             className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
               currentView === item.id
                 ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 
@@ -70,7 +84,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         <p className="px-4 text-xs font-semibold text-muted uppercase tracking-wider mb-4">{t('sidebar.account')}</p>
         <button 
           data-tour="nav-settings"
-          onClick={() => onNavigate && onNavigate('settings')}
+          onClick={() => handleNavigate('settings')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
             currentView === 'settings' 
             ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 
@@ -81,7 +95,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <span>{t('sidebar.settings')}</span>
         </button>
         <button 
-          onClick={() => onNavigate && onNavigate('help')}
+          onClick={() => handleNavigate('help')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
             currentView === 'help' 
             ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 

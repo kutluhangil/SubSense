@@ -11,7 +11,8 @@ import {
   onSnapshot, 
   getDoc,
   getDocs,
-  serverTimestamp
+  serverTimestamp,
+  increment
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
@@ -31,11 +32,20 @@ export interface UserProfileData {
     theme: string;
     baseCurrency: string;
     region: string;
+    analyticsOptOut?: boolean;
   };
   stats: {
     totalSubscriptions: number;
     monthlySpend: number;
     annualSpend: number;
+  };
+  // Internal Analytics
+  analytics?: {
+    lastActiveAt: any; // Timestamp
+    sessionCount: number;
+    signupDate: string; // ISO String
+    churnRisk?: boolean;
+    featureUsage?: Record<string, number>;
   };
 }
 
@@ -82,12 +92,19 @@ export const initializeUserDocument = async (
       baseCurrency: additionalData?.currency || 'USD',
       language: 'en',
       theme: 'system',
-      region: additionalData?.region || 'US'
+      region: additionalData?.region || 'US',
+      analyticsOptOut: false
     },
     stats: {
       totalSubscriptions: 0,
       monthlySpend: 0,
       annualSpend: 0
+    },
+    analytics: {
+      lastActiveAt: now,
+      sessionCount: 1,
+      signupDate: now,
+      featureUsage: {}
     }
   };
 
@@ -117,7 +134,8 @@ export const initializeUserDocument = async (
     try {
       await setDoc(userRef, {
         ...newProfile,
-        createdAt: serverTimestamp() // Use server timestamp for DB consistency
+        createdAt: serverTimestamp(),
+        'analytics.lastActiveAt': serverTimestamp()
       });
     } catch (e: any) {
       if (e.code === 'permission-denied') {
@@ -174,6 +192,42 @@ export const updateUserSettings = async (uid: string, settings: any) => {
   }
 };
 
+/**
+ * Updates user activity metrics (Last Active, Session Count)
+ * Used for Retention and Churn analysis.
+ */
+export const updateUserActivity = async (uid: string) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      'analytics.lastActiveAt': serverTimestamp(),
+      'analytics.sessionCount': increment(1)
+    });
+  } catch (error) {
+    // Fail silently for analytics updates
+    // console.warn("Failed to update activity stats", error);
+  }
+};
+
+/**
+ * Updates feature usage counters.
+ * @param uid User ID
+ * @param feature Feature key (e.g., 'dashboard_view', 'add_sub')
+ */
+export const updateFeatureUsage = async (uid: string, feature: string) => {
+  try {
+    // Check opt-out first (quick check against local storage, assuming sync)
+    if (localStorage.getItem('analytics_opt_out') === 'true') return;
+
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      [`analytics.featureUsage.${feature}`]: increment(1)
+    });
+  } catch (error) {
+    // Fail silently
+  }
+};
+
 // --- Subscriptions ---
 
 export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
@@ -215,6 +269,10 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    
+    // Analytics Hook: Update feature usage
+    updateFeatureUsage(uid, 'subscription_added');
+    
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
       console.warn("Firestore write denied. Adding subscription locally.");
