@@ -82,10 +82,12 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
         <div className="flex-1 overflow-y-auto px-8 pb-10 space-y-10 custom-scrollbar">
            
            {/* 1. Overview */}
-           <section>
-              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-                 {service.description}
-              </p>
+           <section className="space-y-4">
+              {service.description.split('\n\n').map((paragraph, index) => (
+                 <p key={index} className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+                    {paragraph}
+                 </p>
+              ))}
            </section>
 
            {/* 2. Company Facts Grid */}
@@ -98,12 +100,14 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
                     label="Founded" 
                     value={service.foundedYear} 
                     icon={Calendar} 
-                    sub={service.founders}
+                    sub={service.founders ? `by ${service.founders}` : undefined}
                  />
                  <InfoCard 
                     label="Headquarters" 
                     value={service.headquarters} 
                     icon={MapPin} 
+                    isLink
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(service.headquarters)}`}
                  />
                  <InfoCard 
                     label="CEO" 
@@ -115,6 +119,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
                     value={service.website || 'N/A'} 
                     icon={Globe} 
                     isLink
+                    href={service.website ? `https://${service.website}` : undefined}
                  />
               </div>
            </section>
@@ -144,12 +149,14 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
                  </h3>
                  <div className="relative pl-4 border-l-2 border-gray-100 dark:border-gray-700 space-y-6">
                     {service.milestones.map((milestone, idx) => (
-                       <div key={idx} className="relative">
+                       <div key={idx} className="relative group">
                           <div 
-                            className="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900"
+                            className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 group-hover:scale-125 transition-transform duration-300"
                             style={{ backgroundColor: brandColor }}
                           ></div>
-                          <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{milestone}</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 font-medium group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                             {milestone}
+                          </p>
                        </div>
                     ))}
                  </div>
@@ -163,21 +170,27 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
 }
 
 // Helper Card Component
-const InfoCard = ({ label, value, sub, icon: Icon, isLink }: { label: string, value: string, sub?: string, icon: any, isLink?: boolean }) => (
-  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-3 hover:shadow-md transition-shadow">
+const InfoCard = ({ label, value, sub, icon: Icon, isLink, href }: { label: string, value: string, sub?: string, icon: any, isLink?: boolean, href?: string }) => (
+  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-start gap-3 hover:shadow-md transition-shadow h-full">
      <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 shrink-0">
         <Icon size={18} />
      </div>
-     <div className="overflow-hidden">
+     <div className="overflow-hidden flex-1">
         <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">{label}</p>
-        {isLink ? (
-           <a href={`https://${value}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline truncate block">
+        {isLink && href ? (
+           <a 
+             href={href} 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline truncate block"
+             title={value}
+           >
               {value}
            </a>
         ) : (
            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate" title={value}>{value}</p>
         )}
-        {sub && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate" title={sub}>{sub}</p>}
+        {sub && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug line-clamp-2" title={sub}>{sub}</p>}
      </div>
   </div>
 );

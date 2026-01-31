@@ -12,9 +12,46 @@ const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", no
   const baseClasses = `flex items-center justify-center relative overflow-hidden flex-shrink-0 ${noBackground ? '' : 'bg-white'} ${className}`;
   const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || 'default';
   const [imageError, setImageError] = useState(false);
+  const [localImageError, setLocalImageError] = useState(false);
 
   // Check if we have a website url for this type to fetch a logo
-  const serviceDetail = SUBSCRIPTION_CATALOG[normalizedType];
+  // Lookup first by key, then scan for matching ID/Name if key fails
+  let serviceDetail = SUBSCRIPTION_CATALOG[normalizedType];
+  
+  if (!serviceDetail) {
+     const foundKey = Object.keys(SUBSCRIPTION_CATALOG).find(k => 
+        k === normalizedType || 
+        SUBSCRIPTION_CATALOG[k].name.toLowerCase().replace(/\s+/g, '') === normalizedType
+     );
+     if (foundKey) serviceDetail = SUBSCRIPTION_CATALOG[foundKey];
+  }
+
+  // Priority 1: Local Asset (Specifically for Netflix as requested)
+  // We attempt to load from /images/netflix.svg, then png, then jpg via fallback logic or direct check
+  if (normalizedType === 'netflix' && !localImageError) {
+      return (
+        <div className={baseClasses} title={type}>
+            <img 
+                src="/images/netflix.svg" 
+                alt="Netflix Logo" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                    // Try PNG fallback if SVG fails
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.endsWith('.svg')) {
+                        target.src = '/images/netflix.png';
+                    } else if (target.src.endsWith('.png')) {
+                        target.src = '/images/netflix.jpg';
+                    } else {
+                        setLocalImageError(true);
+                    }
+                }}
+            />
+        </div>
+      );
+  }
+
+  // Priority 2: External Clearbit Logo
   const externalLogoUrl = !imageError && serviceDetail?.website 
     ? `https://logo.clearbit.com/${serviceDetail.website}` 
     : null;
@@ -27,27 +64,31 @@ const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", no
           alt={`${type} logo`} 
           className="w-full h-full object-contain p-[10%]"
           onError={() => setImageError(true)}
+          loading="lazy"
         />
       </div>
     );
   }
 
-  // Fallback to internal SVGs if external logo fails or doesn't exist
+  // Priority 3: Internal SVG Fallbacks
   const renderIcon = () => {
     switch (normalizedType) {
       case 'netflix':
+        // Improved Netflix N Logo
         return (
           <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M14.0002 4H18.0002V20H14.0002V4Z" fill="#E50914"/>
-            <path d="M6.00018 4H10.0002V20H6.00018V4Z" fill="#E50914"/>
-            <path d="M6.00018 4L17.9998 20.0001H13.9998L6.00018 4Z" fill="#B81D24"/>
+            <path d="M8.5 4H11.5V19.5L8.5 20V4Z" fill="#E50914" />
+            <path d="M15.5 4H12.5V19.5L15.5 20V4Z" fill="#E50914" />
+            <path d="M8.5 4L15.5 20H12.5L8.5 10V4Z" fill="#D81F26" />
+            <path d="M8.5 4H5.5V20H8.5V4Z" fill="transparent" /> {/* Spacer */}
           </svg>
         );
       case 'spotify':
+        // Authentic Spotify Logo
         return (
           <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <circle cx="12" cy="12" r="10" fill="#1DB954"/>
-             <path d="M16.8 16.7C16.7 17 16.3 17.1 16 16.9C13.8 15.6 11.1 15.3 7 16.2C6.7 16.3 6.4 16.1 6.3 15.8C6.2 15.5 6.4 15.2 6.8 15.1C11.2 14.1 14.2 14.4 16.7 15.9C16.9 16.1 17 16.4 16.8 16.7ZM18.2 13.6C17.9 14 17.4 14.1 17.1 13.9C14.3 12.2 10 11.7 6.5 12.8C6.1 12.9 5.7 12.6 5.5 12.2C5.4 11.8 5.7 11.4 6.1 11.3C10.1 10.1 14.8 10.6 18 12.6C18.4 12.8 18.5 13.3 18.2 13.6ZM18.3 10.5C14.9 8.5 9.1 8.3 5.8 9.3C5.3 9.4 4.7 9.1 4.5 8.6C4.3 8.1 4.6 7.5 5.2 7.3C9.1 6.2 15.5 6.4 19.4 8.7C19.9 9 20 9.6 19.8 10.1C19.5 10.5 18.8 10.7 18.3 10.5Z" fill="white"/>
+             <circle cx="12" cy="12" r="12" fill="#1DB954"/>
+             <path d="M17.5 17.2C17.4 17.5 17.0 17.6 16.7 17.4C14.6 16.1 11.9 15.9 7.8 16.8C7.5 16.9 7.1 16.7 7.0 16.4C6.9 16.1 7.1 15.7 7.5 15.6C12.0 14.6 15.0 14.9 17.4 16.3C17.7 16.5 17.8 16.9 17.5 17.2ZM18.9 14.0C18.6 14.4 18.1 14.5 17.7 14.3C14.9 12.6 10.6 12.1 7.1 13.2C6.7 13.3 6.2 13.1 6.1 12.6C5.9 12.2 6.2 11.8 6.6 11.7C10.6 10.5 15.4 11.0 18.6 13.0C19.0 13.3 19.1 13.7 18.9 14.0ZM19.0 10.9C15.6 8.9 9.7 8.7 6.4 9.7C5.9 9.8 5.3 9.5 5.2 9.0C5.0 8.5 5.3 7.9 5.8 7.7C9.7 6.6 16.2 6.8 20.1 9.1C20.6 9.4 20.7 10.0 20.4 10.5C20.1 10.9 19.5 11.1 19.0 10.9Z" fill="white"/>
           </svg>
         );
       case 'amazon':
@@ -120,20 +161,6 @@ const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", no
             <rect width="24" height="24" fill="#FF6600" rx="4"/>
             <path d="M8 8H16L12 14L8 8Z" fill="white"/>
             <path d="M12 14V17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        );
-      case 'blutv':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="#13C0CA" rx="4"/>
-            <path d="M8 7V17L17 12L8 7Z" fill="white"/>
-          </svg>
-        );
-      case 'exxen':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="#000000" rx="4"/>
-            <path d="M7 7H10L12 10L14 7H17L13.5 12L17 17H14L12 14L10 17H7L10.5 12L7 7Z" fill="#FFCC00"/>
           </svg>
         );
       case 'disney':
