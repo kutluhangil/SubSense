@@ -1,5 +1,4 @@
 
-
 // Comprehensive datasets for the application
 
 export const SUBSCRIPTION_CATEGORIES = [
@@ -572,7 +571,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     price: "10.00",
     currency: "USD",
     type: "midjourney",
-    netWorth: "Unknown (Private)",
+    netWorth: "Private (Est. $10B+)",
     globalUserCount: "16M+ Discord Members",
     website: "midjourney.com",
     milestones: [
@@ -784,6 +783,75 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         "2021: WWE Network integration",
         "2023: First exclusive NFL playoff game stream",
         "2023: Prices increased for the first time"
+    ]
+  },
+  "paramount+": {
+    id: "paramount+",
+    name: "Paramount+",
+    description: "Paramount+ is an American video-on-demand service owned by Paramount Global. It offers content from the libraries of CBS, Paramount Pictures, Nickelodeon, MTV, BET, and Comedy Central, along with live sports and original programming like 'Star Trek: Discovery' and 'Yellowstone' spin-offs.\n\nOriginally launched as CBS All Access in 2014, the service was rebranded as Paramount+ in 2021 to reflect its expanded library following the merger of CBS and Viacom. It aims to compete globally by leveraging its massive catalog of classic films and television series.\n\nThe platform has grown rapidly by bundling with Showtime and securing exclusive rights to major sporting events like the UEFA Champions League and NFL games.",
+    foundedYear: "2014 (as CBS All Access)",
+    founders: "CBS Interactive",
+    ceo: "Bob Bakish (Paramount Global)",
+    headquarters: "New York City, New York",
+    price: "5.99",
+    currency: "USD",
+    type: "paramount+",
+    netWorth: "$8 Billion (Est. Valuation)",
+    globalUserCount: "67M+",
+    parentCompany: "Paramount Global",
+    website: "paramountplus.com",
+    milestones: [
+        "2014: CBS All Access launch",
+        "2017: First Star Trek original series",
+        "2021: Rebranded to Paramount+",
+        "2022: Halo series premiere",
+        "2023: Integration with Showtime"
+    ]
+  },
+  "audible": {
+    id: "audible",
+    name: "Audible",
+    description: "Audible is an online audiobook and podcast service that allows users to purchase and stream audiobooks and other forms of spoken word content. It is the world's largest producer and retailer of audiobooks.\n\nFounded in 1995, Audible created the first portable digital audio player before the iPod existed. Amazon acquired the company in 2008 for $300 million. Since then, it has expanded into original content production, creating 'Audible Originals' which include exclusive audio dramas and podcasts.\n\nThe service operates on a credit-based subscription model, where monthly fees grant credits that can be exchanged for any audiobook regardless of price, making it highly valuable for heavy readers.",
+    foundedYear: "1995",
+    founders: "Don Katz",
+    ceo: "Bob Carrigan",
+    headquarters: "Newark, New Jersey",
+    price: "14.95",
+    currency: "USD",
+    type: "audible",
+    netWorth: "$1 Billion+ (Amazon Subsid.)",
+    globalUserCount: "Millions (Undisclosed)",
+    parentCompany: "Amazon",
+    website: "audible.com",
+    milestones: [
+        "1995: Company founded",
+        "1997: Released first portable digital audio player",
+        "2008: Acquired by Amazon",
+        "2020: Audible Plus catalog launched",
+        "2023: Exclusive deal with Obama's Higher Ground"
+    ]
+  },
+  "amazonprime": {
+    id: "amazonprime",
+    name: "Amazon Prime",
+    description: "Amazon Prime is a paid subscription service from Amazon that gives users access to a wide range of benefits, most notably free two-day (or faster) delivery on eligible items. It has become the gold standard for e-commerce loyalty programs.\n\nBeyond shipping, Prime includes access to Prime Video, Amazon Music Prime, Prime Gaming, and exclusive deals during events like Prime Day. It serves as an ecosystem lock-in, encouraging members to shop almost exclusively on Amazon.\n\nWith over 200 million subscribers globally, Prime is a massive revenue driver for Amazon and a key part of its strategy to dominate retail and entertainment simultaneously.",
+    foundedYear: "2005",
+    founders: "Jeff Bezos",
+    ceo: "Andy Jassy (Amazon)",
+    headquarters: "Seattle, Washington",
+    price: "14.99",
+    currency: "USD",
+    type: "amazonprime",
+    netWorth: "$2 Trillion (Amazon)",
+    globalUserCount: "200M+",
+    parentCompany: "Amazon",
+    website: "amazon.com",
+    milestones: [
+        "2005: Prime launched ($79/year)",
+        "2011: Prime Video added",
+        "2014: Price increased to $99",
+        "2015: First Prime Day",
+        "2021: Reached 200 million members"
     ]
   }
 };
