@@ -8,7 +8,7 @@ interface BrandIconProps {
   noBackground?: boolean;
 }
 
-const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", noBackground = false }) => {
+const BrandIcon: React.FC<BrandIconProps> = React.memo(({ type, className = "w-10 h-10", noBackground = false }) => {
   const baseClasses = `flex items-center justify-center relative overflow-hidden flex-shrink-0 ${noBackground ? '' : 'bg-white'} ${className}`;
   const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || 'default';
   const [imageError, setImageError] = useState(false);
@@ -199,6 +199,6 @@ const BrandIcon: React.FC<BrandIconProps> = ({ type, className = "w-10 h-10", no
       </div>
     </div>
   );
-};
+});
 
 export default BrandIcon;

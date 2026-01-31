@@ -10,7 +10,7 @@ interface StatsCardsProps {
   currencyCode?: string;
 }
 
-export default function StatsCards({ monthly, active, forecast, currencyCode }: StatsCardsProps) {
+const StatsCards: React.FC<StatsCardsProps> = React.memo(({ monthly, active, forecast, currencyCode }) => {
   const { t, formatPrice } = useLanguage();
 
   const stats = [
@@ -99,4 +99,6 @@ export default function StatsCards({ monthly, active, forecast, currencyCode }: 
       ))}
     </div>
   );
-}
+});
+
+export default StatsCards;
