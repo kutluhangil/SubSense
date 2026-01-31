@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, AlertCircle, DollarSign } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Check, Eye, EyeOff, ArrowLeft, AlertCircle, DollarSign } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import LegalModal from './LegalModal';
 import { CURRENCIES } from '../utils/data';
@@ -10,7 +10,7 @@ interface AuthModalProps {
   onClose: () => void;
   initialMode: 'login' | 'signup';
   onLoginSubmit?: (email: string, password: string) => Promise<void>;
-  onSignupSubmit?: (name: string, email: string, password: string, currency: string) => Promise<void>;
+  onSignupSubmit?: (name: string, email: string, password: string, currency: string, region: string) => Promise<void>;
   onSimulateReset?: () => void;
 }
 
@@ -41,16 +41,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
     birthYear: '',
     agreedToTerms: false
   });
-
-  const passwordStrength = React.useMemo(() => {
-    const pwd = formData.password;
-    if (!pwd) return 0;
-    let score = 0;
-    if (pwd.length > 7) score++;
-    if (pwd.match(/[0-9]/)) score++;
-    if (pwd.match(/[^a-zA-Z0-9]/)) score++;
-    return score;
-  }, [formData.password]);
 
   useEffect(() => {
     if (isOpen) {
@@ -93,7 +83,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
         if (formData.password !== formData.confirmPassword) {
            throw new Error("Passwords do not match");
         }
-        await onSignupSubmit(formData.fullName, formData.email, formData.password, formData.currency);
+        // Pass country/region as the 5th argument
+        await onSignupSubmit(formData.fullName, formData.email, formData.password, formData.currency, formData.country);
       }
     } catch (err: any) {
       console.error(err);
@@ -222,9 +213,6 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                   </form>
               )}
 
-              {/* ... Forgot Password and Signup Forms remain structurally similar but now trigger async handleSubmit ... */}
-              {/* Note: In full implementation, ensure all forms call handleSubmit and use the new async props */}
-              
               {mode === 'forgot-password' && (
                   <form className="space-y-6" onSubmit={handleSubmit}>
                     <div>
