@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign } from 'lucide-react';
+import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
-import { CURRENCIES } from '../utils/data';
+import { CURRENCY_DATA } from '../utils/currency'; 
+import CurrencySelector from './CurrencySelector';
 
 export default function Settings({ subscriptions = [] }: { subscriptions?: Subscription[] }) {
   const { t, currentCurrency, setCurrency } = useLanguage();
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
 
   const handleExportCSV = () => {
     const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
@@ -41,6 +43,8 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
     }
   };
 
+  const currentCurrencyData = CURRENCY_DATA[currentCurrency] || CURRENCY_DATA['USD'];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -70,20 +74,17 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                             <label className="text-sm font-bold text-gray-900 dark:text-white mb-1">Base Currency</label>
                             <span className="text-xs text-gray-500 dark:text-gray-400">Used for total aggregation</span>
                          </div>
-                         <div className="relative">
-                             <select 
-                                value={currentCurrency}
-                                onChange={(e) => setCurrency(e.target.value)}
-                                className="appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg pl-3 pr-8 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer min-w-[120px]"
-                             >
-                                {CURRENCIES.map(c => (
-                                    <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
-                                ))}
-                             </select>
-                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                         <button 
+                            onClick={() => setIsCurrencyModalOpen(true)}
+                            className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 transition-all group"
+                         >
+                             <span className="text-xl">{currentCurrencyData.flag}</span>
+                             <div className="text-left mr-2">
+                                <span className="block text-sm font-bold text-gray-900 dark:text-white leading-none">{currentCurrency}</span>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">{currentCurrencyData.symbol}</span>
                              </div>
-                         </div>
+                             <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white" />
+                         </button>
                     </div>
                 </div>
             </div>
@@ -256,6 +257,13 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
         </div>
 
       </div>
+
+      <CurrencySelector 
+        isOpen={isCurrencyModalOpen}
+        onClose={() => setIsCurrencyModalOpen(false)}
+        selectedCurrency={currentCurrency}
+        onSelect={setCurrency}
+      />
     </div>
   );
 }

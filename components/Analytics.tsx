@@ -145,7 +145,7 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
   );
 };
 
-const TopExpensesList = ({ subscriptions, formatPrice, convert }: { subscriptions: Subscription[], formatPrice: (v: number) => string, convert: (v: number, c: string) => number }) => {
+const TopExpensesList = ({ subscriptions, formatPrice, convert }: { subscriptions: Subscription[], formatPrice: (v: number, c?: string) => string, convert: (v: number, c: string) => number }) => {
     // Sort by normalized price desc
     const sorted = [...subscriptions].sort((a, b) => convert(b.price, b.currency) - convert(a.price, a.currency)).slice(0, 3);
 
