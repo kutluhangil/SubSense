@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
@@ -18,10 +18,11 @@ import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
 import CurrencySelector from './CurrencySelector';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Info } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
 import { debugLog } from '../utils/debug';
+import { convertAmount, CURRENCY_DATA } from '../utils/currency';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -83,7 +84,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
      return !hasSeen;
   });
 
-  const { t, formatPrice, convert, currentCurrency, setCurrency } = useLanguage();
+  const { t, formatPrice, currentCurrency, setCurrency } = useLanguage();
+
+  // --- Preview State ---
+  const [previewCurrency, setPreviewCurrency] = useState<string | null>(null);
 
   const handleOnboardingComplete = () => {
      setShowOnboarding(false);
@@ -107,6 +111,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
   }, [totalSaved, userKey]);
 
+  // Recalculate metrics considering optional Preview Currency
   const metrics = useMemo(() => {
     let monthlyTotal = 0;
     let yearlyTotalForecast = 0;
@@ -114,8 +119,12 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
+    // Determine which currency to calculate totals in (Preview vs Base)
+    const targetCurrency = previewCurrency || currentCurrency;
+
     debugLog('CURRENCY_AGGREGATION', 'Starting metrics calculation', { 
-        baseCurrency: currentCurrency, 
+        targetCurrency,
+        isPreview: !!previewCurrency,
         activeSubCount: activeSubs.length 
     });
 
@@ -124,22 +133,22 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
       const validPrice = isNaN(rawPrice) ? 0 : rawPrice;
 
-      // Normalize to Base Currency
-      const priceInBase = convert(validPrice, sub.currency || 'USD');
+      // Normalize to Target Currency
+      const priceInTarget = convertAmount(validPrice, sub.currency || 'USD', targetCurrency);
 
       if (sub.cycle === 'Monthly') {
-        monthlyTotal += priceInBase;
-        yearlyTotalForecast += priceInBase * 12;
+        monthlyTotal += priceInTarget;
+        yearlyTotalForecast += priceInTarget * 12;
       } else {
-        monthlyTotal += priceInBase / 12;
-        yearlyTotalForecast += priceInBase;
+        monthlyTotal += priceInTarget / 12;
+        yearlyTotalForecast += priceInTarget;
       }
 
       if (sub.history && sub.history.length > 0) {
           const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-          lifetimeSpend += convert(historyTotal, sub.currency || 'USD');
+          lifetimeSpend += convertAmount(historyTotal, sub.currency || 'USD', targetCurrency);
       } else {
-          lifetimeSpend += priceInBase; 
+          lifetimeSpend += priceInTarget; 
       }
     });
 
@@ -155,7 +164,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       yearlyForecast: yearlyTotalForecast,
       lifetimeSpend: lifetimeSpend
     };
-  }, [subscriptions, currentCurrency, convert]); // Recalculate when base currency changes
+  }, [subscriptions, currentCurrency, previewCurrency]); 
 
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -166,6 +175,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
   
   const [notifications, setNotifications] = useState([
     { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
@@ -186,7 +196,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
   };
 
-  const handleSubDelete = (id: number) => {
+  const handleSubDelete = useCallback((id: number) => {
+    console.log('[REMOVE_HANDLER_START] Triggered for ID:', id);
     debugLog('REMOVE_ACTION', `Attempting to remove subscription ID: ${id}`);
 
     // 1. Optimistic calculation update (safe to use current state for calc only)
@@ -194,18 +205,19 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (subToDelete) {
         debugLog('REMOVE_ACTION', 'Found subscription to delete', subToDelete);
         const monthlyValueBase = subToDelete.cycle === 'Yearly' 
-            ? convert(subToDelete.price / 12, subToDelete.currency) 
-            : convert(subToDelete.price, subToDelete.currency);
+            ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency) 
+            : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
         
         setTotalSaved(prev => prev + monthlyValueBase);
     } else {
-        debugLog('REMOVE_ACTION', 'ERROR: Subscription ID not found in current state', { id });
-        return;
+        debugLog('REMOVE_ACTION', 'WARNING: ID not found in current closure state (might be expected during race conditions)', { id });
     }
     
     // 2. Strict State Update using Functional Update (Prevents Stale Closure Bugs)
     setSubscriptions(prevSubscriptions => {
+        console.log('[REMOVE_STATE_BEFORE] Count:', prevSubscriptions.length);
         const newSubscriptions = prevSubscriptions.filter(s => s.id !== id);
+        console.log('[REMOVE_STATE_AFTER] Count:', newSubscriptions.length);
         
         debugLog('REMOVE_ACTION', 'State updated', { 
             prevCount: prevSubscriptions.length, 
@@ -224,7 +236,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     });
 
     showToast(`Subscription removed.`);
-  };
+    // Close modal if open
+    setSelectedSub(null);
+  }, [subscriptions, userKey, currentCurrency]);
 
   const handleAddSubscription = (newSub: Subscription) => {
     const finalSub = { ...newSub, id: Date.now() };
@@ -376,7 +390,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         let total = 0;
         subscriptions.forEach(sub => {
             const cat = sub.category || 'Other';
-            const priceInBase = convert(sub.price, sub.currency);
+            const priceInBase = convertAmount(sub.price, sub.currency, previewCurrency || currentCurrency);
             const cost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
             
             cats[cat] = (cats[cat] || 0) + cost;
@@ -390,7 +404,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 name, 
                 percentage: total > 0 ? (value / total) * 100 : 0 
             }));
-     }, [subscriptions, convert]);
+     }, [subscriptions, currentCurrency, previewCurrency]);
 
      return (
         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">
@@ -509,7 +523,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 <StatsCards 
                     monthly={metrics.monthlySpend} 
                     active={metrics.activeCount} 
-                    forecast={metrics.yearlyForecast} 
+                    forecast={metrics.yearlyForecast}
+                    currencyCode={previewCurrency || currentCurrency} // Override display currency if preview active
                 />
              </div>
 
@@ -517,7 +532,65 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 <div className="lg:col-span-2 space-y-6">
                    <div>
                       <div className="flex items-center justify-between mb-4">
-                         <h2 className="text-lg font-bold text-primary">{t('dashboard.active_subs')}</h2>
+                         <div className="flex items-center gap-4">
+                            <h2 className="text-lg font-bold text-primary">{t('dashboard.active_subs')}</h2>
+                            
+                            {/* Global Currency Preview Toggle */}
+                            <div className="relative">
+                               <button 
+                                 onClick={() => setIsPreviewSelectorOpen(!isPreviewSelectorOpen)}
+                                 className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                    previewCurrency 
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300' 
+                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
+                                 }`}
+                               >
+                                  {previewCurrency ? (
+                                     <>
+                                        <Eye size={12} /> Preview: {previewCurrency}
+                                     </>
+                                  ) : (
+                                     <>
+                                        <EyeOff size={12} /> Preview Currency
+                                     </>
+                                  )}
+                               </button>
+
+                               {/* Tooltip */}
+                               <div className="absolute left-0 bottom-full mb-2 w-56 p-3 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                  This is a display-only preview. Your subscriptions remain saved in their original currencies. No data is modified.
+                                  <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900"></div>
+                               </div>
+
+                               {/* Dropdown */}
+                               {isPreviewSelectorOpen && (
+                                  <>
+                                    <div className="fixed inset-0 z-30" onClick={() => setIsPreviewSelectorOpen(false)}></div>
+                                    <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                       <button 
+                                          onClick={() => { setPreviewCurrency(null); setIsPreviewSelectorOpen(false); }}
+                                          className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'}`}
+                                       >
+                                          Off (Original)
+                                          {!previewCurrency && <CheckCircle2 size={12} />}
+                                       </button>
+                                       <div className="h-px bg-gray-100 dark:bg-gray-700"></div>
+                                       {Object.values(CURRENCY_DATA).map(curr => (
+                                          <button
+                                             key={curr.code}
+                                             onClick={() => { setPreviewCurrency(curr.code); setIsPreviewSelectorOpen(false); }}
+                                             className={`w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${previewCurrency === curr.code ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-600 dark:text-gray-300'}`}
+                                          >
+                                             {curr.code} ({curr.symbol})
+                                             {previewCurrency === curr.code && <CheckCircle2 size={12} />}
+                                          </button>
+                                       ))}
+                                    </div>
+                                  </>
+                               )}
+                            </div>
+                         </div>
+
                          <button onClick={() => setCurrentView('subscriptions')} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">{t('dashboard.view_all')}</button>
                       </div>
                       
@@ -528,6 +601,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                            subscriptions={filteredSubscriptions} 
                            onSelectSubscription={setSelectedSub}
                            onDeleteSubscription={handleSubDelete}
+                           previewCurrency={previewCurrency}
                          />
                       </div>
                    </div>
@@ -570,6 +644,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              subscriptions={subscriptions} 
              onSelectSubscription={setSelectedSub} 
              onDeleteSubscription={handleSubDelete}
+             previewCurrency={previewCurrency}
            />
         </div>
       );
@@ -647,7 +722,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          currentPage={currentView}
        />
 
-       {/* Currency Switcher */}
+       {/* Currency Switcher (Base) */}
        <CurrencySelector 
          isOpen={isCurrencyModalOpen} 
          onClose={() => setIsCurrencyModalOpen(false)} 
