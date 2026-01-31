@@ -1,14 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
-import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency'; 
-import CurrencySelector from './CurrencySelector';
+import { User } from '../App';
 
-export default function Settings({ subscriptions = [] }: { subscriptions?: Subscription[] }) {
+interface SettingsProps {
+  subscriptions?: Subscription[];
+  onUpdateSubscriptions?: React.Dispatch<React.SetStateAction<Subscription[]>>;
+  user?: User;
+}
+
+export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
   const { t, currentCurrency, setCurrency } = useLanguage();
-  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
   const handleExportCSV = () => {
     const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
@@ -43,10 +49,41 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
     }
   };
 
-  const currentCurrencyData = CURRENCY_DATA[currentCurrency] || CURRENCY_DATA['USD'];
+  const handleCurrencyChange = (newCurrency: string) => {
+    // 1. Update Global Context
+    setCurrency(newCurrency);
+
+    // 2. Update All Existing Subscriptions (Nominal Switch - No FX)
+    if (onUpdateSubscriptions) {
+        onUpdateSubscriptions(prev => prev.map(sub => ({
+            ...sub,
+            currency: newCurrency
+        })));
+    }
+
+    // 3. Update User Persistence (if user exists)
+    if (user) {
+        try {
+            const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
+            const updatedUsers = users.map((u: User) => {
+                if (u.email === user.email) {
+                    return { ...u, currency: newCurrency };
+                }
+                return u;
+            });
+            localStorage.setItem('subscriptionhub.users', JSON.stringify(updatedUsers));
+        } catch (e) {
+            console.error("Failed to persist user currency preference", e);
+        }
+    }
+
+    // 4. Show Feedback
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12 relative">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h2>
@@ -65,26 +102,34 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                     <h3 className="text-base font-bold text-gray-900 dark:text-white">Currency & Preferences</h3>
                 </div>
                 <div className="p-6 space-y-6">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                        Your <strong>base currency</strong> is used for all calculations, analytics, and AI insights. Original subscription currencies are preserved.
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                         <div className="flex flex-col">
-                            <label className="text-sm font-bold text-gray-900 dark:text-white mb-1">Base Currency</label>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Changing this will recalculate all totals and insights.</span>
+                    <div className="flex flex-col gap-4">
+                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <label className="text-sm font-bold text-gray-900 dark:text-white">Base Currency</label>
+                            <div className="relative min-w-[200px]">
+                                <select 
+                                    value={currentCurrency}
+                                    onChange={(e) => handleCurrencyChange(e.target.value)}
+                                    className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium cursor-pointer"
+                                >
+                                    {Object.values(CURRENCY_DATA).map(c => (
+                                        <option key={c.code} value={c.code}>
+                                            {c.flag} {c.code} - {c.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-3 pointer-events-none text-gray-400">
+                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 1L5 5L9 1"/></svg>
+                                </div>
+                            </div>
                          </div>
-                         <button 
-                            onClick={() => setIsCurrencyModalOpen(true)}
-                            className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 transition-all group"
-                         >
-                             <span className="text-xl">{currentCurrencyData.flag}</span>
-                             <div className="text-left mr-2">
-                                <span className="block text-sm font-bold text-gray-900 dark:text-white leading-none">{currentCurrency}</span>
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400">{currentCurrencyData.symbol}</span>
-                             </div>
-                             <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-white" />
-                         </button>
+                         
+                         {/* Important Note */}
+                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                <strong>Note:</strong> Changing your base currency will update how all subscription prices are displayed and calculated across the app. 
+                                This does not convert prices using exchange rates — it only changes the currency used for your subscriptions.
+                            </p>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -258,12 +303,13 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
 
       </div>
 
-      <CurrencySelector 
-        isOpen={isCurrencyModalOpen}
-        onClose={() => setIsCurrencyModalOpen(false)}
-        selectedCurrency={currentCurrency}
-        onSelect={setCurrency}
-      />
+      {/* Confirmation Toast */}
+      {showToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 animate-in slide-in-from-bottom-4 fade-in">
+            <CheckCircle2 size={18} className="text-green-400 dark:text-green-600" />
+            <span className="font-medium text-sm">Base currency updated successfully.</span>
+        </div>
+      )}
     </div>
   );
 }
