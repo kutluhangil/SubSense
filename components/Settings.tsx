@@ -72,7 +72,7 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
                     <div className="flex items-center justify-between">
                          <div className="flex flex-col">
                             <label className="text-sm font-bold text-gray-900 dark:text-white mb-1">Base Currency</label>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Used for total aggregation</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Changing this will recalculate all totals and insights.</span>
                          </div>
                          <button 
                             onClick={() => setIsCurrencyModalOpen(true)}

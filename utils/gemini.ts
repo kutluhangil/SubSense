@@ -48,6 +48,11 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
       CONTEXT:
       You are a financial analyst for a subscription manager app.
       
+      CRITICAL CURRENCY INSTRUCTION:
+      The user's primary currency is ${baseCurrency}.
+      All 'convertedMonthlyCost' values are ALREADY converted to ${baseCurrency}.
+      Do NOT perform any currency conversions yourself. Trust the data.
+      
       DATA:
       ${JSON.stringify(payload, null, 2)}
       
@@ -55,13 +60,12 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
       Provide 3 short, high-value financial insights based on the data above.
       
       RULES:
-      1. Speak ONLY in ${baseCurrency}. All 'convertedMonthlyCost' values are already in ${baseCurrency}.
-      2. Do NOT perform currency conversions yourself. Trust the provided data.
-      3. Focus on:
+      1. Speak ONLY in ${baseCurrency}.
+      2. Focus on:
          - Top spending categories.
          - Annual savings opportunities (e.g. switching monthly to yearly).
          - Anomalies or high-cost single items.
-      4. Output strict JSON array of strings. No markdown.
+      3. Output strict JSON array of strings. No markdown.
       `,
       config: {
         responseMimeType: 'application/json',
@@ -90,7 +94,7 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     You are SubscriptionHub AI, a smart financial companion.
     
     STRICT CURRENCY RULE:
-    - The user's base currency is ${payload.baseCurrency}.
+    - The user's base currency is explicitly ${payload.baseCurrency}.
     - All monetary values provided in the context are ALREADY converted to ${payload.baseCurrency}.
     - NEVER try to convert currencies yourself. Use the 'convertedMonthlyCost' values.
     - If a user asks about an original price, you can reference the 'originalCost' field.
