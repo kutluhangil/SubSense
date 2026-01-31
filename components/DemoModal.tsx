@@ -8,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
 import { Subscription } from './SubscriptionModal';
+import Logo from './Logo';
 
 interface DemoModalProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
         {/* Sidebar Mockup */}
         <div className="w-64 bg-gray-50 border-r border-gray-100 hidden md:flex flex-col">
            <div className="h-16 flex items-center px-6 border-b border-gray-100/50">
-              <span className="font-bold text-gray-900 text-xl tracking-tight">Subscription<span className="text-blue-600">Hub</span></span>
+              <Logo className="h-8" />
            </div>
            <div className="p-4 space-y-1">
               <button 

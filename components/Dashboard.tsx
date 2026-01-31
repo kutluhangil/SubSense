@@ -135,7 +135,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
   
   const [notifications, setNotifications] = useState([
-    { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
+    { id: 1, text: `Welcome to SubSense, ${user.name}!`, time: "Just now", read: false, type: 'info' },
   ]);
 
   const filteredSubscriptions = useMemo(() => {
@@ -657,7 +657,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <button onClick={() => setIsMobileMenuOpen(true)} className="text-secondary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
                 <Menu size={24} />
              </button>
-             <span className="font-bold text-primary text-lg">SubscriptionHub</span>
+             <span className="font-bold text-primary text-lg">SubSense</span>
              <div className="flex items-center gap-2">
                {/* Mobile Currency Switch */}
                <button onClick={() => setIsCurrencyModalOpen(true)} className="text-primary p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">

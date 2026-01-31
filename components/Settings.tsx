@@ -45,7 +45,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "subscription_hub_export.csv");
+    link.setAttribute("download", "subsense_export.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -260,7 +260,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                         <h3 className="font-bold">Beta Feedback</h3>
                     </div>
                     <p className="text-sm text-white/70 mb-6 leading-relaxed">
-                        Notice a bug or have a feature idea? Help us shape the future of SubscriptionHub.
+                        Notice a bug or have a feature idea? Help us shape the future of SubSense.
                     </p>
                     <button 
                         onClick={() => openFeedback('settings')}

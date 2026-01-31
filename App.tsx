@@ -109,8 +109,8 @@ function AppContent() {
   };
 
   // Wrapper for AuthContext login
-  const handleLogin = async (email: string, password: string) => {
-    await login(email, password);
+  const handleLogin = async (email: string, password: string, rememberMe: boolean = false) => {
+    await login(email, password, rememberMe);
     setIsAuthOpen(false);
     setCurrentPage('home');
   };

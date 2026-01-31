@@ -19,7 +19,7 @@ interface AuthContextType {
   subscriptionsLoading: boolean;
   authInitialized: boolean;
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   welcomeBackMessage: string | null;
   isPro: boolean;
@@ -94,9 +94,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   // Log In
-  async function login(email: string, password: string) {
-    await auth.signInWithEmailAndPassword(email, password);
-    trackEvent('login_success', { method: 'email' });
+  async function login(email: string, password: string, rememberMe: boolean = false) {
+    try {
+      const persistence = rememberMe 
+        ? firebase.auth.Auth.Persistence.LOCAL 
+        : firebase.auth.Auth.Persistence.SESSION;
+        
+      await auth.setPersistence(persistence);
+      await auth.signInWithEmailAndPassword(email, password);
+      trackEvent('login_success', { method: 'email' });
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
   }
 
   // Log Out - Enhanced Security

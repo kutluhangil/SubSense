@@ -43,7 +43,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Upgrade Modal
     "upgrade.title": "Stop wasting money on duplicate apps.",
-    "upgrade.subtitle": "SubscriptionHub Pro automatically detects redundant services and helps you switch to annual billing for instant savings.",
+    "upgrade.subtitle": "SubSense Pro automatically detects redundant services and helps you switch to annual billing for instant savings.",
     "upgrade.feature.redundancy": "Redundancy Detector",
     "upgrade.feature.cycle": "Billing Cycle Optimization",
     "upgrade.feature.support": "Priority Support",
@@ -70,7 +70,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "ai.card.add_more": "Add more subscriptions to activate analysis.",
 
     // Footer
-    "footer.rights": "SubscriptionHub Inc. All rights reserved.",
+    "footer.rights": "SubSense Inc. All rights reserved.",
     "footer.language": "Language",
     "footer.currency": "Currency",
     "footer.region": "Regional Preferences",
@@ -156,7 +156,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "settings.base_currency": "Base Currency",
     "settings.currency_note": "Changing your base currency will update how all subscription prices are displayed and calculated across the app. This does not convert prices using exchange rates — it only changes the currency used for your subscriptions.",
     "settings.ai_title": "AI Personalization",
-    "settings.ai_desc": "Control how SubscriptionHub AI tailors insights, savings tips, and analytics for you.",
+    "settings.ai_desc": "Control how SubSense AI tailors insights, savings tips, and analytics for you.",
     "settings.smart_suggestions": "Smart Suggestions",
     "settings.smart_suggestions_desc": "Receive proactive alerts about potential savings.",
     "settings.focus_area": "Focus Area",
@@ -287,7 +287,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Help Center
     "help.title": "Help Center",
-    "help.subtitle": "Documentation and support for SubscriptionHub MVP.",
+    "help.subtitle": "Documentation and support for SubSense MVP.",
     "help.search": "Search docs...",
     "help.topics": "Topics",
     "help.contact": "Contact Support",
@@ -313,7 +313,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // FAQ Content
     "help.faq.local_first.q": "How is my data stored?",
-    "help.faq.local_first.a": "SubscriptionHub is a 'local-first' application. Your sensitive subscription data lives in your browser's Local Storage. We do not have a central database viewing your finances.",
+    "help.faq.local_first.a": "SubSense is a 'local-first' application. Your sensitive subscription data lives in your browser's Local Storage. We do not have a central database viewing your finances.",
     "help.faq.currency.q": "How do currency conversions work?",
     "help.faq.currency.a": "The app uses a fixed set of daily reference rates to estimate costs in your preferred currency. It does NOT connect to live banks or real-time forex markets.",
     "help.faq.account.q": "Can I sync data across devices?",
@@ -330,11 +330,11 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     // Legal
     "legal.terms.title": "Terms of Service",
     "legal.privacy.title": "Privacy Policy",
-    "legal.intro": "SubscriptionHub is a personal, local-first subscription tracking tool.",
+    "legal.intro": "SubSense is a personal, local-first subscription tracking tool.",
     "legal.section.local": "1. Local-First Usage",
     "legal.section.local_text": "This application operates locally in your browser. All data you enter is stored in your device's Local Storage. We do not sync your data to the cloud.",
     "legal.section.resp": "2. User Responsibility",
-    "legal.section.resp_text": "You are solely responsible for the accuracy of the data you enter. SubscriptionHub calculates totals based on your inputs.",
+    "legal.section.resp_text": "You are solely responsible for the accuracy of the data you enter. SubSense calculates totals based on your inputs.",
     "legal.section.financial": "3. No Financial Advice",
     "legal.section.financial_text": "The insights provided are for informational purposes only. They do not constitute professional financial advice.",
     "legal.section.privacy_data": "1. Data Storage",
@@ -342,7 +342,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "legal.close": "I Understand",
 
     // Onboarding
-    "onboarding.step1.title": "Welcome to SubscriptionHub",
+    "onboarding.step1.title": "Welcome to SubSense",
     "onboarding.step1.content": "Let's get your finances in order. This quick tour will show you how to track, manage, and optimize your global subscriptions.",
     "onboarding.step2.title": "Dashboard Overview",
     "onboarding.step2.content": "Here's your financial heartbeat. See your monthly total, active subscriptions count, and an annual forecast.",
@@ -498,7 +498,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Upgrade Modal
     "upgrade.title": "Gereksiz aboneliklere para harcamayı bırakın.",
-    "upgrade.subtitle": "SubscriptionHub Pro, mükerrer servisleri otomatik olarak tespit eder ve yıllık ödemeye geçerek tasarruf etmenizi sağlar.",
+    "upgrade.subtitle": "SubSense Pro, mükerrer servisleri otomatik olarak tespit eder ve yıllık ödemeye geçerek tasarruf etmenizi sağlar.",
     "upgrade.feature.redundancy": "Gereksiz Abonelik Tespiti",
     "upgrade.feature.cycle": "Fatura Döngüsü Optimizasyonu",
     "upgrade.feature.support": "Öncelikli Destek",
@@ -525,7 +525,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "ai.card.add_more": "Analizi başlatmak için daha fazla abonelik ekleyin.",
 
     // Footer
-    "footer.rights": "SubscriptionHub Inc. Tüm hakları saklıdır.",
+    "footer.rights": "SubSense Inc. Tüm hakları saklıdır.",
     "footer.language": "Dil",
     "footer.currency": "Para Birimi",
     "footer.region": "Bölgesel Tercihler",
@@ -611,7 +611,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "settings.base_currency": "Temel Para Birimi",
     "settings.currency_note": "Temel para biriminizi değiştirmek, tüm abonelik fiyatlarının uygulamada nasıl görüntüleneceğini ve hesaplanacağını günceller. Bu işlem döviz kurlarını kullanarak fiyatları dönüştürmez — yalnızca abonelikleriniz için kullanılan para birimini değiştirir.",
     "settings.ai_title": "Yapay Zeka Kişiselleştirme",
-    "settings.ai_desc": "SubscriptionHub AI'ın içgörüleri, tasarruf ipuçlarını ve analizleri sizin için nasıl özelleştireceğini kontrol edin.",
+    "settings.ai_desc": "SubSense AI'ın içgörüleri, tasarruf ipuçlarını ve analizleri sizin için nasıl özelleştireceğini kontrol edin.",
     "settings.smart_suggestions": "Akıllı Öneriler",
     "settings.smart_suggestions_desc": "Potansiyel tasarruflar hakkında proaktif uyarılar alın.",
     "settings.focus_area": "Odak Alanı",
@@ -768,7 +768,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // FAQ Content
     "help.faq.local_first.q": "Verilerim nasıl saklanıyor?",
-    "help.faq.local_first.a": "SubscriptionHub 'yerel-öncelikli' bir uygulamadır. Tüm hassas abonelik verileriniz tarayıcınızın Yerel Depolama (Local Storage) alanında saklanır. Finansal verilerinizi gören merkezi bir veritabanımız yoktur.",
+    "help.faq.local_first.a": "SubSense 'yerel-öncelikli' bir uygulamadır. Tüm hassas abonelik verileriniz tarayıcınızın Yerel Depolama (Local Storage) alanında saklanır. Finansal verilerinizi gören merkezi bir veritabanımız yoktur.",
     "help.faq.currency.q": "Para birimi dönüşümleri nasıl çalışır?",
     "help.faq.currency.a": "Uygulama, tercih ettiğiniz para birimindeki maliyetleri tahmin etmek için sabit bir günlük referans kuru seti kullanır. Canlı bankalara veya gerçek zamanlı forex piyasalarına bağlanmaz.",
     "help.faq.account.q": "Verileri cihazlar arasında senkronize edebilir miyim?",
@@ -785,7 +785,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     // Legal
     "legal.terms.title": "Hizmet Şartları",
     "legal.privacy.title": "Gizlilik Politikası",
-    "legal.intro": "SubscriptionHub kişisel bir araçtır.",
+    "legal.intro": "SubSense kişisel bir araçtır.",
     "legal.section.local": "1. Yerel Kullanım",
     "legal.section.local_text": "Veriler cihazınızda saklanır.",
     "legal.section.resp": "2. Kullanıcı Sorumluluğu",
@@ -797,7 +797,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "legal.close": "Anladım",
 
     // Onboarding
-    "onboarding.step1.title": "SubscriptionHub'a Hoşgeldiniz",
+    "onboarding.step1.title": "SubSense'e Hoşgeldiniz",
     "onboarding.step1.content": "Finansal durumunuzu düzene sokalım.",
     "onboarding.step2.title": "Panel Genel Bakış",
     "onboarding.step2.content": "Aylık toplamınızı görün.",

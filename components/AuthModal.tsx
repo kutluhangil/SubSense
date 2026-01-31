@@ -9,7 +9,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode: 'login' | 'signup';
-  onLoginSubmit?: (email: string, password: string) => Promise<void>;
+  onLoginSubmit?: (email: string, password: string, rememberMe: boolean) => Promise<void>;
   onSignupSubmit?: (name: string, email: string, password: string, currency: string, region: string) => Promise<void>;
   onSimulateReset?: () => void;
 }
@@ -26,6 +26,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
   const { t } = useLanguage();
@@ -46,6 +47,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
     if (isOpen) {
         setMode(initialMode);
         setShowPassword(false);
+        setRememberMe(false);
         setErrorMsg(null);
         setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
     }
@@ -77,7 +79,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
         await new Promise(r => setTimeout(r, 1000));
         setMode('email-sent');
       } else if (mode === 'login' && onLoginSubmit) {
-        await onLoginSubmit(formData.email, formData.password);
+        await onLoginSubmit(formData.email, formData.password, rememberMe);
         // Parent closes modal on success
       } else if (mode === 'signup' && onSignupSubmit) {
         if (formData.password !== formData.confirmPassword) {
@@ -197,7 +199,20 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                           />
                       </div>
                     </div>
-                    <div className="flex justify-end">
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <input
+                          id="remember-me"
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(e) => setRememberMe(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                        />
+                        <label htmlFor="remember-me" className="ml-2 block text-xs font-semibold text-gray-600 hover:text-gray-900 select-none cursor-pointer">
+                          Remember me
+                        </label>
+                      </div>
                       <button 
                         type="button" 
                         onClick={() => setMode('forgot-password')} 
@@ -206,6 +221,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                         Forgot password?
                       </button>
                     </div>
+
                     <button type="submit" disabled={isSubmitting} className="w-full bg-gray-900 text-white rounded-xl py-3.5 font-bold text-sm hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/20 hover:shadow-gray-900/30 flex items-center justify-center transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
                       {isSubmitting ? 'Logging in...' : t('auth.submit_login')} 
                       {!isSubmitting && <ArrowRight size={18} className="ml-2" />}
