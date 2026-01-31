@@ -639,7 +639,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           <Sidebar 
             onLogout={onLogout} 
             currentView={currentView} 
-            onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); trackEvent('page_view', { page_title: view }); }} 
+            onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }} 
             onOpenAI={() => setIsAIOpen(!isAIOpen)}
           />
        </div>

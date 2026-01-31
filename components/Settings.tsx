@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency'; 
 import { User } from '../App';
 import { useFeedback } from '../contexts/FeedbackContext'; // Import
+import { updateUserSettings } from '../utils/firestore';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsProps {
   subscriptions?: Subscription[];
@@ -15,6 +17,7 @@ interface SettingsProps {
 
 export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
   const { t, currentCurrency, setCurrency } = useLanguage();
+  const { currentUser, userProfile } = useAuth();
   const [showToast, setShowToast] = useState(false);
   const { openFeedback } = useFeedback(); // Hook
 
@@ -61,6 +64,13 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
     }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleAnalyticsOptOut = (optOut: boolean) => {
+      localStorage.setItem('analytics_opt_out', String(optOut));
+      if (currentUser) {
+          updateUserSettings(currentUser.uid, { analyticsOptOut: optOut });
+      }
   };
 
   return (
@@ -209,6 +219,28 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                 </div>
             </div>
 
+            {/* Analytics Opt-Out */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+                    <BarChart className="text-gray-400" size={20} />
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">Analytics</h3>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">Share Usage Data</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">Help us improve features by sharing anonymous usage stats.</p>
+                        </div>
+                        {/* Logic inverted: Toggle ON means Allow (not opt-out) */}
+                        <Toggle 
+                            id="allow_analytics" 
+                            defaultChecked={!userProfile?.preferences?.analyticsOptOut} 
+                            onChange={(checked) => handleAnalyticsOptOut(!checked)}
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Data */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
@@ -256,7 +288,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
   );
 }
 
-const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-600" }: { id: string, defaultChecked?: boolean, color?: string }) => {
+const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-600", onChange }: { id: string, defaultChecked?: boolean, color?: string, onChange?: (val: boolean) => void }) => {
   const [enabled, setEnabled] = useState(() => {
       const saved = localStorage.getItem(`setting_${id}`);
       return saved !== null ? JSON.parse(saved) : defaultChecked;
@@ -266,6 +298,7 @@ const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-
       const newVal = !enabled;
       setEnabled(newVal);
       localStorage.setItem(`setting_${id}`, JSON.stringify(newVal));
+      if (onChange) onChange(newVal);
   };
 
   return (
