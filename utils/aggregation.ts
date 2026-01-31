@@ -1,6 +1,7 @@
 
 import { Subscription } from '../components/SubscriptionModal';
 import { convertAmount } from './currency';
+import { validateSubscription } from './validateSubscription';
 
 export interface DerivedStats {
   totalSubscriptions: number;
@@ -26,13 +27,16 @@ export const calculateDerivedStats = (
     currency: baseCurrency
   };
 
-  if (!subscriptions || subscriptions.length === 0) {
+  if (!subscriptions || !Array.isArray(subscriptions) || subscriptions.length === 0) {
     return stats;
   }
 
   let maxMonthlyCost = 0;
 
-  subscriptions.forEach(sub => {
+  // 1. Guardrail: Filter Invalid Subscriptions BEFORE Math
+  const validSubscriptions = subscriptions.filter(validateSubscription);
+
+  validSubscriptions.forEach(sub => {
     // Only count Active subscriptions for spend stats
     if (sub.status !== 'Active') return;
 

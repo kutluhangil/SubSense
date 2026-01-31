@@ -2,27 +2,36 @@
 import { GoogleGenAI } from "@google/genai";
 import { convertAmount } from "./currency";
 import { debugLog } from "./debug";
+import { Subscription } from "../components/SubscriptionModal";
+import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 /**
- * Prepares a strictly typed and converted payload for Gemini.
- * Ensures the AI never guesses exchange rates.
+ * Prepares a strictly typed, validated, and sanitized payload for Gemini.
+ * Ensures the AI never guesses exchange rates and receives only safe data.
  */
-const prepareGeminiPayload = (subscriptions: any[], baseCurrency: string) => {
-  const convertedSubs = subscriptions.map(s => {
-    const originalCost = s.price;
-    const convertedCost = convertAmount(s.price, s.currency, baseCurrency);
+const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: string) => {
+  // 1. Guardrail: Filter invalid subs
+  const validSubs = subscriptions.filter(validateSubscription);
+
+  // 2. Guardrail: Sanitize and Normalize
+  const convertedSubs = validSubs.map(s => {
+    // Sanitize to remove potentially sensitive extra fields
+    const safeSub = sanitizeForAI(s);
+    
+    // Perform currency conversion deterministically
+    const convertedCost = convertAmount(safeSub.price, safeSub.currency, baseCurrency);
     
     // Normalize to monthly cost for fair comparison
-    const monthlyCost = s.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
+    const monthlyCost = safeSub.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
 
     return {
-      name: s.name,
-      originalCost: `${originalCost} ${s.currency}`,
+      name: safeSub.name,
+      originalCost: `${safeSub.price} ${safeSub.currency}`,
       convertedMonthlyCost: parseFloat(monthlyCost.toFixed(2)),
-      billingCycle: s.cycle,
-      category: s.category || 'Uncategorized'
+      billingCycle: safeSub.cycle,
+      category: safeSub.category
     };
   });
 
@@ -39,7 +48,7 @@ const prepareGeminiPayload = (subscriptions: any[], baseCurrency: string) => {
   };
 };
 
-export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD', languageCode: string = 'en') => {
+export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en') => {
   try {
     debugLog('AI_LANG', `Generating insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
@@ -102,6 +111,9 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
 export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
   try {
     debugLog('AI_LANG', `Chat request in: ${languageCode}`);
+    
+    // Ensure we use the safe payload builder even for chat context
+    // contextData contains subscriptions array which we must sanitize
     const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
 
     // Strict Language & Terminology Rules
