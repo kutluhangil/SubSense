@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { SUBSCRIPTION_CATALOG, ALL_SUBSCRIPTIONS } from '../utils/data';
 import SubscriptionProfileModal from './SubscriptionProfileModal';
 import { ArrowRight } from 'lucide-react';
@@ -45,6 +45,81 @@ const EXPLORE_CARDS = [
   { id: 'peacock', style: 'hulu', height: 'h-[280px]', customBg: 'bg-black' },
   { id: 'paramount+', style: 'disney', height: 'h-[300px]', customBg: 'bg-[#0064FF]' },
 ];
+
+function CardContainer({ 
+  children, 
+  className, 
+  onClick 
+}: { 
+  children: React.ReactNode; 
+  className: string; 
+  onClick: () => void; 
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [transformStyle, setTransformStyle] = useState<string>('');
+  const [glowStyle, setGlowStyle] = useState<React.CSSProperties>({ opacity: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    
+    // Disable heavy animation on touch devices
+    if (window.matchMedia('(pointer: coarse)').matches) return;
+
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    // Calculate rotation (max 4deg for subtlety)
+    const rotateX = ((y - centerY) / centerY) * -4; 
+    const rotateY = ((x - centerX) / centerX) * 4;
+    
+    requestAnimationFrame(() => {
+        setTransformStyle(`perspective(1000px) translateY(-6px) scale(1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`);
+        setGlowStyle({
+            opacity: 1,
+            background: `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,0.15), transparent 80%)`
+        });
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTransformStyle('');
+    setGlowStyle({ opacity: 0 });
+  };
+
+  // Remove existing transition and hover classes to prevent conflict
+  // We apply our own physics-based transition
+  const cleanClassName = className
+    .replace('transition-transform', '')
+    .replace('duration-300', '')
+    .replace('hover:-translate-y-1', '')
+    .trim();
+
+  return (
+    <div
+      ref={ref}
+      className={`${cleanClassName} transition-all will-change-transform`}
+      style={{ 
+        transform: transformStyle, 
+        transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease',
+        boxShadow: transformStyle ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined 
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+    >
+      {children}
+      {/* Soft Light Reflection Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-20 mix-blend-overlay"
+        style={glowStyle}
+      />
+    </div>
+  );
+}
 
 export default function Discover() {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -114,14 +189,14 @@ export default function Discover() {
           // --- TEMPLATE: NETFLIX STYLE (Cinematic) ---
           if (card.style === 'netflix') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-black">
                   <img alt="" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ29QXhahgV2gkyou2n_YGIkdkkrsVbFNAX6OpbhzXUxHcH5FNaOrVGdVXw9ztIsWVA_2Ko_WtzYR8o80kfXcL_OsvQuozAyOF-WIoC1_ZJUGuVN_JLxaoDF3_PCR0FrmWUcMZYvh2iFE5pOkSx6fjJ1GWbkCou2q_UxFgZ11R-ha3cPwF9wDpYh4LCYPrGmUQFQH2YD60OQbyEau62TT7wANVBeF2uGwxK4_sZDOXmG1wpmD3yPCv4I795nvk8pKfqFX53n16WkU"/>
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                 </div>
                 <div className="relative z-10 p-6 flex flex-col justify-between h-full">
                   <div className="flex-1 flex items-end">
-                    <h3 className="text-4xl font-black text-[#E50914] uppercase tracking-tighter mb-2">{service.name}</h3>
+                    <h3 className="text-4xl font-black text-[#E50914] uppercase tracking-tighter mb-2 transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-gray-300 text-sm line-clamp-3 mb-6 font-medium leading-relaxed opacity-90">{service.description}</p>
@@ -130,20 +205,20 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: SPOTIFY STYLE (Color Overlay) ---
           if (card.style === 'spotify') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${card.customBg || 'bg-[#1DB954]'}`}>
                   <img alt="" className="w-full h-full object-cover opacity-30 mix-blend-overlay group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ISkwsBtvU_KO9P1o89YaxZhiFraAAhgwS59O-NsoMO9FNkF8kRCLeHJeDNfJ8QltxlINDQDoW07OeTOl_JrDaIZNBvXMbChVU9qkCbOXEBqFAo8eib2wP0IM77Hp5_MrQygujAObkUVDco190uoFoie1dArA9bmyLPDBZr1v-Y50H_u_AQOAM4UlL-lbulChnJCn8uNw3Idk6gO8UxFslcinemiQHfIxYrq_6twFzVhLpxa7m3BjVBNuetE4eqe3xHYAiOWQaBI"/>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
@@ -152,18 +227,18 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: YOUTUBE STYLE (Clean/Light) ---
           if (card.style === 'youtube') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-gray-800"></div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight condensed">{service.name}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight condensed transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
@@ -172,7 +247,7 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
@@ -180,14 +255,14 @@ export default function Discover() {
           if (card.style === 'disney') {
             const bgClass = card.customBg || 'bg-[#113CCF]';
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${bgClass}`}>
                   <img alt="" className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY-L5CQ7QZ85SjnVmOhmITG76HlSINjAJ2taa0sUohRi8sFVTMOCWKUyBUHCL62Z4YUg0TEYHjQSV81ylxjlMvFwLxfr5mBwadL2KLJW-O6kvjGCxLkSzltZ2BuOOlvbjQ3qnSvmR0cpzRnsaInIJG_kZc1RespkfPnET116L0uPihelh6EKU20h8hJBb5em4UQkWCPAUbbmBCLWsX4EGF5GIW6xr5CRRp7AJ1TMR8ml_Z-6D0eFse1SaCEX9D3j1tznsY3iNxxGQ"/>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0e0b30] to-transparent"></div>
                 </div>
                 <div className="relative z-10 p-6 flex flex-col justify-between h-full text-center items-center">
                   <div className="flex-1 flex items-center justify-center">
-                    <h3 className="text-3xl font-bold text-white tracking-wide font-serif">{service.name}</h3>
+                    <h3 className="text-3xl font-bold text-white tracking-wide font-serif transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-blue-100 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
@@ -196,19 +271,19 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: PRIME STYLE (Gradient Brand) ---
           if (card.style === 'prime') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-[#00A8E1]">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#00A8E1] to-[#002F6C]"></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="text-white font-bold text-3xl italic tracking-tight">{service.name.toLowerCase()}</div>
+                  <div className="text-white font-bold text-3xl italic tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name.toLowerCase()}</div>
                   <div>
                     <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
                     <div className="flex items-center text-xs font-bold text-white/80 group-hover:text-white transition-colors">
@@ -216,7 +291,7 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
@@ -224,14 +299,14 @@ export default function Discover() {
           if (card.style === 'max') {
             const bgClass = card.customBg || 'bg-purple-900';
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${bgClass}`}>
                   <img alt="" className="w-full h-full object-cover opacity-40 mix-blend-multiply group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBF5GL4xU6ZzE7CyjWS4OkkQ4TzxMLUGJCjI1YH4dnRT03NQmVhMth7k_S4Ir9cXsVoFbEVykL7keVbG4a1sKzgMkV7eusuhVUoW37bU_4HSI0qqG-yOTgz_z9-DE_PX_mcUAtzONxU8qx4H0IEybS3-t5Psiwba00eW-gwVOek_LHe0BLBkNXUiJiV9xHTGGjgcVXZS-DN7mkHae3ipuXGgyrS2U4dtXh29w-hLGCqKirpfKe2U_ybZhH0y-xDxmbsM04_e6fzE9c"/>
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-end">
                   <div className="mb-auto pt-4">
-                    <h3 className="text-3xl font-black text-white tracking-tighter">{service.name}</h3>
+                    <h3 className="text-3xl font-black text-white tracking-tighter transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-gray-300 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
@@ -240,23 +315,23 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: APPLE TV STYLE (Minimal Dark) ---
           if (card.style === 'appletv') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-black dark:bg-[#1c1c1e]"></div>
                 <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center text-center">
-                  <h3 className="text-2xl font-medium text-white mb-2 tracking-tight">{service.name}</h3>
+                  <h3 className="text-2xl font-medium text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   <p className="text-gray-400 text-sm mb-6 line-clamp-2 leading-relaxed">{service.description}</p>
                   <div className="flex items-center text-xs font-semibold text-white/60 group-hover:text-white transition-colors">
                        Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
@@ -265,12 +340,12 @@ export default function Discover() {
             const bgClass = card.customBg || 'bg-[#1CE783]';
             const textColor = card.customBg ? 'text-white' : 'text-[#040F1D]';
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${bgClass}`}>
                   <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#040F1D] opacity-90"></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <h3 className="text-4xl font-black text-white tracking-widest uppercase">{service.name}</h3>
+                  <h3 className="text-4xl font-black text-white tracking-widest uppercase transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   <div>
                     <p className="text-green-100 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
                     <div className="flex items-center text-xs font-bold text-white/80 group-hover:text-white transition-colors">
@@ -278,7 +353,7 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
@@ -286,13 +361,13 @@ export default function Discover() {
           if (card.style === 'microsoft') {
             const bgClass = card.customBg || 'bg-blue-50';
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${bgClass} dark:bg-slate-800`}>
                   <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'radial-gradient(#2563EB 1px, transparent 1px)', backgroundSize: '10px 10px'}}></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
@@ -301,7 +376,7 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
@@ -309,11 +384,11 @@ export default function Discover() {
           if (card.style === 'canva') {
             const gradient = card.customGradient || 'bg-gradient-to-tr from-[#00C4CC] via-[#7D2AE8] to-[#F1F3F5]';
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className={`absolute inset-0 ${gradient}`}></div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div>
-                    <h3 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight" style={{ fontFamily: 'sans-serif' }}>{service.name}</h3>
+                    <h3 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1" style={{ fontFamily: 'sans-serif' }}>{service.name}</h3>
                   </div>
                   <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-sm">
                     <p className="text-gray-600 text-sm mb-3 line-clamp-2 font-medium">{service.description}</p>
@@ -322,20 +397,20 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: CHATGPT STYLE (Tech/Green) ---
           if (card.style === 'chatgpt') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-[#10A37F] dark:bg-[#000000]">
                   <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-white/80 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
@@ -344,18 +419,18 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: ADOBE STYLE (Gradient Red/Orange) ---
           if (card.style === 'adobe') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF0000] via-[#FF9900] to-[#FF0080]"></div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
                   <div>
-                    <h3 className="text-2xl font-bold mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-2xl font-bold mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-white/90 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
@@ -364,20 +439,20 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: XBOX STYLE (Gamer Green) ---
           if (card.style === 'xbox') {
             return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-[#107C10]">
                   <img alt="" className="w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtqf5Q4C-cepR3TFkzxjQmWOCK0AssWQsl0_E49SIbJVAm6DFW1G4tEYA7a7Zfs09-rL5qnupx-UPADFhJxD1Wo5nDzLTK4gBAn4b39395bTW8hzpNAmGZ0uRomeMcsoEqaHGhLdHNa0621jAIfW8uG0cCqDCF9pedmaKt7N6evWv_yVdnyzSlyMnI88IMQJo_0HFXn4UYDdyhZI-nmmFzhJdAQ46gbHIpieURzcpzEZb7PM5KjLbkxsMp2m2hnI5CSD-UNAcTR_E"/>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-green-100 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
@@ -386,20 +461,20 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
             );
           }
 
           // --- TEMPLATE: SLACK STYLE (Simple Color) ---
           if (card.style === 'slack') {
              return (
-              <div key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg transition-transform duration-300 hover:-translate-y-1 ${card.height} cursor-pointer`}>
+              <CardContainer key={card.id} onClick={() => handleCardClick(card.id)} className={`masonry-item relative group overflow-hidden rounded-xl shadow-lg ${card.height} cursor-pointer`}>
                 <div className="absolute inset-0 bg-[#4A154B]">
                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{service.name}</h3>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
                   </div>
                   <div>
                     <p className="text-white/80 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
@@ -408,7 +483,7 @@ export default function Discover() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CardContainer>
              )
           }
 
