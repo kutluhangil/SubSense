@@ -5,6 +5,7 @@ import { CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 import { useAuth } from './AuthContext';
 import { updateUserSettings } from '../utils/firestore';
+import { trackEvent } from '../utils/analytics';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -130,11 +131,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentCurrency(curr);
     persistSettings({ baseCurrency: curr });
     showToast(`Base Currency changed to ${curr}`);
+    trackEvent('currency_changed', { to_currency: curr });
   };
 
   const handleSetTheme = (theme: ThemeOption) => {
     setCurrentTheme(theme);
     persistSettings({ theme: theme });
+    trackEvent('theme_changed', { theme: theme });
   };
 
   const t = (key: string): string => {

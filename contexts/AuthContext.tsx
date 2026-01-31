@@ -5,6 +5,7 @@ import { auth } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
+import { trackEvent } from '../utils/analytics';
 
 // Define User type from compat namespace
 type User = firebase.User;
@@ -73,6 +74,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Update local state immediately
         setCurrentUser(user);
         setUserProfile(profile);
+        
+        // Analytics
+        trackEvent('signup_success', { method: 'email', currency: currency });
       }
     } catch (error) {
       console.error("Signup error:", error);
@@ -83,10 +87,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Log In
   async function login(email: string, password: string) {
     await auth.signInWithEmailAndPassword(email, password);
+    trackEvent('login_success', { method: 'email' });
   }
 
   // Log Out
   function logout() {
+    trackEvent('logout');
     return auth.signOut();
   }
 

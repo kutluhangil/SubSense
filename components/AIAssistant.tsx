@@ -4,6 +4,7 @@ import { MessageSquare, X, Send, Sparkles, User, Bot, Loader2 } from 'lucide-rea
 import { chatWithGemini } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
+import { trackEvent } from '../utils/analytics';
 
 interface AIAssistantProps {
   isOpen: boolean;
@@ -30,6 +31,13 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
       ]);
   }, [currentLanguage, t]);
 
+  // Track opening
+  useEffect(() => {
+    if (isOpen) {
+      trackEvent('ai_opened', { from_page: currentPage });
+    }
+  }, [isOpen, currentPage]);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -50,6 +58,9 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
+    
+    // Analytics: Track query length (privacy safe)
+    trackEvent('ai_query_submitted', { length: userMsg.length });
 
     // NOTE: We pass raw subscriptions here, but the utility function `chatWithGemini`
     // is now responsible for strictly validating, sanitizing, and normalizing them.
@@ -105,7 +116,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                 <h2 className="text-sm font-bold text-gray-900 dark:text-white">{t('ai.assistant_title')}</h2>
                 <div className="flex items-center gap-1">
                    <Sparkles size={10} className="text-indigo-500" />
-                   <p className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
+                   <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
                 </div>
               </div>
             </div>

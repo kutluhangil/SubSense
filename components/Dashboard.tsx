@@ -23,6 +23,7 @@ import {
   deleteSubscription 
 } from '../utils/firestore';
 import { calculateDerivedStats } from '../utils/aggregation';
+import { trackEvent } from '../utils/analytics';
 
 // Lazy Load Heavy Components
 const Analytics = React.lazy(() => import('./Analytics'));
@@ -153,7 +154,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (currentUser) {
       debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription in Firestore', updatedSub);
       await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
-      // Local state is updated via listener in AuthContext
+      trackEvent('subscription_edited', { category: updatedSub.category, currency: updatedSub.currency });
     }
   };
 
@@ -167,6 +168,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency) 
                 : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
             setTotalSaved(prev => prev + monthlyValueBase);
+            trackEvent('subscription_removed', { category: subToDelete.category });
         }
         await deleteSubscription(currentUser.uid, id);
         showToast(`Subscription removed.`);
@@ -178,6 +180,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (currentUser) {
         debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription to Firestore', newSub);
         await addSubscription(currentUser.uid, newSub);
+        trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
         setIsAddModalOpen(false);
         setCurrentView('dashboard');
     }
@@ -196,6 +199,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           const nextDate = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           
           await updateSubscription(currentUser.uid, id, { nextDate, history: newHistory });
+          trackEvent('mark_as_paid', { cycle: sub.cycle });
           showToast(`${sub.name} marked as paid.`);
       }
   };
@@ -619,7 +623,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           <Sidebar 
             onLogout={onLogout} 
             currentView={currentView} 
-            onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }} 
+            onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); trackEvent('page_view', { page_title: view }); }} 
             onOpenAI={() => setIsAIOpen(!isAIOpen)}
           />
        </div>

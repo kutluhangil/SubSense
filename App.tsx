@@ -12,6 +12,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { migrateLocalData } from './utils/firestore';
 import { WifiOff } from 'lucide-react';
+import { trackPageView } from './utils/analytics';
 
 // Types for user interface consistency
 export interface User {
@@ -42,6 +43,15 @@ function AppContent() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // --- Analytics: Track Route Changes ---
+  useEffect(() => {
+    if (currentUser) {
+      // Dashboard internal navigation handles its own tracking
+    } else {
+      trackPageView(currentPage);
+    }
+  }, [currentPage, currentUser]);
 
   // --- Migration Logic ---
   useEffect(() => {
