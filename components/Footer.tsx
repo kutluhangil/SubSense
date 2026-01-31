@@ -1,14 +1,16 @@
 
-import React from 'react';
-import { Globe, DollarSign, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { Globe, DollarSign, Sparkles, AlertCircle } from 'lucide-react';
 import { LANGUAGES, CURRENCIES } from '../utils/data';
 import Logo from './Logo';
 import HintCardCarousel from './HintCardCarousel';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LanguageCode } from '../utils/translations';
+import KnownLimitationsModal from './KnownLimitationsModal';
 
 export default function Footer() {
   const { currentLanguage, setLanguage, currentCurrency, setCurrency, t } = useLanguage();
+  const [isLimitationsOpen, setIsLimitationsOpen] = useState(false);
 
   return (
     <footer className="bg-white border-t border-gray-100 pt-16 pb-12 overflow-hidden relative">
@@ -89,10 +91,18 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center relative z-10">
-          <p className="text-sm text-gray-400 hover:text-gray-600 transition-colors duration-300">
-            &copy; {new Date().getFullYear()} {t('footer.rights')}
-          </p>
+        <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center relative z-10 gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4">
+             <p className="text-sm text-gray-400 hover:text-gray-600 transition-colors duration-300">
+               &copy; {new Date().getFullYear()} {t('footer.rights')}
+             </p>
+             <button 
+               onClick={() => setIsLimitationsOpen(true)}
+               className="text-xs font-bold text-gray-400 hover:text-amber-600 transition-colors flex items-center gap-1"
+             >
+                <AlertCircle size={12} /> Beta Limitations
+             </button>
+          </div>
           <div className="flex space-x-8 rtl:space-x-reverse mt-6 md:mt-0">
              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 transform hover:scale-110 transition-all duration-300">
                <span className="sr-only">Twitter</span>
@@ -105,6 +115,11 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      <KnownLimitationsModal 
+        isOpen={isLimitationsOpen} 
+        onClose={() => setIsLimitationsOpen(false)} 
+      />
 
       <style>{`
         @keyframes blob {
