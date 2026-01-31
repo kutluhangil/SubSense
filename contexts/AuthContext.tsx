@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import firebase from 'firebase/compat/app';
 import { auth } from '../firebase/firebase';
-import { initializeUserDocument, getUserDocument, UserProfileData } from '../utils/firestore';
+import { initializeUserDocument, getUserDocument, getUserSubscriptions, UserProfileData } from '../utils/firestore';
+import { Subscription } from '../components/SubscriptionModal';
 
 // Define User type from compat namespace
 type User = firebase.User;
@@ -10,7 +11,9 @@ type User = firebase.User;
 interface AuthContextType {
   currentUser: User | null;
   userProfile: UserProfileData | null;
+  subscriptions: Subscription[];
   loading: boolean;
+  authInitialized: boolean;
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -29,7 +32,9 @@ export function useAuth() {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
@@ -70,6 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return auth.signOut().then(() => {
       setUserProfile(null);
       setCurrentUser(null);
+      setSubscriptions([]);
     });
   }
 
@@ -78,17 +84,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCurrentUser(user);
       
       if (user) {
-        // Hydrate global app state (User Profile) from Firestore
-        const profile = await getUserDocument(user.uid);
-        setUserProfile(profile);
+        try {
+          // Hydrate global app state (User Profile & Subscriptions) from Firestore
+          const profile = await getUserDocument(user.uid);
+          setUserProfile(profile);
+
+          const subs = await getUserSubscriptions(user.uid);
+          setSubscriptions(subs);
+        } catch (err) {
+          console.error("Auth hydration error:", err);
+        }
       } else {
         setUserProfile(null);
+        setSubscriptions([]);
       }
       
       setLoading(false);
+      setAuthInitialized(true);
     }, (error) => {
       console.error("Auth state observer error:", error);
-      setLoading(false); // Ensure app loads even if auth fails
+      setLoading(false);
+      setAuthInitialized(true);
     });
     return unsubscribe;
   }, []);
@@ -96,7 +112,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const value = {
     currentUser,
     userProfile,
+    subscriptions,
     loading,
+    authInitialized,
     signup,
     login,
     logout
@@ -104,7 +122,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
