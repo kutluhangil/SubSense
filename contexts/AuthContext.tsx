@@ -1,9 +1,10 @@
 
-import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo } from 'react';
 import firebase from 'firebase/compat/app';
 import { auth } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
+import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 
 // Define User type from compat namespace
 type User = firebase.User;
@@ -12,6 +13,7 @@ interface AuthContextType {
   currentUser: User | null;
   userProfile: UserProfileData | null;
   subscriptions: Subscription[];
+  derivedStats: DerivedStats;
   loading: boolean;
   subscriptionsLoading: boolean;
   authInitialized: boolean;
@@ -29,6 +31,16 @@ export function useAuth() {
   }
   return context;
 }
+
+const DEFAULT_STATS: DerivedStats = {
+  totalSubscriptions: 0,
+  monthlySpend: 0,
+  annualSpend: 0,
+  lifetimeSpend: 0,
+  categoryBreakdown: {},
+  mostExpensiveSub: null,
+  currency: 'USD'
+};
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -133,10 +145,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
+  // Calculate Derived Stats whenever subscriptions or base currency changes
+  const derivedStats = useMemo(() => {
+    const baseCurrency = userProfile?.preferences?.baseCurrency || 'USD';
+    return calculateDerivedStats(subscriptions, baseCurrency);
+  }, [subscriptions, userProfile?.preferences?.baseCurrency]);
+
   const value = {
     currentUser,
     userProfile,
     subscriptions,
+    derivedStats, // Expose derived stats
     loading,
     subscriptionsLoading,
     authInitialized,

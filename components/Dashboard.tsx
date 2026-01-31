@@ -29,6 +29,7 @@ import {
   updateSubscription, 
   deleteSubscription 
 } from '../utils/firestore';
+import { calculateDerivedStats } from '../utils/aggregation';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -43,7 +44,7 @@ const DEFAULT_BUDGET_LIMITS = {
 };
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
-  const { currentUser, subscriptions, subscriptionsLoading } = useAuth();
+  const { currentUser, subscriptions, derivedStats, subscriptionsLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   
   // Local state only for simpler preferences not critically synced yet
@@ -102,51 +103,16 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
   }, [totalSaved, userKey]);
 
-  // Recalculate metrics considering optional Preview Currency
+  // Recalculate metrics: Use Derived Stats (Context) or Recalculate if Previewing
   const metrics = useMemo(() => {
-    let monthlyTotal = 0;
-    let yearlyTotalForecast = 0;
-    let lifetimeSpend = 0;
-    
-    const activeSubs = subscriptions.filter(s => s.status === 'Active');
-    
-    const targetCurrency = previewCurrency || currentCurrency;
-
-    debugLog('CURRENCY_AGGREGATION', 'Starting metrics calculation', { 
-        targetCurrency,
-        isPreview: !!previewCurrency,
-        activeSubCount: activeSubs.length 
-    });
-
-    activeSubs.forEach(sub => {
-      const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
-      const validPrice = isNaN(rawPrice) ? 0 : rawPrice;
-
-      const priceInTarget = convertAmount(validPrice, sub.currency || 'USD', targetCurrency);
-
-      if (sub.cycle === 'Monthly') {
-        monthlyTotal += priceInTarget;
-        yearlyTotalForecast += priceInTarget * 12;
-      } else {
-        monthlyTotal += priceInTarget / 12;
-        yearlyTotalForecast += priceInTarget;
-      }
-
-      if (sub.history && sub.history.length > 0) {
-          const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-          lifetimeSpend += convertAmount(historyTotal, sub.currency || 'USD', targetCurrency);
-      } else {
-          lifetimeSpend += priceInTarget; 
-      }
-    });
-
-    return {
-      monthlySpend: monthlyTotal,
-      activeCount: activeSubs.length,
-      yearlyForecast: yearlyTotalForecast,
-      lifetimeSpend: lifetimeSpend
-    };
-  }, [subscriptions, currentCurrency, previewCurrency]); 
+    if (previewCurrency) {
+        // If previewing a different currency, recalculate using aggregation utility
+        // This ensures the preview is mathematically consistent with the base logic
+        return calculateDerivedStats(subscriptions, previewCurrency);
+    }
+    // Default: Use the globally managed derived stats
+    return derivedStats;
+  }, [derivedStats, subscriptions, previewCurrency]);
 
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -347,17 +313,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   const ExpenseBreakdown = () => {
+     // Use derived breakdown logic from stats object to avoid drift
+     // Need to sort and map for chart
      const breakdown = useMemo(() => {
-        const cats: Record<string, number> = {};
-        let total = 0;
-        subscriptions.forEach(sub => {
-            const cat = sub.category || 'Other';
-            const priceInBase = convertAmount(sub.price, sub.currency, previewCurrency || currentCurrency);
-            const cost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
-            
-            cats[cat] = (cats[cat] || 0) + cost;
-            total += cost;
-        });
+        const cats = metrics.categoryBreakdown;
+        const total = metrics.monthlySpend;
         
         return Object.entries(cats)
             .sort(([,a], [,b]) => b - a)
@@ -366,7 +326,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 name, 
                 percentage: total > 0 ? (value / total) * 100 : 0 
             }));
-     }, [subscriptions, currentCurrency, previewCurrency]);
+     }, [metrics]);
 
      return (
         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">
@@ -494,8 +454,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <div data-tour="stats-cards">
                 <StatsCards 
                     monthly={metrics.monthlySpend} 
-                    active={metrics.activeCount} 
-                    forecast={metrics.yearlyForecast}
+                    active={metrics.totalSubscriptions} 
+                    forecast={metrics.annualSpend}
                     currencyCode={previewCurrency || currentCurrency} 
                 />
              </div>

@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Lightbulb, RefreshCw } from 'lucide-react';
+import { Sparkles, Lightbulb } from 'lucide-react';
 import { generateDashboardInsights } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AIInsightsCardProps {
   subscriptions: Subscription[];
@@ -13,6 +14,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
   const [insights, setInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentCurrency, currentLanguage, t } = useLanguage();
+  const { derivedStats } = useAuth(); // Could use derivedStats directly if Gemini utility updated
 
   useEffect(() => {
     let mounted = true;
@@ -27,6 +29,9 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
       
       setLoading(true);
       // Pass current base currency and language to ensure insights are strictly localized
+      // Note: We still pass subscriptions as Gemini might analyze individual items (top spenders)
+      // but ideally we should pass derived totals too for strict consistency.
+      // For now, relying on Gemini to sum (via backend utility) is acceptable if utility uses same math.
       const results = await generateDashboardInsights(subscriptions, currentCurrency, currentLanguage);
       if (mounted) {
         setInsights(results);
