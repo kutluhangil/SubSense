@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown, AlertTriangle, Database, Info } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
-// ... (Keep existing static data CATEGORIES and FAQS exactly as they are) ...
 const CATEGORIES = [
   { 
     id: 'start', 
@@ -12,248 +11,179 @@ const CATEGORIES = [
     icon: PlayCircle, 
     color: 'text-blue-600 dark:text-blue-400', 
     bg: 'bg-blue-50 dark:bg-blue-900/20',
-    description: 'Account setup & basics'
+    description: 'Local-first architecture & basics'
   },
   { 
     id: 'subs', 
-    label: 'Subscription Management', 
+    label: 'Subscriptions', 
     icon: CreditCard, 
     color: 'text-purple-600 dark:text-purple-400', 
     bg: 'bg-purple-50 dark:bg-purple-900/20',
-    description: 'Adding & editing services'
+    description: 'Management & persistence'
   },
   { 
     id: 'analytics', 
-    label: 'Analytics & Insights', 
+    label: 'Analytics', 
     icon: PieChart, 
     color: 'text-violet-600 dark:text-violet-400', 
     bg: 'bg-violet-50 dark:bg-violet-900/20',
-    description: 'Trends & spending habits'
+    description: 'Trends & generated history'
   },
   { 
     id: 'compare', 
-    label: 'Global Comparison', 
+    label: 'Compare (Beta)', 
     icon: Globe, 
     color: 'text-green-600 dark:text-green-400', 
     bg: 'bg-green-50 dark:bg-green-900/20',
-    description: 'Regional pricing & currency'
+    description: 'Reference data & disclaimers'
   },
   { 
-    id: 'profile', 
-    label: 'Profile & Friends', 
+    id: 'social', 
+    label: 'Friends (Demo)', 
     icon: Users, 
     color: 'text-orange-600 dark:text-orange-400', 
     bg: 'bg-orange-50 dark:bg-orange-900/20',
-    description: 'Social & account details'
+    description: 'Concept features'
   },
   { 
     id: 'settings', 
-    label: 'Settings & Preferences', 
+    label: 'Settings', 
     icon: Settings, 
     color: 'text-gray-600 dark:text-gray-400', 
     bg: 'bg-gray-50 dark:bg-gray-700/50',
-    description: 'Notifications & privacy'
+    description: 'Preferences & export'
   },
 ];
 
 const FAQS = [
-  // 1. Getting Started
+  // A. Getting Started
   {
-    id: 'create-account',
+    id: 'local-first',
     category: 'start',
-    question: 'How do I create an account?',
-    answer: "Click the 'Sign up' button on the homepage or login screen. You can sign up using your email address or continue with Google/Apple for a faster experience."
+    question: 'How is my data stored?',
+    answer: "SubscriptionHub is a 'local-first' application. All your data (subscriptions, settings, profile) is stored securely in your browser's Local Storage. We do not have a backend database, and your data never leaves your device unless you manually export it."
   },
   {
-    id: 'login-logout',
+    id: 'currency-region',
     category: 'start',
-    question: 'Logging in and out',
-    answer: "To log in, use your email/password or social provider. To log out, click the 'Log out' button at the bottom of the sidebar menu."
+    question: 'How does currency work?',
+    answer: "The application uses a 'Regional Preference' setting (found in the footer or Settings page) to determine the display currency. Changing this setting converts all values using a fixed exchange rate for display purposes. It does not change the original billing currency of your subscriptions."
   },
   {
-    id: 'dashboard-overview',
+    id: 'account-recovery',
     category: 'start',
-    question: 'Dashboard overview',
-    answer: "Your Dashboard is the central hub. It shows your active subscriptions, monthly spending summary, upcoming payments timeline, and quick access to analytics widgets."
-  },
-  {
-    id: 'first-sub',
-    category: 'start',
-    question: 'Adding your first subscription',
-    answer: "Click the 'Add Subscription' button on the dashboard. Search for a service (e.g., Netflix), select it, and enter your plan details to start tracking."
+    question: 'Can I log in from another device?',
+    answer: "No. Since data is stored locally in your browser, your account does not sync across devices. To move data, use the 'Export CSV' feature in Settings and manually re-enter it on a new device."
   },
 
-  // 2. Subscription Management
+  // B. Subscriptions Management
   {
-    id: 'manual-add',
+    id: 'add-edit',
     category: 'subs',
-    question: 'Adding subscriptions manually',
-    answer: "If you can't find a service in our database, you can still track it. Use the 'Add Subscription' button and fill in the custom details for name, price, and billing cycle."
+    question: 'Adding and editing subscriptions',
+    answer: "You can add subscriptions via the Dashboard. When editing, you can change the price, billing cycle (Monthly/Yearly), and currency. These changes are saved immediately to your local storage."
   },
   {
-    id: 'edit-sub',
+    id: 'persistence',
     category: 'subs',
-    question: 'Editing price and billing cycle',
-    answer: "Click on any subscription in your list to open its details. From there, you can update the price, currency, billing cycle (Monthly/Yearly), and next payment date."
+    question: 'What happens if I clear my cache?',
+    answer: "WARNING: Clearing your browser's cache or 'Local Storage' will permanently delete all your subscription data. We recommend using the Export feature regularly to keep a backup."
   },
   {
-    id: 'reminders',
+    id: 'mark-paid',
     category: 'subs',
-    question: 'How do payment reminders work?',
-    answer: "We automatically send a notification 3 days before a subscription renewal date. You can enable or disable these reminders in the subscription details modal."
-  },
-  {
-    id: 'active-expiring',
-    category: 'subs',
-    question: 'Active vs Expiring subscriptions',
-    answer: "Active subscriptions are ongoing. 'Expiring' status appears if you've marked a subscription to cancel or if the billing date is approaching without renewal confirmation."
-  },
-  {
-    id: 'delete-sub',
-    category: 'subs',
-    question: 'Deleting a subscription',
-    answer: "To remove a subscription, open its details card and click the 'Delete' button (trash icon). This removes it from your dashboard and calculations."
+    question: 'How does "Mark as Paid" work?',
+    answer: "Clicking the checkmark on a subscription advances the 'Next Payment' date by one billing cycle (1 month or 1 year) and logs a payment record in your local history for analytics."
   },
 
-  // 3. Analytics & Insights
+  // C. Analytics & Insights
   {
-    id: 'monthly-yearly',
+    id: 'data-generation',
     category: 'analytics',
-    question: 'Viewing monthly vs yearly spend',
-    answer: "Go to the Analytics page to see your 'Lifetime Spend' and monthly breakdown. The Dashboard also provides a quick snapshot of your monthly total."
+    question: 'Where does historical data come from?',
+    answer: "The analytics engine generates historical data based on your current active subscriptions and their billing cycles. It projects past payments to create a trend line. It does not connect to your bank account."
   },
   {
-    id: 'spending-trends',
+    id: 'date-filters',
     category: 'analytics',
-    question: 'Understanding spending trends',
-    answer: "The Spending Trend chart on the Analytics page visualizes your expenses over the last 6 months, helping you identify spikes or reductions in your budget."
+    question: 'Date filters',
+    answer: "The date selector (Last 30 Days, 6 Months, etc.) dynamically recalculates the charts. Selecting a different range filters the generated payment events to show only those falling within that window."
   },
   {
-    id: 'cost-distribution',
+    id: 'savings-goals',
     category: 'analytics',
-    question: 'Cost distribution by category',
-    answer: "We categorize your subscriptions (Entertainment, Productivity, etc.) and show a breakdown chart so you know exactly which areas consume most of your budget."
-  },
-  {
-    id: 'ai-insights',
-    category: 'analytics',
-    question: 'What are AI Savings Insights?',
-    answer: "Our AI analyzes your subscriptions to find optimization opportunities, such as identifying duplicate services (e.g., Spotify + Apple Music) or suggesting annual plans."
+    question: 'Savings Goals',
+    answer: "The Savings Goal widget compares your 'Total Saved' value (accumulated from deleted subscriptions) against a manual target you set. It is a motivational tool, not a financial ledger."
   },
 
-  // 4. Global Comparison
+  // D. Compare Page
   {
-    id: 'regional-pricing',
+    id: 'compare-data',
     category: 'compare',
-    question: 'Comparing regional pricing',
-    answer: "Use the 'Compare' page to select a service (e.g., Netflix) and see how its price varies across different countries like the US, UK, India, and Turkey."
+    question: 'Is the pricing data real-time?',
+    answer: "No. The Regional Price Comparison uses a curated dataset of reference prices for major services (e.g., Netflix, Spotify) across different countries. These are for informational purposes only and may not reflect the absolute latest price changes."
   },
   {
-    id: 'currency-diff',
+    id: 'savings-disabled',
     category: 'compare',
-    question: 'Currency differences',
-    answer: "All prices in the comparison tool are converted to your selected base currency (default USD) using real-time exchange rates for accurate comparison."
-  },
-  {
-    id: 'price-history',
-    category: 'compare',
-    question: 'Price history charts',
-    answer: "We track historical price changes for major services. The charts on the Compare page show how prices have fluctuated over the last 6 months in different regions."
+    question: 'Why is "Potential Savings" disabled?',
+    answer: "The 'Potential Annual Savings' calculator is currently disabled while we improve our multi-currency normalization logic to ensure accuracy. It will be re-enabled in a future update."
   },
 
-  // 5. Profile & Friends
+  // E. Friends & Social
   {
-    id: 'edit-profile',
-    category: 'profile',
-    question: 'Editing profile details',
-    answer: "Navigate to the Profile page to update your avatar, bio, location, and website. Changes are reflected immediately on your public profile card."
+    id: 'demo-status',
+    category: 'social',
+    question: 'Is the Friends feature real?',
+    answer: "The Friends & Social section is currently a Concept Demo. The profiles you see are simulated examples to demonstrate how social sharing might look. You cannot currently send real messages or sync with other users."
   },
   {
-    id: 'profile-visibility',
-    category: 'profile',
-    question: 'Profile visibility settings',
-    answer: "You can control who sees your profile in Settings. Options include Public (visible to everyone), Friends Only, or Private."
-  },
-  {
-    id: 'friends-list',
-    category: 'profile',
-    question: 'Managing your friends list',
-    answer: "Go to the Friends page to see your connections. You can add new friends by username or remove existing connections."
-  },
-  {
-    id: 'shared-subs',
-    category: 'profile',
-    question: 'Viewing shared subscriptions',
-    answer: "When viewing a friend's profile, you'll see a 'Shared with You' section highlighting services you both subscribe to."
-  },
-  {
-    id: 'badges',
-    category: 'profile',
-    question: 'How to earn badges',
-    answer: "Badges are awarded for milestones like 'Top Saver', 'Active Tracker', or 'Global Explorer'. They appear on your profile automatically when earned."
+    id: 'privacy',
+    category: 'social',
+    question: 'Privacy of shared data',
+    answer: "Since the social feature is a demo, no actual data is shared over the internet. Your subscription details remain private on your device."
   },
 
-  // 6. Settings & Preferences
+  // F. Settings
   {
-    id: 'notifications',
+    id: 'csv-export',
     category: 'settings',
-    question: 'Managing notifications',
-    answer: "In Settings, you can toggle alerts for 'Payment Due', 'Price Alerts', and 'Weekly Digest' emails."
+    question: 'Exporting data',
+    answer: "You can download a .CSV file containing your subscription names, prices, and billing dates from the Settings page. This file can be opened in Excel or Google Sheets."
   },
   {
-    id: 'privacy-settings',
+    id: 'theme',
     category: 'settings',
-    question: 'Privacy controls',
-    answer: "Use the 'Privacy & Visibility' section in Settings to hide your spending stats or subscriptions from your public profile."
-  },
-  {
-    id: 'ai-settings',
-    category: 'settings',
-    question: 'AI personalization',
-    answer: "You can enable or disable 'Smart Suggestions' and 'Focus Area' in Settings to tailor the AI insights to your specific goals (e.g., Budget Saving vs Social Trends)."
-  },
-  {
-    id: 'appearance',
-    category: 'settings',
-    question: 'Changing appearance (Dark Mode)',
-    answer: "In your Profile or Settings page, select your preferred theme: Light, Dark, or System (auto-matches your device)."
+    question: 'Dark Mode',
+    answer: "You can toggle between Light, Dark, or System theme preferences. This setting is saved in your browser's local storage."
   }
 ];
 
-// ... (Keep BackgroundVisual and SmartHelpAssistant as they are) ...
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
-  // Returns a subtle SVG pattern based on category
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
-  
   switch(categoryId) {
-    case 'start': // Dashboard-like charts
+    case 'start':
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="100" fill="#3B82F6" className="animate-pulse" />
-          <rect x="200" y="200" width="150" height="150" rx="20" fill="#60A5FA" />
-          <path d="M300 50 L350 150 L250 150 Z" fill="#93C5FD" />
+           <path d="M50 200 L150 200 L150 300 L50 300 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+           <path d="M200 100 L300 100 L300 200 L200 200 Z" fill="none" stroke="currentColor" strokeWidth="2" />
+           <circle cx="200" cy="200" r="10" fill="currentColor" />
         </svg>
       );
-    // ... (Use same logic for other cases, colors generally work fine in dark mode as accents)
-    default: 
+    default:
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="350" r="80" fill="#9CA3AF" />
-          <circle cx="350" cy="50" r="60" fill="#D1D5DB" />
-          <rect x="150" y="150" width="100" height="100" rx="20" fill="#E5E7EB" transform="rotate(45 200 200)" />
+           <circle cx="200" cy="200" r="150" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="10 10" />
         </svg>
       );
   }
 };
-
-// --- Main Component ---
 
 export default function HelpCenter() {
   const [activeCategory, setActiveCategory] = useState('start');
   const [searchQuery, setSearchQuery] = useState('');
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [feedbackState, setFeedbackState] = useState<Record<string, 'up' | 'down' | null>>({});
   const { t } = useLanguage();
 
   const toggleItem = (id: string) => {
@@ -262,15 +192,10 @@ export default function HelpCenter() {
     );
   };
 
-  const handleFeedback = (id: string, type: 'up' | 'down') => {
-    setFeedbackState(prev => ({ ...prev, [id]: type }));
-  };
-
   const filteredFaqs = FAQS.filter(faq => {
     const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === faq.category;
-    
     return searchQuery ? matchesSearch : matchesCategory;
   });
 
@@ -279,31 +204,27 @@ export default function HelpCenter() {
   return (
     <div className="relative min-h-screen bg-gray-50/50 dark:bg-gray-900 pb-12 animate-in fade-in duration-500">
       
-      {/* Background Visual Layer */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
          <BackgroundVisual categoryId={activeCategory} />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Header */}
         <div className="mb-8">
            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Help Center</h1>
-           <p className="text-gray-500 dark:text-gray-400">Find answers, guides, and support for your journey.</p>
+           <p className="text-gray-500 dark:text-gray-400">Documentation and support for SubscriptionHub MVP.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
            
-           {/* LEFT COLUMN: Navigation & Search */}
+           {/* Navigation */}
            <div className="lg:col-span-4 space-y-6 sticky top-6">
-              
-              {/* Search Box */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-1">
                  <div className="relative">
                     <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
                     <input 
                        type="text" 
-                       placeholder="Search help topics..." 
+                       placeholder="Search docs..." 
                        value={searchQuery}
                        onChange={(e) => setSearchQuery(e.target.value)}
                        className="w-full pl-10 pr-4 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-gray-400 text-gray-900 dark:text-white"
@@ -311,10 +232,9 @@ export default function HelpCenter() {
                  </div>
               </div>
 
-              {/* Categories Navigation */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                  <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
-                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Browse Topics</h3>
+                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Topics</h3>
                  </div>
                  <div className="p-2 space-y-1">
                     {CATEGORIES.map(cat => (
@@ -342,13 +262,11 @@ export default function HelpCenter() {
                     ))}
                  </div>
               </div>
-
            </div>
 
-           {/* RIGHT COLUMN: Content */}
+           {/* Content */}
            <div className="lg:col-span-8 space-y-6">
               
-              {/* Category Header */}
               {!searchQuery && (
                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden flex items-center justify-between">
                     <div className="relative z-10">
@@ -356,12 +274,13 @@ export default function HelpCenter() {
                           {activeCategoryData && React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
                        </div>
                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData?.label}</h2>
-                       <p className="text-gray-500 dark:text-gray-400 max-w-md">Frequently asked questions and guides about {activeCategoryData?.label.toLowerCase()}.</p>
+                       <p className="text-gray-500 dark:text-gray-400 max-w-md">
+                          {activeCategoryData?.description}
+                       </p>
                     </div>
                  </div>
               )}
 
-              {/* FAQ Accordion */}
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                  {filteredFaqs.length > 0 ? (
                     <div className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -385,24 +304,6 @@ export default function HelpCenter() {
                                 <div className="px-6 pb-6 pt-0 ml-7">
                                    <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 animate-in fade-in slide-in-from-top-1 duration-200">
                                       {faq.answer}
-                                      <div className="mt-4 pt-3 border-t border-gray-200/50 dark:border-gray-700 flex items-center gap-4">
-                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Was this helpful?</span>
-                                         <button 
-                                            onClick={() => handleFeedback(faq.id, 'up')}
-                                            className={`transition-colors ${feedbackState[faq.id] === 'up' ? 'text-green-500' : 'text-gray-400 hover:text-green-500'}`}
-                                         >
-                                            <ThumbsUp size={14} className={feedbackState[faq.id] === 'up' ? 'fill-current' : ''} />
-                                         </button>
-                                         <button 
-                                            onClick={() => handleFeedback(faq.id, 'down')}
-                                            className={`transition-colors ${feedbackState[faq.id] === 'down' ? 'text-red-500' : 'text-gray-400 hover:text-red-500'}`}
-                                         >
-                                            <ThumbsDown size={14} className={feedbackState[faq.id] === 'down' ? 'fill-current' : ''} />
-                                         </button>
-                                         {feedbackState[faq.id] && (
-                                            <span className="text-[10px] text-gray-400 animate-in fade-in">Thanks for your feedback!</span>
-                                         )}
-                                      </div>
                                    </div>
                                 </div>
                              )}
@@ -422,21 +323,16 @@ export default function HelpCenter() {
 
               {/* Support Footer Block */}
               <div className="bg-gradient-to-br from-gray-900 to-gray-800 dark:from-black dark:to-gray-900 rounded-2xl p-8 text-white relative overflow-hidden shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-500">
-                 {/* Decorative background shapes */}
                  <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
                  
                  <div className="relative z-10 sm:flex items-center justify-between">
                     <div className="mb-6 sm:mb-0">
-                       <div className="flex items-center gap-3 mb-3">
-                          <div className="flex -space-x-2">
-                             <div className="w-8 h-8 rounded-full border-2 border-gray-900 bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-bold">JD</div>
-                             <div className="w-8 h-8 rounded-full border-2 border-gray-900 bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-bold">AS</div>
-                             <div className="w-8 h-8 rounded-full border-2 border-gray-900 bg-gray-400 flex items-center justify-center text-gray-600 text-xs font-bold">MK</div>
-                          </div>
-                          <span className="text-sm font-medium text-gray-300">Support Team</span>
+                       <div className="flex items-center gap-2 mb-3 text-gray-300">
+                          <Info size={16} />
+                          <span className="text-sm font-medium">MVP Support</span>
                        </div>
-                       <h3 className="text-xl font-bold mb-2">Still need help?</h3>
-                       <p className="text-gray-400 text-sm max-w-sm">Our team is available 24/7. We usually respond within 2 hours.</p>
+                       <h3 className="text-xl font-bold mb-2">Report an Issue</h3>
+                       <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know. Note that response times may vary for this preview release.</p>
                     </div>
                     <div>
                        <button 
@@ -454,7 +350,6 @@ export default function HelpCenter() {
         </div>
       </div>
 
-      {/* Contact Support Modal */}
       <ContactSupportModal 
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}

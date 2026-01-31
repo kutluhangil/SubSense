@@ -14,14 +14,12 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus textarea on open
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
         textareaRef.current?.focus();
       }, 100);
     } else {
-      // Reset state when closed
       setTimeout(() => {
         setMessage('');
         setSent(false);
@@ -40,10 +38,8 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
 
     // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1200));
       setSent(true);
-      // Optional: Auto close after success
-      // setTimeout(onClose, 2000); 
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -52,7 +48,6 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Allow Ctrl+Enter to submit
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         handleSubmit(e);
     }
@@ -62,23 +57,20 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       ></div>
 
-      {/* Modal Container */}
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100">
         
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white z-10">
           <div>
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                Contact Support
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-               Describe your issue and we'll get back to you via email.
+               Leave a message for the development team.
             </p>
           </div>
           <button 
@@ -89,7 +81,6 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 bg-gray-50/50">
            {!sent ? (
              <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,7 +90,7 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Describe the issue you're experiencing..."
+                      placeholder="Describe your issue or suggestion..."
                       className="w-full p-4 bg-white border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all resize-none placeholder-gray-400 shadow-sm min-h-[140px]"
                    />
                    <div className="absolute bottom-3 right-3 pointer-events-none text-[10px] text-gray-400 bg-white/80 px-1 rounded">
@@ -151,7 +142,7 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent</h3>
                 <p className="text-sm text-gray-500 mb-8 max-w-xs mx-auto leading-relaxed">
-                   Thank you for reaching out. Our support team has received your message and will respond shortly.
+                   Your message has been recorded for review.
                 </p>
                 <button 
                   onClick={onClose}
