@@ -541,10 +541,26 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                       <CategoryFilters />
 
                       <div className="bg-card rounded-2xl border border-subtle shadow-sm overflow-hidden min-h-[400px]">
-                         {subscriptionsLoading && filteredSubscriptions.length === 0 ? (
-                            <div className="p-8 text-center text-gray-400 flex flex-col items-center">
-                                <Loader2 size={32} className="animate-spin mb-2 text-indigo-500" />
-                                <p>Loading subscriptions...</p>
+                         {subscriptionsLoading ? (
+                            <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center h-96">
+                                <Loader2 size={32} className="animate-spin mb-3 text-indigo-500" />
+                                <p className="text-sm font-medium">Syncing your subscriptions...</p>
+                            </div>
+                         ) : filteredSubscriptions.length === 0 ? (
+                            <div className="p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
+                                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
+                                    <Plus size={32} className="text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">No subscriptions yet</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
+                                    Start tracking your recurring expenses to unlock insights.
+                                </p>
+                                <button 
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    <Plus size={16} /> Add First Subscription
+                                </button>
                             </div>
                          ) : (
                             <SubscriptionTable 
