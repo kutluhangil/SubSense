@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info, Shield, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
-import { useFeedback } from '../contexts/FeedbackContext'; // Import
+import { useFeedback } from '../contexts/FeedbackContext';
 
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
@@ -59,12 +59,12 @@ export default function HelpCenter() {
       description: t('help.cat.subs_desc')
     },
     { 
-      id: 'analytics', 
-      label: t('help.cat.analytics'), 
-      icon: PieChart, 
-      color: 'text-violet-600 dark:text-violet-400', 
-      bg: 'bg-violet-50 dark:bg-violet-900/20',
-      description: t('help.cat.analytics_desc')
+      id: 'security', 
+      label: t('settings.security'), 
+      icon: Shield, 
+      color: 'text-gray-700 dark:text-gray-300', 
+      bg: 'bg-gray-100 dark:bg-gray-800',
+      description: t('settings.privacy_visibility')
     },
     { 
       id: 'limitations', 
@@ -73,55 +73,21 @@ export default function HelpCenter() {
       color: 'text-amber-600 dark:text-amber-400', 
       bg: 'bg-amber-50 dark:bg-amber-900/20',
       description: t('help.cat.limitations_desc')
-    },
-    { 
-      id: 'security', 
-      label: 'Security', 
-      icon: Shield, 
-      color: 'text-gray-700 dark:text-gray-300', 
-      bg: 'bg-gray-100 dark:bg-gray-800',
-      description: 'Privacy & Data Protection'
-    },
-    { 
-      id: 'compare', 
-      label: t('help.cat.compare'), 
-      icon: Globe, 
-      color: 'text-green-600 dark:text-green-400', 
-      bg: 'bg-green-50 dark:bg-green-900/20',
-      description: t('help.cat.compare_desc')
-    },
-    { 
-      id: 'social', 
-      label: t('help.cat.social'), 
-      icon: Users, 
-      color: 'text-orange-600 dark:text-orange-400', 
-      bg: 'bg-orange-50 dark:bg-orange-900/20',
-      description: t('help.cat.social_desc')
-    },
-    { 
-      id: 'settings', 
-      label: t('help.cat.settings'), 
-      icon: Settings, 
-      color: 'text-gray-600 dark:text-gray-400', 
-      bg: 'bg-gray-50 dark:bg-gray-700/50',
-      description: t('help.cat.settings_desc')
-    },
+    }
   ], [t]);
 
   const FAQS = useMemo(() => [
     { id: 'local-first', category: 'start', question: t('help.faq.local_first.q'), answer: t('help.faq.local_first.a') },
     { id: 'currency-region', category: 'start', question: t('help.faq.currency.q'), answer: t('help.faq.currency.a') },
-    { id: 'account-recovery', category: 'start', question: t('help.faq.account.q'), answer: t('help.faq.account.a') },
+    { id: 'free-pro', category: 'start', question: t('help.faq.free_pro.q'), answer: t('help.faq.free_pro.a') },
     
     // Limitations
     { id: 'limit-storage', category: 'limitations', question: t('help.faq.limit_storage.q'), answer: t('help.faq.limit_storage.a') },
-    { id: 'limit-currency', category: 'limitations', question: t('help.faq.limit_currency.q'), answer: t('help.faq.limit_currency.a') },
     { id: 'limit-support', category: 'limitations', question: t('help.faq.limit_support.q'), answer: t('help.faq.limit_support.a') },
     
-    // Security (Hardcoded for now as it's new)
-    { id: 'sec-isolation', category: 'security', question: 'Can other users see my data?', answer: 'No. Strict database rules ensure that each user can only read and write their own data. Cross-access is blocked at the server level.' },
-    { id: 'sec-encryption', category: 'security', question: 'How is data encrypted?', answer: 'Data is encrypted in transit using HTTPS/TLS. Since this is a local-first app, your sensitive data mostly lives in your own browser.' },
-    { id: 'sec-ai', category: 'security', question: 'Does AI see my financial data?', answer: 'The AI features receive only a sanitized, anonymous snapshot of your current subscriptions to generate insights. No PII is sent, and data is not used for model training.' },
+    // Security
+    { id: 'sec-ai', category: 'security', question: t('help.faq.ai_privacy.q'), answer: t('help.faq.ai_privacy.a') },
+    { id: 'account-sync', category: 'security', question: t('help.faq.account.q'), answer: t('help.faq.account.a') },
     
   ], [t]);
 
@@ -208,15 +174,15 @@ export default function HelpCenter() {
            {/* Content */}
            <div className="lg:col-span-8 space-y-6">
               
-              {!searchQuery && (
+              {!searchQuery && activeCategoryData && (
                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden flex items-center justify-between">
                     <div className="relative z-10">
-                       <div className={`inline-flex p-3 rounded-xl mb-4 ${activeCategoryData?.bg}`}>
-                          {activeCategoryData && React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
+                       <div className={`inline-flex p-3 rounded-xl mb-4 ${activeCategoryData.bg}`}>
+                          {React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
                        </div>
-                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData?.label}</h2>
+                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData.label}</h2>
                        <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                          {activeCategoryData?.description}
+                          {activeCategoryData.description}
                        </p>
                     </div>
                  </div>

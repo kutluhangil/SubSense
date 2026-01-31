@@ -1,19 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import Features from './components/Features';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
-import Dashboard from './components/Dashboard';
-import DemoModal from './components/DemoModal';
-import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { FeedbackProvider } from './contexts/FeedbackContext'; // Import
+import { FeedbackProvider } from './contexts/FeedbackContext'; 
 import { migrateLocalData } from './utils/firestore';
-import { WifiOff } from 'lucide-react';
+import { WifiOff, Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
+
+// Lazy Load Pages & Heavy Components
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const Features = React.lazy(() => import('./components/Features'));
+const DemoModal = React.lazy(() => import('./components/DemoModal'));
+const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage'));
 
 // Types for user interface consistency
 export interface User {
@@ -23,6 +25,12 @@ export interface User {
   currency?: string;
   uid?: string;
 }
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
+    <Loader2 className="animate-spin text-indigo-600" size={32} />
+  </div>
+);
 
 function AppContent() {
   const { currentUser, login, signup, logout, authInitialized } = useAuth();
@@ -129,11 +137,7 @@ function AppContent() {
 
   // 4. App-Level Gating: Show loader until auth state is confirmed
   if (!authInitialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   // Map Firebase user to App User interface
@@ -153,47 +157,49 @@ function AppContent() {
         </div>
       )}
       
-      {appUser ? (
-        <Dashboard user={appUser} onLogout={handleLogout} />
-      ) : (
-        <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
-          {currentPage === 'reset-password' ? (
-             <ResetPasswordPage onLoginClick={() => {
-                setCurrentPage('home');
-                openAuth('login');
-             }} />
-          ) : (
-            <>
-              <Navbar 
-                onOpenAuth={openAuth} 
-                onNavigate={(page) => setCurrentPage(page as any)} 
-                currentPage={currentPage as 'home' | 'features'}
-              />
-              <main className="flex-grow flex flex-col">
-                {currentPage === 'home' ? (
-                  <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
-                ) : (
-                  <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
-                )}
-              </main>
-              <Footer />
-            </>
-          )}
-          <AuthModal 
-            isOpen={isAuthOpen} 
-            onClose={() => setIsAuthOpen(false)} 
-            initialMode={authMode}
-            onLoginSubmit={handleLogin}
-            onSignupSubmit={handleSignup}
-            onSimulateReset={handleSimulateReset}
-          />
-          <DemoModal 
-            isOpen={isDemoOpen}
-            onClose={closeDemo}
-            onSignup={() => openAuth('signup')}
-          />
-        </div>
-      )}
+      <Suspense fallback={<PageLoader />}>
+        {appUser ? (
+          <Dashboard user={appUser} onLogout={handleLogout} />
+        ) : (
+          <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
+            {currentPage === 'reset-password' ? (
+               <ResetPasswordPage onLoginClick={() => {
+                  setCurrentPage('home');
+                  openAuth('login');
+               }} />
+            ) : (
+              <>
+                <Navbar 
+                  onOpenAuth={openAuth} 
+                  onNavigate={(page) => setCurrentPage(page as any)} 
+                  currentPage={currentPage as 'home' | 'features'}
+                />
+                <main className="flex-grow flex flex-col">
+                  {currentPage === 'home' ? (
+                    <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
+                  ) : (
+                    <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
+                  )}
+                </main>
+                <Footer />
+              </>
+            )}
+            <AuthModal 
+              isOpen={isAuthOpen} 
+              onClose={() => setIsAuthOpen(false)} 
+              initialMode={authMode}
+              onLoginSubmit={handleLogin}
+              onSignupSubmit={handleSignup}
+              onSimulateReset={handleSimulateReset}
+            />
+            <DemoModal 
+              isOpen={isDemoOpen}
+              onClose={closeDemo}
+              onSignup={() => openAuth('signup')}
+            />
+          </div>
+        )}
+      </Suspense>
     </>
   );
 }

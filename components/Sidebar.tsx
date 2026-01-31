@@ -15,7 +15,7 @@ interface SidebarProps {
   onOpenAI?: () => void; // New prop
 }
 
-export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) {
+const Sidebar = ({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) => {
   const { t } = useLanguage();
   const { currentUser, isPro } = useAuth();
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -146,4 +146,6 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
     <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
     </>
   );
-}
+};
+
+export default React.memo(Sidebar);

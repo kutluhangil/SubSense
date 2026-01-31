@@ -11,7 +11,7 @@ interface AIInsightsCardProps {
   subscriptions: Subscription[];
 }
 
-export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
+const AIInsightsCard = ({ subscriptions }: AIInsightsCardProps) => {
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -78,11 +78,11 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
                         <div className="p-1.5 bg-gray-900 dark:bg-white rounded-lg">
                             <Sparkles className="w-4 h-4 text-white dark:text-gray-900" />
                         </div>
-                        <span className="font-bold text-gray-900 dark:text-white text-sm tracking-wide">AI Insights</span>
+                        <span className="font-bold text-gray-900 dark:text-white text-sm tracking-wide">{t('ai.card.title')}</span>
                     </div>
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
                         <Lock size={12} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Pro</span>
+                        <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">{t('ai.card.pro_badge')}</span>
                     </div>
                 </div>
 
@@ -108,14 +108,14 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 dark:bg-gray-900/60 backdrop-blur-[2px]">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 text-center max-w-xs transform transition-transform group-hover:scale-105">
                         <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
-                            Potential Savings Found
+                            {t('ai.card.potential_savings')}
                         </p>
                         <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-4">
                             {potentialSavingsTeaser > 0 ? formatPrice(potentialSavingsTeaser) : '$100+'}
                             <span className="text-sm font-medium text-gray-400">/yr</span>
                         </h3>
                         <button className="w-full bg-gray-900 dark:bg-white hover:bg-gray-800 text-white dark:text-gray-900 text-sm font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
-                            Unlock Insights <ArrowRight size={14} />
+                            {t('ai.card.unlock_btn')} <ArrowRight size={14} />
                         </button>
                     </div>
                 </div>
@@ -141,9 +141,9 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
               <Sparkles className="w-5 h-5 text-yellow-300" />
             </div>
             <div>
-              <h3 className="font-bold text-lg leading-none tracking-tight">Smart Insights</h3>
+              <h3 className="font-bold text-lg leading-none tracking-tight">{t('ai.card.smart_title')}</h3>
               <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">
-                Optimized by Gemini
+                {t('ai.card.optimized_by')}
               </p>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
                     </div>
                     {insight.estimatedSavings && (
                         <div className="flex flex-col items-end shrink-0">
-                            <span className="text-[10px] text-gray-400 uppercase font-bold">Save</span>
+                            <span className="text-[10px] text-gray-400 uppercase font-bold">{t('ai.card.save_label')}</span>
                             <span className="text-sm font-bold text-white bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
                                 {insight.estimatedSavings}
                             </span>
@@ -185,12 +185,14 @@ export default function AIInsightsCard({ subscriptions }: AIInsightsCardProps) {
           ) : (
             <div className="text-center py-6 text-gray-400 text-xs bg-white/5 rounded-xl border border-white/5 border-dashed">
                 <Lightbulb className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                <p>No optimization opportunities found yet.</p>
-                <p>Add more subscriptions to activate analysis.</p>
+                <p>{t('ai.card.no_insights')}</p>
+                <p>{t('ai.card.add_more')}</p>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default React.memo(AIInsightsCard);
