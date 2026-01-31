@@ -2,7 +2,7 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/functions"; // Import Functions
-import { initializeFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getPerformance } from "firebase/performance";
 
@@ -46,26 +46,19 @@ if (window.location.hostname === "localhost") {
 let dbInstance;
 
 try {
+  // Use modern persistentLocalCache configuration
   dbInstance = initializeFirestore(app, {
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED
+    })
   });
 } catch (e) {
-  console.warn("Firestore already initialized, using existing instance.");
+  console.warn("Firestore already initialized or fallback required, using existing instance.", e);
   dbInstance = firebase.firestore(app); 
 }
 
 export const db = dbInstance;
-
-// Enable offline persistence
-if (typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-        console.warn("Firestore persistence enabled in another tab.");
-    } else if (err.code == 'unimplemented') {
-        console.warn("Firestore persistence not supported by this browser.");
-    }
-  });
-}
 
 // Initialize Analytics & Performance (Client-Side Only)
 export let analytics: any = null;
