@@ -110,9 +110,12 @@ export const getRates = (): Record<string, number> => {
  */
 export const convertAmount = (amount: number, fromCurrency: string, toCurrency: string): number => {
   const rates = getRates();
+  // Ensure we have a valid rate, fallback to 1 if missing or 0
   const fromRate = rates[fromCurrency] || 1;
   const toRate = rates[toCurrency] || 1;
   
+  if (!amount) return 0;
+
   // Convert to USD (Base) then to Target
   // Amount / FromRate = USD Value
   // USD Value * ToRate = Target Value

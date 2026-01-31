@@ -4,7 +4,7 @@ import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, S
 import BrandIcon from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
-import { EXCHANGE_RATES } from '../utils/currency';
+import { EXCHANGE_RATES, CURRENCY_DATA, convertAmount } from '../utils/currency';
 
 // --- Types & Constants ---
 
@@ -12,14 +12,13 @@ interface PricingData {
   country: string;
   currency: string;
   price: number;
-  usdPrice: number;
-  history: number[]; // 6 months
+  displayPrice: number; // Converted to user selected base currency
+  history: number[]; // 6 months in display currency
   taxInfo: string;
   lastUpdated: string;
   trend: number; // % change
 }
 
-// ... (Data Constants remain same) ...
 const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number; code: string; currency: string }> = {
   'United States': { color: '#2D60FF', flag: '🇺🇸', ppp: 1.0, code: 'US', currency: 'USD' },
   'United Kingdom': { color: '#FF8A00', flag: '🇬🇧', ppp: 1.15, code: 'GB', currency: 'GBP' }, // Slightly more exp usually
@@ -31,32 +30,40 @@ const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-// ... (Helper functions generateLivePricing & generateSmoothPath remain same) ...
-const generateLivePricing = (serviceName: string): PricingData[] => {
+const generateLivePricing = (serviceName: string, baseCurrency: string): PricingData[] => {
     const key = serviceName.toLowerCase().replace(/\s+/g, '');
     const service = SUBSCRIPTION_CATALOG[key];
-    const basePrice = service ? parseFloat(service.price) : 10.00; 
+    const basePriceUSD = service ? parseFloat(service.price) : 10.00; 
 
     return Object.entries(COUNTRY_CONFIG).map(([country, config]) => {
-        const localPriceRaw = basePrice * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
-        let formattedPrice = localPriceRaw;
+        // Calculate local price based on PPP and Exchange Rate (simulated)
+        const localPriceRaw = basePriceUSD * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
+        let formattedLocalPrice = localPriceRaw;
+        
+        // Rounding conventions
         if (config.currency === 'JPY' || config.currency === 'HUF') {
-            formattedPrice = Math.round(localPriceRaw / 10) * 10;
+            formattedLocalPrice = Math.round(localPriceRaw / 10) * 10;
         } else {
-            formattedPrice = Math.round(localPriceRaw) - 0.01;
+            formattedLocalPrice = Math.round(localPriceRaw) - 0.01;
         }
-        const rate = EXCHANGE_RATES[config.currency] || 1;
-        const usdVal = formattedPrice / rate;
+
+        // Ensure price is positive
+        const finalLocalPrice = Math.max(0, formattedLocalPrice);
+
+        // Convert local price to Selected Base Currency for comparison
+        const displayPrice = convertAmount(finalLocalPrice, config.currency, baseCurrency);
+
+        // Generate history based on display price
         const history = Array.from({length: 6}, (_, i) => {
             const fluctuation = 1 + (Math.random() - 0.5) * 0.05;
-            return usdVal * fluctuation;
+            return displayPrice * fluctuation;
         });
 
         return {
             country,
             currency: config.currency,
-            price: Math.max(0, formattedPrice),
-            usdPrice: Math.max(0, usdVal),
+            price: finalLocalPrice, // Native price
+            displayPrice: displayPrice, // Converted price
             history,
             taxInfo: country === 'United States' ? '+ Tax' : 'incl. Tax',
             lastUpdated: 'Live',
@@ -85,7 +92,7 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 // --- Components ---
 
-const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
+const GlobalPricingChart = ({ data, baseCurrencySymbol }: { data: PricingData[], baseCurrencySymbol: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [hoveredX, setHoveredX] = useState<number | null>(null);
@@ -179,7 +186,7 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                    <g key={i}>
                       <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="var(--chart-grid)" />
                       <text x={padding.left - 10} y={y} dy="4" textAnchor="end" className="text-[10px] fill-gray-400 dark:fill-gray-500 font-medium">
-                         ${(chartData.maxValue * t).toFixed(0)}
+                         {baseCurrencySymbol}{(chartData.maxValue * t).toFixed(0)}
                       </text>
                    </g>
                 );
@@ -261,7 +268,7 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{d.country}</span>
                       </div>
                       <div className="text-right">
-                         <div className="text-xs font-bold text-gray-900 dark:text-white">${d.point.value.toFixed(2)}</div>
+                         <div className="text-xs font-bold text-gray-900 dark:text-white">{baseCurrencySymbol}{d.point.value.toFixed(2)}</div>
                       </div>
                    </div>
                 ))}
@@ -272,13 +279,15 @@ const GlobalPricingChart = ({ data }: { data: PricingData[] }) => {
   );
 };
 
-const AIInsightsPanel = ({ data, serviceName }: { data: PricingData[], serviceName: string }) => {
+const AIInsightsPanel = ({ data, serviceName, baseCurrencySymbol }: { data: PricingData[], serviceName: string, baseCurrencySymbol: string }) => {
   const [isOpen, setIsOpen] = useState(true);
   const { t } = useLanguage();
 
-  const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
-  const mostExpensive = data.reduce((prev, curr) => prev.usdPrice > curr.usdPrice ? prev : curr);
-  const diffPercent = ((mostExpensive.usdPrice - cheapest.usdPrice) / mostExpensive.usdPrice * 100).toFixed(0);
+  const cheapest = data.reduce((prev, curr) => prev.displayPrice < curr.displayPrice ? prev : curr);
+  const mostExpensive = data.reduce((prev, curr) => prev.displayPrice > curr.displayPrice ? prev : curr);
+  const diffPercent = mostExpensive.displayPrice > 0 
+    ? ((mostExpensive.displayPrice - cheapest.displayPrice) / mostExpensive.displayPrice * 100).toFixed(0) 
+    : '0';
 
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 overflow-hidden">
@@ -308,10 +317,10 @@ const AIInsightsPanel = ({ data, serviceName }: { data: PricingData[], serviceNa
   );
 };
 
-const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: PricingData[], baseCountry?: string }) => {
-   const basePrice = data.find(d => d.country === baseCountry)?.usdPrice || 0;
-   const cheapest = data.reduce((prev, curr) => prev.usdPrice < curr.usdPrice ? prev : curr);
-   const savings = basePrice - cheapest.usdPrice;
+const SavingsComparisonBox = ({ data, baseCountry = 'United States', baseCurrencySymbol }: { data: PricingData[], baseCountry?: string, baseCurrencySymbol: string }) => {
+   const basePrice = data.find(d => d.country === baseCountry)?.displayPrice || 0;
+   const cheapest = data.reduce((prev, curr) => prev.displayPrice < curr.displayPrice ? prev : curr);
+   const savings = basePrice - cheapest.displayPrice;
    const savingsPercent = basePrice > 0 ? ((savings / basePrice) * 100).toFixed(0) : '0';
    const { t } = useLanguage();
 
@@ -332,7 +341,7 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
          <div className="relative z-10">
             <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('compare.potential_savings')}</p>
             <div className="flex items-baseline gap-1 mb-1">
-               <span className="text-4xl font-bold">${(savings * 12).toFixed(2)}</span>
+               <span className="text-4xl font-bold">{baseCurrencySymbol}{(savings * 12).toFixed(2)}</span>
                <span className="text-sm text-gray-400">/ year</span>
             </div>
             <div className="flex items-center gap-2 mb-4">
@@ -347,7 +356,7 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
                  t('compare.switching_msg'), 
                  `${baseCountry}`, 
                  `${cheapest.country}`, 
-                 `$${savings.toFixed(2)}`
+                 `${baseCurrencySymbol}${savings.toFixed(2)}`
                )}
             </p>
          </div>
@@ -355,7 +364,7 @@ const SavingsComparisonBox = ({ data, baseCountry = 'United States' }: { data: P
    );
 };
 
-const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseCurrency: string }) => {
+const RegionalPriceTable = ({ data, baseCurrencySymbol }: { data: PricingData[], baseCurrencySymbol: string }) => {
    const baseItem = data.find(d => d.country === 'United States') || data[0]; 
    const { t } = useLanguage();
 
@@ -371,8 +380,8 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
             <table className="w-full text-left">
                <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                   {data.map((item, idx) => {
-                     const diff = baseItem.usdPrice > 0 
-                        ? ((item.usdPrice - baseItem.usdPrice) / baseItem.usdPrice) * 100 
+                     const diff = baseItem.displayPrice > 0 
+                        ? ((item.displayPrice - baseItem.displayPrice) / baseItem.displayPrice) * 100 
                         : 0;
                      const isCheaper = diff < 0;
                      const isBase = item.country === 'United States';
@@ -390,7 +399,7 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
                            </td>
                            <td className="px-4 py-3 text-right">
                               <div className="flex flex-col items-end">
-                                 <span className="text-sm font-bold text-gray-900 dark:text-white">${item.usdPrice.toFixed(2)}</span>
+                                 <span className="text-sm font-bold text-gray-900 dark:text-white">{baseCurrencySymbol}{item.displayPrice.toFixed(2)}</span>
                                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{item.currency} {item.price.toLocaleString()}</span>
                               </div>
                            </td>
@@ -415,14 +424,22 @@ const RegionalPriceTable = ({ data, baseCurrency }: { data: PricingData[], baseC
 };
 
 export default function Comparison() {
-  const { t } = useLanguage();
+  const { t, currentCurrency } = useLanguage(); // Use context currency as default
   const [selectedService, setSelectedService] = useState('Netflix');
-  const [baseCurrency, setBaseCurrency] = useState('USD');
+  const [baseCurrency, setBaseCurrency] = useState(currentCurrency);
 
-  // Real-time calculation based on exchange rates
+  // Sync local baseCurrency with global change if user hasn't overridden it locally (optional, staying consistent for now)
+  useEffect(() => {
+      setBaseCurrency(currentCurrency);
+  }, [currentCurrency]);
+
+  const currencies = useMemo(() => Object.values(CURRENCY_DATA), []);
+  const baseCurrencySymbol = CURRENCY_DATA[baseCurrency]?.symbol || '$';
+
+  // Real-time calculation based on exchange rates and selected base currency
   const currentData = useMemo(() => {
-      return generateLivePricing(selectedService);
-  }, [selectedService]);
+      return generateLivePricing(selectedService, baseCurrency);
+  }, [selectedService, baseCurrency]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-500">
@@ -458,17 +475,16 @@ export default function Comparison() {
                      value={baseCurrency}
                      onChange={(e) => setBaseCurrency(e.target.value)}
                  >
-                     <option value="USD">United States Dollar (USD)</option>
-                     <option value="GBP">British Pound (GBP)</option>
-                     <option value="EUR">Euro (EUR)</option>
-                     <option value="JPY">Japanese Yen (JPY)</option>
+                     {currencies.map(c => (
+                         <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+                     ))}
                  </select>
                  <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
              </div>
          </div>
          {/* Savings Box takes up remaining space */}
          <div className="md:col-span-2">
-             <SavingsComparisonBox data={currentData} />
+             <SavingsComparisonBox data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
          </div>
       </div>
 
@@ -482,7 +498,7 @@ export default function Comparison() {
                       <div className="flex items-center gap-3">
                           <BrandIcon type={selectedService} className="w-10 h-10 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600" />
                           <div>
-                              <h3 className="font-bold text-gray-900 dark:text-white">{t('compare.price_history')} (USD)</h3>
+                              <h3 className="font-bold text-gray-900 dark:text-white">{t('compare.price_history')} ({baseCurrency})</h3>
                               <p className="text-xs text-gray-500 dark:text-gray-400">{t('compare.trend_analysis')}</p>
                           </div>
                       </div>
@@ -498,16 +514,16 @@ export default function Comparison() {
                       </div>
                   </div>
                   
-                  <GlobalPricingChart data={currentData} />
+                  <GlobalPricingChart data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
               </div>
 
               {/* AI Insights */}
-              <AIInsightsPanel data={currentData} serviceName={selectedService} />
+              <AIInsightsPanel data={currentData} serviceName={selectedService} baseCurrencySymbol={baseCurrencySymbol} />
           </div>
 
           {/* Right Column: Comparison Table */}
           <div className="lg:col-span-1 h-full">
-              <RegionalPriceTable data={currentData} baseCurrency={baseCurrency} />
+              <RegionalPriceTable data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
           </div>
       </div>
     </div>

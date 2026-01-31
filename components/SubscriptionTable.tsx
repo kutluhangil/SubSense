@@ -28,18 +28,25 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
 
   const handleDropdownClick = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    setActiveDropdown(activeDropdown === id ? null : id);
+    // Toggle: if clicking the same ID, close it; otherwise open new
+    setActiveDropdown(prev => prev === id ? null : id);
   };
 
-  const handleAction = (e: React.MouseEvent, action: 'edit' | 'delete', sub: Subscription) => {
+  const handleDelete = (e: React.MouseEvent, sub: Subscription) => {
     e.stopPropagation();
     setActiveDropdown(null);
-    if (action === 'edit' && onSelectSubscription) {
-        onSelectSubscription(sub);
-    } else if (action === 'delete' && onDeleteSubscription) {
-        if (window.confirm("Are you sure you want to delete this subscription?")) {
+    if (onDeleteSubscription) {
+        if (window.confirm(`Are you sure you want to remove ${sub.name}? This cannot be undone.`)) {
             onDeleteSubscription(sub.id);
         }
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent, sub: Subscription) => {
+    e.stopPropagation();
+    setActiveDropdown(null);
+    if (onSelectSubscription) {
+        onSelectSubscription(sub);
     }
   };
 
@@ -113,20 +120,20 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 {activeDropdown === sub.id && (
                     <div ref={dropdownRef} className="absolute right-8 top-8 w-40 bg-card rounded-xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 origin-top-right">
                        <button 
-                         onClick={(e) => handleAction(e, 'edit', sub)}
+                         onClick={(e) => handleEdit(e, sub)}
                          className="w-full text-left px-4 py-2.5 text-xs font-medium text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary flex items-center gap-2"
                        >
                           <Edit2 size={14} /> Edit Subscription
                        </button>
                        <button 
-                         onClick={(e) => handleAction(e, 'edit', sub)}
+                         onClick={(e) => handleEdit(e, sub)}
                          className="w-full text-left px-4 py-2.5 text-xs font-medium text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-primary flex items-center gap-2"
                        >
                           <Eye size={14} /> View Details
                        </button>
                        <div className="h-px bg-subtle my-1"></div>
                        <button 
-                         onClick={(e) => handleAction(e, 'delete', sub)}
+                         onClick={(e) => handleDelete(e, sub)}
                          className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                        >
                           <Trash2 size={14} /> Remove
