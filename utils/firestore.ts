@@ -7,7 +7,6 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
-  where,
   orderBy,
   onSnapshot, 
   getDoc,
@@ -16,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
+import { validateSubscription } from './validateSubscription';
 
 // --- Types ---
 
@@ -169,7 +169,37 @@ export const updateUserSettings = async (uid: string, settings: any) => {
 
 // --- Subscriptions ---
 
+export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
+  try {
+    const subsRef = collection(db, 'users', uid, 'subscriptions');
+    const snapshot = await getDocs(subsRef);
+    const subs: Subscription[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      // Only include if valid
+      if (validateSubscription(data as Partial<Subscription>)) {
+        subs.push({ id: doc.id, ...data } as unknown as Subscription);
+      }
+    });
+    return subs;
+  } catch (error: any) {
+    console.error("Error fetching subscriptions:", error);
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const localSubs = getLocalData<Subscription[]>(localKey) || [];
+      return localSubs.filter(validateSubscription);
+    }
+    return [];
+  }
+};
+
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
+  // 1. Guardrail: Validate Data before Write
+  if (!validateSubscription(subscription as Partial<Subscription>)) {
+    console.error("Attempted to add invalid subscription. Operation blocked.");
+    throw new Error("Invalid subscription data. Please check fields.");
+  }
+
   try {
     const subsRef = collection(db, 'users', uid, 'subscriptions');
     await addDoc(subsRef, {
@@ -182,7 +212,6 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
       console.warn("Firestore write denied. Adding subscription locally.");
       const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
       const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-      // Generate a numeric ID for local item to match interface
       const newSub = { ...subscription, id: Date.now() } as Subscription;
       setLocalData(localKey, [...currentSubs, newSub]);
     } else {
@@ -193,10 +222,17 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
 };
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
+  // 1. Guardrail: Validate Data before Write (if update contains vital fields)
+  // We construct a mock object merging just the fields we have to check validity roughly
+  // Ideally, we'd fetch current, merge, and validate, but that's expensive.
+  // We check if the *changed* fields are valid in isolation if possible, or just proceed if partial.
+  // For safety, let's minimally check key fields if present.
+  if (data.price !== undefined && (typeof data.price !== 'number' || data.price < 0)) throw new Error("Invalid price update");
+  if (data.currency && typeof data.currency !== 'string') throw new Error("Invalid currency update");
+
   try {
-    // If ID is numeric (local), don't even try Firestore, just update local
     if (typeof subId === 'number') {
-        throw { code: 'permission-denied' }; // Trigger catch block to handle local update
+        throw { code: 'permission-denied' }; 
     }
 
     const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
@@ -248,16 +284,14 @@ export const listenToUserSubscriptions = (
 ) => {
   let unsubscribeFirestore = () => {};
   
-  // Local fallback listener function
   const handleLocalUpdate = (e: any) => {
     if (e.detail && e.detail.key === `${FALLBACK_KEY_PREFIX}subs_${uid}`) {
-      onChange(e.detail.data || []);
+      const validSubs = (e.detail.data || []).filter(validateSubscription);
+      onChange(validSubs);
     }
   };
 
   try {
-    // Attempt to order by createdAt. Note: This requires a composite index if we were filtering too,
-    // but here we are in a subcollection so it's usually fine. If it fails, we fall back.
     const q = query(
       collection(db, 'users', uid, 'subscriptions'),
       orderBy('createdAt', 'desc')
@@ -266,22 +300,21 @@ export const listenToUserSubscriptions = (
     unsubscribeFirestore = onSnapshot(q, (snapshot) => {
       const subs: Subscription[] = [];
       snapshot.forEach((doc) => {
-        // Cast doc.id (string) to id (number | string)
-        subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
+        const data = doc.data();
+        // Guardrail: Filter invalid docs from stream
+        if (validateSubscription(data as Partial<Subscription>)) {
+            subs.push({ id: doc.id, ...data } as unknown as Subscription);
+        } else {
+            console.warn("Skipping invalid subscription document:", doc.id);
+        }
       });
       onChange(subs);
     }, (error) => {
-      // Handle Permission Denied or Offline
       if (error.code === 'permission-denied' || error.code === 'unavailable' || error.code === 'failed-precondition') {
-        console.warn("Firestore realtime denied or failed. Switching to local storage.");
-        
-        // 1. Initial Load from Local
+        console.warn("Firestore realtime denied/failed. Switching to local storage.");
         const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
-        onChange(localData);
-
-        // 2. Attach Listener for future local updates
+        onChange(localData.filter(validateSubscription));
         fallbackEvents.addEventListener('local-update', handleLocalUpdate);
-        
         if (onError) onError(error);
       } else {
         console.error("Firestore snapshot error:", error);
@@ -290,13 +323,11 @@ export const listenToUserSubscriptions = (
     });
   } catch (error) {
     console.error("Error setting up subscription listener:", error);
-    // Fallback immediately
     const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
-    onChange(localData);
+    onChange(localData.filter(validateSubscription));
     fallbackEvents.addEventListener('local-update', handleLocalUpdate);
   }
 
-  // Return unsubscribe function that cleans up both Firestore and Local listeners
   return () => {
     unsubscribeFirestore();
     fallbackEvents.removeEventListener('local-update', handleLocalUpdate);
@@ -308,9 +339,13 @@ export const migrateLocalData = async (uid: string, localSubs: Subscription[]) =
   if (!localSubs || localSubs.length === 0) return;
   
   const promises = localSubs.map(sub => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, ...rest } = sub;
-      return addSubscription(uid, rest);
+      // Validate before migration
+      if (validateSubscription(sub)) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...rest } = sub;
+          return addSubscription(uid, rest);
+      }
+      return Promise.resolve();
   });
   
   await Promise.all(promises);

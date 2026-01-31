@@ -18,7 +18,7 @@ interface Message {
 }
 
 export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
-  const { currentCurrency, convert, currentLanguage, t } = useLanguage();
+  const { currentCurrency, currentLanguage, t } = useLanguage();
   
   // Initialize messages with localized welcome
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,21 +51,12 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
-    // Prepare context with normalized currency values
-    const monthlySpend = subscriptions.reduce((acc, sub) => {
-       const priceInBase = convert(sub.price, sub.currency);
-       return acc + (sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12);
-    }, 0);
-
+    // NOTE: We pass raw subscriptions here, but the utility function `chatWithGemini`
+    // is now responsible for strictly validating, sanitizing, and normalizing them.
+    // This keeps the UI component dumb and the logic centralized.
+    
     const contextData = {
-      subscriptions: subscriptions.map(s => ({ 
-          name: s.name, 
-          price: s.price, 
-          currency: s.currency, 
-          basePrice: convert(s.price, s.currency).toFixed(2),
-          cycle: s.cycle 
-      })),
-      monthlySpend: monthlySpend.toFixed(2),
+      subscriptions: subscriptions,
       baseCurrency: currentCurrency,
       currentPage
     };
