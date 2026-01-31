@@ -1,32 +1,51 @@
-
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// Robustly get env vars (support both Vite import.meta.env and standard process.env)
-const getEnv = () => {
-  const meta = import.meta as any;
-  // Check if import.meta.env exists
-  if (meta && meta.env) {
-    return meta.env;
+// Safe access to environment variables
+const getEnvVar = (key: string) => {
+  try {
+    // Check import.meta.env (Vite)
+    // Cast to any to avoid TS errors if Vite types aren't loaded
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env[key]) {
+      return (import.meta as any).env[key];
+    }
+    // Check process.env (Standard/Webpack)
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch (e) {
+    // Ignore errors in restricted environments
   }
-  // Fallback to process.env if available
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env;
-  }
-  // Fallback to empty object to prevent crashes on property access
-  return {};
+  return undefined;
 };
 
-const env = getEnv();
+// Check if we have a valid configuration
+const apiKey = getEnvVar('VITE_FIREBASE_API_KEY');
+const authDomain = getEnvVar('VITE_FIREBASE_AUTH_DOMAIN');
 
-const firebaseConfig = {
-  apiKey: env.VITE_FIREBASE_API_KEY,
-  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: env.VITE_FIREBASE_APP_ID
+const isConfigValid = apiKey && authDomain;
+
+if (!isConfigValid) {
+  console.warn("Firebase configuration is missing or incomplete. Check your .env file. Using mock config to prevent crash.");
+}
+
+// Use real config or a placeholder to prevent immediate crash
+const firebaseConfig = isConfigValid ? {
+  apiKey: apiKey,
+  authDomain: authDomain,
+  projectId: getEnvVar('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: getEnvVar('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: getEnvVar('VITE_FIREBASE_APP_ID')
+} : {
+  // Placeholder config so app loads (auth will fail on use)
+  apiKey: "AIzaSyDummyKeyForDevelopmentEnvironmentOnly",
+  authDomain: "dummy.firebaseapp.com",
+  projectId: "dummy-project",
+  storageBucket: "dummy.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:0000000000000000000000"
 };
 
 const app = initializeApp(firebaseConfig);
