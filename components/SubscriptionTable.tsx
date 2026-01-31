@@ -4,15 +4,17 @@ import BrandIcon from './BrandIcon';
 import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
+import { convertAmount } from '../utils/currency';
 
 interface SubscriptionTableProps {
   subscriptions?: Subscription[];
   onSelectSubscription?: (sub: Subscription) => void;
   onDeleteSubscription?: (id: number) => void;
+  previewCurrency?: string | null;
 }
 
-export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription }: SubscriptionTableProps) {
-  const { formatPrice, formatDate, convert, currentCurrency } = useLanguage();
+export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }: SubscriptionTableProps) {
+  const { formatPrice, formatDate, currentCurrency } = useLanguage();
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +54,9 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
 
   const displaySubs = subscriptions.length > 0 ? subscriptions : [] as Subscription[];
 
+  // Determine target currency for secondary display
+  const targetCurrency = previewCurrency || currentCurrency;
+
   return (
     <div className="overflow-x-visible">
       <table className="w-full text-left border-collapse">
@@ -66,8 +71,23 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
         </thead>
         <tbody className="bg-card">
           {displaySubs.map((sub) => {
-            const isDifferentCurrency = sub.currency !== currentCurrency;
-            const normalizedPrice = convert(sub.price, sub.currency);
+            // Logic:
+            // 1. Always show original price prominently.
+            // 2. Secondary line shows converted approximate value if:
+            //    a) Preview Mode is ON (shows preview currency)
+            //    b) Preview Mode is OFF AND sub currency != base currency (shows base currency)
+            
+            const isPreviewActive = !!previewCurrency;
+            const needsConversion = isPreviewActive || sub.currency !== currentCurrency;
+            
+            let secondaryDisplay = null;
+
+            if (needsConversion) {
+                // Use imported currency util to convert to arbitrary target (preview) or base
+                const convertedVal = convertAmount(sub.price, sub.currency, targetCurrency);
+                const label = isPreviewActive ? '(preview)' : '';
+                secondaryDisplay = `≈ ${formatPrice(convertedVal, targetCurrency)} ${label}`;
+            }
 
             return (
             <tr 
@@ -99,9 +119,9 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 <div className="text-sm font-semibold text-primary">
                     {formatPrice(sub.price, sub.currency)}
                 </div>
-                {isDifferentCurrency && (
-                    <div className="text-[10px] text-muted font-medium">
-                        ≈ {formatPrice(normalizedPrice, currentCurrency)}
+                {secondaryDisplay && (
+                    <div className={`text-[10px] font-medium mt-0.5 ${isPreviewActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-muted'}`}>
+                        {secondaryDisplay}
                     </div>
                 )}
                 <div className="text-xs text-secondary mt-0.5">{sub.cycle}</div>

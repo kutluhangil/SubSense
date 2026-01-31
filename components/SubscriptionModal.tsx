@@ -5,6 +5,7 @@ import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, CURRENCIES } from '../utils/data';
 import { EXCHANGE_RATES } from '../utils/currency';
+import { debugLog } from '../utils/debug';
 
 export interface Subscription {
   id: number;
@@ -121,9 +122,13 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
   };
 
   const handleDelete = () => {
+    console.log("[REMOVE_CLICK] Edit Modal Delete clicked for ID:", subscription.id);
     if (window.confirm("Are you sure you want to delete this subscription? This action cannot be undone.")) {
+        debugLog('REMOVE_ACTION', `Confirmed delete from Edit Modal for ID: ${subscription.id}`);
         onDelete(subscription.id);
-        onClose();
+        // Do not call onClose() here manually if onDelete handles UI updates, 
+        // but typically modal close is separate. The parent handles state update.
+        onClose(); 
     }
   };
 

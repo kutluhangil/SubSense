@@ -28,13 +28,10 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
   useEffect(() => {
     if (isOpen) {
         if (service) {
-            // Do NOT prefill price as per requirement
             setPrice(''); 
-            // Default to service currency if known, else USD, but allow user to change
             setCurrency(service.currency || 'USD');
             setName(service.name || '');
         } else {
-            // Custom subscription default
             setPrice('');
             setCurrency('USD');
             setName('');

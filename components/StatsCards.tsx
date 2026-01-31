@@ -7,15 +7,16 @@ interface StatsCardsProps {
   monthly: number;
   active: number;
   forecast: number;
+  currencyCode?: string;
 }
 
-export default function StatsCards({ monthly, active, forecast }: StatsCardsProps) {
+export default function StatsCards({ monthly, active, forecast, currencyCode }: StatsCardsProps) {
   const { t, formatPrice } = useLanguage();
 
   const stats = [
     {
       label: t('stats.monthly'),
-      value: formatPrice(monthly),
+      value: formatPrice(monthly, currencyCode),
       change: '+0.0%', // Could calculate this if history existed
       trend: 'neutral',
       icon: DollarSign,
@@ -31,7 +32,7 @@ export default function StatsCards({ monthly, active, forecast }: StatsCardsProp
     },
     {
       label: t('stats.forecast'),
-      value: formatPrice(forecast),
+      value: formatPrice(forecast, currencyCode),
       change: 'Projected',
       trend: 'up',
       icon: TrendingUp, 
