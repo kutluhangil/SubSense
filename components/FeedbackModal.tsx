@@ -23,8 +23,22 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { currentUser } = useAuth();
 
+  // Rate Limit check
+  const [onCooldown, setOnCooldown] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
+      // Check last submission time
+      const lastSubmit = localStorage.getItem('last_feedback_submit');
+      if (lastSubmit) {
+          const diff = Date.now() - parseInt(lastSubmit);
+          if (diff < 60000) { // 1 minute cooldown
+              setOnCooldown(true);
+          } else {
+              setOnCooldown(false);
+          }
+      }
+
       // Reset state on open
       setMessage('');
       setRating(null);
@@ -41,6 +55,10 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (onCooldown) {
+        setError("Please wait a moment before sending more feedback.");
+        return;
+    }
     if (!message.trim() && !rating) {
         setError("Please provide a rating or a message.");
         return;
@@ -53,7 +71,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
       // Construct safe metadata
       const feedbackData = {
         category,
-        message: message.trim(),
+        message: message.trim().substring(0, 1000), // Max length enforcement
         rating,
         contact_requested: contactMe,
         uid: currentUser?.uid || 'anonymous',
@@ -68,6 +86,8 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
       };
 
       await addDoc(collection(db, 'feedback'), feedbackData);
+      
+      localStorage.setItem('last_feedback_submit', Date.now().toString());
       setSent(true);
       
       // Auto close after success
@@ -197,15 +217,15 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                    </button>
                    <button 
                      type="submit" 
-                     disabled={(!message.trim() && !rating) || isSending}
+                     disabled={(!message.trim() && !rating) || isSending || onCooldown}
                      className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all ${
-                        (!message.trim() && !rating) || isSending 
+                        (!message.trim() && !rating) || isSending || onCooldown
                         ? 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed shadow-none' 
                         : 'bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 active:scale-95'
                      }`}
                    >
-                      {isSending ? 'Sending...' : 'Send Feedback'}
-                      {!isSending && <Send size={16} />}
+                      {isSending ? 'Sending...' : (onCooldown ? 'Wait...' : 'Send Feedback')}
+                      {!isSending && !onCooldown && <Send size={16} />}
                    </button>
                 </div>
              </form>

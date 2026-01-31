@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info, Shield } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
 
@@ -8,6 +8,7 @@ const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
   switch(categoryId) {
     case 'limitations':
+    case 'security':
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
            <path d="M200 50 L350 350 L50 350 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="10 5" />
@@ -72,6 +73,14 @@ export default function HelpCenter() {
       description: t('help.cat.limitations_desc')
     },
     { 
+      id: 'security', 
+      label: 'Security', 
+      icon: Shield, 
+      color: 'text-gray-700 dark:text-gray-300', 
+      bg: 'bg-gray-100 dark:bg-gray-800',
+      description: 'Privacy & Data Protection'
+    },
+    { 
       id: 'compare', 
       label: t('help.cat.compare'), 
       icon: Globe, 
@@ -107,7 +116,11 @@ export default function HelpCenter() {
     { id: 'limit-currency', category: 'limitations', question: t('help.faq.limit_currency.q'), answer: t('help.faq.limit_currency.a') },
     { id: 'limit-support', category: 'limitations', question: t('help.faq.limit_support.q'), answer: t('help.faq.limit_support.a') },
     
-    // Add more mapped FAQs here if needed based on translation keys
+    // Security (Hardcoded for now as it's new)
+    { id: 'sec-isolation', category: 'security', question: 'Can other users see my data?', answer: 'No. Strict database rules ensure that each user can only read and write their own data. Cross-access is blocked at the server level.' },
+    { id: 'sec-encryption', category: 'security', question: 'How is data encrypted?', answer: 'Data is encrypted in transit using HTTPS/TLS. Since this is a local-first app, your sensitive data mostly lives in your own browser.' },
+    { id: 'sec-ai', category: 'security', question: 'Does AI see my financial data?', answer: 'The AI features receive only a sanitized, anonymous snapshot of your current subscriptions to generate insights. No PII is sent, and data is not used for model training.' },
+    
   ], [t]);
 
   const toggleItem = (id: string) => {
@@ -234,6 +247,8 @@ export default function HelpCenter() {
                                 <div className="flex items-center gap-3">
                                    {faq.category === 'limitations' ? (
                                       <AlertTriangle size={18} className="text-amber-500 dark:text-amber-400" />
+                                   ) : faq.category === 'security' ? (
+                                      <Shield size={18} className="text-gray-500 dark:text-gray-400" />
                                    ) : (
                                       <HelpCircle size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
                                    )}

@@ -90,15 +90,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     trackEvent('login_success', { method: 'email' });
   }
 
-  // Log Out
-  function logout() {
+  // Log Out - Enhanced Security
+  async function logout() {
     trackEvent('logout');
-    return auth.signOut();
+    
+    // 1. Unsubscribe from listeners immediately
+    if (unsubscribeSubsRef.current) {
+      unsubscribeSubsRef.current();
+      unsubscribeSubsRef.current = null;
+    }
+
+    // 2. Clear Local Storage of user-specific data to prevent leaks
+    // We keep non-sensitive preferences like theme if possible, but for security we clear strict user data keys
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('subscriptionhub.') || key.includes(currentUser?.email || 'unknown'))) {
+            keysToRemove.push(key);
+        }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
+    // 3. Reset State
+    setCurrentUser(null);
+    setUserProfile(null);
+    setSubscriptions([]);
+    setSubscriptionsLoading(false);
+
+    // 4. Sign out from Firebase
+    await auth.signOut();
   }
 
   useEffect(() => {
     const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
-      // Always cleanup previous subscription listener if it exists
+      // Always cleanup previous subscription listener if it exists when auth changes
       if (unsubscribeSubsRef.current) {
         unsubscribeSubsRef.current();
         unsubscribeSubsRef.current = null;
@@ -129,7 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSubscriptionsLoading(false);
         }
       } else {
-        // Clear state on logout
+        // Clear state on logout / initial null
         setUserProfile(null);
         setSubscriptions([]);
         setSubscriptionsLoading(false);
