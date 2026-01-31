@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Search, MapPin, UserPlus, MoreHorizontal, UserMinus, X, Check, Copy, Users } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import { useLanguage } from '../contexts/LanguageContext';
 

@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { X, MapPin, Link as LinkIcon, Calendar, Shield, MessageCircle, UserPlus, Music, Github, Globe, Check } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export interface UserProfile {

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Calendar, Edit2, TrendingUp, TrendingDown, Bell, Lightbulb, Trash2, Check, ExternalLink } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, CURRENCIES } from '../utils/data';
 import { EXCHANGE_RATES } from '../utils/currency';

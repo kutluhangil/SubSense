@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
@@ -6,7 +5,7 @@ import SubscriptionTable from './SubscriptionTable';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
