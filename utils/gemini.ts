@@ -7,6 +7,9 @@ import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Simple in-memory cache for the session
+let cachedInsights: { key: string; data: string[] } | null = null;
+
 /**
  * Prepares a strictly typed, validated, and sanitized payload for Gemini.
  * Ensures the AI never guesses exchange rates and receives only safe data.
@@ -50,6 +53,16 @@ const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: strin
 
 export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en') => {
   try {
+    // 1. Cache Check
+    // Create a stable key based on subscription count, total value, and currency
+    const totalValue = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
+    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}`;
+
+    if (cachedInsights && cachedInsights.key === cacheKey) {
+        debugLog('AI_LANG', 'Returning cached insights');
+        return cachedInsights.data;
+    }
+
     debugLog('AI_LANG', `Generating insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
     
@@ -89,7 +102,13 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
 
     const text = response.text;
     if (!text) return [];
-    return JSON.parse(text);
+    
+    const results = JSON.parse(text);
+    
+    // Update cache
+    cachedInsights = { key: cacheKey, data: results };
+    
+    return results;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
     // Return localized fallbacks

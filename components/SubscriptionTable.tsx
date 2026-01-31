@@ -13,7 +13,7 @@ interface SubscriptionTableProps {
   previewCurrency?: string | null;
 }
 
-export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }: SubscriptionTableProps) {
+const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }) => {
   const { formatPrice, formatDate, currentCurrency } = useLanguage();
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -167,4 +167,6 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
       </table>
     </div>
   );
-}
+});
+
+export default SubscriptionTable;

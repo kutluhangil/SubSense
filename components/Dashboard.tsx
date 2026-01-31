@@ -1,15 +1,8 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
-import Friends from './Friends';
-import Analytics from './Analytics';
-import SettingsPage from './Settings';
-import Comparison from './Comparison';
-import HelpCenter from './HelpCenter';
-import Profile from './Profile';
-import Discover from './Discover';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
@@ -31,6 +24,15 @@ import {
 } from '../utils/firestore';
 import { calculateDerivedStats } from '../utils/aggregation';
 
+// Lazy Load Heavy Components
+const Analytics = React.lazy(() => import('./Analytics'));
+const Friends = React.lazy(() => import('./Friends'));
+const SettingsPage = React.lazy(() => import('./Settings'));
+const Comparison = React.lazy(() => import('./Comparison'));
+const HelpCenter = React.lazy(() => import('./HelpCenter'));
+const Profile = React.lazy(() => import('./Profile'));
+const Discover = React.lazy(() => import('./Discover'));
+
 interface DashboardProps {
   onLogout: () => void;
   user: User;
@@ -42,6 +44,12 @@ const DEFAULT_BUDGET_LIMITS = {
   'Shopping': 200,
   'Tools': 50
 };
+
+const LoadingFallback = () => (
+  <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+    <Loader2 className="animate-spin text-gray-400" size={32} />
+  </div>
+);
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
   const { currentUser, subscriptions, derivedStats, subscriptionsLoading } = useAuth();
@@ -553,34 +561,40 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              </div>
           </div>
         );
-      case 'friends': return <Friends />;
+      case 'friends': return <Suspense fallback={<LoadingFallback />}><Friends /></Suspense>;
       case 'analytics': return (
-        <Analytics 
-          subscriptions={subscriptions} 
-          budgetLimits={budgetLimits} 
-          setBudgetLimits={setBudgetLimits}
-          savingsGoal={savingsGoal}
-          setSavingsGoal={setSavingsGoal}
-          totalSaved={totalSaved}
-          lifetimeSpend={metrics.lifetimeSpend}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Analytics 
+            subscriptions={subscriptions} 
+            budgetLimits={budgetLimits} 
+            setBudgetLimits={setBudgetLimits}
+            savingsGoal={savingsGoal}
+            setSavingsGoal={setSavingsGoal}
+            totalSaved={totalSaved}
+            lifetimeSpend={metrics.lifetimeSpend}
+          />
+        </Suspense>
       );
-      case 'compare': return <Comparison />;
-      case 'discover': return <Discover />;
+      case 'compare': return <Suspense fallback={<LoadingFallback />}><Comparison /></Suspense>;
+      case 'discover': return <Suspense fallback={<LoadingFallback />}><Discover /></Suspense>;
       case 'settings': return (
-        <SettingsPage 
-          subscriptions={subscriptions} 
-          onUpdateSubscriptions={undefined /* Settings no longer directly updates subs state via prop in this arch, listeners do it */}
-          user={user}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <SettingsPage 
+            subscriptions={subscriptions} 
+            onUpdateSubscriptions={undefined}
+            user={user}
+          />
+        </Suspense>
       );
-      case 'help': return <HelpCenter />;
+      case 'help': return <Suspense fallback={<LoadingFallback />}><HelpCenter /></Suspense>;
       case 'profile': return (
-        <Profile 
-            user={user} 
-            subscriptions={subscriptions}
-            userKey={userKey}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Profile 
+              user={user} 
+              subscriptions={subscriptions}
+              userKey={userKey}
+          />
+        </Suspense>
       );
       case 'subscriptions': return (
         <div className="space-y-6">
