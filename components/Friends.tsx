@@ -181,7 +181,7 @@ export default function Friends() {
                 <button 
                     onClick={(e) => { 
                         e.stopPropagation(); 
-                        navigator.clipboard.writeText(`https://subscriptionhub.app/u/${friend.username}`);
+                        navigator.clipboard.writeText(`https://subsense.app/u/${friend.username}`);
                         alert("Profile link copied!");
                     }}
                     className="flex-1 flex items-center justify-center py-2 px-3 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors"

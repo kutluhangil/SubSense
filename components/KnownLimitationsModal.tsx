@@ -60,7 +60,7 @@ export default function KnownLimitationsModal({ isOpen, onClose }: KnownLimitati
 
         <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
            <p className="text-sm text-gray-600 dark:text-gray-300">
-              SubscriptionHub is currently in <strong>Public Beta</strong>. We believe in transparency. Here is exactly what works and what doesn't yet.
+              SubSense is currently in <strong>Public Beta</strong>. We believe in transparency. Here is exactly what works and what doesn't yet.
            </p>
 
            <div className="space-y-4">

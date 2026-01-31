@@ -157,7 +157,7 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Message Sent</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto leading-relaxed">
-                   Thanks for helping us improve SubscriptionHub!
+                   Thanks for helping us improve SubSense!
                 </p>
                 <button 
                   onClick={onClose}

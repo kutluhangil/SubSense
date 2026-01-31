@@ -153,7 +153,7 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
                   </button>
                   <button 
                     onClick={() => {
-                        navigator.clipboard.writeText(`https://subscriptionhub.app/u/${user.username}`);
+                        navigator.clipboard.writeText(`https://subsense.app/u/${user.username}`);
                         alert("Link copied!");
                     }}
                     className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50 active:scale-95 transition-all"
