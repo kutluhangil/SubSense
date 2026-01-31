@@ -58,9 +58,10 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 };
 
 // --- Logic: Data Generation ---
+// Changed 'range' to accept keys '30d', '3m', '6m', '12m'
 const processSubscriptionsForRange = (
   subscriptions: Subscription[], 
-  range: string, 
+  rangeKey: string, 
   convert: (amount: number, from: string) => number,
   baseCurrency: string
 ): AggregatedAnalytics => {
@@ -71,23 +72,23 @@ const processSubscriptionsForRange = (
   let monthsInPeriod = 1;
 
   // 1. Determine Time Window
-  switch (range) {
-    case 'Last 30 Days':
+  switch (rangeKey) {
+    case '30d':
       startDate.setDate(now.getDate() - 30);
       groupBy = 'day';
       monthsInPeriod = 1;
       break;
-    case 'Last 3 Months':
+    case '3m':
       startDate.setMonth(now.getMonth() - 3);
       groupBy = 'month';
       monthsInPeriod = 3;
       break;
-    case 'Last 6 Months':
+    case '6m':
       startDate.setMonth(now.getMonth() - 6);
       groupBy = 'month';
       monthsInPeriod = 6;
       break;
-    case 'Last 12 Months':
+    case '12m':
       startDate.setMonth(now.getMonth() - 12);
       groupBy = 'month';
       monthsInPeriod = 12;
@@ -100,7 +101,7 @@ const processSubscriptionsForRange = (
   // Set start of day for accurate comparison
   startDate.setHours(0,0,0,0);
 
-  debugLog('ANALYTICS_RANGE', `Processing range: ${range}`, { startDate: startDate.toISOString(), groupBy });
+  debugLog('ANALYTICS_RANGE', `Processing range: ${rangeKey}`, { startDate: startDate.toISOString(), groupBy });
 
   const categoryTotals: Record<string, number> = {};
   const serviceTotals: Record<number, number> = {};
@@ -119,7 +120,6 @@ const processSubscriptionsForRange = (
   } else {
     // Monthly buckets
     const tempDate = new Date(startDate);
-    // Adjust to start of month to avoid skipping if today is 31st and prev month only has 30
     tempDate.setDate(1); 
     
     while (tempDate <= now) {
@@ -137,19 +137,12 @@ const processSubscriptionsForRange = (
     if (sub.status !== 'Active') return;
 
     const price = convert(sub.price, sub.currency);
-    const cycleMonths = sub.cycle === 'Yearly' ? 12 : 1;
     
-    // Parse next payment date
     const nextPay = new Date(sub.nextDate);
     if (isNaN(nextPay.getTime())) return;
 
-    // Start projecting backwards from next payment
-    // Logic: Find the most recent payment that <= now, then iterate backwards
-    
     let pointerDate = new Date(nextPay);
     
-    // Move pointer back until it is <= now (find the last actual payment)
-    // Safety break: max 50 loops to prevent infinite
     let safety = 0;
     while (pointerDate > now && safety < 100) {
       if (sub.cycle === 'Monthly') pointerDate.setMonth(pointerDate.getMonth() - 1);
@@ -157,30 +150,22 @@ const processSubscriptionsForRange = (
       safety++;
     }
 
-    // Now pointerDate is the last theoretical payment.
-    // Iterate backwards until before startDate
     safety = 0;
     while (pointerDate >= startDate && safety < 1000) {
-      // Add to aggregation
       const bucketKey = groupBy === 'day' 
         ? pointerDate.toISOString().split('T')[0]
         : `${pointerDate.getFullYear()}-${pointerDate.getMonth()}`;
 
       if (buckets[bucketKey]) {
         buckets[bucketKey].value += price;
-      } else if (groupBy === 'month') {
-         // Edge case: Sometimes date math might land slightly off-month boundaries
-         // Try to find nearest bucket? For MVP, skip if out of initialized bounds
       }
 
-      // Add to Totals
       const cat = sub.category || 'Other';
       categoryTotals[cat] = (categoryTotals[cat] || 0) + price;
       serviceTotals[sub.id] = (serviceTotals[sub.id] || 0) + price;
       totalSpendInPeriod += price;
       transactionCount++;
 
-      // Move back one cycle
       if (sub.cycle === 'Monthly') pointerDate.setMonth(pointerDate.getMonth() - 1);
       else pointerDate.setFullYear(pointerDate.getFullYear() - 1);
       
@@ -188,20 +173,14 @@ const processSubscriptionsForRange = (
     }
   });
 
-  debugLog('ANALYTICS_DATA', `Generated ${transactionCount} transaction points`, { totalSpendInPeriod });
-
   const trendData = Object.values(buckets).sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  if (trendData.length === 0) {
-      debugLog('ANALYTICS_EMPTY', 'No data points generated for selected range');
-  }
 
   return {
     trendData,
     categoryTotals,
     serviceTotals,
     totalSpendInPeriod,
-    periodLabel: range,
+    periodLabel: rangeKey,
     monthsInPeriod
   };
 };
@@ -234,7 +213,7 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
   if (width === 0) return <div ref={containerRef} className="h-[200px] w-full" />;
 
   const maxVal = Math.max(...data.map(d => d.value));
-  const maxValue = maxVal > 0 ? maxVal * 1.1 : 100; // Provide headroom
+  const maxValue = maxVal > 0 ? maxVal * 1.1 : 100;
   const minValue = 0;
   
   const points = data.map((d, i) => ({
@@ -255,7 +234,6 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
                 <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
              </linearGradient>
           </defs>
-          {/* Grid */}
           {[0, 0.5, 1].map((t, i) => {
              const y = padding.top + drawHeight * (1 - t);
              return (
@@ -265,30 +243,24 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
                 </g>
              );
           })}
-          
           {data.length > 0 && (
             <>
               <path d={fillPath} fill="url(#trendGradient)" className="transition-all duration-300" />
               <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
             </>
           )}
-
-          {/* Interaction Points */}
           {points.map((p, i) => (
              <circle 
                 key={i} 
                 cx={p.x} cy={p.y} r={hoveredIndex === i ? 6 : 4} 
                 fill={strokeColor} stroke="var(--bg-card)" strokeWidth="2"
                 className="transition-all duration-200 cursor-pointer opacity-0 hover:opacity-100"
-                style={{ opacity: hoveredIndex === i ? 1 : 0 }} // Only show on hover
+                style={{ opacity: hoveredIndex === i ? 1 : 0 }}
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
              />
           ))}
-          
-          {/* X Axis Labels (Sampled) */}
           {points.map((p, i) => {
-             // Show first, last, and ~3 intermediate labels to avoid crowding
              const step = Math.ceil(points.length / 5);
              if (i % step !== 0 && i !== points.length - 1) return null;
              return (
@@ -296,14 +268,11 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
              );
           })}
        </svg>
-       
        {data.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
              No spending data for this period
           </div>
        )}
-       
-       {/* Tooltip */}
        {hoveredIndex !== null && points[hoveredIndex] && (
           <div 
              className="absolute bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10 transition-all"
@@ -329,7 +298,7 @@ const TopExpensesList = ({
   formatPrice: (v: number) => string,
   periodLabel: string
 }) => {
-    // Sort subscriptions by the calculated total spend in the period
+    const { t } = useLanguage();
     const sorted = [...subscriptions]
       .filter(sub => (serviceTotals[sub.id] || 0) > 0)
       .sort((a, b) => (serviceTotals[b.id] || 0) - (serviceTotals[a.id] || 0))
@@ -339,7 +308,7 @@ const TopExpensesList = ({
         <div className="flex flex-col h-full justify-center space-y-4">
             <div className="flex justify-between items-center mb-1">
                <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
-               <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">{periodLabel}</span>
+               <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">{t(`analytics.range.${periodLabel}`)}</span>
             </div>
             {sorted.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between group">
@@ -357,7 +326,7 @@ const TopExpensesList = ({
                     </span>
                 </div>
             ))}
-            {sorted.length === 0 && <p className="text-xs text-gray-400 text-center py-4">No spending recorded in this period.</p>}
+            {sorted.length === 0 && <p className="text-xs text-gray-400 text-center py-4">{t('help.no_results')}</p>}
         </div>
     );
 };
@@ -427,7 +396,6 @@ const ComparisonWidget = ({ formatPrice, monthlySpend, convert, currentCurrency 
       );
   }
 
-  // Simplified: Global Avg assumes around $50 USD converted to Base Currency
   const globalAvg = convert(50, 'USD'); 
   const diffPercent = ((monthlySpend - globalAvg) / globalAvg * 100).toFixed(0);
   const isLower = monthlySpend < globalAvg;
@@ -527,6 +495,7 @@ const SmartBudgetMonitor = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
+  const { t } = useLanguage();
 
   const categories = Object.keys(budgetLimits);
   
@@ -545,13 +514,12 @@ const SmartBudgetMonitor = ({
           onClick={() => setIsEditing(true)}
           className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded transition-colors"
         >
-          Edit
+          {t('common.edit')}
         </button>
       </div>
 
       <div className="space-y-5">
         {categories.slice(0,3).map((cat, idx) => {
-          // Scale budget limit for the selected time period
           const baseLimit = budgetLimits[cat] || 0;
           const scaledLimit = baseLimit * monthsInPeriod;
           const spent = categoryTotals[cat] || 0;
@@ -605,7 +573,7 @@ const SmartBudgetMonitor = ({
               ))}
            </div>
            <button onClick={handleSaveLimits} className="w-full bg-gray-900 dark:bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm mt-4 hover:bg-gray-800 dark:hover:bg-blue-700">
-              Save
+              {t('common.saved')}
            </button>
         </div>
       )}
@@ -616,8 +584,8 @@ const SmartBudgetMonitor = ({
 const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: number, setGoal: any, totalSaved: number, formatPrice: any }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempGoal, setTempGoal] = useState(goal);
+  const { t } = useLanguage();
   
-  // Handle division by zero if goal is 0
   const percentage = goal > 0 ? Math.min((totalSaved / goal) * 100, 100) : 0;
   const remaining = Math.max(0, goal - totalSaved);
 
@@ -641,7 +609,7 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
                         className="w-24 px-2 py-1 border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded text-lg font-bold"
                         autoFocus
                       />
-                      <button onClick={handleSave} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">Save</button>
+                      <button onClick={handleSave} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">{t('common.saved')}</button>
                    </div>
                 ) : (
                    <div className="flex items-center gap-2 group/edit cursor-pointer" onClick={() => setIsEditing(true)}>
@@ -680,10 +648,6 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
 };
 
 const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
-    // Basic logic: Detect overlapping categories or high frequency
-    const potentialSavings = 0; 
-
-    // Render simple state or nothing
     return (
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm h-full flex flex-col justify-center items-center text-center">
             <CheckCircle2 size={24} className="text-green-500 mb-2" />
@@ -697,7 +661,6 @@ const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: { ic
   return (
     <div className="rounded-xl p-5 border border-transparent shadow-sm relative overflow-hidden group h-full flex flex-col justify-center bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700" 
          style={{ 
-             // Override background for colored effect, but use opacity for dark mode compat
              backgroundImage: `linear-gradient(to bottom right, ${tintColor}80, ${tintColor}40)` 
          }}>
        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -716,18 +679,17 @@ const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: { ic
 
 export default function Analytics({ subscriptions = [], budgetLimits = {}, setBudgetLimits, savingsGoal = 0, setSavingsGoal, totalSaved = 0, lifetimeSpend = 0 }: AnalyticsProps) {
   const { t, currentCurrency, formatPrice, convert } = useLanguage();
-  const [dateRange, setDateRange] = useState('Last 6 Months');
+  const [dateRangeKey, setDateRangeKey] = useState('6m');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
 
   // Recalculate all metrics when subscriptions or dateRange changes
   const analyticsData = useMemo(() => {
-    return processSubscriptionsForRange(subscriptions, dateRange, convert, currentCurrency);
-  }, [subscriptions, dateRange, currentCurrency, convert]);
+    return processSubscriptionsForRange(subscriptions, dateRangeKey, convert, currentCurrency);
+  }, [subscriptions, dateRangeKey, currentCurrency, convert]);
 
   const { trendData, categoryTotals, serviceTotals, totalSpendInPeriod, monthsInPeriod } = analyticsData;
 
-  // CSV Export Logic
   const handleExportCSV = () => {
     const headers = ["Date", "Label", "Value"];
     const rows = trendData.map(d => [
@@ -745,7 +707,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `analytics_${dateRange.replace(/ /g, '_')}.csv`);
+    link.setAttribute("download", `analytics_${dateRangeKey}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -753,13 +715,14 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
 
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
-  // Calculate current monthly spend for comparison widget (normalized)
   const currentMonthlySpend = useMemo(() => {
       return subscriptions.reduce((acc, sub) => {
           const priceInBase = convert(sub.price, sub.currency);
           return acc + (sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12);
       }, 0);
   }, [subscriptions, convert]);
+
+  const rangeOptions = ['30d', '3m', '6m', '12m'];
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
@@ -778,20 +741,20 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                 className="flex items-center space-x-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
              >
                 <Calendar size={16} className="text-gray-400" />
-                <span>{dateRange}</span>
+                <span>{t(`analytics.range.${dateRangeKey}`)}</span>
                 <ChevronDown size={14} className="text-gray-400 ml-1" />
              </button>
              {isDateDropdownOpen && (
                <>
                  <div className="fixed inset-0 z-10" onClick={() => setIsDateDropdownOpen(false)}></div>
                  <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                    {['Last 30 Days', 'Last 3 Months', 'Last 6 Months', 'Last 12 Months'].map(option => (
+                    {rangeOptions.map(optionKey => (
                        <button
-                         key={option}
-                         onClick={() => { setDateRange(option); setIsDateDropdownOpen(false); }}
-                         className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 ${dateRange === option ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}
+                         key={optionKey}
+                         onClick={() => { setDateRangeKey(optionKey); setIsDateDropdownOpen(false); }}
+                         className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 ${dateRangeKey === optionKey ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}
                        >
-                         {option}
+                         {t(`analytics.range.${optionKey}`)}
                        </button>
                     ))}
                  </div>
@@ -830,7 +793,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <AIInsightCard 
                         icon={Lightbulb} 
                         title="Spending Alert" 
-                        desc={`You spent ${formatPrice(totalSpendInPeriod)} in the ${dateRange.toLowerCase()}.`} 
+                        desc={`You spent ${formatPrice(totalSpendInPeriod)} in the ${t(`analytics.range.${dateRangeKey}`).toLowerCase()}.`} 
                         accentColor="#F59E0B" 
                         tintColor="#FFFBEB"
                     />
@@ -848,7 +811,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group h-full flex flex-col justify-between">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
             <div>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Spend ({dateRange})</p>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Spend ({t(`analytics.range.${dateRangeKey}`)})</p>
                 <h3 className="text-3xl font-bold mb-1">{formatPrice(totalSpendInPeriod)}</h3>
             </div>
             {totalSpendInPeriod > 1000 && (
@@ -873,7 +836,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                 subscriptions={subscriptions} 
                 serviceTotals={serviceTotals}
                 formatPrice={formatPrice}
-                periodLabel={dateRange}
+                periodLabel={dateRangeKey}
             />
          </div>
       </div>

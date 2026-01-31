@@ -1,203 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, ThumbsUp, ThumbsDown, AlertTriangle, Database, Info, ServerOff, WifiOff } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
-
-const CATEGORIES = [
-  { 
-    id: 'start', 
-    label: 'Getting Started', 
-    icon: PlayCircle, 
-    color: 'text-blue-600 dark:text-blue-400', 
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
-    description: 'Local-first architecture & basics'
-  },
-  { 
-    id: 'subs', 
-    label: 'Subscriptions', 
-    icon: CreditCard, 
-    color: 'text-purple-600 dark:text-purple-400', 
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
-    description: 'Management & persistence'
-  },
-  { 
-    id: 'analytics', 
-    label: 'Analytics', 
-    icon: PieChart, 
-    color: 'text-violet-600 dark:text-violet-400', 
-    bg: 'bg-violet-50 dark:bg-violet-900/20',
-    description: 'Trends & generated history'
-  },
-  { 
-    id: 'limitations', 
-    label: 'Known Limitations', 
-    icon: AlertTriangle, 
-    color: 'text-amber-600 dark:text-amber-400', 
-    bg: 'bg-amber-50 dark:bg-amber-900/20',
-    description: 'MVP boundaries & transparency'
-  },
-  { 
-    id: 'compare', 
-    label: 'Compare (Beta)', 
-    icon: Globe, 
-    color: 'text-green-600 dark:text-green-400', 
-    bg: 'bg-green-50 dark:bg-green-900/20',
-    description: 'Reference data & disclaimers'
-  },
-  { 
-    id: 'social', 
-    label: 'Friends (Demo)', 
-    icon: Users, 
-    color: 'text-orange-600 dark:text-orange-400', 
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
-    description: 'Concept features'
-  },
-  { 
-    id: 'settings', 
-    label: 'Settings', 
-    icon: Settings, 
-    color: 'text-gray-600 dark:text-gray-400', 
-    bg: 'bg-gray-50 dark:bg-gray-700/50',
-    description: 'Preferences & export'
-  },
-];
-
-const FAQS = [
-  // A. Getting Started
-  {
-    id: 'local-first',
-    category: 'start',
-    question: 'How is my data stored?',
-    answer: "SubscriptionHub is a 'local-first' application. All your data (subscriptions, settings, profile) is stored securely in your browser's Local Storage. We do not have a backend database, and your data never leaves your device unless you manually export it."
-  },
-  {
-    id: 'currency-region',
-    category: 'start',
-    question: 'How does currency work?',
-    answer: "The application uses a 'Regional Preference' setting (found in the footer or Settings page) to determine the display currency. Changing this setting converts all values using a fixed exchange rate for display purposes. It does not change the original billing currency of your subscriptions."
-  },
-  {
-    id: 'account-recovery',
-    category: 'start',
-    question: 'Can I log in from another device?',
-    answer: "No. Since data is stored locally in your browser, your account does not sync across devices. To move data, use the 'Export CSV' feature in Settings and manually re-enter it on a new device."
-  },
-
-  // B. Subscriptions Management
-  {
-    id: 'add-edit',
-    category: 'subs',
-    question: 'Adding and editing subscriptions',
-    answer: "You can add subscriptions via the Dashboard. When editing, you can change the price, billing cycle (Monthly/Yearly), and currency. These changes are saved immediately to your local storage."
-  },
-  {
-    id: 'persistence',
-    category: 'subs',
-    question: 'What happens if I clear my cache?',
-    answer: "WARNING: Clearing your browser's cache or 'Local Storage' will permanently delete all your subscription data. We recommend using the Export feature regularly to keep a backup."
-  },
-  {
-    id: 'mark-paid',
-    category: 'subs',
-    question: 'How does "Mark as Paid" work?',
-    answer: "Clicking the checkmark on a subscription advances the 'Next Payment' date by one billing cycle (1 month or 1 year) and logs a payment record in your local history for analytics."
-  },
-
-  // C. Analytics & Insights
-  {
-    id: 'data-generation',
-    category: 'analytics',
-    question: 'Where does historical data come from?',
-    answer: "The analytics engine generates historical data based on your current active subscriptions and their billing cycles. It projects past payments to create a trend line. It does not connect to your bank account."
-  },
-  {
-    id: 'date-filters',
-    category: 'analytics',
-    question: 'Date filters',
-    answer: "The date selector (Last 30 Days, 6 Months, etc.) dynamically recalculates the charts. Selecting a different range filters the generated payment events to show only those falling within that window."
-  },
-  {
-    id: 'savings-goals',
-    category: 'analytics',
-    question: 'Savings Goals',
-    answer: "The Savings Goal widget compares your 'Total Saved' value (accumulated from deleted subscriptions) against a manual target you set. It is a motivational tool, not a financial ledger."
-  },
-
-  // D. Limitations (New Section)
-  {
-    id: 'limit-storage',
-    category: 'limitations',
-    question: 'Data & Persistence',
-    answer: "SubscriptionHub operates entirely in your browser. There is no cloud sync. If you use the app in Incognito mode or clear your browser data, your subscriptions will be lost. There is no 'password recovery' because we do not store your password."
-  },
-  {
-    id: 'limit-currency',
-    category: 'limitations',
-    question: 'Currency & Pricing',
-    answer: "Exchange rates are based on periodic snapshots and are not live market rates. Comparisons are for informational purposes only and may vary from actual bank charges."
-  },
-  {
-    id: 'limit-analytics',
-    category: 'limitations',
-    question: 'Analytics Accuracy',
-    answer: "Historical charts are simulated projections based on your current active subscriptions. The app does not know about payments you made before you added a subscription."
-  },
-  {
-    id: 'limit-friends',
-    category: 'limitations',
-    question: 'Friends & Social Features',
-    answer: "The 'Friends' section is currently a conceptual demo. The profiles shown are simulated. You cannot currently send messages, add real users, or sync data with others."
-  },
-  {
-    id: 'limit-support',
-    category: 'limitations',
-    question: 'Support Availability',
-    answer: "The 'Contact Support' form is currently simulated. While we value feedback, there is no guaranteed response time for this MVP release."
-  },
-
-  // E. Compare Page
-  {
-    id: 'compare-data',
-    category: 'compare',
-    question: 'Is the pricing data real-time?',
-    answer: "No. The Regional Price Comparison uses a curated dataset of reference prices for major services (e.g., Netflix, Spotify) across different countries. These are for informational purposes only and may not reflect the absolute latest price changes."
-  },
-  {
-    id: 'savings-disabled',
-    category: 'compare',
-    question: 'Why is "Potential Savings" disabled?',
-    answer: "The 'Potential Annual Savings' calculator is currently disabled while we improve our multi-currency normalization logic to ensure accuracy. It will be re-enabled in a future update."
-  },
-
-  // F. Friends & Social
-  {
-    id: 'demo-status',
-    category: 'social',
-    question: 'Is the Friends feature real?',
-    answer: "The Friends & Social section is currently a Concept Demo. The profiles you see are simulated examples to demonstrate how social sharing might look. You cannot currently send real messages or sync with other users."
-  },
-  {
-    id: 'privacy',
-    category: 'social',
-    question: 'Privacy of shared data',
-    answer: "Since the social feature is a demo, no actual data is shared over the internet. Your subscription details remain private on your device."
-  },
-
-  // G. Settings
-  {
-    id: 'csv-export',
-    category: 'settings',
-    question: 'Exporting data',
-    answer: "You can download a .CSV file containing your subscription names, prices, and billing dates from the Settings page. This file can be opened in Excel or Google Sheets."
-  },
-  {
-    id: 'theme',
-    category: 'settings',
-    question: 'Dark Mode',
-    answer: "You can toggle between Light, Dark, or System theme preferences. This setting is saved in your browser's local storage."
-  }
-];
 
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
@@ -233,6 +38,78 @@ export default function HelpCenter() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { t } = useLanguage();
 
+  const CATEGORIES = useMemo(() => [
+    { 
+      id: 'start', 
+      label: t('help.cat.start'), 
+      icon: PlayCircle, 
+      color: 'text-blue-600 dark:text-blue-400', 
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      description: t('help.cat.start_desc')
+    },
+    { 
+      id: 'subs', 
+      label: t('help.cat.subs'), 
+      icon: CreditCard, 
+      color: 'text-purple-600 dark:text-purple-400', 
+      bg: 'bg-purple-50 dark:bg-purple-900/20',
+      description: t('help.cat.subs_desc')
+    },
+    { 
+      id: 'analytics', 
+      label: t('help.cat.analytics'), 
+      icon: PieChart, 
+      color: 'text-violet-600 dark:text-violet-400', 
+      bg: 'bg-violet-50 dark:bg-violet-900/20',
+      description: t('help.cat.analytics_desc')
+    },
+    { 
+      id: 'limitations', 
+      label: t('help.cat.limitations'), 
+      icon: AlertTriangle, 
+      color: 'text-amber-600 dark:text-amber-400', 
+      bg: 'bg-amber-50 dark:bg-amber-900/20',
+      description: t('help.cat.limitations_desc')
+    },
+    { 
+      id: 'compare', 
+      label: t('help.cat.compare'), 
+      icon: Globe, 
+      color: 'text-green-600 dark:text-green-400', 
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      description: t('help.cat.compare_desc')
+    },
+    { 
+      id: 'social', 
+      label: t('help.cat.social'), 
+      icon: Users, 
+      color: 'text-orange-600 dark:text-orange-400', 
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      description: t('help.cat.social_desc')
+    },
+    { 
+      id: 'settings', 
+      label: t('help.cat.settings'), 
+      icon: Settings, 
+      color: 'text-gray-600 dark:text-gray-400', 
+      bg: 'bg-gray-50 dark:bg-gray-700/50',
+      description: t('help.cat.settings_desc')
+    },
+  ], [t]);
+
+  const FAQS = useMemo(() => [
+    { id: 'local-first', category: 'start', question: t('help.faq.local_first.q'), answer: t('help.faq.local_first.a') },
+    { id: 'currency-region', category: 'start', question: t('help.faq.currency.q'), answer: t('help.faq.currency.a') },
+    { id: 'account-recovery', category: 'start', question: t('help.faq.account.q'), answer: t('help.faq.account.a') },
+    
+    // Limitations
+    { id: 'limit-storage', category: 'limitations', question: t('help.faq.limit_storage.q'), answer: t('help.faq.limit_storage.a') },
+    { id: 'limit-currency', category: 'limitations', question: t('help.faq.limit_currency.q'), answer: t('help.faq.limit_currency.a') },
+    { id: 'limit-support', category: 'limitations', question: t('help.faq.limit_support.q'), answer: t('help.faq.limit_support.a') },
+    
+    // Add more mapped FAQs here if needed based on translation keys
+  ], [t]);
+
   const toggleItem = (id: string) => {
     setOpenItems(prev => 
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -260,8 +137,8 @@ export default function HelpCenter() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <div className="mb-8">
-           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">Help Center</h1>
-           <p className="text-gray-500 dark:text-gray-400">Documentation and support for SubscriptionHub MVP.</p>
+           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">{t('help.title')}</h1>
+           <p className="text-gray-500 dark:text-gray-400">{t('help.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -273,7 +150,7 @@ export default function HelpCenter() {
                     <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
                     <input 
                        type="text" 
-                       placeholder="Search docs..." 
+                       placeholder={t('help.search')}
                        value={searchQuery}
                        onChange={(e) => setSearchQuery(e.target.value)}
                        className="w-full pl-10 pr-4 py-3 bg-transparent text-sm font-medium focus:outline-none placeholder-gray-400 text-gray-900 dark:text-white"
@@ -283,7 +160,7 @@ export default function HelpCenter() {
 
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                  <div className="p-4 border-b border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800">
-                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Topics</h3>
+                    <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{t('help.topics')}</h3>
                  </div>
                  <div className="p-2 space-y-1">
                     {CATEGORIES.map(cat => (
@@ -337,10 +214,9 @@ export default function HelpCenter() {
                        <ServerOff size={20} />
                     </div>
                     <div>
-                       <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-1">MVP Notice</h3>
+                       <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-1">{t('help.mvp_notice')}</h3>
                        <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                          SubscriptionHub is currently in MVP (Minimum Viable Product) stage. 
-                          Features listed below have intentional boundaries to ensure a stable, reliable local experience without backend complexity.
+                          {t('help.cat.limitations_desc')}
                        </p>
                     </div>
                  </div>
@@ -388,8 +264,8 @@ export default function HelpCenter() {
                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-700 mb-4">
                           <Search size={28} className="text-gray-400" />
                        </div>
-                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">No results found</h3>
-                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Try adjusting your search terms or browse the categories.</p>
+                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('help.no_results')}</h3>
+                       <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Try adjusting your search terms.</p>
                     </div>
                  )}
               </div>
@@ -402,10 +278,10 @@ export default function HelpCenter() {
                     <div className="mb-6 sm:mb-0">
                        <div className="flex items-center gap-2 mb-3 text-gray-300">
                           <Info size={16} />
-                          <span className="text-sm font-medium">MVP Support</span>
+                          <span className="text-sm font-medium">{t('help.mvp_notice')}</span>
                        </div>
-                       <h3 className="text-xl font-bold mb-2">Report an Issue</h3>
-                       <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know. Note that response times may vary for this preview release.</p>
+                       <h3 className="text-xl font-bold mb-2">{t('help.report')}</h3>
+                       <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know.</p>
                     </div>
                     <div>
                        <button 
@@ -413,7 +289,7 @@ export default function HelpCenter() {
                          className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto"
                        >
                           <Mail size={18} />
-                          <span>Contact Support</span>
+                          <span>{t('help.contact')}</span>
                        </button>
                     </div>
                  </div>

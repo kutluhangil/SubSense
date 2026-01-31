@@ -1,6 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { convertAmount } from "./currency";
+import { debugLog } from "./debug";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -38,20 +39,25 @@ const prepareGeminiPayload = (subscriptions: any[], baseCurrency: string) => {
   };
 };
 
-export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD') => {
+export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD', languageCode: string = 'en') => {
   try {
+    debugLog('AI_LANG', `Generating insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
     
+    // Define language rules based on input code
+    const langInstruction = languageCode === 'tr' 
+      ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output must be strictly in Turkish."
+      : "OUTPUT LANGUAGE: ENGLISH. Output must be strictly in English.";
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
       CONTEXT:
       You are a financial analyst for a subscription manager app.
       
-      CRITICAL CURRENCY INSTRUCTION:
-      The user's primary currency is ${baseCurrency}.
-      All 'convertedMonthlyCost' values are ALREADY converted to ${baseCurrency}.
-      Do NOT perform any currency conversions yourself. Trust the data.
+      CRITICAL INSTRUCTIONS:
+      1. ${langInstruction}
+      2. The user's primary currency is ${baseCurrency}. All 'convertedMonthlyCost' values are ALREADY converted to ${baseCurrency}. Do NOT convert yourself.
       
       DATA:
       ${JSON.stringify(payload, null, 2)}
@@ -60,11 +66,11 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
       Provide 3 short, high-value financial insights based on the data above.
       
       RULES:
-      1. Speak ONLY in ${baseCurrency}.
+      1. Speak ONLY in the target language (${languageCode === 'tr' ? 'Turkish' : 'English'}).
       2. Focus on:
          - Top spending categories.
-         - Annual savings opportunities (e.g. switching monthly to yearly).
-         - Anomalies or high-cost single items.
+         - Annual savings opportunities.
+         - Anomalies.
       3. Output strict JSON array of strings. No markdown.
       `,
       config: {
@@ -77,6 +83,14 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
     return JSON.parse(text);
   } catch (error) {
     console.error("Gemini Insight Error:", error);
+    // Return localized fallbacks
+    if (languageCode === 'tr') {
+        return [
+            "Tasarruf etmek için harcama alışkanlıklarınızı inceleyin.",
+            "Kullanılmayan abonelikleri iptal etmeyi düşünün.",
+            "Uzun vadeli servisler için yıllık faturalandırmayı değerlendirin."
+        ];
+    }
     return [
       "Analyze your spending patterns to find savings.",
       "Check for unused subscriptions to cancel.",
@@ -85,30 +99,64 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
   }
 };
 
-export const chatWithGemini = async (history: any[], userMessage: string, contextData: any) => {
+export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
   try {
+    debugLog('AI_LANG', `Chat request in: ${languageCode}`);
     const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
+
+    // Strict Language & Terminology Rules
+    let languageRules = "";
+    if (languageCode === 'tr') {
+        languageRules = `
+        CRITICAL LANGUAGE RULE: TURKISH (Türkçe).
+        You MUST respond in Turkish only. Do NOT use English.
+        
+        TERMINOLOGY MAPPING (Use exact terms):
+        - Dashboard -> Panel
+        - Subscription -> Abonelik
+        - Settings -> Ayarlar
+        - Analytics -> Analizler
+        - Compare -> Karşılaştır
+        - Help Center -> Yardım Merkezi
+        
+        TONE:
+        - Professional, helpful, natural Turkish.
+        - Not robotic translation.
+        `;
+    } else {
+        languageRules = `
+        CRITICAL LANGUAGE RULE: ENGLISH.
+        You MUST respond in English only.
+        
+        TONE:
+        - Professional, helpful, concise.
+        `;
+    }
 
     const systemInstruction = `
     ROLE:
-    You are SubscriptionHub AI, a smart financial companion.
+    You are SubscriptionHub AI, a smart financial companion embedded in a local-first subscription tracking app.
     
-    STRICT CURRENCY RULE:
-    - The user's base currency is explicitly ${payload.baseCurrency}.
-    - All monetary values provided in the context are ALREADY converted to ${payload.baseCurrency}.
-    - NEVER try to convert currencies yourself. Use the 'convertedMonthlyCost' values.
-    - If a user asks about an original price, you can reference the 'originalCost' field.
+    ${languageRules}
+    
+    STRICT LIMITATIONS (Must respect these):
+    - NO real-time bank synchronization exists.
+    - NO cloud backup exists (data is local).
+    - NO live human support agents are available.
+    - NO real-time currency exchange trading (rates are reference only).
+    
+    CURRENCY CONTEXT:
+    - User base currency: ${payload.baseCurrency}
+    - All values in context are already converted to ${payload.baseCurrency}.
+    - Do not perform currency conversion math yourself.
     
     CONTEXT DATA:
     ${JSON.stringify(payload)}
     
     BEHAVIOR:
-    1. Be concise and helpful.
-    2. Explain costs in the context of the user's local economy if relevant (e.g. purchasing power).
-    3. If asked "How much do I spend?", use the totals provided in the context.
-    4. Never perform destructive actions.
-    
-    Tone: Professional, calm, trustworthy.
+    1. Answer user questions about their spending, data, or app features.
+    2. If asked about unavailable features (bank sync, cloud), explain politely that this is a local-first MVP app.
+    3. Keep answers short and relevant.
     `;
 
     const chat = ai.chats.create({
@@ -120,9 +168,16 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     });
 
     const result = await chat.sendMessage({ message: userMessage });
+    
+    // Safety check (logging only)
+    debugLog('AI_LANG', `Response generated.`, { text: result.text?.substring(0, 50) + "..." });
+    
     return result.text;
   } catch (error) {
     console.error("Gemini Chat Error:", error);
+    if (languageCode === 'tr') {
+        return "Şu anda zeka katmanıma bağlanmakta sorun yaşıyorum. Lütfen birazdan tekrar deneyin.";
+    }
     return "I'm having trouble connecting to my intelligence layer right now. Please try again in a moment.";
   }
 };

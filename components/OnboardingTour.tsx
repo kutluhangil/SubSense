@@ -1,89 +1,78 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, ChevronRight, ChevronLeft, Check, Compass, Globe, PieChart, Settings, Plus, LayoutGrid } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
-interface Step {
-  target: string;
-  title: string;
-  content: string;
-  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
-  highlightSelector?: string;
-  icon?: any;
-}
-
-const STEPS: Step[] = [
-  {
-    target: 'center',
-    title: "Welcome to SubscriptionHub",
-    content: "Let's get your finances in order. This quick tour will show you how to track, manage, and optimize your global subscriptions.",
-    position: 'center',
-    icon: Compass
-  },
-  {
-    target: 'stats-cards',
-    title: "Dashboard Overview",
-    content: "Here's your financial heartbeat. See your monthly total, active subscriptions count, and an annual forecast based on your current spending.",
-    position: 'bottom',
-    highlightSelector: '[data-tour="stats-cards"]',
-    icon: LayoutGrid
-  },
-  {
-    target: 'add-btn',
-    title: "Add Subscription",
-    content: "Click here to add Netflix, Spotify, or any recurring expense. You can manually enter prices in any currency.",
-    position: 'bottom',
-    highlightSelector: '[data-tour="add-btn"]',
-    icon: Plus
-  },
-  {
-    target: 'nav-settings',
-    title: "Regional Preferences",
-    content: "Currency conversions depend on your region. You can change your base currency and country preferences here in Settings at any time.",
-    position: 'right',
-    highlightSelector: '[data-tour="nav-settings"]',
-    icon: Globe
-  },
-  {
-    target: 'nav-analytics',
-    title: "Analytics",
-    content: "Visualize your spending habits with charts. Use the date filter to see how your budget changes over time.",
-    position: 'right',
-    highlightSelector: '[data-tour="nav-analytics"]',
-    icon: PieChart
-  },
-  {
-    target: 'nav-compare',
-    title: "Global Comparison",
-    content: "See how much you're paying compared to other countries. Note: This tool is informational and uses reference pricing data.",
-    position: 'right',
-    highlightSelector: '[data-tour="nav-compare"]',
-    icon: Globe
-  },
-  {
-    target: 'nav-settings',
-    title: "Settings & Data",
-    content: "Manage your theme (Light/Dark), export your data to CSV, or clear your local storage here.",
-    position: 'right',
-    highlightSelector: '[data-tour="nav-settings"]',
-    icon: Settings
-  },
-  {
-    target: 'center',
-    title: "You're All Set",
-    content: "Start tracking with confidence. Your data stays on this device.",
-    position: 'center',
-    icon: Check
-  }
-];
-
-interface OnboardingTourProps {
-  onComplete: () => void;
-}
-
-export default function OnboardingTour({ onComplete }: OnboardingTourProps) {
+export default function OnboardingTour({ onComplete }: { onComplete: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties>({});
+  const { t } = useLanguage();
+
+  const STEPS = useMemo(() => [
+    {
+      target: 'center',
+      title: t('onboarding.step1.title'),
+      content: t('onboarding.step1.content'),
+      position: 'center',
+      icon: Compass
+    },
+    {
+      target: 'stats-cards',
+      title: t('onboarding.step2.title'),
+      content: t('onboarding.step2.content'),
+      position: 'bottom',
+      highlightSelector: '[data-tour="stats-cards"]',
+      icon: LayoutGrid
+    },
+    {
+      target: 'add-btn',
+      title: t('onboarding.step3.title'),
+      content: t('onboarding.step3.content'),
+      position: 'bottom',
+      highlightSelector: '[data-tour="add-btn"]',
+      icon: Plus
+    },
+    {
+      target: 'nav-settings',
+      title: t('onboarding.step4.title'),
+      content: t('onboarding.step4.content'),
+      position: 'right',
+      highlightSelector: '[data-tour="nav-settings"]',
+      icon: Globe
+    },
+    {
+      target: 'nav-analytics',
+      title: t('onboarding.step5.title'),
+      content: t('onboarding.step5.content'),
+      position: 'right',
+      highlightSelector: '[data-tour="nav-analytics"]',
+      icon: PieChart
+    },
+    {
+      target: 'nav-compare',
+      title: t('onboarding.step6.title'),
+      content: t('onboarding.step6.content'),
+      position: 'right',
+      highlightSelector: '[data-tour="nav-compare"]',
+      icon: Globe
+    },
+    {
+      target: 'nav-settings',
+      title: t('onboarding.step7.title'),
+      content: t('onboarding.step7.content'),
+      position: 'right',
+      highlightSelector: '[data-tour="nav-settings"]',
+      icon: Settings
+    },
+    {
+      target: 'center',
+      title: t('onboarding.step8.title'),
+      content: t('onboarding.step8.content'),
+      position: 'center',
+      icon: Check
+    }
+  ], [t]);
 
   useEffect(() => {
     const step = STEPS[currentStep];
@@ -118,7 +107,7 @@ export default function OnboardingTour({ onComplete }: OnboardingTourProps) {
       pointerEvents: 'none',
       transition: 'all 0.4s ease-in-out'
     });
-  }, [currentStep]);
+  }, [currentStep, STEPS]);
 
   const handleNext = () => {
     if (currentStep < STEPS.length - 1) {
@@ -158,6 +147,7 @@ export default function OnboardingTour({ onComplete }: OnboardingTourProps) {
        if(element) {
            const rect = element.getBoundingClientRect();
            const margin = 20;
+           // Simple positioning logic
            if(step.position === 'bottom') return { top: rect.bottom + margin, left: rect.left + rect.width/2 - 160 };
            if(step.position === 'top') return { bottom: window.innerHeight - rect.top + margin, left: rect.left + rect.width/2 - 160 };
            if(step.position === 'right') return { top: rect.top, left: rect.right + margin };
@@ -215,7 +205,7 @@ export default function OnboardingTour({ onComplete }: OnboardingTourProps) {
                 onClick={handleNext}
                 className="flex items-center gap-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-lg shadow-gray-900/10 dark:shadow-none"
               >
-                 {currentStep === STEPS.length - 1 ? 'Finish' : 'Next'}
+                 {currentStep === STEPS.length - 1 ? t('onboarding.finish') : t('onboarding.next')}
                  {currentStep === STEPS.length - 1 ? <Check size={16} /> : <ChevronRight size={16} />}
               </button>
            </div>

@@ -18,10 +18,18 @@ interface Message {
 }
 
 export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
-  const { currentCurrency, convert } = useLanguage();
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: "Hello! I'm your Gemini-powered financial assistant. Ask me anything about your subscriptions, spending habits, or how to save money." }
-  ]);
+  const { currentCurrency, convert, currentLanguage, t } = useLanguage();
+  
+  // Initialize messages with localized welcome
+  const [messages, setMessages] = useState<Message[]>([]);
+  
+  // Reset welcome message when language changes or on mount
+  useEffect(() => {
+      setMessages([
+        { role: 'model', text: t('ai.welcome_message') }
+      ]);
+  }, [currentLanguage, t]);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -68,9 +76,10 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
         parts: [{ text: m.text }]
     }));
 
-    const responseText = await chatWithGemini(historyForGemini, userMsg, contextData);
+    // Pass strict language code to the utility
+    const responseText = await chatWithGemini(historyForGemini, userMsg, contextData, currentLanguage);
 
-    setMessages(prev => [...prev, { role: 'model', text: responseText || "I couldn't generate a response." }]);
+    setMessages(prev => [...prev, { role: 'model', text: responseText || t('ai.error_message') }]);
     setIsLoading(false);
   };
 
@@ -84,7 +93,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
         >
           <Sparkles className="w-6 h-6 animate-pulse" />
           <span className="absolute right-full mr-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Ask Gemini
+            {t('sidebar.ai_assistant')}
           </span>
         </button>
       )}
@@ -102,10 +111,10 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                 <Bot size={18} />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-gray-900 dark:text-white">AI Assistant</h2>
+                <h2 className="text-sm font-bold text-gray-900 dark:text-white">{t('ai.assistant_title')}</h2>
                 <div className="flex items-center gap-1">
                    <Sparkles size={10} className="text-indigo-500" />
-                   <p className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">POWERED BY GEMINI</p>
+                   <p className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
                 </div>
               </div>
             </div>
@@ -139,7 +148,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                  </div>
                  <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none border border-indigo-100 dark:border-indigo-900/30 flex items-center gap-2">
                     <Loader2 size={16} className="animate-spin text-indigo-500" />
-                    <span className="text-xs text-gray-500">Gemini is thinking...</span>
+                    <span className="text-xs text-gray-500">{t('ai.thinking')}</span>
                  </div>
               </div>
             )}
@@ -149,7 +158,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
           {/* Privacy Note */}
           <div className="px-6 py-2 bg-gray-50 dark:bg-black/40 text-center">
              <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
-                <ShieldIcon /> Your data is analyzed securely. No actions taken without confirmation.
+                <ShieldIcon /> {t('ai.disclaimer')}
              </p>
           </div>
 
@@ -160,7 +169,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about your spending..."
+                placeholder={t('ai.ask_placeholder')}
                 className="w-full pl-4 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
               />
               <button 
