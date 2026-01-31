@@ -24,6 +24,7 @@ export interface UserProfileData {
   email: string;
   displayName: string | null;
   createdAt: any;
+  termsAcceptedAt?: string; // Compliance timestamp
   preferences: {
     language: string;
     theme: string;
@@ -67,13 +68,15 @@ export const initializeUserDocument = async (
   additionalData?: { currency?: string; region?: string }
 ): Promise<UserProfileData> => {
   const localKey = `${FALLBACK_KEY_PREFIX}profile_${user.uid}`;
+  const now = new Date().toISOString();
   
   // Default Profile Structure
   const newProfile: UserProfileData = {
     uid: user.uid,
     email: user.email || '',
     displayName: user.displayName,
-    createdAt: new Date().toISOString(), // Fallback timestamp
+    createdAt: now,
+    termsAcceptedAt: now, // Capture consent time
     preferences: {
       baseCurrency: additionalData?.currency || 'USD',
       language: 'en',
@@ -112,7 +115,7 @@ export const initializeUserDocument = async (
     try {
       await setDoc(userRef, {
         ...newProfile,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp() // Use server timestamp for DB consistency
       });
     } catch (e: any) {
       if (e.code === 'permission-denied') {
@@ -223,10 +226,6 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
   // 1. Guardrail: Validate Data before Write (if update contains vital fields)
-  // We construct a mock object merging just the fields we have to check validity roughly
-  // Ideally, we'd fetch current, merge, and validate, but that's expensive.
-  // We check if the *changed* fields are valid in isolation if possible, or just proceed if partial.
-  // For safety, let's minimally check key fields if present.
   if (data.price !== undefined && (typeof data.price !== 'number' || data.price < 0)) throw new Error("Invalid price update");
   if (data.currency && typeof data.currency !== 'string') throw new Error("Invalid currency update");
 
