@@ -9,8 +9,8 @@ import { Subscription } from './SubscriptionModal';
 // --- Types ---
 interface DataPoint {
   label: string;
-  value: number; // Base USD
-  prevValue: number; // Base USD
+  value: number; // In Base Currency
+  prevValue: number; // In Base Currency
 }
 
 interface AnalyticsProps {
@@ -49,7 +49,7 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
 
 // --- Visual Components ---
 
-const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurrency }: { data: DataPoint[], color?: string, convertPrice: (v: number) => number, currentCurrency: string }) => {
+const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data: DataPoint[], color?: string, currentCurrency: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -75,7 +75,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
 
   if (width === 0) return <div ref={containerRef} className="h-[200px] w-full" />;
 
-  const convertedData = data.map(d => ({ ...d, value: convertPrice(d.value) }));
+  const convertedData = data; // Assuming data comes in normalized
   // Handle case where max value is 0
   const maxVal = Math.max(...convertedData.map(d => d.value));
   const maxValue = maxVal > 0 ? maxVal * 1.1 : 100;
@@ -137,7 +137,7 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
              className="absolute bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10"
              style={{ left: points[hoveredIndex].x, top: points[hoveredIndex].y - 12 }}
           >
-             {currentCurrency} {points[hoveredIndex].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+             {currentCurrency} {Math.round(points[hoveredIndex].value).toLocaleString()}
              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-white rotate-45"></div>
           </div>
        )}
@@ -145,9 +145,9 @@ const SpendingTrendChart = ({ data, color = "#111827", convertPrice, currentCurr
   );
 };
 
-const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
-    // Sort by price desc
-    const sorted = [...subscriptions].sort((a, b) => b.price - a.price).slice(0, 3);
+const TopExpensesList = ({ subscriptions, formatPrice, convert }: { subscriptions: Subscription[], formatPrice: (v: number) => string, convert: (v: number, c: string) => number }) => {
+    // Sort by normalized price desc
+    const sorted = [...subscriptions].sort((a, b) => convert(b.price, b.currency) - convert(a.price, a.currency)).slice(0, 3);
 
     return (
         <div className="flex flex-col h-full justify-center space-y-4">
@@ -162,7 +162,7 @@ const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscr
                             <p className="text-[10px] text-gray-500 dark:text-gray-400">{sub.category}</p>
                         </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white">{formatPrice(sub.price)}</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white">{formatPrice(sub.price, sub.currency)}</span>
                 </div>
             ))}
             {sorted.length === 0 && <p className="text-xs text-gray-400 text-center">No subscriptions yet.</p>}
@@ -170,14 +170,15 @@ const TopExpensesList = ({ subscriptions, formatPrice }: { subscriptions: Subscr
     );
 };
 
-const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v: number) => string, subscriptions: Subscription[] }) => {
+const CostDistributionChart = ({ formatPrice, subscriptions, convert }: { formatPrice: (v: number) => string, subscriptions: Subscription[], convert: (v: number, c: string) => number }) => {
    const data = useMemo(() => {
       const map: Record<string, number> = {};
       
       subscriptions.forEach(sub => {
          const key = sub.category || 'Other'; 
-         const monthlyPrice = sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
-         map[key] = (map[key] || 0) + monthlyPrice;
+         const priceInBase = convert(sub.price, sub.currency);
+         const monthlyCost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
+         map[key] = (map[key] || 0) + monthlyCost;
       });
 
       return Object.entries(map)
@@ -188,7 +189,7 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
         })
         .sort((a,b) => b.value - a.value)
         .slice(0, 5); 
-   }, [subscriptions]);
+   }, [subscriptions, convert]);
 
    const total = data.reduce((a, b) => a + b.value, 0);
    let cumulativePercent = 0;
@@ -235,7 +236,7 @@ const CostDistributionChart = ({ formatPrice, subscriptions }: { formatPrice: (v
    );
 };
 
-const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: number) => string, monthlySpend: number }) => {
+const ComparisonWidget = ({ formatPrice, monthlySpend, convert, currentCurrency }: { formatPrice: (v: number) => string, monthlySpend: number, convert: (v: number, c: string) => number, currentCurrency: string }) => {
   if (monthlySpend === 0) {
       return (
           <div className="h-32 flex items-center justify-center text-xs text-gray-400">
@@ -244,8 +245,8 @@ const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: numb
       );
   }
 
-  // Simplified: Global Avg assumes around $50
-  const globalAvg = 50; 
+  // Simplified: Global Avg assumes around $50 USD converted to Base Currency
+  const globalAvg = convert(50, 'USD'); 
   const diffPercent = ((monthlySpend - globalAvg) / globalAvg * 100).toFixed(0);
   const isLower = monthlySpend < globalAvg;
 
@@ -260,8 +261,8 @@ const ComparisonWidget = ({ formatPrice, monthlySpend }: { formatPrice: (v: numb
          </div>
          
          {[
-           { label: 'You', height: `${Math.min((monthlySpend / 200) * 100, 100)}%`, color: 'bg-gray-900 dark:bg-white', val: monthlySpend },
-           { label: 'Global Avg', height: `${Math.min((globalAvg / 200) * 100, 100)}%`, color: 'bg-gray-300 dark:bg-gray-600', val: globalAvg },
+           { label: 'You', height: `${Math.min((monthlySpend / (globalAvg * 2)) * 100, 100)}%`, color: 'bg-gray-900 dark:bg-white', val: monthlySpend },
+           { label: 'Global Avg', height: `${Math.min((globalAvg / (globalAvg * 2)) * 100, 100)}%`, color: 'bg-gray-300 dark:bg-gray-600', val: globalAvg },
          ].map((bar, i) => (
            <div key={i} className="flex flex-col items-center justify-end h-full w-1/3 group relative z-10 cursor-pointer">
               <span className="text-[10px] font-bold text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 bg-white dark:bg-gray-700 dark:text-gray-300 shadow-sm px-1.5 py-0.5 rounded border border-gray-100 dark:border-gray-600">{formatPrice(bar.val)}</span>
@@ -333,12 +334,14 @@ const SmartBudgetMonitor = ({
   subscriptions = [], 
   budgetLimits = {}, 
   setBudgetLimits, 
-  formatPrice 
+  formatPrice,
+  convert
 }: { 
   subscriptions: Subscription[], 
   budgetLimits: Record<string, number>, 
   setBudgetLimits: any, 
-  formatPrice: (v: number) => string 
+  formatPrice: (v: number) => string,
+  convert: (v: number, c: string) => number
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
@@ -347,16 +350,15 @@ const SmartBudgetMonitor = ({
     const spending: Record<string, number> = {};
     subscriptions.forEach(sub => {
       const cat = sub.category || 'Other';
-      const monthlyCost = sub.cycle === 'Yearly' ? sub.price / 12 : sub.price;
+      const priceInBase = convert(sub.price, sub.currency);
+      const monthlyCost = sub.cycle === 'Yearly' ? priceInBase / 12 : priceInBase;
       spending[cat] = (spending[cat] || 0) + monthlyCost;
     });
     return spending;
-  }, [subscriptions]);
+  }, [subscriptions, convert]);
 
   const categories = Object.keys(budgetLimits);
-  const totalBudget = (Object.values(budgetLimits) as number[]).reduce((a, b) => a + b, 0);
-  const totalSpent = (Object.values(spendingByCategory) as number[]).reduce((a, b) => a + b, 0);
-
+  
   const handleSaveLimits = () => {
     if (setBudgetLimits) setBudgetLimits(localLimits);
     setIsEditing(false);
@@ -569,7 +571,7 @@ const AIInsightCard = ({ icon: Icon, title, desc, accentColor, tintColor }: { ic
 };
 
 export default function Analytics({ subscriptions = [], budgetLimits = {}, setBudgetLimits, savingsGoal = 0, setSavingsGoal, totalSaved = 0, lifetimeSpend = 0 }: AnalyticsProps) {
-  const { t, currentCurrency, formatPrice, convertPrice } = useLanguage();
+  const { t, currentCurrency, formatPrice, convert } = useLanguage();
   const [dateRange, setDateRange] = useState('Last 6 Months');
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
@@ -613,11 +615,12 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
         months.push(d.toLocaleString('default', { month: 'short' }));
     }
 
-    // Calculate current monthly total
+    // Calculate current monthly total in base currency
     let currentMonthlyTotal = 0;
     subscriptions.forEach(sub => {
         if(sub.status === 'Active') {
-            currentMonthlyTotal += sub.cycle === 'Monthly' ? sub.price : sub.price / 12;
+            const priceInBase = convert(sub.price, sub.currency);
+            currentMonthlyTotal += sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
         }
     });
 
@@ -632,14 +635,17 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             prevValue: val * 0.9
         };
     });
-  }, [subscriptions]);
+  }, [subscriptions, convert]);
 
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
-  // Calculate current monthly spend for comparison widget
+  // Calculate current monthly spend for comparison widget (normalized)
   const currentMonthlySpend = useMemo(() => {
-      return subscriptions.reduce((acc, sub) => acc + (sub.cycle === 'Monthly' ? sub.price : sub.price / 12), 0);
-  }, [subscriptions]);
+      return subscriptions.reduce((acc, sub) => {
+          const priceInBase = convert(sub.price, sub.currency);
+          return acc + (sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12);
+      }, 0);
+  }, [subscriptions, convert]);
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
@@ -753,7 +759,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
                <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">High Impact</span>
             </div>
-            <TopExpensesList subscriptions={subscriptions} formatPrice={formatPrice} />
+            <TopExpensesList subscriptions={subscriptions} formatPrice={formatPrice} convert={convert} />
          </div>
       </div>
 
@@ -772,7 +778,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                   </div>
                 </div>
                 {subscriptions.length > 0 ? (
-                    <SpendingTrendChart data={personalTrendData} color={trendColor} convertPrice={convertPrice} currentCurrency={currentCurrency} />
+                    <SpendingTrendChart data={personalTrendData} color={trendColor} currentCurrency={currentCurrency} />
                 ) : (
                     <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs bg-gray-50 dark:bg-gray-900 rounded-xl">
                         No data to display
@@ -794,7 +800,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                   <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} />
+               <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} convert={convert} />
             </div>
 
             {/* Budget Monitor */}
@@ -803,12 +809,13 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
               budgetLimits={budgetLimits}
               setBudgetLimits={setBudgetLimits}
               formatPrice={formatPrice}
+              convert={convert}
             />
 
             {/* Global Comparison */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm h-fit">
                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">{t('analytics.global_compare')}</h3>
-               <ComparisonWidget formatPrice={formatPrice} monthlySpend={currentMonthlySpend} />
+               <ComparisonWidget formatPrice={formatPrice} monthlySpend={currentMonthlySpend} convert={convert} currentCurrency={currentCurrency} />
             </div>
 
          </div>

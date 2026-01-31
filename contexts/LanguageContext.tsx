@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, LanguageCode } from '../utils/translations';
-import { EXCHANGE_RATES, CURRENCY_LOCALES } from '../utils/currency';
+import { EXCHANGE_RATES, CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -14,8 +14,8 @@ interface LanguageContextType {
   setTheme: (theme: ThemeOption) => void;
   t: (key: string) => string;
   dir: 'ltr' | 'rtl';
-  formatPrice: (amountInUSD: number) => string;
-  convertPrice: (amountInUSD: number) => number;
+  formatPrice: (amount: number, currencyCode?: string) => string;
+  convert: (amount: number, fromCurrency: string) => number;
   formatDate: (dateString: string) => string;
 }
 
@@ -33,7 +33,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return 'en';
   });
 
-  // --- Currency State ---
+  // --- Currency State (User Base Currency) ---
   const [currentCurrency, setCurrentCurrency] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('userCurrencyPreference');
@@ -117,12 +117,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const handleSetCurrency = (curr: string) => {
     setCurrentCurrency(curr);
-    showToast(`Currency changed to ${curr}`);
+    showToast(`Base Currency changed to ${curr}`);
   };
 
   const handleSetTheme = (theme: ThemeOption) => {
     setCurrentTheme(theme);
-    // showToast(`Theme changed to ${theme}`);
   };
 
   const t = (key: string): string => {
@@ -131,25 +130,26 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return langDict[key] || translations['en'][key] || key;
   };
 
-  // Currency Logic
-  const convertPrice = (amountInUSD: number): number => {
-    const rate = EXCHANGE_RATES[currentCurrency] || 1;
-    return amountInUSD * rate;
+  // Convert amount from ANY currency to User Base Currency
+  const convert = (amount: number, fromCurrency: string): number => {
+    return convertAmount(amount, fromCurrency, currentCurrency);
   };
 
-  const formatPrice = (amountInUSD: number): string => {
-    const convertedAmount = convertPrice(amountInUSD);
+  // Format price. If currencyCode provided, use it. Otherwise use Base Currency.
+  // NOTE: This function assumes the 'amount' passed is ALREADY in the target 'currencyCode'.
+  // It does NOT perform conversion. Conversion must happen before formatting if needed.
+  const formatPrice = (amount: number, currencyCode: string = currentCurrency): string => {
     const locale = CURRENCY_LOCALES[currentLanguage] || 'en-US';
     
     try {
       return new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: currentCurrency,
+        currency: currencyCode,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      }).format(convertedAmount);
+      }).format(amount);
     } catch (e) {
-      return `${currentCurrency} ${convertedAmount.toFixed(2)}`;
+      return `${currencyCode} ${amount.toFixed(2)}`;
     }
   };
 
@@ -174,7 +174,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       t, 
       dir,
       formatPrice,
-      convertPrice,
+      convert,
       formatDate
     }}>
       {children}

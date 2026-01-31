@@ -20,7 +20,6 @@ import AIInsightsCard from './AIInsightsCard';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
-import { EXCHANGE_RATES } from '../utils/currency';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -79,6 +78,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
      return !hasSeen;
   });
 
+  const { t, formatPrice, convert, currentCurrency } = useLanguage();
+
   const handleOnboardingComplete = () => {
      setShowOnboarding(false);
      localStorage.setItem(`subscriptionhub.${userKey}.hasSeenOnboarding`, 'true');
@@ -101,39 +102,39 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   }, [totalSaved, userKey]);
 
   const metrics = useMemo(() => {
-    let monthlyTotalUSD = 0;
-    let yearlyTotalForecastUSD = 0;
-    let lifetimeSpendUSD = 0;
+    let monthlyTotal = 0;
+    let yearlyTotalForecast = 0;
+    let lifetimeSpend = 0;
     
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
     activeSubs.forEach(sub => {
-      const rate = EXCHANGE_RATES[sub.currency] || 1;
-      const priceInUSD = sub.price / rate;
+      // Normalize to Base Currency
+      const priceInBase = convert(sub.price, sub.currency);
 
       if (sub.cycle === 'Monthly') {
-        monthlyTotalUSD += priceInUSD;
-        yearlyTotalForecastUSD += priceInUSD * 12;
+        monthlyTotal += priceInBase;
+        yearlyTotalForecast += priceInBase * 12;
       } else {
-        monthlyTotalUSD += priceInUSD / 12;
-        yearlyTotalForecastUSD += priceInUSD;
+        monthlyTotal += priceInBase / 12;
+        yearlyTotalForecast += priceInBase;
       }
 
       if (sub.history && sub.history.length > 0) {
           const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-          lifetimeSpendUSD += historyTotal / rate;
+          lifetimeSpend += convert(historyTotal, sub.currency);
       } else {
-          lifetimeSpendUSD += priceInUSD; 
+          lifetimeSpend += priceInBase; 
       }
     });
 
     return {
-      monthlySpend: monthlyTotalUSD,
+      monthlySpend: monthlyTotal,
       activeCount: activeSubs.length,
-      yearlyForecast: yearlyTotalForecastUSD,
-      lifetimeSpend: lifetimeSpendUSD
+      yearlyForecast: yearlyTotalForecast,
+      lifetimeSpend: lifetimeSpend
     };
-  }, [subscriptions]);
+  }, [subscriptions, currentCurrency, convert]); // Recalculate when base currency changes
 
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -147,8 +148,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [notifications, setNotifications] = useState([
     { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
   ]);
-
-  const { t, formatPrice } = useLanguage();
 
   const filteredSubscriptions = useMemo(() => {
     if (activeCategory === 'All') return subscriptions;
@@ -167,11 +166,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const handleSubDelete = (id: number) => {
     const subToDelete = subscriptions.find(s => s.id === id);
     if (subToDelete) {
-        const rate = EXCHANGE_RATES[subToDelete.currency] || 1;
-        const priceInUSD = subToDelete.price / rate;
-        const monthlyValueUSD = subToDelete.cycle === 'Yearly' ? priceInUSD / 12 : priceInUSD;
+        const monthlyValueBase = subToDelete.cycle === 'Yearly' 
+            ? convert(subToDelete.price / 12, subToDelete.currency) 
+            : convert(subToDelete.price, subToDelete.currency);
         
-        setTotalSaved(prev => prev + monthlyValueUSD);
+        setTotalSaved(prev => prev + monthlyValueBase);
         showToast(`Subscription deleted. Savings updated!`);
     }
     setSubscriptions(prev => prev.filter(s => s.id !== id));
@@ -179,7 +178,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
   const handleAddSubscription = (newSub: Subscription) => {
     const finalSub = { ...newSub, id: Date.now() };
-    
     setSubscriptions(prev => [finalSub, ...prev]);
     setIsAddModalOpen(false);
     setCurrentView('dashboard');
@@ -297,8 +295,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                         <div className="flex justify-between items-baseline mb-0.5">
                         <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
                         <span className="text-xs font-bold text-primary">
-                            {sub.currency === 'USD' ? '$' : sub.currency === 'EUR' ? '€' : sub.currency === 'GBP' ? '£' : sub.currency + ' '}
-                            {sub.price.toFixed(2)}
+                            {formatPrice(sub.price, sub.currency)}
                         </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -328,9 +325,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         let total = 0;
         subscriptions.forEach(sub => {
             const cat = sub.category || 'Other';
-            const rate = EXCHANGE_RATES[sub.currency] || 1;
-            const priceInUSD = sub.price / rate; 
-            const cost = sub.cycle === 'Monthly' ? priceInUSD : priceInUSD / 12;
+            const priceInBase = convert(sub.price, sub.currency);
+            const cost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
             
             cats[cat] = (cats[cat] || 0) + cost;
             total += cost;
@@ -343,7 +339,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 name, 
                 percentage: total > 0 ? (value / total) * 100 : 0 
             }));
-     }, [subscriptions]);
+     }, [subscriptions, convert]);
 
      return (
         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">

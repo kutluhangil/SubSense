@@ -12,7 +12,7 @@ interface SubscriptionTableProps {
 }
 
 export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription }: SubscriptionTableProps) {
-  const { formatPrice, formatDate } = useLanguage();
+  const { formatPrice, formatDate, convert, currentCurrency } = useLanguage();
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +58,11 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
           </tr>
         </thead>
         <tbody className="bg-card">
-          {displaySubs.map((sub) => (
+          {displaySubs.map((sub) => {
+            const isDifferentCurrency = sub.currency !== currentCurrency;
+            const normalizedPrice = convert(sub.price, sub.currency);
+
+            return (
             <tr 
               key={sub.id} 
               className="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors group cursor-pointer border-b border-subtle last:border-0"
@@ -85,8 +89,15 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-primary">{formatPrice(sub.price)}</div>
-                <div className="text-xs text-secondary">{sub.cycle}</div>
+                <div className="text-sm font-semibold text-primary">
+                    {formatPrice(sub.price, sub.currency)}
+                </div>
+                {isDifferentCurrency && (
+                    <div className="text-[10px] text-muted font-medium">
+                        ≈ {formatPrice(normalizedPrice, currentCurrency)}
+                    </div>
+                )}
+                <div className="text-xs text-secondary mt-0.5">{sub.cycle}</div>
               </td>
               <td className="px-6 py-4 text-sm text-secondary whitespace-nowrap">
                 {formatDate(sub.nextDate)}
@@ -124,7 +135,7 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
                 )}
               </td>
             </tr>
-          ))}
+          );})}
         </tbody>
       </table>
     </div>

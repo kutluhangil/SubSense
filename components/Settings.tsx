@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText } from 'lucide-react';
+import { Bell, Shield, Eye, Lock, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
+import { CURRENCIES } from '../utils/data';
 
 export default function Settings({ subscriptions = [] }: { subscriptions?: Subscription[] }) {
-  const { t } = useLanguage();
+  const { t, currentCurrency, setCurrency } = useLanguage();
 
   const handleExportCSV = () => {
     const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
@@ -53,6 +54,40 @@ export default function Settings({ subscriptions = [] }: { subscriptions?: Subsc
         
         <div className="xl:col-span-2 space-y-8">
             
+            {/* Currency & Localization */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+                    <DollarSign className="text-gray-400" size={20} />
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">Currency & Preferences</h3>
+                </div>
+                <div className="p-6 space-y-6">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Your <strong>base currency</strong> is used for all calculations, analytics, and AI insights. Original subscription currencies are preserved.
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                         <div className="flex flex-col">
+                            <label className="text-sm font-bold text-gray-900 dark:text-white mb-1">Base Currency</label>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Used for total aggregation</span>
+                         </div>
+                         <div className="relative">
+                             <select 
+                                value={currentCurrency}
+                                onChange={(e) => setCurrency(e.target.value)}
+                                className="appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg pl-3 pr-8 py-2 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer min-w-[120px]"
+                             >
+                                {CURRENCIES.map(c => (
+                                    <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
+                                ))}
+                             </select>
+                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 shadow-sm overflow-hidden">
                  <div className="px-6 py-4 border-b border-indigo-100/50 dark:border-indigo-800/50 flex items-center gap-3">
                     <Zap className="text-indigo-600 dark:text-indigo-400" size={20} />

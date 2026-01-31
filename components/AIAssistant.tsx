@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Send, Sparkles, User, Bot, Loader2 } from 'lucide-react';
 import { chatWithGemini } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AIAssistantProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface Message {
 }
 
 export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
+  const { currentCurrency, convert } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: "Hello! I'm your Gemini-powered financial assistant. Ask me anything about your subscriptions, spending habits, or how to save money." }
   ]);
@@ -41,14 +43,22 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
 
-    // Prepare context
+    // Prepare context with normalized currency values
     const monthlySpend = subscriptions.reduce((acc, sub) => {
-       return acc + (sub.cycle === 'Monthly' ? sub.price : sub.price / 12);
+       const priceInBase = convert(sub.price, sub.currency);
+       return acc + (sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12);
     }, 0);
 
     const contextData = {
-      subscriptions: subscriptions.map(s => ({ name: s.name, price: s.price, currency: s.currency, cycle: s.cycle })),
+      subscriptions: subscriptions.map(s => ({ 
+          name: s.name, 
+          price: s.price, 
+          currency: s.currency, 
+          basePrice: convert(s.price, s.currency).toFixed(2),
+          cycle: s.cycle 
+      })),
       monthlySpend: monthlySpend.toFixed(2),
+      baseCurrency: currentCurrency,
       currentPage
     };
 
