@@ -7,6 +7,8 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
+  where,
+  orderBy,
   onSnapshot, 
   getDoc,
   getDocs,
@@ -167,26 +169,6 @@ export const updateUserSettings = async (uid: string, settings: any) => {
 
 // --- Subscriptions ---
 
-// New: Fetch once for hydration
-export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
-  try {
-    const subsRef = collection(db, 'users', uid, 'subscriptions');
-    const snapshot = await getDocs(subsRef);
-    const subs: Subscription[] = [];
-    snapshot.forEach((doc) => {
-      subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
-    });
-    return subs;
-  } catch (error: any) {
-    console.error("Error fetching subscriptions:", error);
-    if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-      return getLocalData<Subscription[]>(localKey) || [];
-    }
-    return [];
-  }
-};
-
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
   try {
     const subsRef = collection(db, 'users', uid, 'subscriptions');
@@ -258,45 +240,59 @@ export const deleteSubscription = async (uid: string, subId: number | string) =>
   }
 };
 
-export const subscribeToSubscriptions = (uid: string, callback: (subs: Subscription[]) => void) => {
+// Realtime Listener
+export const listenToUserSubscriptions = (
+  uid: string, 
+  onChange: (subs: Subscription[]) => void,
+  onError?: (error: any) => void
+) => {
   let unsubscribeFirestore = () => {};
   
   // Local fallback listener function
   const handleLocalUpdate = (e: any) => {
     if (e.detail && e.detail.key === `${FALLBACK_KEY_PREFIX}subs_${uid}`) {
-      callback(e.detail.data || []);
+      onChange(e.detail.data || []);
     }
   };
 
   try {
-    const q = query(collection(db, 'users', uid, 'subscriptions'));
+    // Attempt to order by createdAt. Note: This requires a composite index if we were filtering too,
+    // but here we are in a subcollection so it's usually fine. If it fails, we fall back.
+    const q = query(
+      collection(db, 'users', uid, 'subscriptions'),
+      orderBy('createdAt', 'desc')
+    );
+
     unsubscribeFirestore = onSnapshot(q, (snapshot) => {
       const subs: Subscription[] = [];
       snapshot.forEach((doc) => {
         // Cast doc.id (string) to id (number | string)
         subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
       });
-      callback(subs);
+      onChange(subs);
     }, (error) => {
-      if (error.code === 'permission-denied' || error.code === 'unavailable') {
-        console.warn("Permission denied or offline. Switching to local storage subscription feed.");
+      // Handle Permission Denied or Offline
+      if (error.code === 'permission-denied' || error.code === 'unavailable' || error.code === 'failed-precondition') {
+        console.warn("Firestore realtime denied or failed. Switching to local storage.");
         
-        // 1. Initial Load
+        // 1. Initial Load from Local
         const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
-        callback(localData);
+        onChange(localData);
 
         // 2. Attach Listener for future local updates
         fallbackEvents.addEventListener('local-update', handleLocalUpdate);
+        
+        if (onError) onError(error);
       } else {
         console.error("Firestore snapshot error:", error);
-        callback([]); 
+        if (onError) onError(error);
       }
     });
   } catch (error) {
     console.error("Error setting up subscription listener:", error);
     // Fallback immediately
     const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
-    callback(localData);
+    onChange(localData);
     fallbackEvents.addEventListener('local-update', handleLocalUpdate);
   }
 

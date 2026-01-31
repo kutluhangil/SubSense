@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import firebase from 'firebase/compat/app';
 import { auth } from '../firebase/firebase';
-import { initializeUserDocument, getUserDocument, getUserSubscriptions, UserProfileData } from '../utils/firestore';
+import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 
 // Define User type from compat namespace
@@ -13,6 +13,7 @@ interface AuthContextType {
   userProfile: UserProfileData | null;
   subscriptions: Subscription[];
   loading: boolean;
+  subscriptionsLoading: boolean;
   authInitialized: boolean;
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -34,7 +35,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
+
+  // Store the unsubscribe function to clean up on logout/unmount
+  const unsubscribeSubsRef = useRef<(() => void) | null>(null);
 
   // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
@@ -64,39 +69,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   // Log In
-  function login(email: string, password: string) {
-    return auth.signInWithEmailAndPassword(email, password).then(() => {
-      // Profile fetch is handled by onAuthStateChanged
-    });
+  async function login(email: string, password: string) {
+    await auth.signInWithEmailAndPassword(email, password);
   }
 
   // Log Out
   function logout() {
-    return auth.signOut().then(() => {
-      setUserProfile(null);
-      setCurrentUser(null);
-      setSubscriptions([]);
-    });
+    return auth.signOut();
   }
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+      // Always cleanup previous subscription listener if it exists
+      if (unsubscribeSubsRef.current) {
+        unsubscribeSubsRef.current();
+        unsubscribeSubsRef.current = null;
+      }
+
       setCurrentUser(user);
       
       if (user) {
         try {
-          // Hydrate global app state (User Profile & Subscriptions) from Firestore
+          // 1. Hydrate User Profile
           const profile = await getUserDocument(user.uid);
           setUserProfile(profile);
 
-          const subs = await getUserSubscriptions(user.uid);
-          setSubscriptions(subs);
+          // 2. Start Realtime Subscription Listener
+          setSubscriptionsLoading(true);
+          const unsub = listenToUserSubscriptions(user.uid, (subs) => {
+            setSubscriptions(subs);
+            setSubscriptionsLoading(false);
+          }, (error) => {
+            console.error("Subscription Sync Error:", error);
+            setSubscriptionsLoading(false);
+          });
+          
+          unsubscribeSubsRef.current = unsub;
+
         } catch (err) {
           console.error("Auth hydration error:", err);
+          setSubscriptionsLoading(false);
         }
       } else {
+        // Clear state on logout
         setUserProfile(null);
         setSubscriptions([]);
+        setSubscriptionsLoading(false);
       }
       
       setLoading(false);
@@ -106,7 +124,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
       setAuthInitialized(true);
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSubsRef.current) {
+        unsubscribeSubsRef.current();
+      }
+    };
   }, []);
 
   const value = {
@@ -114,6 +138,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     userProfile,
     subscriptions,
     loading,
+    subscriptionsLoading,
     authInitialized,
     signup,
     login,

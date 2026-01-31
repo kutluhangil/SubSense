@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
@@ -18,14 +18,13 @@ import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
 import CurrencySelector from './CurrencySelector';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Info } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
 import { debugLog } from '../utils/debug';
 import { convertAmount, CURRENCY_DATA } from '../utils/currency';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  subscribeToSubscriptions, 
   addSubscription, 
   updateSubscription, 
   deleteSubscription 
@@ -44,28 +43,10 @@ const DEFAULT_BUDGET_LIMITS = {
 };
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
-  const { currentUser } = useAuth();
+  const { currentUser, subscriptions, subscriptionsLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   
-  // Real-time Subscriptions State
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loadingSubs, setLoadingSubs] = useState(true);
-
-  // Firestore Sync
-  useEffect(() => {
-    if (currentUser) {
-      const unsubscribe = subscribeToSubscriptions(currentUser.uid, (data) => {
-        setSubscriptions(data);
-        setLoadingSubs(false);
-      });
-      return () => unsubscribe();
-    } else {
-      setSubscriptions([]);
-      setLoadingSubs(false);
-    }
-  }, [currentUser]);
-
-  // Local state only for simpler preferences not critically synced yet (can be moved to Firestore later)
+  // Local state only for simpler preferences not critically synced yet
   const userKey = user?.email || 'guest';
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
     try {
@@ -198,7 +179,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (currentUser) {
       debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription in Firestore', updatedSub);
       await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
-      // Local state is updated via listener
+      // Local state is updated via listener in AuthContext
     }
   };
 
@@ -251,7 +232,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // Components Render... (Unchanged visual logic)
   const NotificationDropdown = () => (
     <div className="absolute right-0 top-12 w-80 bg-card rounded-2xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
        <div className="p-4 border-b border-subtle flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
@@ -304,7 +284,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const UpcomingTimeline = () => {
      const upcoming = [...subscriptions].sort((a,b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()).slice(0, 4);
 
-     if (upcoming.length === 0) {
+     if (upcoming.length === 0 && !subscriptionsLoading) {
         return (
             <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 text-center">
                 <h3 className="font-bold text-primary text-sm mb-2">{t('dashboard.upcoming')}</h3>
@@ -326,36 +306,42 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 {t('dashboard.view_calendar')}
             </button>
             </div>
-            <div className="space-y-4">
-            {upcoming.map((sub) => (
-                <div key={sub.id} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                        <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
-                    </div>
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                        <div className="flex justify-between items-baseline mb-0.5">
-                        <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
-                        <span className="text-xs font-bold text-primary">
-                            {formatPrice(sub.price, sub.currency)}
-                        </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                        <span className="text-[10px] text-secondary">{sub.nextDate}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
-                            {sub.status}
-                        </span>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
-                        className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                        title="Mark as paid"
-                    >
-                        <CheckCircle2 size={16} />
-                    </button>
+            {subscriptionsLoading ? (
+                <div className="space-y-4">
+                    {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>)}
                 </div>
-            ))}
-            </div>
+            ) : (
+                <div className="space-y-4">
+                {upcoming.map((sub) => (
+                    <div key={sub.id} className="flex items-center gap-3 group">
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                            <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
+                        </div>
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                            <div className="flex justify-between items-baseline mb-0.5">
+                            <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
+                            <span className="text-xs font-bold text-primary">
+                                {formatPrice(sub.price, sub.currency)}
+                            </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-secondary">{sub.nextDate}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
+                                {sub.status}
+                            </span>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
+                            className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            title="Mark as paid"
+                        >
+                            <CheckCircle2 size={16} />
+                        </button>
+                    </div>
+                ))}
+                </div>
+            )}
         </div>
      );
   };
@@ -388,7 +374,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             <PieChart size={16} className="text-muted" /> {t('dashboard.expense_breakdown')}
             </h3>
             
-            {breakdown.length === 0 ? (
+            {subscriptionsLoading ? (
+                <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full animate-pulse"></div>
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-2/3 animate-pulse"></div>
+                    </div>
+                </div>
+            ) : breakdown.length === 0 ? (
                 <div className="text-center py-4 text-xs text-muted">Add subscriptions to see stats.</div>
             ) : (
                 <div className="flex items-center gap-6">
@@ -461,7 +455,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <div className="mb-8 flex items-center justify-between relative">
                 <div>
                    <h1 className="text-2xl font-bold text-primary tracking-tight">{t('dashboard.title')}</h1>
-                   <p className="text-secondary text-sm mt-1">Welcome back, {user.name}.</p>
+                   <p className="text-secondary text-sm mt-1">
+                      {subscriptionsLoading ? <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> Syncing...</span> : `Welcome back, ${user.name}.`}
+                   </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -573,12 +569,19 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                       <CategoryFilters />
 
                       <div className="bg-card rounded-2xl border border-subtle shadow-sm overflow-hidden min-h-[400px]">
-                         <SubscriptionTable 
-                           subscriptions={filteredSubscriptions} 
-                           onSelectSubscription={setSelectedSub}
-                           onDeleteSubscription={handleSubDelete}
-                           previewCurrency={previewCurrency}
-                         />
+                         {subscriptionsLoading && filteredSubscriptions.length === 0 ? (
+                            <div className="p-8 text-center text-gray-400 flex flex-col items-center">
+                                <Loader2 size={32} className="animate-spin mb-2 text-indigo-500" />
+                                <p>Loading subscriptions...</p>
+                            </div>
+                         ) : (
+                            <SubscriptionTable 
+                                subscriptions={filteredSubscriptions} 
+                                onSelectSubscription={setSelectedSub}
+                                onDeleteSubscription={handleSubDelete}
+                                previewCurrency={previewCurrency}
+                            />
+                         )}
                       </div>
                    </div>
                 </div>
