@@ -2,6 +2,8 @@
 // CURRENCY SERVICE LAYER
 // Handles rate fetching, caching, and conversion logic.
 
+import { trackEvent } from './analytics';
+
 export interface CurrencyMetadata {
   code: string;
   symbol: string;
@@ -86,6 +88,10 @@ export const getRates = (): Record<string, number> => {
   // 2. Fallback to default rates (Simulation of fresh fetch)
   // In a real app, this would be: await fetch('https://api...').json()
   const freshRates = DEFAULT_RATES;
+  
+  // Track that we are using default/fallback rates which might be slightly stale
+  // This helps us monitor how often we are hitting the fallback
+  trackEvent('rate_fetch_error', { reason: 'using_default_static', base: 'USD' });
   
   // 3. Cache the "new" rates
   try {

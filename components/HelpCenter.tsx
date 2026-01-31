@@ -1,8 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info, Shield } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info, Shield, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
+import { useFeedback } from '../contexts/FeedbackContext'; // Import
 
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
@@ -38,6 +39,7 @@ export default function HelpCenter() {
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { t } = useLanguage();
+  const { openFeedback } = useFeedback();
 
   const CATEGORIES = useMemo(() => [
     { 
@@ -298,7 +300,14 @@ export default function HelpCenter() {
                        <h3 className="text-xl font-bold mb-2">{t('help.report')}</h3>
                        <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know.</p>
                     </div>
-                    <div>
+                    <div className="flex gap-3">
+                       <button 
+                         onClick={() => openFeedback('help_center')}
+                         className="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 w-full sm:w-auto border border-white/20"
+                       >
+                          <MessageSquare size={18} />
+                          <span>Send Feedback</span>
+                       </button>
                        <button 
                          onClick={() => setIsContactModalOpen(true)}
                          className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto"

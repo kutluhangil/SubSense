@@ -4,7 +4,7 @@ import { analytics } from "../firebase/firebase";
 import { IS_BETA, APP_VERSION } from "./constants";
 
 // Types for strict event logging
-type AnalyticsEvent = 
+export type AnalyticsEvent = 
   // Auth
   | 'signup_success'
   | 'login_success'
@@ -22,9 +22,12 @@ type AnalyticsEvent =
   // AI
   | 'ai_opened'
   | 'ai_query_submitted'
-  // System
+  // System & Monitoring
   | 'app_error'
-  | 'performance_metric';
+  | 'performance_metric'
+  | 'system_fallback'
+  | 'rate_fetch_error'
+  | 'data_integrity_warning';
 
 interface EventParams {
   [key: string]: string | number | boolean | undefined;
