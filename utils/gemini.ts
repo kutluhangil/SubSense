@@ -80,6 +80,7 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
       CRITICAL INSTRUCTIONS:
       1. ${langInstruction}
       2. The user's primary currency is ${baseCurrency}. All 'convertedMonthlyCost' values are ALREADY converted to ${baseCurrency}. Do NOT convert yourself.
+      3. SAFETY: Do NOT provide specific investment advice. Do NOT ask for personal banking credentials.
       
       DATA:
       ${JSON.stringify(payload, null, 2)}
@@ -175,6 +176,7 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     - NO cloud backup exists (data is local).
     - NO live human support agents are available.
     - NO real-time currency exchange trading (rates are reference only).
+    - DO NOT HALLUCINATE data not present in the CONTEXT DATA.
     
     CURRENCY CONTEXT:
     - User base currency: ${payload.baseCurrency}
