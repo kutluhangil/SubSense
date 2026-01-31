@@ -1,4 +1,16 @@
-import firebase from 'firebase/app';
+
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  onSnapshot, 
+  getDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
 
@@ -31,16 +43,16 @@ export const initializeUserDocument = async (
   try {
     if (!user.email) throw new Error("User email is required");
 
-    const userRef = db.collection('users').doc(user.uid);
-    const userSnap = await userRef.get();
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists) {
+    if (!userSnap.exists()) {
       // Create new user profile with strict schema
       const newProfile: UserProfileData = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: serverTimestamp(),
         preferences: {
           baseCurrency: additionalData?.currency || 'USD',
           language: 'en', // Default to English, can be detected
@@ -54,7 +66,7 @@ export const initializeUserDocument = async (
         }
       };
 
-      await userRef.set(newProfile);
+      await setDoc(userRef, newProfile);
       return newProfile;
     }
     
@@ -68,9 +80,9 @@ export const initializeUserDocument = async (
 
 export const getUserDocument = async (uid: string): Promise<UserProfileData | null> => {
   try {
-    const userRef = db.collection('users').doc(uid);
-    const snap = await userRef.get();
-    if (snap.exists) {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
       return snap.data() as UserProfileData;
     }
     return null;
@@ -81,43 +93,43 @@ export const getUserDocument = async (uid: string): Promise<UserProfileData | nu
 };
 
 export const updateUserSettings = async (uid: string, settings: any) => {
-  const userRef = db.collection('users').doc(uid);
+  const userRef = doc(db, 'users', uid);
   // Merge into preferences field
-  await userRef.set({ preferences: settings }, { merge: true });
+  await setDoc(userRef, { preferences: settings }, { merge: true });
 };
 
 // --- Subscriptions ---
 
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
-  const subsRef = db.collection('users').doc(uid).collection('subscriptions');
-  await subsRef.add({
+  const subsRef = collection(db, 'users', uid, 'subscriptions');
+  await addDoc(subsRef, {
     ...subscription,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   });
 };
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
-  const subRef = db.collection('users').doc(uid).collection('subscriptions').doc(String(subId));
+  const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
   
   // Remove id from data to avoid overwriting document ID field if it exists in the object
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, ...updateData } = data as any;
   
-  await subRef.update({
+  await updateDoc(subRef, {
     ...updateData,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    updatedAt: serverTimestamp()
   });
 };
 
 export const deleteSubscription = async (uid: string, subId: number | string) => {
-  const subRef = db.collection('users').doc(uid).collection('subscriptions').doc(String(subId));
-  await subRef.delete();
+  const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
+  await deleteDoc(subRef);
 };
 
 export const subscribeToSubscriptions = (uid: string, callback: (subs: Subscription[]) => void) => {
-  const q = db.collection('users').doc(uid).collection('subscriptions');
-  return q.onSnapshot((snapshot) => {
+  const q = query(collection(db, 'users', uid, 'subscriptions'));
+  return onSnapshot(q, (snapshot) => {
     const subs: Subscription[] = [];
     snapshot.forEach((doc) => {
       // We map the Firestore document ID to the 'id' field used by the frontend
