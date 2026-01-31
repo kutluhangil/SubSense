@@ -17,19 +17,33 @@ import { Subscription } from '../components/SubscriptionModal';
 // --- User Management ---
 
 export const initializeUserDocument = async (uid: string, email: string) => {
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
 
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      email,
-      createdAt: Timestamp.now(),
-      settings: {
-        baseCurrency: 'USD',
-        language: 'en',
-        theme: 'system'
-      }
-    });
+    if (!userSnap.exists()) {
+      // Create new user profile
+      await setDoc(userRef, {
+        uid,
+        email,
+        createdAt: Timestamp.now(),
+        settings: {
+          baseCurrency: 'USD',
+          language: 'en',
+          theme: 'system'
+        },
+        profile: {
+          bio: '',
+          location: '',
+          website: '',
+          phone: '',
+          joinedDate: new Date().toISOString()
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing user document:", error);
+    throw error;
   }
 };
 
@@ -53,14 +67,18 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
   const subsRef = collection(db, 'users', uid, 'subscriptions');
   await addDoc(subsRef, {
     ...subscription,
-    createdAt: Timestamp.now()
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now()
   });
 };
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
   const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
-  // Remove id from data to avoid overwriting document ID field if it exists
+  
+  // Remove id from data to avoid overwriting document ID field if it exists in the object
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, ...updateData } = data as any;
+  
   await updateDoc(subRef, {
     ...updateData,
     updatedAt: Timestamp.now()
@@ -77,6 +95,7 @@ export const subscribeToSubscriptions = (uid: string, callback: (subs: Subscript
   return onSnapshot(q, (snapshot) => {
     const subs: Subscription[] = [];
     snapshot.forEach((doc) => {
+      // We map the Firestore document ID to the 'id' field used by the frontend
       subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
     });
     callback(subs);
@@ -89,6 +108,7 @@ export const migrateLocalData = async (uid: string, localSubs: Subscription[]) =
   
   const batchPromises = localSubs.map(sub => {
     // Remove the numeric ID used locally, let Firestore generate one
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...rest } = sub;
     return addSubscription(uid, rest);
   });

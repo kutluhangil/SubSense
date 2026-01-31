@@ -35,12 +35,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Sign Up
   async function signup(email: string, password: string, name: string) {
+    // 1. Create Auth User
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    // Update Display Name
-    await updateProfile(userCredential.user, { displayName: name });
-    // Initialize Firestore Document for User
-    await initializeUserDocument(userCredential.user.uid, email);
-    setCurrentUser(userCredential.user);
+    const user = userCredential.user;
+
+    // 2. Update Profile (Display Name)
+    await updateProfile(user, { displayName: name });
+
+    // 3. Initialize Firestore Document for User
+    await initializeUserDocument(user.uid, email);
+    
+    // State update happens via onAuthStateChanged, but we can set it here optimistically if needed
+    setCurrentUser(user);
   }
 
   // Log In

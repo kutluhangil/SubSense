@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -6,11 +7,12 @@ import { getFirestore } from 'firebase/firestore';
 const getEnvVar = (key: string) => {
   try {
     // Check import.meta.env (Vite)
-    // Cast to any to avoid TS errors if Vite types aren't loaded
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env[key]) {
-      return (import.meta as any).env[key];
+    // Cast to any to avoid TS errors if Vite types aren't fully loaded in all contexts
+    const meta = import.meta as any;
+    if (meta && meta.env && meta.env[key]) {
+      return meta.env[key];
     }
-    // Check process.env (Standard/Webpack)
+    // Check process.env (Standard/Webpack/Node)
     if (typeof process !== 'undefined' && process.env && process.env[key]) {
       return process.env[key];
     }
@@ -39,7 +41,7 @@ const firebaseConfig = isConfigValid ? {
   messagingSenderId: getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID'),
   appId: getEnvVar('VITE_FIREBASE_APP_ID')
 } : {
-  // Placeholder config so app loads (auth will fail on use)
+  // Placeholder config so app loads (auth will fail on use if keys are missing)
   apiKey: "AIzaSyDummyKeyForDevelopmentEnvironmentOnly",
   authDomain: "dummy.firebaseapp.com",
   projectId: "dummy-project",
