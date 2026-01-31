@@ -11,7 +11,10 @@ type LogCategory =
   | 'CURRENCY_CONVERSION'
   | 'COMPARE_CALC'
   | 'REMOVE_ACTION'
-  | 'THEME_SYNC';
+  | 'THEME_SYNC'
+  | 'ANALYTICS_RANGE'
+  | 'ANALYTICS_DATA'
+  | 'ANALYTICS_EMPTY';
 
 export const debugLog = (category: LogCategory, message: string, data?: any) => {
   if (!DEBUG_MODE) return;

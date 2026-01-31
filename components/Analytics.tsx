@@ -5,12 +5,22 @@ import BrandIcon from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, SUBSCRIPTION_CATALOG } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
+import { debugLog } from '../utils/debug';
 
 // --- Types ---
 interface DataPoint {
   label: string;
   value: number; // In Base Currency
-  prevValue: number; // In Base Currency
+  date: Date;    // For sorting/processing
+}
+
+interface AggregatedAnalytics {
+  trendData: DataPoint[];
+  categoryTotals: Record<string, number>;
+  serviceTotals: Record<number, number>; // ID -> Total Spend
+  totalSpendInPeriod: number;
+  periodLabel: string;
+  monthsInPeriod: number;
 }
 
 interface AnalyticsProps {
@@ -47,6 +57,155 @@ const generateSmoothPath = (points: {x: number, y: number}[]) => {
   return path;
 };
 
+// --- Logic: Data Generation ---
+const processSubscriptionsForRange = (
+  subscriptions: Subscription[], 
+  range: string, 
+  convert: (amount: number, from: string) => number,
+  baseCurrency: string
+): AggregatedAnalytics => {
+  
+  const now = new Date();
+  let startDate = new Date();
+  let groupBy: 'day' | 'month' = 'month';
+  let monthsInPeriod = 1;
+
+  // 1. Determine Time Window
+  switch (range) {
+    case 'Last 30 Days':
+      startDate.setDate(now.getDate() - 30);
+      groupBy = 'day';
+      monthsInPeriod = 1;
+      break;
+    case 'Last 3 Months':
+      startDate.setMonth(now.getMonth() - 3);
+      groupBy = 'month';
+      monthsInPeriod = 3;
+      break;
+    case 'Last 6 Months':
+      startDate.setMonth(now.getMonth() - 6);
+      groupBy = 'month';
+      monthsInPeriod = 6;
+      break;
+    case 'Last 12 Months':
+      startDate.setMonth(now.getMonth() - 12);
+      groupBy = 'month';
+      monthsInPeriod = 12;
+      break;
+    default:
+      startDate.setMonth(now.getMonth() - 6);
+      monthsInPeriod = 6;
+  }
+
+  // Set start of day for accurate comparison
+  startDate.setHours(0,0,0,0);
+
+  debugLog('ANALYTICS_RANGE', `Processing range: ${range}`, { startDate: startDate.toISOString(), groupBy });
+
+  const categoryTotals: Record<string, number> = {};
+  const serviceTotals: Record<number, number> = {};
+  let totalSpendInPeriod = 0;
+  
+  // Temporal Buckets
+  const buckets: Record<string, { label: string, value: number, date: Date }> = {};
+
+  // Initialize Buckets to ensure continuous line (no gaps)
+  if (groupBy === 'day') {
+    for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().split('T')[0];
+      const label = d.toLocaleDateString('default', { day: 'numeric', month: 'short' });
+      buckets[key] = { label, value: 0, date: new Date(d) };
+    }
+  } else {
+    // Monthly buckets
+    const tempDate = new Date(startDate);
+    // Adjust to start of month to avoid skipping if today is 31st and prev month only has 30
+    tempDate.setDate(1); 
+    
+    while (tempDate <= now) {
+      const key = `${tempDate.getFullYear()}-${tempDate.getMonth()}`;
+      const label = tempDate.toLocaleDateString('default', { month: 'short' });
+      buckets[key] = { label, value: 0, date: new Date(tempDate) };
+      tempDate.setMonth(tempDate.getMonth() + 1);
+    }
+  }
+
+  // 2. Project Payments Backward
+  let transactionCount = 0;
+
+  subscriptions.forEach(sub => {
+    if (sub.status !== 'Active') return;
+
+    const price = convert(sub.price, sub.currency);
+    const cycleMonths = sub.cycle === 'Yearly' ? 12 : 1;
+    
+    // Parse next payment date
+    const nextPay = new Date(sub.nextDate);
+    if (isNaN(nextPay.getTime())) return;
+
+    // Start projecting backwards from next payment
+    // Logic: Find the most recent payment that <= now, then iterate backwards
+    
+    let pointerDate = new Date(nextPay);
+    
+    // Move pointer back until it is <= now (find the last actual payment)
+    // Safety break: max 50 loops to prevent infinite
+    let safety = 0;
+    while (pointerDate > now && safety < 100) {
+      if (sub.cycle === 'Monthly') pointerDate.setMonth(pointerDate.getMonth() - 1);
+      else pointerDate.setFullYear(pointerDate.getFullYear() - 1);
+      safety++;
+    }
+
+    // Now pointerDate is the last theoretical payment.
+    // Iterate backwards until before startDate
+    safety = 0;
+    while (pointerDate >= startDate && safety < 1000) {
+      // Add to aggregation
+      const bucketKey = groupBy === 'day' 
+        ? pointerDate.toISOString().split('T')[0]
+        : `${pointerDate.getFullYear()}-${pointerDate.getMonth()}`;
+
+      if (buckets[bucketKey]) {
+        buckets[bucketKey].value += price;
+      } else if (groupBy === 'month') {
+         // Edge case: Sometimes date math might land slightly off-month boundaries
+         // Try to find nearest bucket? For MVP, skip if out of initialized bounds
+      }
+
+      // Add to Totals
+      const cat = sub.category || 'Other';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + price;
+      serviceTotals[sub.id] = (serviceTotals[sub.id] || 0) + price;
+      totalSpendInPeriod += price;
+      transactionCount++;
+
+      // Move back one cycle
+      if (sub.cycle === 'Monthly') pointerDate.setMonth(pointerDate.getMonth() - 1);
+      else pointerDate.setFullYear(pointerDate.getFullYear() - 1);
+      
+      safety++;
+    }
+  });
+
+  debugLog('ANALYTICS_DATA', `Generated ${transactionCount} transaction points`, { totalSpendInPeriod });
+
+  const trendData = Object.values(buckets).sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  if (trendData.length === 0) {
+      debugLog('ANALYTICS_EMPTY', 'No data points generated for selected range');
+  }
+
+  return {
+    trendData,
+    categoryTotals,
+    serviceTotals,
+    totalSpendInPeriod,
+    periodLabel: range,
+    monthsInPeriod
+  };
+};
+
 // --- Visual Components ---
 
 const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data: DataPoint[], color?: string, currentCurrency: string }) => {
@@ -55,7 +214,6 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const { currentTheme } = useLanguage();
 
-  // Adjust line color for dark mode if using default
   const strokeColor = currentTheme === 'dark' || (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) 
     ? (color === '#111827' ? '#e5e7eb' : color) 
     : color;
@@ -75,13 +233,11 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
 
   if (width === 0) return <div ref={containerRef} className="h-[200px] w-full" />;
 
-  const convertedData = data; // Assuming data comes in normalized
-  // Handle case where max value is 0
-  const maxVal = Math.max(...convertedData.map(d => d.value));
-  const maxValue = maxVal > 0 ? maxVal * 1.1 : 100;
+  const maxVal = Math.max(...data.map(d => d.value));
+  const maxValue = maxVal > 0 ? maxVal * 1.1 : 100; // Provide headroom
   const minValue = 0;
   
-  const points = convertedData.map((d, i) => ({
+  const points = data.map((d, i) => ({
     x: padding.left + (i / (Math.max(1, data.length - 1))) * drawWidth,
     y: padding.top + drawHeight - ((d.value - minValue) / (maxValue - minValue)) * drawHeight,
     ...d
@@ -110,8 +266,12 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
              );
           })}
           
-          <path d={fillPath} fill="url(#trendGradient)" className="transition-all duration-300" />
-          <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
+          {data.length > 0 && (
+            <>
+              <path d={fillPath} fill="url(#trendGradient)" className="transition-all duration-300" />
+              <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-sm transition-all duration-300" />
+            </>
+          )}
 
           {/* Interaction Points */}
           {points.map((p, i) => (
@@ -119,25 +279,38 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
                 key={i} 
                 cx={p.x} cy={p.y} r={hoveredIndex === i ? 6 : 4} 
                 fill={strokeColor} stroke="var(--bg-card)" strokeWidth="2"
-                className="transition-all duration-200 cursor-pointer"
+                className="transition-all duration-200 cursor-pointer opacity-0 hover:opacity-100"
+                style={{ opacity: hoveredIndex === i ? 1 : 0 }} // Only show on hover
                 onMouseEnter={() => setHoveredIndex(i)}
                 onMouseLeave={() => setHoveredIndex(null)}
              />
           ))}
           
-          {/* X Axis Labels */}
-          {points.map((p, i) => (
-             <text key={i} x={p.x} y={height - 5} textAnchor="middle" className="text-[9px] fill-gray-400 dark:fill-gray-500 uppercase font-bold tracking-wider">{p.label}</text>
-          ))}
+          {/* X Axis Labels (Sampled) */}
+          {points.map((p, i) => {
+             // Show first, last, and ~3 intermediate labels to avoid crowding
+             const step = Math.ceil(points.length / 5);
+             if (i % step !== 0 && i !== points.length - 1) return null;
+             return (
+               <text key={i} x={p.x} y={height - 5} textAnchor="middle" className="text-[9px] fill-gray-400 dark:fill-gray-500 uppercase font-bold tracking-wider">{p.label}</text>
+             );
+          })}
        </svg>
+       
+       {data.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+             No spending data for this period
+          </div>
+       )}
        
        {/* Tooltip */}
        {hoveredIndex !== null && points[hoveredIndex] && (
           <div 
-             className="absolute bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10"
+             className="absolute bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl transform -translate-x-1/2 -translate-y-full pointer-events-none z-10 transition-all"
              style={{ left: points[hoveredIndex].x, top: points[hoveredIndex].y - 12 }}
           >
-             {currentCurrency} {Math.round(points[hoveredIndex].value).toLocaleString()}
+             <span className="block text-[9px] opacity-70 mb-0.5">{points[hoveredIndex].label}</span>
+             {currentCurrency} {points[hoveredIndex].value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 dark:bg-white rotate-45"></div>
           </div>
        )}
@@ -145,16 +318,33 @@ const SpendingTrendChart = ({ data, color = "#111827", currentCurrency }: { data
   );
 };
 
-const TopExpensesList = ({ subscriptions, formatPrice, convert }: { subscriptions: Subscription[], formatPrice: (v: number, c?: string) => string, convert: (v: number, c: string) => number }) => {
-    // Sort by normalized price desc
-    const sorted = [...subscriptions].sort((a, b) => convert(b.price, b.currency) - convert(a.price, a.currency)).slice(0, 3);
+const TopExpensesList = ({ 
+  subscriptions, 
+  serviceTotals, 
+  formatPrice, 
+  periodLabel 
+}: { 
+  subscriptions: Subscription[], 
+  serviceTotals: Record<number, number>, 
+  formatPrice: (v: number) => string,
+  periodLabel: string
+}) => {
+    // Sort subscriptions by the calculated total spend in the period
+    const sorted = [...subscriptions]
+      .filter(sub => (serviceTotals[sub.id] || 0) > 0)
+      .sort((a, b) => (serviceTotals[b.id] || 0) - (serviceTotals[a.id] || 0))
+      .slice(0, 3);
 
     return (
         <div className="flex flex-col h-full justify-center space-y-4">
+            <div className="flex justify-between items-center mb-1">
+               <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
+               <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">{periodLabel}</span>
+            </div>
             {sorted.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between">
+                <div key={sub.id} className="flex items-center justify-between group">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center border border-gray-100 dark:border-gray-600">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center border border-gray-100 dark:border-gray-600 group-hover:border-gray-300 dark:group-hover:border-gray-500 transition-colors">
                             <BrandIcon type={sub.type} className="w-5 h-5" noBackground />
                         </div>
                         <div>
@@ -162,39 +352,31 @@ const TopExpensesList = ({ subscriptions, formatPrice, convert }: { subscription
                             <p className="text-[10px] text-gray-500 dark:text-gray-400">{sub.category}</p>
                         </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white">{formatPrice(sub.price, sub.currency)}</span>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white">
+                        {formatPrice(serviceTotals[sub.id])}
+                    </span>
                 </div>
             ))}
-            {sorted.length === 0 && <p className="text-xs text-gray-400 text-center">No subscriptions yet.</p>}
+            {sorted.length === 0 && <p className="text-xs text-gray-400 text-center py-4">No spending recorded in this period.</p>}
         </div>
     );
 };
 
-const CostDistributionChart = ({ formatPrice, subscriptions, convert }: { formatPrice: (v: number) => string, subscriptions: Subscription[], convert: (v: number, c: string) => number }) => {
+const CostDistributionChart = ({ categoryTotals, formatPrice }: { categoryTotals: Record<string, number>, formatPrice: (v: number) => string }) => {
    const data = useMemo(() => {
-      const map: Record<string, number> = {};
-      
-      subscriptions.forEach(sub => {
-         const key = sub.category || 'Other'; 
-         const priceInBase = convert(sub.price, sub.currency);
-         const monthlyCost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
-         map[key] = (map[key] || 0) + monthlyCost;
-      });
-
-      return Object.entries(map)
+      return Object.entries(categoryTotals)
         .map(([name, value]) => {
-           // Assign colors randomly based on name hash for consistency
            const color = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'][name.length % 5];
            return { name, value, color };
         })
         .sort((a,b) => b.value - a.value)
         .slice(0, 5); 
-   }, [subscriptions, convert]);
+   }, [categoryTotals]);
 
    const total = data.reduce((a, b) => a + b.value, 0);
    let cumulativePercent = 0;
 
-   if (data.length === 0) return <div className="flex items-center justify-center h-full text-xs text-gray-400">No data available</div>;
+   if (total === 0) return <div className="flex items-center justify-center h-full text-xs text-gray-400">No spending data</div>;
 
    return (
     <div className="flex items-start gap-6 h-full">
@@ -331,31 +513,20 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
 };
 
 const SmartBudgetMonitor = ({ 
-  subscriptions = [], 
+  categoryTotals,
   budgetLimits = {}, 
   setBudgetLimits, 
   formatPrice,
-  convert
+  monthsInPeriod
 }: { 
-  subscriptions: Subscription[], 
+  categoryTotals: Record<string, number>, 
   budgetLimits: Record<string, number>, 
   setBudgetLimits: any, 
   formatPrice: (v: number) => string,
-  convert: (v: number, c: string) => number
+  monthsInPeriod: number
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
-
-  const spendingByCategory = useMemo(() => {
-    const spending: Record<string, number> = {};
-    subscriptions.forEach(sub => {
-      const cat = sub.category || 'Other';
-      const priceInBase = convert(sub.price, sub.currency);
-      const monthlyCost = sub.cycle === 'Yearly' ? priceInBase / 12 : priceInBase;
-      spending[cat] = (spending[cat] || 0) + monthlyCost;
-    });
-    return spending;
-  }, [subscriptions, convert]);
 
   const categories = Object.keys(budgetLimits);
   
@@ -380,10 +551,13 @@ const SmartBudgetMonitor = ({
 
       <div className="space-y-5">
         {categories.slice(0,3).map((cat, idx) => {
-          const limit = budgetLimits[cat] || 0;
-          const spent = spendingByCategory[cat] || 0;
-          const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-          const isOverBudget = spent > limit;
+          // Scale budget limit for the selected time period
+          const baseLimit = budgetLimits[cat] || 0;
+          const scaledLimit = baseLimit * monthsInPeriod;
+          const spent = categoryTotals[cat] || 0;
+          
+          const percentage = scaledLimit > 0 ? Math.min((spent / scaledLimit) * 100, 100) : 0;
+          const isOverBudget = spent > scaledLimit;
           
           let barColor = 'bg-blue-500';
           if (percentage > 80) barColor = 'bg-yellow-500';
@@ -394,7 +568,7 @@ const SmartBudgetMonitor = ({
               <div className="flex justify-between items-end mb-1.5">
                 <span className="text-xs font-bold text-gray-900 dark:text-white">{cat}</span>
                 <span className={`text-[10px] font-bold ${isOverBudget ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                   {formatPrice(spent)} <span className="text-gray-300 dark:text-gray-600">/</span> {formatPrice(limit)}
+                   {formatPrice(spent)} <span className="text-gray-300 dark:text-gray-600">/</span> {formatPrice(scaledLimit)}
                 </span>
               </div>
               <div className="relative h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -411,7 +585,7 @@ const SmartBudgetMonitor = ({
       {isEditing && (
         <div className="absolute inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-gray-900 dark:text-white">Edit Limits</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white">Edit Monthly Limits</h4>
               <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"><X size={18} /></button>
            </div>
            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
@@ -505,9 +679,8 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   );
 };
 
-// --- RESETTING THIS COMPONENT TO 0 AS REQUESTED ---
 const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
-    // Force reset for now until currency logic is robust
+    // Basic logic: Detect overlapping categories or high frequency
     const potentialSavings = 0; 
 
     // Render simple state or nothing
@@ -515,7 +688,7 @@ const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: S
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm h-full flex flex-col justify-center items-center text-center">
             <CheckCircle2 size={24} className="text-green-500 mb-2" />
             <p className="text-sm font-bold text-gray-900 dark:text-white">Optimization Ready</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Add more data to see savings.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Savings insights will appear once enough data is collected.</p>
         </div>
     );
 };
@@ -547,17 +720,20 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
   const [viewMode, setViewMode] = useState<'personal' | 'friends'>('personal');
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
 
+  // Recalculate all metrics when subscriptions or dateRange changes
+  const analyticsData = useMemo(() => {
+    return processSubscriptionsForRange(subscriptions, dateRange, convert, currentCurrency);
+  }, [subscriptions, dateRange, currentCurrency, convert]);
+
+  const { trendData, categoryTotals, serviceTotals, totalSpendInPeriod, monthsInPeriod } = analyticsData;
+
   // CSV Export Logic
   const handleExportCSV = () => {
-    const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
-    const rows = subscriptions.map(sub => [
-        sub.name,
-        sub.category || "Uncategorized",
-        sub.price.toFixed(2),
-        sub.currency,
-        sub.cycle,
-        sub.nextDate,
-        sub.status
+    const headers = ["Date", "Label", "Value"];
+    const rows = trendData.map(d => [
+      d.date.toISOString().split('T')[0],
+      d.label,
+      d.value.toFixed(2)
     ]);
 
     const csvContent = [
@@ -569,44 +745,11 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "subscription_data.csv");
+    link.setAttribute("download", `analytics_${dateRange.replace(/ /g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
-
-  // Derive Trend Data from real subscriptions
-  const personalTrendData = useMemo(() => {
-    const today = new Date();
-    const months = [];
-    
-    // Create last 6 months buckets
-    for (let i = 5; i >= 0; i--) {
-        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        months.push(d.toLocaleString('default', { month: 'short' }));
-    }
-
-    // Calculate current monthly total in base currency
-    let currentMonthlyTotal = 0;
-    subscriptions.forEach(sub => {
-        if(sub.status === 'Active') {
-            const priceInBase = convert(sub.price, sub.currency);
-            currentMonthlyTotal += sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
-        }
-    });
-
-    // Simulate trend with slight random variance for MVP visual appeal
-    // In a real backend app, this would query historical snapshots
-    return months.map((m, i) => {
-        const variance = (Math.random() - 0.5) * (currentMonthlyTotal * 0.1); // +/- 5% variance
-        const val = Math.max(0, currentMonthlyTotal + (i < 5 ? variance : 0)); // Ensure last month matches current total
-        return {
-            label: m,
-            value: val,
-            prevValue: val * 0.9
-        };
-    });
-  }, [subscriptions, convert]);
 
   const trendColor = viewMode === 'personal' ? '#111827' : '#3B82F6';
 
@@ -646,7 +789,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                        <button
                          key={option}
                          onClick={() => { setDateRange(option); setIsDateDropdownOpen(false); }}
-                         className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+                         className={`w-full text-left px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 ${dateRange === option ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}
                        >
                          {option}
                        </button>
@@ -687,7 +830,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <AIInsightCard 
                         icon={Lightbulb} 
                         title="Spending Alert" 
-                        desc="Your monthly spend is consistent with last month." 
+                        desc={`You spent ${formatPrice(totalSpendInPeriod)} in the ${dateRange.toLowerCase()}.`} 
                         accentColor="#F59E0B" 
                         tintColor="#FFFBEB"
                     />
@@ -705,12 +848,12 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group h-full flex flex-col justify-between">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
             <div>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.lifetime')}</p>
-                <h3 className="text-3xl font-bold mb-1">{formatPrice(lifetimeSpend || 0)}</h3>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Spend ({dateRange})</p>
+                <h3 className="text-3xl font-bold mb-1">{formatPrice(totalSpendInPeriod)}</h3>
             </div>
-            {lifetimeSpend > 1000 && (
+            {totalSpendInPeriod > 1000 && (
                 <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/10 w-fit px-2 py-1 rounded-lg mt-4">
-                   <Trophy size={12} className="text-yellow-400" /> Top Spender
+                   <Trophy size={12} className="text-yellow-400" /> High Spender
                 </div>
             )}
          </div>
@@ -726,11 +869,12 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          
          {/* Top Expenses List */}
          <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm md:col-span-2 flex flex-col h-full">
-            <div className="flex justify-between items-center mb-4">
-               <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
-               <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">High Impact</span>
-            </div>
-            <TopExpensesList subscriptions={subscriptions} formatPrice={formatPrice} convert={convert} />
+            <TopExpensesList 
+                subscriptions={subscriptions} 
+                serviceTotals={serviceTotals}
+                formatPrice={formatPrice}
+                periodLabel={dateRange}
+            />
          </div>
       </div>
 
@@ -748,13 +892,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.trend_desc')}</p>
                   </div>
                 </div>
-                {subscriptions.length > 0 ? (
-                    <SpendingTrendChart data={personalTrendData} color={trendColor} currentCurrency={currentCurrency} />
-                ) : (
-                    <div className="h-[200px] flex items-center justify-center text-gray-400 text-xs bg-gray-50 dark:bg-gray-900 rounded-xl">
-                        No data to display
-                    </div>
-                )}
+                <SpendingTrendChart data={trendData} color={trendColor} currentCurrency={currentCurrency} />
             </div>
 
             {/* Subscription Lifetime */}
@@ -771,16 +909,16 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                   <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDistributionChart formatPrice={formatPrice} subscriptions={subscriptions} convert={convert} />
+               <CostDistributionChart categoryTotals={categoryTotals} formatPrice={formatPrice} />
             </div>
 
             {/* Budget Monitor */}
             <SmartBudgetMonitor 
-              subscriptions={subscriptions}
+              categoryTotals={categoryTotals}
               budgetLimits={budgetLimits}
               setBudgetLimits={setBudgetLimits}
               formatPrice={formatPrice}
-              convert={convert}
+              monthsInPeriod={monthsInPeriod}
             />
 
             {/* Global Comparison */}
