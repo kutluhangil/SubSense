@@ -4,7 +4,7 @@ import { translations, LanguageCode } from '../utils/translations';
 import { CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 import { useAuth } from './AuthContext';
-import { getUserSettings, updateUserSettings } from '../utils/firestore';
+import { updateUserSettings } from '../utils/firestore';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -25,7 +25,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   // --- Local States (Initialized from LocalStorage fallback) ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
@@ -46,18 +46,15 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const dir = (currentLanguage as string) === 'ar' ? 'rtl' : 'ltr';
 
-  // --- Sync with Firestore on Login ---
+  // --- Sync with Firestore Profile (Hydration) ---
   useEffect(() => {
-    if (currentUser) {
-      getUserSettings(currentUser.uid).then(settings => {
-        if (settings) {
-          if (settings.language) setCurrentLanguage(settings.language);
-          if (settings.baseCurrency) setCurrentCurrency(settings.baseCurrency);
-          if (settings.theme) setCurrentTheme(settings.theme);
-        }
-      });
+    if (userProfile && userProfile.preferences) {
+      const { language, theme, baseCurrency } = userProfile.preferences;
+      if (language) setCurrentLanguage(language as LanguageCode);
+      if (baseCurrency) setCurrentCurrency(baseCurrency);
+      if (theme) setCurrentTheme(theme as ThemeOption);
     }
-  }, [currentUser]);
+  }, [userProfile]);
 
   // --- Persist Changes ---
   

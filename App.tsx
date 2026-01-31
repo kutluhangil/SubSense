@@ -83,8 +83,9 @@ function AppContent() {
   };
 
   // Wrapper for AuthContext signup
-  const handleSignup = async (name: string, email: string, password: string, currency: string) => {
-    await signup(email, password, name);
+  const handleSignup = async (name: string, email: string, password: string, currency: string, region: string) => {
+    await signup(email, password, name, currency, region);
+    // LanguageContext listens to profile changes via userProfile, but we can set local state too for instant feedback
     setCurrency(currency);
     setIsAuthOpen(false);
     setCurrentPage('home');
