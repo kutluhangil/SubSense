@@ -628,7 +628,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       );
       case 'compare': return <Comparison />;
       case 'discover': return <Discover />;
-      case 'settings': return <SettingsPage subscriptions={subscriptions} />;
+      case 'settings': return (
+        <SettingsPage 
+          subscriptions={subscriptions} 
+          onUpdateSubscriptions={setSubscriptions}
+          user={user}
+        />
+      );
       case 'help': return <HelpCenter />;
       case 'profile': return (
         <Profile 
