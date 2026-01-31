@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, Sparkles } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
 import { EXCHANGE_RATES, CURRENCY_DATA, convertAmount } from '../utils/currency';

@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';

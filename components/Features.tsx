@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { CreditCard, Globe, Bell, PieChart, Users, Shield, ArrowRight, Zap, Smartphone, Layers, CheckCircle2 } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface FeaturesProps {

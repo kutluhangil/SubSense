@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, BRAND_COLORS } from '../utils/data';
 
 interface Particle {

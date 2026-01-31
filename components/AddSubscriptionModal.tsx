@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, CheckCircle, DollarSign, AlertCircle } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SubscriptionDetail, BRAND_COLORS, CURRENCIES } from '../utils/data';
 import { Subscription } from './SubscriptionModal';

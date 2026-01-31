@@ -1,6 +1,5 @@
 
-import React, { useState } from 'react';
-import { SUBSCRIPTION_CATALOG } from '../utils/data';
+import React from 'react';
 
 interface BrandIconProps {
   type: string;
@@ -8,197 +7,154 @@ interface BrandIconProps {
   noBackground?: boolean;
 }
 
-const BrandIcon: React.FC<BrandIconProps> = React.memo(({ type, className = "w-10 h-10", noBackground = false }) => {
+const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export const BrandIcon: React.FC<BrandIconProps> = React.memo(({ type, className = "w-10 h-10", noBackground = false }) => {
   const baseClasses = `flex items-center justify-center relative overflow-hidden flex-shrink-0 ${noBackground ? '' : 'bg-white'} ${className}`;
-  const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || 'default';
-  const [imageError, setImageError] = useState(false);
-  const [localImageError, setLocalImageError] = useState(false);
+  const key = normalize(type || 'default');
 
-  // Check if we have a website url for this type to fetch a logo
-  // Lookup first by key, then scan for matching ID/Name if key fails
-  let serviceDetail = SUBSCRIPTION_CATALOG[normalizedType];
-  
-  if (!serviceDetail) {
-     const foundKey = Object.keys(SUBSCRIPTION_CATALOG).find(k => 
-        k === normalizedType || 
-        SUBSCRIPTION_CATALOG[k].name.toLowerCase().replace(/\s+/g, '') === normalizedType
-     );
-     if (foundKey) serviceDetail = SUBSCRIPTION_CATALOG[foundKey];
-  }
+  // Helper to render SVG container
+  const renderSvg = (content: React.ReactNode, viewBox: string = "0 0 24 24", bg?: string) => (
+    <div className={`w-full h-full flex items-center justify-center ${bg || ''}`}>
+        <svg viewBox={viewBox} className="w-full h-full" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+            {content}
+        </svg>
+    </div>
+  );
 
-  // Priority 1: Local Asset (Specifically for Netflix as requested)
-  // We attempt to load from /images/netflix.svg, then png, then jpg via fallback logic or direct check
-  if (normalizedType === 'netflix' && !localImageError) {
-      return (
-        <div className={baseClasses} title={type}>
-            <img 
-                src="/images/netflix.svg" 
-                alt="Netflix Logo" 
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                    // Try PNG fallback if SVG fails
-                    const target = e.target as HTMLImageElement;
-                    if (target.src.endsWith('.svg')) {
-                        target.src = '/images/netflix.png';
-                    } else if (target.src.endsWith('.png')) {
-                        target.src = '/images/netflix.jpg';
-                    } else {
-                        setLocalImageError(true);
-                    }
-                }}
-            />
-        </div>
-      );
-  }
+  const getIcon = () => {
+    // --- Streaming ---
+    if (key.includes('netflix')) return (
+       <svg viewBox="0 0 551 1000" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#b1060f" d="M-1.2-1.2l3.5 1003.9c73.3-14.1 130.9-12.6 195.9-18.5V0H-1.2z"/>
+          <path fill="#b1060f" d="M353.8 0h199.4l2.3 1000.4-202.8-33.4z"/>
+          <path fill="#e50914" d="M1.2 0C5.8 11.5 346.9 981.9 346.9 981.9c56.1-.4 131.2 8.8 205.1 17.3L197.1 0H1.2z"/>
+       </svg>
+    );
+    if (key.includes('spotify')) return (
+       <svg viewBox="0 0 496 512" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#1ed760" d="M248 8C111.1 8 0 119.1 0 256s111.1 248 248 248 248-111.1 248-248S384.9 8 248 8Z"/>
+          <path fill="white" d="M406.6 231.1c-5.2 0-8.4-1.3-12.9-3.9-71.2-42.5-198.5-52.7-280.9-29.7-3.6 1-8.1 2.6-12.9 2.6-13.2 0-23.3-10.3-23.3-23.6 0-13.6 8.4-21.3 17.4-23.9 35.2-10.3 74.6-15.2 117.5-15.2 73 0 149.5 15.2 205.4 47.8 7.8 4.5 12.9 10.7 12.9 22.6 0 13.6-11 23.3-23.2 23.3zm-31 76.2c-5.2 0-8.7-2.3-12.3-4.2-62.5-37-155.7-51.9-238.6-29.4-4.8 1.3-7.4 2.6-11.9 2.6-10.7 0-19.4-8.7-19.4-19.4s5.2-17.8 15.5-20.7c27.8-7.8 56.2-13.6 97.8-13.6 64.9 0 127.6 16.1 177 45.5 8.1 4.8 11.3 11 11.3 19.7-.1 10.8-8.5 19.5-19.4 19.5zm-26.9 65.6c-4.2 0-6.8-1.3-10.7-3.6-62.4-37.6-135-39.2-206.7-24.5-3.9 1-9 2.6-11.9 2.6-9.7 0-15.8-7.7-15.8-15.8 0-10.3 6.1-15.2 13.6-16.8 81.9-18.1 165.6-16.5 237 26.2 6.1 3.9 9.7 7.4 9.7 16.5s-7.1 15.4-15.2 15.4z"/>
+       </svg>
+    );
+    if (key.includes('youtube')) return (
+       <svg viewBox="0 0 846 174" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+         <path fill="#ff0000" d="M242.88,27.11 A31.07,31.07 0 0 0 220.95,5.18 C201.6,0 124,0 124,0s-77.54,0-96.89,5.18A31.07,31.07 0 0 0 5.18,27.11 C0,46.46 0,86.82 0,86.82s0,40.36 5.18,59.71a31.07,31.07 0 0 0 21.93,21.93c19.35,5.18 96.92,5.18 96.92,5.18s77.57,0 96.92-5.18a31.07,31.07 0 0 0 21.93-21.93c5.18-19.35 5.18-59.71 5.18-59.71s0-40.36-5.18-59.71z"/>
+         <path fill="#ffffff" d="M99.22,124.03 163.67,86.82 99.22,49.61 Z"/>
+         <path fill="currentColor" d="M287.71 12.36 H 318 c 27.7,0 40.29,11.71 40.29,42.74v6 c 0,30 -13.3,47.53 -42.39,47.53 h -4.43 v 52.5 H 287.71 V 12.36 z"/>
+       </svg>
+    );
+    if (key.includes('prime') || key === 'amazon') return renderSvg(
+       <>
+         <path fill="#00A8E1" d="M408.5,245.9c-4 0-8 0-12 0-5.5-.3-11-.5-16.5-1-14.6-1-29.1-3.3-43.3-6.5-49.1-11.4-92.2-34.3-129.8-67.6-3.5-3.1-6.8-6.3-10.2-9.5-.8-.7-1.5-1.7-1.9-2.7-.6-1.4-.3-2.9.7-4 1-1.1 2.6-1.5 4-.9.9.4 1.8.8 2.6 1.3 35.9 22.2 75.1 38.4 116.2 48 13.8 3.2 27.7 5.7 41.7 7.5 20.1 2.5 40.4 3.4 60.6 2.7 10.9-.3 21.7-1.3 32.5-2.7 25.2-3.2 50.1-8.9 74.2-16.9 12.7-4.2 25.1-9 37.2-14.6 1.8-1 4-1.3 6-.8 3.3.8 5.3 4.2 4.5 7.5-.1.4-.3.9-.5 1.3-.8 1.5-1.9 2.8-3.3 3.8-11.5 9-23.9 16.9-37 23.5-24.7 12.5-51.1 21.4-78.3 26.5-15.6 3.1-31.4 4.8-47.3 5.4z"/>
+         <path fill="currentColor" d="M163.2.1c1.6 0 3.2.2 4.7.7 5.4 1.8 8.2 6.5 7.7 12.6-.4 5.2-4.3 9.4-9.5 10.2-2.2.4-4.5.4-6.7 0-5.7-1.1-9.9-5.3-9.5-12.5.6-7.1 5.3-11 13.3-11z"/>
+       </>,
+       "0 0 800 246"
+    );
+    if (key.includes('disney')) return renderSvg(
+       <path d="M735.8 365.7c-14.4 3.3-52.3 5.2-52.3 5.2l-4.8 15s18.9-1.6 32.7-.2c0 0 4.5-.5 5 5.1.2 5.2-.4 10.8-.4 10.8s-.3 3.4-5.1 4.2c-5.2.9-40.8 2.2-40.8 2.2l-5.8 19.5s-2.1 4.5 2.7 3.2c4.5-1.2 41.8-8.2 46.7-7.2 5.2 1.3 11 8.2 9.3 14.6-2 7.8-39.2 31.6-61.9 29.9 0 0-11.9.8-22-15.3-9.4-15.3 3.6-44.4 3.6-44.4s-5.9-13.6-1.6-18.1c0 0 2.6-2.3 10-2.9l9.1-18.9s-10.4.7-16.6-6.9c-5.8-7.3-6.2-10.6-1.8-12.6 4.7-2.3 48-10.2 77.8-9.2 0 0 10.4-1 19.3 17 0 0 4.4 7.3-3 9zM350.2 389.5c-1.9 24.2-11.2 64.9-77.1 85-43.5 13.1-84.6 6.8-107-1.1-.5 8.9-1.5 12.7-2.9 14.2-1.9 1.9-16.1 10.1-23.9-1.5-3.5-5.5-5.3-15.5-6.3-24.4-50.4-23.2-73.6-56.6-74.5-58.1-1.1-1.1-12.6-13.1-1.1-27.8 10.8-13.3 46.1-26.6 77.9-32 1.1-27.2 4.3-47.7 8.1-57.1 4.6-10.9 10.4-1.1 15.4 6.3 4.1 7.2 6.6 30.9 6.8 49.8 20.8-1.1 33.1 14.2 37.3 44.4 5.5 20.2 20.9 18.4 38.4 17.1 17.2-15.8 24.3-39.6 18.4-63.6-.9-2.3 39.5-6.8 39.5-13.5-.3-6.7 5.8-9.9 14-8.8 8.8 3.5 6.5 11.2 6.5 11.2-3.3-9.6-42.5-16.3-81.5-16.3-.2 21.5 1.1 57.2 1.6 78 5.2 0 5.2 0 5.2 100-2.8 3-66.6 6.1-130.3-102.3-162.7-75.6-182.5-118.4-168.7-3.7-1.9-4-1.9-.3-.6 0 0 0 0 4.1.6 11.2 3 18.7 2.6 22.6 2.6 22.6-12.9 4 1.4-26.2-5.7-86-6.4-192.4 5.4-206.5 61.2 59.4-44.4 79-58.6 113.6-2 24.6 7.4 33.4 12.9 38.9.3 0 .3 93.5-32.3 207.4 58.6 207.4 58.6 86.6 54.1 104.8 117.5-2 24.6z"/>,
+       "0 0 1041 565"
+    );
+    if (key.includes('hulu')) return renderSvg(
+       <path fill="#1CE783" d="M102.07,22.2c0,0,0,27.75,0,28.71c0,2.54-2.05,4.6-4.6,4.6H87.5c-2.54,0-4.6-2.06-4.6-4.6 c0-0.96,0-28.71,0-28.71H65.74v30.14c0,12.32,7.88,18.81,19.53,18.81H99.7c11.65,0,19.53-6.49,19.53-18.81V22.2H102.07z M198.85,22.2c0,0,0,27.75,0,28.71c0,2.54-2.05,4.6-4.6,4.6h-9.98c-2.54,0-4.6-2.06-4.6-4.6 c0-0.96,0-28.71,0-28.71h-17.16v30.14c0,12.32,7.88,18.81,19.53,18.81h14.42c11.65,0,19.53-6.49,19.53-18.81V22.2H198.85z M33.95,22.2c0,0-8.94,0-11,0c-3.86,0-5.8,1.04-5.8,1.04V0H0v71.15h17.15V42.44c0-2.54,2.06-4.6,4.6-4.6h9.98 c2.54,0,4.59,2.06,4.59,4.6v28.71l17.16,0V40.21C53.48,27.21,44.81,22.2,33.95,22.2z"/>,
+       "0 0 216 71.15",
+       "bg-black p-2"
+    );
+    if (key.includes('apple') && (key.includes('tv') || key.includes('plus'))) return renderSvg(
+       <path d="M9.436 2.742A3.857 3.857 0 0 0 10.316 0a3.769 3.769 0 0 0-2.51 1.311 3.622 3.622 0 0 0-.9 2.631 3.138 3.138 0 0 0 2.53-1.2m.82 1.381c-1.4-.081-2.58.8-3.25.8s-1.69-.756-2.79-.736a4.117 4.117 0 0 0-3.5 2.147c-1.5 2.6-.4 6.473 1.06 8.59.71 1.006 1.56 2.205 2.69 2.166s1.48-.7 2.77-.7 1.67.7 2.79.675 1.9-1.008 2.6-2.1a9.317 9.317 0 0 0 1.17-2.42 3.814 3.814 0 0 1-2.27-3.468 3.9 3.9 0 0 1 1.83-3.256 3.991 3.991 0 0 0-3.1-1.7m8.93-2.016V4.96h2.28V6.845h-2.28V13.6c0 1.008.45 1.522 1.45 1.522a7.482 7.482 0 0 0 .82-.06v1.9a7.823 7.823 0 0 1-1.35.1c-2.36 0-3.27-.917-3.27-3.216V6.89h-1.79V5h1.74V2.107Zm10.25 14.853h-2.5L22.736 5h2.49l2.95 9.608h.06L31.186 5h2.44Zm10.98 0h-2.16v-4.9h-4.64V9.9h4.63V5h2.16V9.9h4.64v2.158h-4.63Z"/>,
+       "0 0 45 17",
+       "bg-black text-white p-2"
+    );
+    if (key.includes('apple') || key === 'applemusic') return renderSvg(
+       <path d="M17.05 18.26c-.3.8-.8 1.7-1.4 2.4-.6.7-1.3.7-1.8.7-.5 0-1-.3-1.9-.3-1 0-1.4.3-1.9.3-.5 0-1.1-.1-1.8-.8-.9-1-1.6-2.8-1.6-4.4 0-2.4 1.5-3.6 3-3.6.6 0 1.2.2 1.6.5.4.3.9.5 1.5.5.6 0 1.5-.3 2.1-.5.7-.3 1.3-.3 1.8 0 .4.2 1.8 1 1.8 1-.1.2-.9 1.1-.9 2.6 0 2.1 1.8 2.8 1.9 2.9-.1.2-.2.5-.3.7zm-2.9-15c.5-.6.9-1.4.9-2.2 0-.1 0-.2 0-.3-.8 0-1.7.5-2.2 1.1-.4.5-.8 1.3-.8 2.1 0 .1 0 .2 0 .3.8.1 1.7-.3 2.1-1z"/>,
+       "0 0 24 24"
+    );
 
-  // Priority 2: External Clearbit Logo
-  const externalLogoUrl = !imageError && serviceDetail?.website 
-    ? `https://logo.clearbit.com/${serviceDetail.website}` 
-    : null;
+    // --- Productivity ---
+    if (key.includes('microsoft')) return renderSvg(
+        <>
+            <path fill="#f25022" d="M1 1h10v10H1z"/>
+            <path fill="#7fba00" d="M12 1h10v10H12z"/>
+            <path fill="#00a4ef" d="M1 12h10v10H1z"/>
+            <path fill="#ffb900" d="M12 12h10v10H12z"/>
+        </>,
+        "0 0 23 23"
+    );
+    if (key.includes('google')) return renderSvg(
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>,
+        "0 0 24 24"
+    );
+    if (key.includes('canva')) return renderSvg(
+        <path d="M40 80C62.1 80 80 62.1 80 40S62.1 0 40 0 0 17.9 0 40s17.9 40 40 40z" fill="#00C4CC"/>,
+        "0 0 80 80"
+    );
+    if (key.includes('slack')) return renderSvg(
+        <path d="M5.8 2.5h5.4v26.1H5.8zm48.5 0v26.1h5.4V18.9l6.3 7.9h6.9l-8.1-9.3 7.5-8.7h-6.6L60.7 16V2.5zM27 21.9c-.8 1.3-2.4 2.2-4.2 2.2-2.5 0-4.5-2-4.5-4.5 0-2.5 2-4.5 4.5-4.5 1.7 0 3.1.9 3.9 2.3l4.3-2.4c-1.6-2.9-4.7-4.8-8.2-4.8-5.2 0-9.4 4.2-9.4 9.4s4.2 9.4 9.4 9.4c3.5 0 6.6-1.9 8.2-4.8l-4.3-2.4z" fill="currentColor"/>,
+        "0 0 80 80"
+    );
+    if (key.includes('notion')) return renderSvg(
+        <path d="M6 4.3l55.3-4.1c6.8-.6 8.5-.2 12.8 2.9l17.7 12.4c2.9 2.1 3.9 2.7 3.9 5.1v68.2c0 4.3-1.6 6.8-7 7.2L24.5 100c-4.1.2-6-.4-8.2-3.1L3.3 79.9C1 76.8 0 74.5 0 71.8V11.1c0-3.5 1.6-6.4 6-6.8z" fill="currentColor"/>,
+        "0 0 100 100"
+    );
 
-  if (externalLogoUrl) {
+    // --- Gaming ---
+    if (key.includes('xbox')) return renderSvg(
+        <path fill="#107C10" d="M50,80.3h-4.6l-7.9-10.9l-7.9,10.9h-4.6l10.2-14.1l-9.4-13h4.6l7.1,9.8l7.1-9.8h4.6l-9.4,13L50,80.3z"/>,
+        "0 0 151 106"
+    );
+    if (key.includes('playstation')) return renderSvg(
+        <path fill="#00439C" d="M77.1 299.5 212.2-32.3-30.4-214.5c4.6-20.7 18.8-22.2 31.8-26.3L468.2 2a34.7 34.7 0 0 1 33.6 30.8l26.9 205 212.1-28.8c18.3-.5 34 4.4 35.2 38.5l19.7 160.6c6.1 25.1-4 39-33.4 39.6l-200.4 27.8 28.7 214.1c-5.2 13.2-7.5 28.9-27.9 28.6L372.4 693c-16.6-1.1-20.1-14.7-22.8-29.1l-28.8-205.9-207 29.5c-20.5-.3-38.5-4.3-38-37.2L52.6 286.2c-1.3-16.1 2-30.3 24.5-36.6z"/>,
+        "0 0 799 811"
+    );
+    if (key.includes('steam')) return renderSvg(
+        <>
+        <path fill="#000" d="M28.2 24.7C28.2 16 21.1 8.9 12.3 8.9V0C26 0 37 11.1 37 24.7S26 49.4 12.3 49.4v-8.9c8.7 0 15.8-7.1 15.8-15.8z"/>
+        <circle cx="12.3" cy="24.7" r="12.3" fill="#1A9FFF"/>
+        </>,
+        "0 0 177 50"
+    );
+
+    // --- AI ---
+    if (key.includes('chatgpt') || key.includes('openai')) return renderSvg(
+        <path fill="#10A37F" d="m297.1 131c7.3-21.8 4.8-45.7-6.9-65.5-17.5-30.4-52.6-46-86.8-38.7-15.3-17.2-37.2-27-60.1-26.8-35 0-66.1 22.5-76.9 55.8-22.5 4.6-41.9 18.7-53.3 38.7-17.6 30.3-13.6 68.5 9.9 94.5-7.3 21.8-4.8 45.7 6.9 65.5 17.5 30.4 52.6 46 86.8 38.7 15.2 17.2 37.2 27 60.1 26.8 35.1.1 66.2-22.5 76.9-55.9 22.5-4.6 41.9-18.7 53.3-38.7 17.6-30.3 13.6-68.5-9.9-94.5zm-120.3 168.1c-14 0-27.6-4.9-38.4-13.9.5-.3 1.3-.7 1.9-1.1l63.7-36.8c3.3-1.9 5.3-5.3 5.2-9.1v-89.8l26.9 15.6c.3.1.5.4.5.7v74.4c0 33.1-26.8 59.9-59.9 60z"/>,
+        "0 0 320 320"
+    );
+    if (key.includes('claude')) return renderSvg(
+        <path fill="#d97757" d="m105 98.5 29.1-16.4.5-1.4-.5-.8h-1.4l-4.9-.3-16.7-.5-14.4-.6-14-.8-3.5-.8-3.3-4.4.3-2.2 3-2 4.2.4 9.4.6 14.1 1 10.2.6 15.1 1.6h2.4l.3-1-.8-.6-.6-.6-14.6-9.9-15.8-10.4-8.3-6-4.5-3-2.3-2.9-1-6.2 4.1-4.5 5.4.4 1.4.4 5.5 4.2 11.8 9.1 15.4 11.3 2.3 1.9.9-.6.1-.5-1-1.7-8.4-15.1-8.9-15.4-4-6.4-1.1-3.8c-.4-1.6-.6-2.9-.6-4.5l4.6-6.3 2.6-.8 6.2.8 2.6 2.3 3.8 8.7 6.2 13.8 9.6 18.7 2.8 5.6 1.5 5.1.6 1.6h1v-.9l.8-10.5 1.5-12.9 1.4-16.7.5-4.7 2.3-5.6 4.6-3 3.6 1.7 3 4.2-.4 2.7-1.8 11.4-3.5 17.9-2.3 12h1.3l1.5-1.5 6.1-8.1 10.2-12.8 4.5-5.1 5.3-5.6 3.4-2.7h6.4l4.7 7-2.1 7.2-6.6 8.3-5.4 7.1-7.8 10.5-4.9 8.4.5.7 1.2-.1 17.6-3.8 9.5-1.7 11.4-2 5.1 2.4.6 2.4-2 5-12.2 3-14.3 2.9-21.2 5-.3.2.3.4 9.6.9 4.1.2h10l18.6 1.4 4.9 3.2 2.9 3.9-.5 3-7.5 3.8-10.1-2.4-23.6-5.6-8.1-2h-1.1v.7l6.8 6.6 12.4 11.2 15.5 14.4.8 3.6-2 2.8-2.1-.3-13.6-10.2-5.3-4.6-11.9-10h-.8v1l2.7 4 14.5 21.8.8 6.7-1.1 2.2-3.8 1.3-4.1-.8-8.5-11.9-8.7-13.4-7.1-12-.9.5-4.2 44.8-2 2.3-4.5 1.7-3.8-2.9-2-4.6 2-9.1 2.4-11.9 2-9.5 1.8-11.7 1.1-3.9-.1-.3-.9.1-8.9 12.2-13.5 18.2-10.7 11.4-2.6 1-4.4-2.3.4-4.1 2.5-3.6 14.7-18.8 8.9-11.6 5.7-6.7v-1h-.3l-39.2 25.4-7 .9-3-2.8.4-4.6 1.4-1.5 11.8-8.1z"/>,
+        "0 0 690 148"
+    );
+    if (key.includes('midjourney')) return renderSvg(
+        <path fill="currentColor" d="m174 794c20 0 50-42 85-48 20 0 35 42 85 48 35 0 50-42 85-42 35 0 50 42 85 42 35 0 50-42 85-42 35 0 50-42 85-42 35 0 50 42 85 42 35 0 50 42 85 42"/>,
+        "0 0 1024 1024"
+    );
+
+    // --- Local / E-com ---
+    if (key.includes('trendyol')) return renderSvg(
+       <path fill="#FF6600" d="M187 375c5.2 2.2 9.4 5.6 12.8 10 2.8 4 4.5 7.8 5.2 12 .6 4.1.9 10.7.9 20v60.6h-27.5v-62.7c0-5.6-.9-10-2.8-13.4-2.4-4.8-7.1-7.2-13.9-7.2-6.8 0-12.4 2.4-16.1 7.1-3.7 4.8-5.5 11.6-5.5 20.4v55.9h-27V337h27v46.4c5-4.9 7.5-6.5 12.5-8.5 5.2-2.1 11.5-3 17.2-3 5.3 0 11.1 1.1 16.3 3.3z"/>,
+       "0 0 500 500"
+    );
+    if (key.includes('hepsiburada')) return renderSvg(
+       <path fill="#F68B1E" d="M187 375c5.2 2.2 9.4 5.6 12.8 10 2.8 4 4.5 7.8 5.2 12 .6 4.1.9 10.7.9 20v60.6h-27.5v-62.7c0-5.6-.9-10-2.8-13.4-2.4-4.8-7.1-7.2-13.9-7.2-6.8 0-12.4 2.4-16.1 7.1-3.7 4.8-5.5 11.6-5.5 20.4v55.9h-27V337h27v46.4c5-4.9 7.5-6.5 12.5-8.5 5.2-2.1 11.5-3 17.2-3 5.3 0 11.1 1.1 16.3 3.3z"/>,
+       "0 0 1280 1024"
+    );
+    if (key.includes('getir')) return renderSvg(
+       <path fill="#5D3EBC" d="M127 181.7c-50.9 0-77.4-35.6-77.4-89.9l.4-132.9c0-16.9 4.6-29 13.9-36.3 9.2-7.3 22.7-11 40.3-11-.3 2-.6 4.7-.9 8-.3 3.1-.5 7.3-.7 12.5-.2 5.2-.2 12-.2 20.5l.4 26.6h58.1c0 12.7-3.6 22.8-10.8 30.4-7.2 7.6-17.5 11.4-30.8 11.4h-16.5l-.4 60c0 11.8 1.5 23.1 3.7 31.1 2.2 8 13.8 26.7 36.6 26.7 13.4 0 21.6-1.9 26.1-3 .5 6.6 1.5 10.3 1.5 17.3z"/>,
+       "0 0 800 350"
+    );
+
+    // Generic Fallback
     return (
-      <div className={baseClasses} title={type}>
-        <img 
-          src={externalLogoUrl} 
-          alt={`${type} logo`} 
-          className="w-full h-full object-contain p-[10%]"
-          onError={() => setImageError(true)}
-          loading="lazy"
-        />
+      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white font-bold text-sm rounded">
+         {type.slice(0, 1).toUpperCase()}
       </div>
     );
-  }
-
-  // Priority 3: Internal SVG Fallbacks
-  const renderIcon = () => {
-    switch (normalizedType) {
-      case 'netflix':
-        // Improved Netflix N Logo
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8.5 4H11.5V19.5L8.5 20V4Z" fill="#E50914" />
-            <path d="M15.5 4H12.5V19.5L15.5 20V4Z" fill="#E50914" />
-            <path d="M8.5 4L15.5 20H12.5L8.5 10V4Z" fill="#D81F26" />
-            <path d="M8.5 4H5.5V20H8.5V4Z" fill="transparent" /> {/* Spacer */}
-          </svg>
-        );
-      case 'spotify':
-        // Authentic Spotify Logo
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <circle cx="12" cy="12" r="12" fill="#1DB954"/>
-             <path d="M17.5 17.2C17.4 17.5 17.0 17.6 16.7 17.4C14.6 16.1 11.9 15.9 7.8 16.8C7.5 16.9 7.1 16.7 7.0 16.4C6.9 16.1 7.1 15.7 7.5 15.6C12.0 14.6 15.0 14.9 17.4 16.3C17.7 16.5 17.8 16.9 17.5 17.2ZM18.9 14.0C18.6 14.4 18.1 14.5 17.7 14.3C14.9 12.6 10.6 12.1 7.1 13.2C6.7 13.3 6.2 13.1 6.1 12.6C5.9 12.2 6.2 11.8 6.6 11.7C10.6 10.5 15.4 11.0 18.6 13.0C19.0 13.3 19.1 13.7 18.9 14.0ZM19.0 10.9C15.6 8.9 9.7 8.7 6.4 9.7C5.9 9.8 5.3 9.5 5.2 9.0C5.0 8.5 5.3 7.9 5.8 7.7C9.7 6.6 16.2 6.8 20.1 9.1C20.6 9.4 20.7 10.0 20.4 10.5C20.1 10.9 19.5 11.1 19.0 10.9Z" fill="white"/>
-          </svg>
-        );
-      case 'amazon':
-      case 'amazonprime':
-      case 'amazonprimevideo':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15.8 13.5c.1.9-.3 1.5-1.6 1.5-1.3 0-2.3-.6-2.5-.7l-.4 1.1c.3.2 1.4.9 3.2.9 2.1 0 3.2-1.2 3.2-3.1V6.7h-2.3v1c-.7-.8-1.9-1.2-3.2-1.2-2.8 0-4.4 1.9-4.4 4.5 0 2.5 1.7 4.5 4.3 4.5 1.3 0 2.4-.5 3.1-1.3l.6 1.3zm-3.6-5.8c1.6 0 2.7 1.1 2.7 3.2s-1.1 3.2-2.7 3.2c-1.6 0-2.7-1.1-2.7-3.2s1.1-3.2 2.7-3.2z" fill="#000"/>
-            <path d="M17.7 17.8c-.1 0-.3.1-.4.2-.6.5-1.9 1-3.6 1-4.3 0-5.8-3.3-5.8-3.4-.1-.2-.4-.2-.5 0l-.6.7c-.1.2-.1.5.1.7.2.3 2 4 6.7 4 2 0 3.6-.6 4.3-1.2.2-.1.2-.4.1-.6l-.3-1.4z" fill="#FF9900"/>
-            <path d="M18.4 15.5c-.5.4-1.2.4-1.2.4-.2 0-.3.2-.2.4l.2.8c.1.2.3.2.5.2 0 0 1.9 0 2.9-1.2.1-.1 0-.3-.1-.4l-2.1-.2z" fill="#FF9900"/>
-          </svg>
-        );
-      case 'youtube':
-      case 'youtubepremium':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <path d="M21.6 6.2c-.2-.9-.9-1.5-1.8-1.8C18.3 4 12 4 12 4s-6.3 0-7.8.4c-.9.2-1.5.9-1.8 1.8C2 7.7 2 12 2 12s0 4.3.4 5.8c.2.9.9 1.5 1.8 1.8 1.6.4 7.8.4 7.8.4s6.3 0 7.8-.4c.9-.2 1.5-.9 1.8-1.8.4-1.5.4-5.8.4-5.8s0-4.3-.4-5.8z" fill="#FF0000"/>
-             <path d="M10 15.5l6-3.5-6-3.5v7z" fill="white"/>
-          </svg>
-        );
-      case 'apple':
-      case 'appletv+':
-      case 'applemusic':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="black" xmlns="http://www.w3.org/2000/svg">
-             <path d="M17.05 18.26c-.3.8-.8 1.7-1.4 2.4-.6.7-1.3.7-1.8.7-.5 0-1-.3-1.9-.3-1 0-1.4.3-1.9.3-.5 0-1.1-.1-1.8-.8-.9-1-1.6-2.8-1.6-4.4 0-2.4 1.5-3.6 3-3.6.6 0 1.2.2 1.6.5.4.3.9.5 1.5.5.6 0 1.5-.3 2.1-.5.7-.3 1.3-.3 1.8 0 .4.2 1.8 1 1.8 1-.1.2-.9 1.1-.9 2.6 0 2.1 1.8 2.8 1.9 2.9-.1.2-.2.5-.3.7zm-2.9-15c.5-.6.9-1.4.9-2.2 0-.1 0-.2 0-.3-.8 0-1.7.5-2.2 1.1-.4.5-.8 1.3-.8 2.1 0 .1 0 .2 0 .3.8.1 1.7-.3 2.1-1z"/>
-          </svg>
-        );
-      case 'adobe':
-      case 'adobecreativecloud':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <rect width="24" height="24" rx="2" fill="#FF0000"/>
-             <path d="M15 6h4v13h-3v-5h-3l2-8zM9 6H5v13h3v-5h3L9 6zM12.5 16l1.5-4h-4l1.5 4h1z" fill="white"/>
-          </svg>
-        );
-      case 'google':
-      case 'googleone':
-      case 'googleworkspace':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-        );
-      case 'canva':
-      case 'canvapro':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="12" fill="#00C4CC"/>
-            <path d="M12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6Z" fill="white" fillOpacity="0.3"/>
-            <path d="M12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8Z" fill="white"/>
-          </svg>
-        );
-      case 'hepsiburada':
-      case 'hepsiburadapremium':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="#F68B1E" rx="4"/>
-            <path d="M12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7ZM12 15C10.3431 15 9 13.6569 9 12C9 10.3431 10.3431 9 12 9C13.6569 9 15 10.3431 15 12C15 13.6569 13.6569 15 12 15Z" fill="white"/>
-            <path d="M12 10.5C11.1716 10.5 10.5 11.1716 10.5 12C10.5 12.8284 11.1716 13.5 12 13.5C12.8284 13.5 13.5 12.8284 13.5 12C13.5 11.1716 12.8284 10.5 12 10.5Z" fill="white"/>
-          </svg>
-        );
-      case 'trendyol':
-      case 'trendyolelite':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="#FF6600" rx="4"/>
-            <path d="M8 8H16L12 14L8 8Z" fill="white"/>
-            <path d="M12 14V17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        );
-      case 'disney':
-      case 'disney+':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="#113CCF" rx="4"/>
-            <path d="M12 6C8 6 6 9 6 12C6 15 8 18 12 18C15 18 18 15 18 12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M15 10C16 9 17 8 18 6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M12 14C12 14 14 13 16 12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        );
-      case 'gamepass':
-      case 'xbox':
-        return (
-          <svg viewBox="0 0 24 24" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" fill="#107C10"/>
-            <path d="M12 6L16 12L12 18L8 12L12 6Z" fill="white" fillOpacity="0.2"/>
-            <path d="M7 7L17 17M17 7L7 17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        );
-      default:
-        // Generic Fallback
-        return (
-          <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white font-bold text-sm rounded">
-             {type.slice(0, 1).toUpperCase()}
-          </div>
-        );
-    }
   };
 
   return (
     <div className={baseClasses} title={type}>
-      <div className="w-full h-full p-[18%] flex items-center justify-center">
-        {renderIcon()}
+      <div className="w-full h-full p-[15%] flex items-center justify-center">
+        {getIcon()}
       </div>
     </div>
   );
 });
-
-export default BrandIcon;
