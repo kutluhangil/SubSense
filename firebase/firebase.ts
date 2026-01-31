@@ -2,6 +2,8 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import { initializeFirestore, enableIndexedDbPersistence, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+import { getPerformance } from "firebase/performance";
 
 // Helper to safely read env vars without crashing if import.meta.env is undefined
 const getEnv = (key: string, fallback: string) => {
@@ -29,7 +31,7 @@ const firebaseConfig = {
 
 // Initialize using compat for auth support in mixed environments
 // Check if app is already initialized to prevent errors during hot reload
-const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
+export const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig);
 
 export const auth = app.auth();
 
@@ -56,4 +58,18 @@ if (typeof window !== 'undefined') {
         console.warn("Firestore persistence not supported by this browser.");
     }
   });
+}
+
+// Initialize Analytics & Performance (Client-Side Only)
+export let analytics: any = null;
+export let perf: any = null;
+
+if (typeof window !== 'undefined') {
+  try {
+    analytics = getAnalytics(app);
+    perf = getPerformance(app);
+    console.debug("[Firebase] Analytics & Performance initialized");
+  } catch (e) {
+    console.warn("[Firebase] Failed to initialize Analytics/Performance (likely ad-blocker or offline)", e);
+  }
 }

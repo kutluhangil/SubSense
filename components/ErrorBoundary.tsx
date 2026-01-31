@@ -1,6 +1,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { trackError } from '../utils/analytics';
 
 interface Props {
   children: ReactNode;
@@ -22,8 +23,11 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // In production, you would log this to a reporting service (e.g. Sentry)
+    // Log to console for local debugging
     console.error("Uncaught error:", error, errorInfo);
+    
+    // Log to Analytics (Privacy-safe)
+    trackError('ErrorBoundary', error.message || 'Unknown UI Crash');
   }
 
   public render() {
