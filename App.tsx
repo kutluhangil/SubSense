@@ -8,7 +8,7 @@ import AuthModal from './components/AuthModal';
 import Dashboard from './components/Dashboard';
 import DemoModal from './components/DemoModal';
 import ResetPasswordPage from './components/ResetPasswordPage';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 
 // Types for our local auth system
 export interface User {
@@ -17,6 +17,7 @@ export interface User {
   // In a real app, never store passwords plain text. 
   // For this local MVP, we store a simple hash or the string itself if strictly local.
   passwordHash: string; 
+  currency?: string;
 }
 
 function AppContent() {
@@ -25,6 +26,7 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
+  const { setCurrency, setLanguage } = useLanguage();
 
   // Load session on mount
   useEffect(() => {
@@ -35,6 +37,9 @@ function AppContent() {
       if (user) {
         setCurrentUser(user);
         setCurrentPage('home');
+        if (user.currency) {
+            setCurrency(user.currency);
+        }
       }
     }
   }, []);
@@ -60,7 +65,8 @@ function AppContent() {
         const adminUser: User = { 
             name: 'Dev Admin', 
             email: 'admin@admin.com', 
-            passwordHash: 'Admin23.' 
+            passwordHash: 'Admin23.',
+            currency: 'USD'
         };
         
         // Ensure admin is in the users list so session persistence works on refresh
@@ -80,6 +86,7 @@ function AppContent() {
 
         localStorage.setItem('subscriptionhub.session', email);
         setCurrentUser(adminUser);
+        setCurrency('USD');
         setIsAuthOpen(false);
         setCurrentPage('home');
         return true;
@@ -92,6 +99,9 @@ function AppContent() {
     if (user) {
       localStorage.setItem('subscriptionhub.session', email);
       setCurrentUser(user);
+      if (user.currency) {
+          setCurrency(user.currency);
+      }
       setIsAuthOpen(false);
       setCurrentPage('home');
       return true;
@@ -99,14 +109,14 @@ function AppContent() {
     return false;
   };
 
-  const handleSignup = (name: string, email: string, passwordHash: string) => {
+  const handleSignup = (name: string, email: string, passwordHash: string, currency: string) => {
     const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
     
     if (users.find((u: User) => u.email === email)) {
       return false; // User exists
     }
 
-    const newUser = { name, email, passwordHash };
+    const newUser = { name, email, passwordHash, currency };
     users.push(newUser);
     localStorage.setItem('subscriptionhub.users', JSON.stringify(users));
     
@@ -119,6 +129,10 @@ function AppContent() {
     // Auto login
     localStorage.setItem('subscriptionhub.session', email);
     setCurrentUser(newUser);
+    
+    // Immediately set the global currency context
+    setCurrency(currency);
+    
     setIsAuthOpen(false);
     setCurrentPage('home');
     return true;

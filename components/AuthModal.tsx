@@ -1,17 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
+import { X, Mail, Lock, ArrowRight, User, Globe, Calendar, Check, Eye, EyeOff, ArrowLeft, AlertCircle, DollarSign } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import LegalModal from './LegalModal';
+import { CURRENCIES } from '../utils/data';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode: 'login' | 'signup';
   onLoginSubmit?: (email: string, password: string) => boolean;
-  onSignupSubmit?: (name: string, email: string, password: string) => boolean;
+  onSignupSubmit?: (name: string, email: string, password: string, currency: string) => boolean;
   onSimulateReset?: () => void;
 }
+
+const COUNTRY_TO_CURRENCY: Record<string, string> = {
+  'United States': 'USD',
+  'United Kingdom': 'GBP',
+  'Turkey': 'TRY',
+  'Germany': 'EUR',
+  'Japan': 'JPY'
+};
 
 export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit, onSignupSubmit, onSimulateReset }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
@@ -28,6 +37,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
     password: '',
     confirmPassword: '',
     country: 'United States',
+    currency: 'USD',
     birthYear: '',
     agreedToTerms: false
   });
@@ -52,7 +62,18 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
   }, [initialMode, isOpen]);
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+        const newData = { ...prev, [field]: value };
+        
+        // Auto-detect currency when country changes
+        if (field === 'country') {
+            const suggestedCurrency = COUNTRY_TO_CURRENCY[value];
+            if (suggestedCurrency) {
+                newData.currency = suggestedCurrency;
+            }
+        }
+        return newData;
+    });
     setErrorMsg(null);
   };
 
@@ -79,7 +100,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
            setIsSubmitting(false);
            return;
         }
-        const success = onSignupSubmit(formData.fullName, formData.email, formData.password);
+        const success = onSignupSubmit(formData.fullName, formData.email, formData.password, formData.currency);
         if (!success) {
            setErrorMsg("Account already exists with this email");
            setIsSubmitting(false);
@@ -123,7 +144,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                 {mode === 'signup' && (
                   <>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Create your account</h2>
-                    <p className="text-gray-500 text-sm">Start tracking and managing your subscriptions today.</p>
+                    <p className="text-gray-500 text-sm">Start tracking your subscriptions in your local currency.</p>
                   </>
                 )}
                 {mode === 'forgot-password' && (
@@ -345,15 +366,16 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                         </div>
                      )}
 
-                     <div className="grid grid-cols-5 gap-4">
-                        <div className="space-y-1 col-span-3">
+                     {/* Regional Preferences */}
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
                            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Country</label>
                            <div className="relative group">
                               <Globe size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
                               <select 
                                  value={formData.country}
                                  onChange={(e) => handleChange('country', e.target.value)}
-                                 className="w-full pl-10 pr-8 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 appearance-none focus:bg-white cursor-pointer"
+                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 appearance-none focus:bg-white cursor-pointer"
                               >
                                  <option>United States</option>
                                  <option>United Kingdom</option>
@@ -363,17 +385,19 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                               </select>
                            </div>
                         </div>
-                        <div className="space-y-1 col-span-2">
-                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Birth Year</label>
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Currency</label>
                            <div className="relative group">
-                              <Calendar size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
-                              <input 
-                                 type="number" 
-                                 value={formData.birthYear}
-                                 onChange={(e) => handleChange('birthYear', e.target.value)}
-                                 className="w-full pl-10 pr-2 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
-                                 placeholder="YYYY"
-                              />
+                              <DollarSign size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 transition-colors" />
+                              <select 
+                                 value={formData.currency}
+                                 onChange={(e) => handleChange('currency', e.target.value)}
+                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 appearance-none focus:bg-white cursor-pointer"
+                              >
+                                 {CURRENCIES.map(c => (
+                                     <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
+                                 ))}
+                              </select>
                            </div>
                         </div>
                      </div>
