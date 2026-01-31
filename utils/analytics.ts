@@ -22,6 +22,7 @@ export type AnalyticsEvent =
   | 'subscription_edited'
   | 'subscription_removed'
   | 'mark_as_paid'
+  | 'subscription_upgrade'
   
   // Features (Engagement)
   | 'feature_viewed' // Generic feature view (dashboard, analytics, etc)

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo } from 'react';
 import firebase from 'firebase/compat/app';
 import { auth } from '../firebase/firebase';
-import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity } from '../utils/firestore';
+import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
@@ -21,7 +21,9 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  welcomeBackMessage: string | null; // For churn recovery toast
+  welcomeBackMessage: string | null;
+  isPro: boolean;
+  upgradeToPro: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +54,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [welcomeBackMessage, setWelcomeBackMessage] = useState<string | null>(null);
+
+  // Determine Pro Status (Default false if no profile)
+  const isPro = useMemo(() => {
+    return userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
+  }, [userProfile]);
 
   // Store the unsubscribe function to clean up on logout/unmount
   const unsubscribeSubsRef = useRef<(() => void) | null>(null);
@@ -103,7 +110,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     // 2. Clear Local Storage of user-specific data to prevent leaks
-    // We keep non-sensitive preferences like theme if possible, but for security we clear strict user data keys
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -122,6 +128,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 4. Sign out from Firebase
     await auth.signOut();
+  }
+
+  // Mock Upgrade Function (Simulates Payment Success)
+  async function upgradeToPro() {
+    if (!currentUser || !userProfile) return;
+    
+    try {
+      // In a real app, you'd integrate Stripe/LemonSqueezy here
+      const newPlan = {
+        type: 'pro' as const,
+        status: 'active' as const,
+        since: new Date().toISOString()
+      };
+      
+      await updateUserPlan(currentUser.uid, newPlan);
+      
+      // Optimistic update
+      setUserProfile({ ...userProfile, plan: newPlan });
+      trackEvent('subscription_upgrade', { plan: 'pro' });
+    } catch (e) {
+      console.error("Upgrade failed:", e);
+      throw e;
+    }
   }
 
   useEffect(() => {
@@ -208,14 +237,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     currentUser,
     userProfile,
     subscriptions,
-    derivedStats, // Expose derived stats
+    derivedStats,
     loading,
     subscriptionsLoading,
     authInitialized,
     welcomeBackMessage,
+    isPro,
     signup,
     login,
-    logout
+    logout,
+    upgradeToPro
   };
 
   return (

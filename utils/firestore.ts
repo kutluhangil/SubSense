@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -46,6 +45,13 @@ export interface UserProfileData {
     signupDate: string; // ISO String
     churnRisk?: boolean;
     featureUsage?: Record<string, number>;
+  };
+  // Monetization
+  plan?: {
+    type: 'free' | 'pro';
+    status: 'active' | 'canceled' | 'expired' | 'trial';
+    since: any; // Timestamp
+    expiresAt?: any; // Timestamp
   };
 }
 
@@ -105,6 +111,11 @@ export const initializeUserDocument = async (
       sessionCount: 1,
       signupDate: now,
       featureUsage: {}
+    },
+    plan: {
+      type: 'free',
+      status: 'active',
+      since: now
     }
   };
 
@@ -135,7 +146,8 @@ export const initializeUserDocument = async (
       await setDoc(userRef, {
         ...newProfile,
         createdAt: serverTimestamp(),
-        'analytics.lastActiveAt': serverTimestamp()
+        'analytics.lastActiveAt': serverTimestamp(),
+        'plan.since': serverTimestamp()
       });
     } catch (e: any) {
       if (e.code === 'permission-denied') {
@@ -189,6 +201,16 @@ export const updateUserSettings = async (uid: string, settings: any) => {
     } else {
         console.error("Error updating user settings:", error);
     }
+  }
+};
+
+export const updateUserPlan = async (uid: string, planData: UserProfileData['plan']) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { plan: planData });
+  } catch (error) {
+    console.error("Error updating plan:", error);
+    throw error;
   }
 };
 
@@ -381,7 +403,9 @@ export const listenToUserSubscriptions = (
         const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
         onChange(localData.filter(validateSubscription));
         fallbackEvents.addEventListener('local-update', handleLocalUpdate);
-        if (onError) onError(error);
+        
+        // Do NOT call onError here as we have handled the fallback gracefully
+        // if (onError) onError(error); 
       } else {
         console.error("Firestore snapshot error:", error);
         if (onError) onError(error);

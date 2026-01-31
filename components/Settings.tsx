@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency'; 
@@ -8,6 +8,7 @@ import { User } from '../App';
 import { useFeedback } from '../contexts/FeedbackContext'; // Import
 import { updateUserSettings } from '../utils/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import UpgradeModal from './UpgradeModal';
 
 interface SettingsProps {
   subscriptions?: Subscription[];
@@ -17,8 +18,9 @@ interface SettingsProps {
 
 export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
   const { t, currentCurrency, setCurrency } = useLanguage();
-  const { currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile, isPro } = useAuth();
   const [showToast, setShowToast] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const { openFeedback } = useFeedback(); // Hook
 
   const handleExportCSV = () => {
@@ -86,6 +88,39 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
         
         <div className="xl:col-span-2 space-y-8">
             
+            {/* Subscription Plan */}
+            <div className={`rounded-2xl border shadow-sm overflow-hidden ${isPro ? 'bg-gradient-to-r from-indigo-900 to-purple-900 border-indigo-700' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}>
+                <div className={`px-6 py-4 border-b flex items-center gap-3 ${isPro ? 'border-indigo-700/50 bg-black/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30'}`}>
+                    <CreditCard className={isPro ? 'text-indigo-300' : 'text-gray-400'} size={20} />
+                    <h3 className={`text-base font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Subscription Plan</h3>
+                </div>
+                <div className="p-6 flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`text-lg font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                                {isPro ? 'Pro Plan' : 'Free Plan'}
+                            </h4>
+                            {isPro && <span className="bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>}
+                        </div>
+                        <p className={`text-sm ${isPro ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
+                            {isPro ? 'Next billing date: Oct 24, 2024' : 'Upgrade to unlock advanced AI insights.'}
+                        </p>
+                    </div>
+                    {isPro ? (
+                        <button className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors">
+                            Manage
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={() => setIsUpgradeOpen(true)}
+                            className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
+                        >
+                            Upgrade <Star size={14} className="fill-current" />
+                        </button>
+                    )}
+                </div>
+            </div>
+
             {/* Currency & Preferences */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
@@ -284,6 +319,8 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
             <span className="font-medium text-sm">Settings updated successfully.</span>
         </div>
       )}
+      
+      <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
     </div>
   );
 }

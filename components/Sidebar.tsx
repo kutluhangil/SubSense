@@ -1,11 +1,12 @@
 
-import React from 'react';
-import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles, Star } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
 import { updateFeatureUsage } from '../utils/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { trackEvent } from '../utils/analytics';
+import UpgradeModal from './UpgradeModal';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -16,7 +17,8 @@ interface SidebarProps {
 
 export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) {
   const { t } = useLanguage();
-  const { currentUser } = useAuth();
+  const { currentUser, isPro } = useAuth();
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
 
   const handleNavigate = (view: string) => {
       if (onNavigate) {
@@ -39,6 +41,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
   ];
 
   return (
+    <>
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-subtle h-full transition-colors duration-300">
       {/* Logo Area */}
       <div className="h-20 flex items-center px-6 border-b border-subtle cursor-pointer" onClick={() => handleNavigate('dashboard')}>
@@ -107,6 +110,27 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         </button>
       </div>
 
+      {/* Pro Upgrade CTA (Only for Free Users) */}
+      {!isPro && (
+        <div className="mx-4 mb-4">
+           <button 
+             onClick={() => setIsUpgradeOpen(true)}
+             className="w-full bg-gradient-to-r from-gray-900 to-gray-800 dark:from-indigo-600 dark:to-purple-600 text-white rounded-xl p-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+           >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center gap-3 relative z-10">
+                 <div className="bg-white/20 p-1.5 rounded-lg">
+                    <Star size={16} className="text-yellow-300 fill-current" />
+                 </div>
+                 <div className="text-left">
+                    <p className="text-xs font-bold">Upgrade to Pro</p>
+                    <p className="text-[10px] text-gray-300">Unlock AI Insights</p>
+                 </div>
+              </div>
+           </button>
+        </div>
+      )}
+
       {/* Bottom Actions */}
       <div className="p-4 border-t border-subtle">
         <button 
@@ -118,5 +142,8 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         </button>
       </div>
     </div>
+    
+    <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
+    </>
   );
 }
