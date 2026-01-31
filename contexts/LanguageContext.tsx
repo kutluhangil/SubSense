@@ -27,7 +27,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { currentUser, userProfile } = useAuth();
 
-  // --- Local States (Initialized from LocalStorage fallback) ---
+  // --- Local States (Initialized from LocalStorage fallback for guests/initial load) ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
     const saved = localStorage.getItem('userLanguagePreference');
     return (saved === 'en' || saved === 'tr') ? saved : 'en';
@@ -50,9 +50,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     if (userProfile && userProfile.preferences) {
       const { language, theme, baseCurrency } = userProfile.preferences;
-      if (language) setCurrentLanguage(language as LanguageCode);
-      if (baseCurrency) setCurrentCurrency(baseCurrency);
-      if (theme) setCurrentTheme(theme as ThemeOption);
+      
+      // Firestore is the source of truth when logged in
+      if (language && language !== currentLanguage) setCurrentLanguage(language as LanguageCode);
+      if (baseCurrency && baseCurrency !== currentCurrency) setCurrentCurrency(baseCurrency);
+      if (theme && theme !== currentTheme) setCurrentTheme(theme as ThemeOption);
     }
   }, [userProfile]);
 

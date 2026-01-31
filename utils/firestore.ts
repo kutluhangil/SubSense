@@ -9,6 +9,7 @@ import {
   query, 
   onSnapshot, 
   getDoc,
+  getDocs,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
@@ -166,6 +167,26 @@ export const updateUserSettings = async (uid: string, settings: any) => {
 
 // --- Subscriptions ---
 
+// New: Fetch once for hydration
+export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
+  try {
+    const subsRef = collection(db, 'users', uid, 'subscriptions');
+    const snapshot = await getDocs(subsRef);
+    const subs: Subscription[] = [];
+    snapshot.forEach((doc) => {
+      subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
+    });
+    return subs;
+  } catch (error: any) {
+    console.error("Error fetching subscriptions:", error);
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      return getLocalData<Subscription[]>(localKey) || [];
+    }
+    return [];
+  }
+};
+
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
   try {
     const subsRef = collection(db, 'users', uid, 'subscriptions');
@@ -288,9 +309,6 @@ export const subscribeToSubscriptions = (uid: string, callback: (subs: Subscript
 
 // --- Migration Tool ---
 export const migrateLocalData = async (uid: string, localSubs: Subscription[]) => {
-  // If we are in permission-denied mode, "migration" just means saving to our fallback storage
-  // We try to write to Firestore, if it fails, we save to our new fallback key
-  
   if (!localSubs || localSubs.length === 0) return;
   
   const promises = localSubs.map(sub => {

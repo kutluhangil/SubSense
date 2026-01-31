@@ -22,7 +22,7 @@ export interface User {
 }
 
 function AppContent() {
-  const { currentUser, login, signup, logout } = useAuth();
+  const { currentUser, login, signup, logout, authInitialized } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -101,6 +101,15 @@ function AppContent() {
     setCurrentPage('reset-password');
     window.scrollTo(0,0);
   };
+
+  // 4. App-Level Gating: Show loader until auth state is confirmed
+  if (!authInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   // Map Firebase user to App User interface
   const appUser: User | null = currentUser ? {
