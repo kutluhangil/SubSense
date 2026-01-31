@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Globe, Building2, TrendingUp, Users, History, Briefcase, Award } from 'lucide-react';
+import { X, MapPin, Calendar, Globe, Building2, TrendingUp, Users, History, Briefcase, Award, Sparkles } from 'lucide-react';
 import BrandIcon from './BrandIcon';
 import { SubscriptionDetail, BRAND_COLORS } from '../utils/data';
 
@@ -163,6 +163,16 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service }: S
               </section>
            )}
 
+        </div>
+
+        {/* Footer Branding */}
+        <div className="bg-gray-50 dark:bg-black/20 p-4 border-t border-gray-100 dark:border-gray-800 text-center">
+           <div className="inline-flex items-center gap-1.5 opacity-60 grayscale hover:grayscale-0 transition-all duration-300">
+              <Sparkles size={12} className="text-indigo-500" />
+              <span className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+                 Insights powered by Gemini
+              </span>
+           </div>
         </div>
       </div>
     </div>

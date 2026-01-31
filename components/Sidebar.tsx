@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass } from 'lucide-react';
+import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -8,9 +8,10 @@ interface SidebarProps {
   onLogout: () => void;
   currentView?: string;
   onNavigate?: (view: string) => void;
+  onOpenAI?: () => void; // New prop
 }
 
-export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate }: SidebarProps) {
+export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) {
   const { t } = useLanguage();
 
   const navItems = [
@@ -48,7 +49,24 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           </button>
         ))}
         
-        <p className="px-4 text-xs font-semibold text-muted uppercase tracking-wider mt-8 mb-4">{t('sidebar.account')}</p>
+        {/* AI Assistant Divider */}
+        <div className="my-4 border-t border-subtle mx-4"></div>
+        
+        {/* AI Assistant Button */}
+        <button 
+          onClick={onOpenAI}
+          className="w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+        >
+          <div className="relative">
+             <Sparkles size={20} className="text-indigo-500 animate-pulse" />
+             <div className="absolute inset-0 bg-indigo-400 blur-sm opacity-20 animate-pulse"></div>
+          </div>
+          <span className="font-semibold">AI Assistant</span>
+        </button>
+
+        <div className="my-4 border-t border-subtle mx-4"></div>
+        
+        <p className="px-4 text-xs font-semibold text-muted uppercase tracking-wider mb-4">{t('sidebar.account')}</p>
         <button 
           onClick={() => onNavigate && onNavigate('settings')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
