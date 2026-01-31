@@ -21,6 +21,7 @@ import CurrencySelector from './CurrencySelector';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
+import { debugLog } from '../utils/debug';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -41,8 +42,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>(() => {
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.subscriptions`);
-      return saved ? JSON.parse(saved) : [];
+      const parsed = saved ? JSON.parse(saved) : [];
+      debugLog('PERSISTENCE_LOAD', `Loaded ${parsed.length} subscriptions`, parsed);
+      return parsed;
     } catch (e) {
+      console.error("Failed to load subscriptions", e);
       return [];
     }
   });
@@ -87,6 +91,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   useEffect(() => {
+    debugLog('PERSISTENCE_SAVE', `Saving ${subscriptions.length} subscriptions to storage`, subscriptions);
     localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(subscriptions));
   }, [subscriptions, userKey]);
 
@@ -109,6 +114,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     
     const activeSubs = subscriptions.filter(s => s.status === 'Active');
     
+    debugLog('CURRENCY_AGGREGATION', 'Starting metrics calculation', { 
+        baseCurrency: currentCurrency, 
+        activeSubCount: activeSubs.length 
+    });
+
     activeSubs.forEach(sub => {
       // Ensure strict numeric type before conversion
       const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
@@ -131,6 +141,12 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       } else {
           lifetimeSpend += priceInBase; 
       }
+    });
+
+    debugLog('CURRENCY_AGGREGATION', 'Calculation Complete', {
+      monthlySpend: monthlyTotal,
+      yearlyForecast: yearlyTotalForecast,
+      lifetimeSpend: lifetimeSpend
     });
 
     return {
@@ -166,31 +182,53 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   };
 
   const handleSubUpdate = (updatedSub: Subscription) => {
+    debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription', updatedSub);
     setSubscriptions(prev => prev.map(s => s.id === updatedSub.id ? updatedSub : s));
   };
 
   const handleSubDelete = (id: number) => {
-    // Optimistic UI update and logic for savings
+    debugLog('REMOVE_ACTION', `Attempting to remove subscription ID: ${id}`);
+
+    // 1. Optimistic calculation update (safe to use current state for calc only)
     const subToDelete = subscriptions.find(s => s.id === id);
     if (subToDelete) {
+        debugLog('REMOVE_ACTION', 'Found subscription to delete', subToDelete);
         const monthlyValueBase = subToDelete.cycle === 'Yearly' 
             ? convert(subToDelete.price / 12, subToDelete.currency) 
             : convert(subToDelete.price, subToDelete.currency);
         
         setTotalSaved(prev => prev + monthlyValueBase);
-        showToast(`Subscription deleted. Savings updated!`);
+    } else {
+        debugLog('REMOVE_ACTION', 'ERROR: Subscription ID not found in current state', { id });
+        return;
     }
     
-    // Strict State Update
-    const newSubscriptions = subscriptions.filter(s => s.id !== id);
-    setSubscriptions(newSubscriptions);
-    
-    // Explicit Persistence (redundant with useEffect but ensures sync)
-    localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(newSubscriptions));
+    // 2. Strict State Update using Functional Update (Prevents Stale Closure Bugs)
+    setSubscriptions(prevSubscriptions => {
+        const newSubscriptions = prevSubscriptions.filter(s => s.id !== id);
+        
+        debugLog('REMOVE_ACTION', 'State updated', { 
+            prevCount: prevSubscriptions.length, 
+            newCount: newSubscriptions.length 
+        });
+
+        // 3. Immediate Persistence (Redundant safety net)
+        try {
+            localStorage.setItem(`subscriptionhub.${userKey}.subscriptions`, JSON.stringify(newSubscriptions));
+            debugLog('REMOVE_ACTION', 'Immediate persistence successful');
+        } catch (e) {
+            console.error("Failed to persist deletion", e);
+        }
+        
+        return newSubscriptions;
+    });
+
+    showToast(`Subscription removed.`);
   };
 
   const handleAddSubscription = (newSub: Subscription) => {
     const finalSub = { ...newSub, id: Date.now() };
+    debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription', finalSub);
     setSubscriptions(prev => [finalSub, ...prev]);
     setIsAddModalOpen(false);
     setCurrentView('dashboard');

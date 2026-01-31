@@ -505,46 +505,17 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
   );
 };
 
+// --- RESETTING THIS COMPONENT TO 0 AS REQUESTED ---
 const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
-    // Basic logic: Check if user pays > catalog price for cheap region (Turkey usually)
-    const potentialSavings = useMemo(() => {
-        let total = 0;
-        subscriptions.forEach(sub => {
-            const key = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
-            const detail = SUBSCRIPTION_CATALOG[key];
-            if (detail && sub.currency === 'USD') {
-                // Heuristic: Compare against ~50% of price as "Global Avg"
-                // In real app, we check specific regional pricing data
-                const possiblePrice = sub.price * 0.4; // 60% cheaper elsewhere
-                if (sub.price > 5) {
-                    total += (sub.price - possiblePrice);
-                }
-            }
-        });
-        return total * 12; // Annual
-    }, [subscriptions]);
+    // Force reset for now until currency logic is robust
+    const potentialSavings = 0; 
 
-    if (potentialSavings <= 0) return (
+    // Render simple state or nothing
+    return (
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm h-full flex flex-col justify-center items-center text-center">
             <CheckCircle2 size={24} className="text-green-500 mb-2" />
-            <p className="text-sm font-bold text-gray-900 dark:text-white">Great job!</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">No major savings found.</p>
-        </div>
-    );
-
-    return (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 p-5 rounded-xl border border-green-100 dark:border-green-800/30 shadow-sm relative overflow-hidden flex flex-col justify-center">
-            <div className="flex items-start gap-4 relative z-10">
-                <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg text-green-600 dark:text-green-400 shrink-0">
-                    <DollarSign size={20} />
-                </div>
-                <div>
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Potential Savings</h4>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        You could save <span className="font-bold text-green-700 dark:text-green-400">{formatPrice(potentialSavings)}/yr</span> by optimizing regional plans.
-                    </p>
-                </div>
-            </div>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Optimization Ready</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Add more data to see savings.</p>
         </div>
     );
 };
