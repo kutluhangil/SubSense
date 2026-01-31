@@ -46,21 +46,23 @@ const EXPLORE_CARDS = [
   { id: 'paramount+', style: 'disney', height: 'h-[300px]', customBg: 'bg-[#0064FF]' },
 ];
 
-function CardContainer({ 
-  children, 
-  className, 
-  onClick,
-  isDimmed,
-  onHover,
-  onLeave
-}: { 
+interface CardContainerProps {
   children: React.ReactNode; 
   className: string; 
   onClick: () => void; 
   isDimmed: boolean;
   onHover: () => void;
   onLeave: () => void;
-}) {
+}
+
+const CardContainer: React.FC<CardContainerProps> = ({ 
+  children, 
+  className, 
+  onClick,
+  isDimmed,
+  onHover,
+  onLeave
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [transformStyle, setTransformStyle] = useState<string>('');
   const [glowStyle, setGlowStyle] = useState<React.CSSProperties>({ opacity: 0 });

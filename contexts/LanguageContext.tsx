@@ -1,8 +1,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, LanguageCode } from '../utils/translations';
-import { EXCHANGE_RATES, CURRENCY_LOCALES, convertAmount } from '../utils/currency';
+import { CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
+import { useAuth } from './AuthContext';
+import { getUserSettings, updateUserSettings } from '../utils/firestore';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -22,68 +24,76 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  // --- Language State ---
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { currentUser } = useAuth();
+
+  // --- Local States (Initialized from LocalStorage fallback) ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userLanguagePreference');
-      if (saved === 'en' || saved === 'tr') {
-        return saved;
-      }
-    }
-    return 'en';
+    const saved = localStorage.getItem('userLanguagePreference');
+    return (saved === 'en' || saved === 'tr') ? saved : 'en';
   });
 
-  // --- Currency State (User Base Currency) ---
   const [currentCurrency, setCurrentCurrency] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userCurrencyPreference');
-      return saved || 'USD';
-    }
-    return 'USD';
+    const saved = localStorage.getItem('userCurrencyPreference');
+    return saved || 'USD';
   });
 
-  // --- Theme State ---
   const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('userThemePreference');
-      if (saved === 'light' || saved === 'dark' || saved === 'system') {
-        return saved;
-      }
-    }
-    return 'system';
+    const saved = localStorage.getItem('userThemePreference');
+    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const dir = (currentLanguage as string) === 'ar' ? 'rtl' : 'ltr';
 
-  // --- Effects ---
-
-  // Persist Language & Direction
+  // --- Sync with Firestore on Login ---
   useEffect(() => {
-    localStorage.setItem('userLanguagePreference', currentLanguage);
+    if (currentUser) {
+      getUserSettings(currentUser.uid).then(settings => {
+        if (settings) {
+          if (settings.language) setCurrentLanguage(settings.language);
+          if (settings.baseCurrency) setCurrentCurrency(settings.baseCurrency);
+          if (settings.theme) setCurrentTheme(settings.theme);
+        }
+      });
+    }
+  }, [currentUser]);
+
+  // --- Persist Changes ---
+  
+  const persistSettings = (updates: any) => {
+    // Local persistence for fallback/guest
+    if (updates.language) localStorage.setItem('userLanguagePreference', updates.language);
+    if (updates.baseCurrency) localStorage.setItem('userCurrencyPreference', updates.baseCurrency);
+    if (updates.theme) localStorage.setItem('userThemePreference', updates.theme);
+
+    // Remote persistence if logged in
+    if (currentUser) {
+      updateUserSettings(currentUser.uid, {
+        ...(updates.language && { language: updates.language }),
+        ...(updates.baseCurrency && { baseCurrency: updates.baseCurrency }),
+        ...(updates.theme && { theme: updates.theme }),
+      });
+    }
+  };
+
+  useEffect(() => {
     document.documentElement.lang = currentLanguage;
     document.documentElement.dir = dir;
   }, [currentLanguage, dir]);
 
-  // Persist Currency
   useEffect(() => {
-    localStorage.setItem('userCurrencyPreference', currentCurrency);
     debugLog('CURRENCY_CONVERSION', `Base currency set to ${currentCurrency}`);
   }, [currentCurrency]);
 
-  // Persist & Apply Theme
+  // Apply Theme
   useEffect(() => {
-    localStorage.setItem('userThemePreference', currentTheme);
-    
     const applyTheme = () => {
       const isDark = 
         currentTheme === 'dark' || 
         (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
       const root = document.documentElement;
-      
       debugLog('THEME_SYNC', `Applying Theme: ${currentTheme}`, { isDarkResolved: isDark });
 
       if (isDark) {
@@ -96,13 +106,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
 
     applyTheme();
-
-    // Listener for system changes if in 'system' mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (currentTheme === 'system') applyTheme();
     };
-
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [currentTheme]);
@@ -115,17 +122,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const handleSetLanguage = (lang: LanguageCode) => {
     setCurrentLanguage(lang);
+    persistSettings({ language: lang });
     const langName = new Intl.DisplayNames([lang], { type: 'language' }).of(lang);
     showToast(`Language changed to ${langName}`);
   };
 
   const handleSetCurrency = (curr: string) => {
     setCurrentCurrency(curr);
+    persistSettings({ baseCurrency: curr });
     showToast(`Base Currency changed to ${curr}`);
   };
 
   const handleSetTheme = (theme: ThemeOption) => {
     setCurrentTheme(theme);
+    persistSettings({ theme: theme });
   };
 
   const t = (key: string): string => {
@@ -134,20 +144,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return langDict[key] || translations['en'][key] || key;
   };
 
-  // Convert amount from ANY currency to User Base Currency
   const convert = (amount: number, fromCurrency: string): number => {
-    const result = convertAmount(amount, fromCurrency, currentCurrency);
-    // Optional: Verbose logging for specific debugging
-    // debugLog('CURRENCY_CONVERSION', `Converting ${amount} ${fromCurrency} -> ${currentCurrency}`, { result });
-    return result;
+    return convertAmount(amount, fromCurrency, currentCurrency);
   };
 
-  // Format price. If currencyCode provided, use it. Otherwise use Base Currency.
-  // NOTE: This function assumes the 'amount' passed is ALREADY in the target 'currencyCode'.
-  // It does NOT perform conversion. Conversion must happen before formatting if needed.
   const formatPrice = (amount: number, currencyCode: string = currentCurrency): string => {
     const locale = CURRENCY_LOCALES[currentLanguage] || 'en-US';
-    
     try {
       return new Intl.NumberFormat(locale, {
         style: 'currency',

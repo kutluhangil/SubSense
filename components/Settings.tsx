@@ -50,10 +50,10 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
   };
 
   const handleCurrencyChange = (newCurrency: string) => {
-    // 1. Update Global Context
+    // 1. Update Global Context & Persistence (Firestore)
     setCurrency(newCurrency);
 
-    // 2. Update All Existing Subscriptions (Nominal Switch - No FX)
+    // 2. Update Local State for immediate UI feedback if passed
     if (onUpdateSubscriptions) {
         onUpdateSubscriptions(prev => prev.map(sub => ({
             ...sub,
@@ -61,23 +61,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
         })));
     }
 
-    // 3. Update User Persistence (if user exists)
-    if (user) {
-        try {
-            const users = JSON.parse(localStorage.getItem('subscriptionhub.users') || '[]');
-            const updatedUsers = users.map((u: User) => {
-                if (u.email === user.email) {
-                    return { ...u, currency: newCurrency };
-                }
-                return u;
-            });
-            localStorage.setItem('subscriptionhub.users', JSON.stringify(updatedUsers));
-        } catch (e) {
-            console.error("Failed to persist user currency preference", e);
-        }
-    }
-
-    // 4. Show Feedback
+    // 3. Show Feedback
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
