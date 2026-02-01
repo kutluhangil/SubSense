@@ -2,7 +2,7 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/functions"; // Import Functions
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED, getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getPerformance } from "firebase/performance";
 
@@ -47,6 +47,7 @@ let dbInstance;
 
 try {
   // Use modern persistentLocalCache configuration
+  // This throws if Firestore is already initialized (e.g. HMR)
   dbInstance = initializeFirestore(app, {
     localCache: persistentLocalCache({
       tabManager: persistentMultipleTabManager(),
@@ -54,8 +55,9 @@ try {
     })
   });
 } catch (e) {
-  console.warn("Firestore already initialized or fallback required, using existing instance.", e);
-  dbInstance = firebase.firestore(app); 
+  // If already initialized, retrieve the existing modular instance
+  // We avoid firebase.firestore(app) here to prevent triggering the compat-layer deprecation warning
+  dbInstance = getFirestore(app);
 }
 
 export const db = dbInstance;
