@@ -132,7 +132,7 @@ export const initializeUserDocument = async (
       userSnap = await getDoc(userRef);
     } catch (e: any) {
       if (e.code === 'permission-denied' || e.code === 'unavailable') {
-        console.warn("Firestore read denied. Using local fallback for profile.");
+        console.debug("Firestore read denied/unavailable. Using local fallback for profile.");
         trackEvent('system_fallback', { type: 'profile_read', reason: e.code });
         const localProfile = getLocalData<UserProfileData>(localKey);
         return localProfile || newProfile;
@@ -152,7 +152,7 @@ export const initializeUserDocument = async (
       });
     } catch (e: any) {
       if (e.code === 'permission-denied') {
-        console.warn("Firestore write denied. Saving profile locally.");
+        console.info("Firestore write denied. Saving profile locally.");
         trackEvent('system_fallback', { type: 'profile_write', reason: e.code });
         setLocalData(localKey, newProfile);
         return newProfile;
@@ -177,11 +177,12 @@ export const getUserDocument = async (uid: string): Promise<UserProfileData | nu
     }
     return null;
   } catch (error: any) {
-    console.error("Error fetching user document:", error);
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
+       // Silent fallback for guest/unauthed
        trackEvent('system_fallback', { type: 'profile_fetch', reason: error.code });
        return getLocalData<UserProfileData>(`${FALLBACK_KEY_PREFIX}profile_${uid}`);
     }
+    console.error("Error fetching user document:", error);
     return null;
   }
 };
@@ -260,13 +261,13 @@ export const getUserSubscriptions = async (uid: string): Promise<Subscription[]>
     });
     return subs;
   } catch (error: any) {
-    console.error("Error fetching subscriptions:", error);
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
       trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code });
       const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
       const localSubs = getLocalData<Subscription[]>(localKey) || [];
       return localSubs.filter(validateSubscription);
     }
+    console.error("Error fetching subscriptions:", error);
     return [];
   }
 };
@@ -287,7 +288,7 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
     updateFeatureUsage(uid, 'subscription_added');
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      console.warn("Firestore write denied. Adding subscription locally.");
+      console.info("Firestore write denied. Adding subscription locally.");
       trackEvent('system_fallback', { type: 'sub_add', reason: error.code });
       const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
       const currentSubs = getLocalData<Subscription[]>(localKey) || [];
@@ -382,7 +383,7 @@ export const listenToUserSubscriptions = (
       onChange(subs);
     }, (error) => {
       if (error.code === 'permission-denied' || error.code === 'unavailable' || error.code === 'failed-precondition') {
-        console.warn("Firestore realtime denied/failed. Switching to local storage.");
+        console.debug("Firestore realtime connection denied/failed. Switching to local storage mode.");
         trackEvent('system_fallback', { type: 'sub_listen', reason: error.code });
         const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
         onChange(localData.filter(validateSubscription));

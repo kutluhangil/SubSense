@@ -42,7 +42,7 @@ if (window.location.hostname === "localhost") {
   // functions.useEmulator("localhost", 5001);
 }
 
-// Initialize Firestore
+// Initialize Firestore with modern caching
 let dbInstance;
 
 try {
@@ -55,8 +55,7 @@ try {
     })
   });
 } catch (e) {
-  // If already initialized, retrieve the existing modular instance
-  // We avoid firebase.firestore(app) here to prevent triggering the compat-layer deprecation warning
+  // If already initialized (common in development HMR), retrieve the existing instance
   dbInstance = getFirestore(app);
 }
 

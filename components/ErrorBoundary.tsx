@@ -1,4 +1,3 @@
-
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { trackError } from '../utils/analytics';
@@ -13,6 +12,9 @@ interface State {
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
+  // Explicitly declare props to avoid TS error
+  declare props: Props;
+
   public state: State = {
     hasError: false,
     error: null
