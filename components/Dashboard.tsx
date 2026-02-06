@@ -331,11 +331,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
         const total = metrics.monthlySpend;
         
         return Object.entries(cats)
-            .sort(([,a], [,b]) => b - a)
+            .sort(([,a], [,b]) => (b as number) - (a as number))
             .slice(0, 3)
             .map(([name, value]) => ({ 
                 name, 
-                percentage: total > 0 ? (value / total) * 100 : 0 
+                percentage: total > 0 ? ((value as number) / total) * 100 : 0 
             }));
      }, [metrics]);
 
