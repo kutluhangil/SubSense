@@ -17,6 +17,7 @@ const subscriptionSchema = z.object({
     startDate: z.string().optional(), // ISO date string
     description: z.string().optional(),
     active: z.boolean().optional(),
+    logo: z.string().optional(), // Base64 or URL
 });
 
 const updateSubscriptionSchema = subscriptionSchema.partial();
