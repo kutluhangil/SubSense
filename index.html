@@ -1,167 +1,200 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>SubSense</title>
-    <meta name="description" content="The local-first subscription tracker. Manage global expenses, compare prices worldwide, and optimize your spending with Gemini AI. Privacy-focused and free." />
-    <meta name="keywords" content="subscription tracker, expense manager, recurring payments, netflix price comparison, spotify stats, local-first app" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://subsense.app/" />
-    <meta property="og:title" content="SubSense" />
-    <meta property="og:description" content="Track, manage, and optimize your global subscriptions. Compare prices worldwide and save money with SubSense." />
-    <meta property="og:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200" />
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://subsense.app/" />
-    <meta property="twitter:title" content="SubSense" />
-    <meta property="twitter:description" content="Track, manage, and optimize your global subscriptions. Privacy-focused and powered by Gemini AI." />
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SubSense</title>
+  <meta name="description"
+    content="The local-first subscription tracker. Manage global expenses, compare prices worldwide, and optimize your spending with Gemini AI. Privacy-focused and free." />
+  <meta name="keywords"
+    content="subscription tracker, expense manager, recurring payments, netflix price comparison, spotify stats, local-first app" />
 
-    <meta name="theme-color" content="#ffffff" />
-    <link rel="canonical" href="https://subsense.app/" />
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-            colors: {
-              // Semantic Tokens linked to CSS Variables
-              app: 'var(--bg-app)',
-              card: 'var(--bg-card)',
-              sidebar: 'var(--bg-sidebar)',
-              
-              primary: 'var(--text-primary)',
-              secondary: 'var(--text-secondary)',
-              muted: 'var(--text-muted)',
-              
-              subtle: 'var(--border-subtle)',
-              'subtle-hover': 'var(--border-subtle-hover)',
-              
-              // Raw grays for utility if needed (legacy support)
-              gray: {
-                50: '#f9fafb',
-                100: '#f3f4f6',
-                200: '#e5e7eb',
-                300: '#d1d5db',
-                400: '#9ca3af',
-                500: '#6b7280',
-                600: '#4b5563',
-                700: '#374151',
-                800: '#1f2937',
-                900: '#111827',
-              }
-            },
-            animation: {
-              'float': 'float 6s ease-in-out infinite',
-              'float-delayed': 'float 6s ease-in-out 3s infinite',
-            },
-            keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              }
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://subsense.app/" />
+  <meta property="og:title" content="SubSense" />
+  <meta property="og:description"
+    content="Track, manage, and optimize your global subscriptions. Compare prices worldwide and save money with SubSense." />
+  <meta property="og:image"
+    content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://subsense.app/" />
+  <meta property="twitter:title" content="SubSense" />
+  <meta property="twitter:description"
+    content="Track, manage, and optimize your global subscriptions. Privacy-focused and powered by Gemini AI." />
+  <meta property="twitter:image"
+    content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=1200" />
+
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="canonical" href="https://subsense.app/" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            // Semantic Tokens linked to CSS Variables
+            app: 'var(--bg-app)',
+            card: 'var(--bg-card)',
+            sidebar: 'var(--bg-sidebar)',
+
+            primary: 'var(--text-primary)',
+            secondary: 'var(--text-secondary)',
+            muted: 'var(--text-muted)',
+
+            subtle: 'var(--border-subtle)',
+            'subtle-hover': 'var(--border-subtle-hover)',
+
+            // Raw grays for utility if needed (legacy support)
+            gray: {
+              50: '#f9fafb',
+              100: '#f3f4f6',
+              200: '#e5e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#1f2937',
+              900: '#111827',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'float-delayed': 'float 6s ease-in-out 3s infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
             }
           }
         }
       }
-    </script>
-    <style>
-      :root {
-        /* Light Theme (Default) */
-        --bg-app: #f9fafb;       /* gray-50 */
-        --bg-card: #ffffff;      /* white */
-        --bg-sidebar: #ffffff;   /* white */
-        
-        --text-primary: #111827; /* gray-900 */
-        --text-secondary: #4b5563; /* gray-600 */
-        --text-muted: #9ca3af;   /* gray-400 */
-        
-        --border-subtle: #f3f4f6; /* gray-100 */
-        --border-subtle-hover: #e5e7eb; /* gray-200 */
-        
-        --chart-grid: #f3f4f6;
-        --overlay-bg: rgba(255, 255, 255, 0.8);
-      }
+    }
+  </script>
+  <style>
+    :root {
+      /* Light Theme (Default) */
+      --bg-app: #f9fafb;
+      /* gray-50 */
+      --bg-card: #ffffff;
+      /* white */
+      --bg-sidebar: #ffffff;
+      /* white */
 
-      [data-theme='dark'] {
-        /* Dark Theme (Matches Profile Page Aesthetic) */
-        --bg-app: #111827;       /* gray-900 */
-        --bg-card: #1f2937;      /* gray-800 */
-        --bg-sidebar: #1f2937;   /* gray-800 - Unified with card for sidebar */
-        
-        --text-primary: #f9fafb; /* gray-50 */
-        --text-secondary: #d1d5db; /* gray-300 */
-        --text-muted: #9ca3af;   /* gray-400 */
-        
-        --border-subtle: #374151; /* gray-700 */
-        --border-subtle-hover: #4b5563; /* gray-600 */
-        
-        --chart-grid: #374151;
-        --overlay-bg: rgba(31, 41, 55, 0.8);
-      }
+      --text-primary: #111827;
+      /* gray-900 */
+      --text-secondary: #4b5563;
+      /* gray-600 */
+      --text-muted: #9ca3af;
+      /* gray-400 */
 
-      /* Global Smooth Theme Transition */
-      body, div, nav, aside, section, article, header, footer, 
-      button, input, textarea, select, table, tr, td, th, span, p, h1, h2, h3, h4, h5, h6 {
-        transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-        transition-duration: 300ms;
-        transition-timing-function: ease-in-out;
-      }
+      --border-subtle: #f3f4f6;
+      /* gray-100 */
+      --border-subtle-hover: #e5e7eb;
+      /* gray-200 */
 
-      body {
-        background-color: var(--bg-app);
-        color: var(--text-primary);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+      --chart-grid: #f3f4f6;
+      --overlay-bg: rgba(255, 255, 255, 0.8);
+    }
 
-      /* Scrollbar Styling */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--border-subtle-hover);
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
-      }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "firebase/": "https://esm.sh/firebase@^12.8.0/",
-    "firebase-functions": "https://esm.sh/firebase-functions@^7.0.5",
-    "firebase-admin": "https://esm.sh/firebase-admin@^13.6.0",
-    "stripe": "https://esm.sh/stripe@^20.3.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
-    "vite": "https://esm.sh/vite@^7.3.1"
-  }
-}
-</script>
+    [data-theme='dark'] {
+      /* Dark Theme (Matches Profile Page Aesthetic) */
+      --bg-app: #111827;
+      /* gray-900 */
+      --bg-card: #1f2937;
+      /* gray-800 */
+      --bg-sidebar: #1f2937;
+      /* gray-800 - Unified with card for sidebar */
+
+      --text-primary: #f9fafb;
+      /* gray-50 */
+      --text-secondary: #d1d5db;
+      /* gray-300 */
+      --text-muted: #9ca3af;
+      /* gray-400 */
+
+      --border-subtle: #374151;
+      /* gray-700 */
+      --border-subtle-hover: #4b5563;
+      /* gray-600 */
+
+      --chart-grid: #374151;
+      --overlay-bg: rgba(31, 41, 55, 0.8);
+    }
+
+    /* Global Smooth Theme Transition */
+    body,
+    div,
+    nav,
+    aside,
+    section,
+    article,
+    header,
+    footer,
+    button,
+    input,
+    textarea,
+    select,
+    table,
+    tr,
+    td,
+    th,
+    span,
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+      transition-duration: 300ms;
+      transition-timing-function: ease-in-out;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle-hover);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+  <script type="module" src="/index.tsx"></script>
 </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<body>
+  <div id="root"></div>
+</body>
+
 </html>
