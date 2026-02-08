@@ -1,12 +1,14 @@
+
 import React, { useState, useMemo } from 'react';
 import { 
   X, LayoutGrid, Users, CreditCard, PieChart, 
-  ArrowRightLeft, LogOut
+  ArrowRightLeft, LogOut, Lock
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
 import { Subscription } from './SubscriptionModal';
+import Logo from './Logo';
 
 interface DemoModalProps {
   isOpen: boolean;
@@ -24,6 +26,12 @@ const DEMO_SUBSCRIPTIONS: Subscription[] = [
 export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps) {
   const { t } = useLanguage();
   const [currentView, setCurrentView] = useState('dashboard');
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showLockedToast = () => {
+      setToastMsg(t('demo.sidebar.locked'));
+      setTimeout(() => setToastMsg(null), 2000);
+  };
 
   const metrics = useMemo(() => {
     let monthlyTotal = 0;
@@ -61,7 +69,7 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
         {/* Sidebar Mockup */}
         <div className="w-64 bg-gray-50 border-r border-gray-100 hidden md:flex flex-col">
            <div className="h-16 flex items-center px-6 border-b border-gray-100/50">
-              <span className="font-bold text-gray-900 text-xl tracking-tight">Subscription<span className="text-blue-600">Hub</span></span>
+              <Logo className="h-8" />
            </div>
            <div className="p-4 space-y-1">
               <button 
@@ -76,14 +84,18 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
               >
                  <CreditCard size={18} /> <span>{t('sidebar.subscriptions')}</span>
               </button>
-              <button className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors">
-                 <PieChart size={18} /> <span>{t('sidebar.analytics')}</span>
+              {/* Disabled Items */}
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
+                 <div className="flex items-center space-x-3"><PieChart size={18} /> <span>{t('sidebar.analytics')}</span></div>
+                 <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
-              <button className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors">
-                 <Users size={18} /> <span>{t('sidebar.friends')}</span>
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
+                 <div className="flex items-center space-x-3"><Users size={18} /> <span>{t('sidebar.friends')}</span></div>
+                 <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
-              <button className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors">
-                 <ArrowRightLeft size={18} /> <span>{t('sidebar.compare')}</span>
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
+                 <div className="flex items-center space-x-3"><ArrowRightLeft size={18} /> <span>{t('sidebar.compare')}</span></div>
+                 <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
            </div>
            <div className="mt-auto p-4 border-t border-gray-100">
@@ -156,6 +168,13 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
                  {t('demo.start_trial')}
               </span>
            </div>
+
+           {/* Toast for Locked Items */}
+           {toastMsg && (
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg animate-in slide-in-from-top-2 fade-in z-50">
+                    {toastMsg}
+                </div>
+           )}
 
         </div>
       </div>

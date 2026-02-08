@@ -1,53 +1,94 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
 
-// Safe access to environment variables
-const getEnvVar = (key: string) => {
-  try {
-    // Check import.meta.env (Vite)
-    // Cast to any to avoid TS errors if Vite types aren't loaded
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env[key]) {
-      return (import.meta as any).env[key];
-    }
-    // Check process.env (Standard/Webpack)
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      return process.env[key];
-    }
-  } catch (e) {
-    // Ignore errors in restricted environments
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
+import { getFunctions, Functions } from "firebase/functions";
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  CACHE_SIZE_UNLIMITED, 
+  getFirestore,
+  Firestore 
+} from "firebase/firestore";
+// @ts-ignore -- Firebase Analytics types might be missing in this environment
+import { getAnalytics, Analytics, isSupported as isAnalyticsSupported } from "firebase/analytics";
+// @ts-ignore -- Firebase Performance types might be missing in this environment
+import { getPerformance, FirebasePerformance } from "firebase/performance";
+
+// --- Configuration ---
+// Safe fallback mechanism for environment variables
+const getEnv = (key: string, fallback: string): string => {
+  // Cast to any to avoid TS errors
+  const meta = import.meta as any;
+  if (typeof meta !== 'undefined' && meta.env) {
+      return (meta.env[key] as string) || fallback;
   }
-  return undefined;
+  return fallback;
 };
 
-// Check if we have a valid configuration
-const apiKey = getEnvVar('VITE_FIREBASE_API_KEY');
-const authDomain = getEnvVar('VITE_FIREBASE_AUTH_DOMAIN');
+const firebaseConfig = {
+  apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyArupQpxKTcA1PUoqmUFLf2K31CT4KG_R4"),
+  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "subscriptionhub-85b02.firebaseapp.com"),
+  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", "subscriptionhub-85b02"),
+  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", "subscriptionhub-85b02.firebasestorage.app"),
+  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "86302718224"),
+  appId: getEnv("VITE_FIREBASE_APP_ID", "1:86302718224:web:f9f646d77fa9fb92050d95")
+};
 
-const isConfigValid = apiKey && authDomain;
+// --- Initialization ---
 
-if (!isConfigValid) {
-  console.warn("Firebase configuration is missing or incomplete. Check your .env file. Using mock config to prevent crash.");
+// 1. Initialize App (Singleton pattern)
+let app: FirebaseApp;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
 }
 
-// Use real config or a placeholder to prevent immediate crash
-const firebaseConfig = isConfigValid ? {
-  apiKey: apiKey,
-  authDomain: authDomain,
-  projectId: getEnvVar('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: getEnvVar('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: getEnvVar('VITE_FIREBASE_APP_ID')
-} : {
-  // Placeholder config so app loads (auth will fail on use)
-  apiKey: "AIzaSyDummyKeyForDevelopmentEnvironmentOnly",
-  authDomain: "dummy.firebaseapp.com",
-  projectId: "dummy-project",
-  storageBucket: "dummy.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:0000000000000000000000"
-};
+// 2. Initialize Auth
+const auth: Auth = getAuth(app);
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+// 3. Initialize Functions
+const functions: Functions = getFunctions(app);
+
+// 4. Initialize Firestore (Crash-proof for HMR/Vercel)
+let db: Firestore;
+try {
+  // Try modern cache first
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED
+    })
+  });
+} catch (e) {
+  // Fallback to existing instance if HMR re-initializes
+  // or if persistent cache fails
+  db = getFirestore(app);
+}
+
+// 5. Initialize Analytics & Performance (Browser Only)
+let analytics: Analytics | null = null;
+let perf: FirebasePerformance | null = null;
+
+if (typeof window !== 'undefined') {
+  // Async initialization to not block main thread
+  // @ts-ignore
+  if (typeof isAnalyticsSupported === 'function') {
+    // @ts-ignore
+    isAnalyticsSupported().then((supported) => {
+      // @ts-ignore
+      if (supported) analytics = getAnalytics(app);
+    }).catch(e => console.warn("Analytics not supported:", e));
+  }
+  
+  try {
+    // Firebase Performance does not export isSupported, it handles environments internally or throws
+    perf = getPerformance(app);
+  } catch (e) {
+    console.debug("Firebase Performance not initialized (unsupported environment)");
+  }
+}
+
+// Export instances
+export { app, auth, db, functions, analytics, perf };

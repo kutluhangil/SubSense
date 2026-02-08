@@ -1,35 +1,37 @@
-
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
-import Friends from './Friends';
-import Analytics from './Analytics';
-import SettingsPage from './Settings';
-import Comparison from './Comparison';
-import HelpCenter from './HelpCenter';
-import Profile from './Profile';
-import Discover from './Discover';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
 import CurrencySelector from './CurrencySelector';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Info } from 'lucide-react';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
 import { debugLog } from '../utils/debug';
 import { convertAmount, CURRENCY_DATA } from '../utils/currency';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  subscribeToSubscriptions, 
   addSubscription, 
   updateSubscription, 
   deleteSubscription 
 } from '../utils/firestore';
+import { calculateDerivedStats } from '../utils/aggregation';
+import { trackEvent } from '../utils/analytics';
+
+// Lazy Load Heavy Components
+const Analytics = React.lazy(() => import('./Analytics'));
+const Friends = React.lazy(() => import('./Friends'));
+const SettingsPage = React.lazy(() => import('./Settings'));
+const Comparison = React.lazy(() => import('./Comparison'));
+const HelpCenter = React.lazy(() => import('./HelpCenter'));
+const Profile = React.lazy(() => import('./Profile'));
+const Discover = React.lazy(() => import('./Discover'));
 
 interface DashboardProps {
   onLogout: () => void;
@@ -43,29 +45,17 @@ const DEFAULT_BUDGET_LIMITS = {
   'Tools': 50
 };
 
+const LoadingFallback = () => (
+  <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+    <Loader2 className="animate-spin text-gray-400" size={32} />
+  </div>
+);
+
 export default function Dashboard({ onLogout, user }: DashboardProps) {
-  const { currentUser } = useAuth();
+  const { currentUser, subscriptions, derivedStats, subscriptionsLoading } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   
-  // Real-time Subscriptions State
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loadingSubs, setLoadingSubs] = useState(true);
-
-  // Firestore Sync
-  useEffect(() => {
-    if (currentUser) {
-      const unsubscribe = subscribeToSubscriptions(currentUser.uid, (data) => {
-        setSubscriptions(data);
-        setLoadingSubs(false);
-      });
-      return () => unsubscribe();
-    } else {
-      setSubscriptions([]);
-      setLoadingSubs(false);
-    }
-  }, [currentUser]);
-
-  // Local state only for simpler preferences not critically synced yet (can be moved to Firestore later)
+  // Local state only for simpler preferences not critically synced yet
   const userKey = user?.email || 'guest';
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
     try {
@@ -121,51 +111,16 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
   }, [totalSaved, userKey]);
 
-  // Recalculate metrics considering optional Preview Currency
+  // Recalculate metrics: Use Derived Stats (Context) or Recalculate if Previewing
   const metrics = useMemo(() => {
-    let monthlyTotal = 0;
-    let yearlyTotalForecast = 0;
-    let lifetimeSpend = 0;
-    
-    const activeSubs = subscriptions.filter(s => s.status === 'Active');
-    
-    const targetCurrency = previewCurrency || currentCurrency;
-
-    debugLog('CURRENCY_AGGREGATION', 'Starting metrics calculation', { 
-        targetCurrency,
-        isPreview: !!previewCurrency,
-        activeSubCount: activeSubs.length 
-    });
-
-    activeSubs.forEach(sub => {
-      const rawPrice = typeof sub.price === 'string' ? parseFloat(sub.price) : sub.price;
-      const validPrice = isNaN(rawPrice) ? 0 : rawPrice;
-
-      const priceInTarget = convertAmount(validPrice, sub.currency || 'USD', targetCurrency);
-
-      if (sub.cycle === 'Monthly') {
-        monthlyTotal += priceInTarget;
-        yearlyTotalForecast += priceInTarget * 12;
-      } else {
-        monthlyTotal += priceInTarget / 12;
-        yearlyTotalForecast += priceInTarget;
-      }
-
-      if (sub.history && sub.history.length > 0) {
-          const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-          lifetimeSpend += convertAmount(historyTotal, sub.currency || 'USD', targetCurrency);
-      } else {
-          lifetimeSpend += priceInTarget; 
-      }
-    });
-
-    return {
-      monthlySpend: monthlyTotal,
-      activeCount: activeSubs.length,
-      yearlyForecast: yearlyTotalForecast,
-      lifetimeSpend: lifetimeSpend
-    };
-  }, [subscriptions, currentCurrency, previewCurrency]); 
+    if (previewCurrency) {
+        // If previewing a different currency, recalculate using aggregation utility
+        // This ensures the preview is mathematically consistent with the base logic
+        return calculateDerivedStats(subscriptions, previewCurrency);
+    }
+    // Default: Use the globally managed derived stats
+    return derivedStats;
+  }, [derivedStats, subscriptions, previewCurrency]);
 
   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -179,7 +134,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
   
   const [notifications, setNotifications] = useState([
-    { id: 1, text: `Welcome to SubscriptionHub, ${user.name}!`, time: "Just now", read: false, type: 'info' },
+    { id: 1, text: `Welcome to SubSense, ${user.name}!`, time: "Just now", read: false, type: 'info' },
   ]);
 
   const filteredSubscriptions = useMemo(() => {
@@ -198,7 +153,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (currentUser) {
       debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription in Firestore', updatedSub);
       await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
-      // Local state is updated via listener
+      trackEvent('subscription_edited', { category: updatedSub.category, currency: updatedSub.currency });
     }
   };
 
@@ -212,6 +167,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency) 
                 : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
             setTotalSaved(prev => prev + monthlyValueBase);
+            trackEvent('subscription_removed', { category: subToDelete.category });
         }
         await deleteSubscription(currentUser.uid, id);
         showToast(`Subscription removed.`);
@@ -223,6 +179,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     if (currentUser) {
         debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription to Firestore', newSub);
         await addSubscription(currentUser.uid, newSub);
+        trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
         setIsAddModalOpen(false);
         setCurrentView('dashboard');
     }
@@ -241,6 +198,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           const nextDate = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           
           await updateSubscription(currentUser.uid, id, { nextDate, history: newHistory });
+          trackEvent('mark_as_paid', { cycle: sub.cycle });
           showToast(`${sub.name} marked as paid.`);
       }
   };
@@ -251,7 +209,6 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  // Components Render... (Unchanged visual logic)
   const NotificationDropdown = () => (
     <div className="absolute right-0 top-12 w-80 bg-card rounded-2xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
        <div className="p-4 border-b border-subtle flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
@@ -304,7 +261,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const UpcomingTimeline = () => {
      const upcoming = [...subscriptions].sort((a,b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()).slice(0, 4);
 
-     if (upcoming.length === 0) {
+     if (upcoming.length === 0 && !subscriptionsLoading) {
         return (
             <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 text-center">
                 <h3 className="font-bold text-primary text-sm mb-2">{t('dashboard.upcoming')}</h3>
@@ -326,61 +283,61 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 {t('dashboard.view_calendar')}
             </button>
             </div>
-            <div className="space-y-4">
-            {upcoming.map((sub) => (
-                <div key={sub.id} className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                        <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
-                    </div>
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                        <div className="flex justify-between items-baseline mb-0.5">
-                        <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
-                        <span className="text-xs font-bold text-primary">
-                            {formatPrice(sub.price, sub.currency)}
-                        </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                        <span className="text-[10px] text-secondary">{sub.nextDate}</span>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
-                            {sub.status}
-                        </span>
-                        </div>
-                    </div>
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
-                        className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                        title="Mark as paid"
-                    >
-                        <CheckCircle2 size={16} />
-                    </button>
+            {subscriptionsLoading ? (
+                <div className="space-y-4">
+                    {[1,2,3].map(i => <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>)}
                 </div>
-            ))}
-            </div>
+            ) : (
+                <div className="space-y-4">
+                {upcoming.map((sub) => (
+                    <div key={sub.id} className="flex items-center gap-3 group">
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                            <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
+                        </div>
+                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
+                            <div className="flex justify-between items-baseline mb-0.5">
+                            <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
+                            <span className="text-xs font-bold text-primary">
+                                {formatPrice(sub.price, sub.currency)}
+                            </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                            <span className="text-[10px] text-secondary">{sub.nextDate}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
+                                {sub.status}
+                            </span>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
+                            className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            title="Mark as paid"
+                        >
+                            <CheckCircle2 size={16} />
+                        </button>
+                    </div>
+                ))}
+                </div>
+            )}
         </div>
      );
   };
 
   const ExpenseBreakdown = () => {
+     // Use derived breakdown logic from stats object to avoid drift
+     // Need to sort and map for chart
      const breakdown = useMemo(() => {
-        const cats: Record<string, number> = {};
-        let total = 0;
-        subscriptions.forEach(sub => {
-            const cat = sub.category || 'Other';
-            const priceInBase = convertAmount(sub.price, sub.currency, previewCurrency || currentCurrency);
-            const cost = sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12;
-            
-            cats[cat] = (cats[cat] || 0) + cost;
-            total += cost;
-        });
+        const cats = metrics.categoryBreakdown;
+        const total = metrics.monthlySpend;
         
         return Object.entries(cats)
-            .sort(([,a], [,b]) => b - a)
+            .sort(([,a], [,b]) => (b as number) - (a as number))
             .slice(0, 3)
             .map(([name, value]) => ({ 
                 name, 
-                percentage: total > 0 ? (value / total) * 100 : 0 
+                percentage: total > 0 ? ((value as number) / total) * 100 : 0 
             }));
-     }, [subscriptions, currentCurrency, previewCurrency]);
+     }, [metrics]);
 
      return (
         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">
@@ -388,7 +345,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             <PieChart size={16} className="text-muted" /> {t('dashboard.expense_breakdown')}
             </h3>
             
-            {breakdown.length === 0 ? (
+            {subscriptionsLoading ? (
+                <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full animate-pulse"></div>
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-2/3 animate-pulse"></div>
+                    </div>
+                </div>
+            ) : breakdown.length === 0 ? (
                 <div className="text-center py-4 text-xs text-muted">Add subscriptions to see stats.</div>
             ) : (
                 <div className="flex items-center gap-6">
@@ -461,7 +426,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <div className="mb-8 flex items-center justify-between relative">
                 <div>
                    <h1 className="text-2xl font-bold text-primary tracking-tight">{t('dashboard.title')}</h1>
-                   <p className="text-secondary text-sm mt-1">Welcome back, {user.name}.</p>
+                   <p className="text-secondary text-sm mt-1">
+                      {subscriptionsLoading 
+                        ? <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> {t('dashboard.syncing')}</span> 
+                        : t('dashboard.welcome').replace('{name}', user.name)}
+                   </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
@@ -498,8 +467,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <div data-tour="stats-cards">
                 <StatsCards 
                     monthly={metrics.monthlySpend} 
-                    active={metrics.activeCount} 
-                    forecast={metrics.yearlyForecast}
+                    active={metrics.totalSubscriptions} 
+                    forecast={metrics.annualSpend}
                     currencyCode={previewCurrency || currentCurrency} 
                 />
              </div>
@@ -523,18 +492,18 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                >
                                   {previewCurrency ? (
                                      <>
-                                        <Eye size={12} /> Preview: {previewCurrency}
+                                        <Eye size={12} /> {t('dashboard.preview_mode')}: {previewCurrency}
                                      </>
                                   ) : (
                                      <>
-                                        <EyeOff size={12} /> Preview Currency
+                                        <EyeOff size={12} /> {t('dashboard.preview_currency')}
                                      </>
                                   )}
                                </button>
 
                                {/* Tooltip */}
                                <div className="absolute left-0 bottom-full mb-2 w-56 p-3 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                  This is a display-only preview. Your subscriptions remain saved in their original currencies. No data is modified.
+                                  {t('dashboard.preview_tooltip')}
                                   <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900"></div>
                                </div>
 
@@ -545,7 +514,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                     <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
                                        <button 
                                           onClick={() => { setPreviewCurrency(null); setIsPreviewSelectorOpen(false); }}
-                                          className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'}`}
+                                          className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'} `}
                                        >
                                           Off (Original)
                                           {!previewCurrency && <CheckCircle2 size={12} />}
@@ -573,12 +542,35 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                       <CategoryFilters />
 
                       <div className="bg-card rounded-2xl border border-subtle shadow-sm overflow-hidden min-h-[400px]">
-                         <SubscriptionTable 
-                           subscriptions={filteredSubscriptions} 
-                           onSelectSubscription={setSelectedSub}
-                           onDeleteSubscription={handleSubDelete}
-                           previewCurrency={previewCurrency}
-                         />
+                         {subscriptionsLoading ? (
+                            <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center h-96">
+                                <Loader2 size={32} className="animate-spin mb-3 text-indigo-500" />
+                                <p className="text-sm font-medium">{t('dashboard.syncing')}</p>
+                            </div>
+                         ) : filteredSubscriptions.length === 0 ? (
+                            <div className="p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
+                                <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
+                                    <Plus size={32} className="text-gray-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('dashboard.empty_title')}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
+                                    {t('dashboard.empty_desc')}
+                                </p>
+                                <button 
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2"
+                                >
+                                    <Plus size={16} /> {t('dashboard.add_first')}
+                                </button>
+                            </div>
+                         ) : (
+                            <SubscriptionTable 
+                                subscriptions={filteredSubscriptions} 
+                                onSelectSubscription={setSelectedSub}
+                                onDeleteSubscription={handleSubDelete}
+                                previewCurrency={previewCurrency}
+                            />
+                         )}
                       </div>
                    </div>
                 </div>
@@ -590,34 +582,40 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              </div>
           </div>
         );
-      case 'friends': return <Friends />;
+      case 'friends': return <Suspense fallback={<LoadingFallback />}><Friends /></Suspense>;
       case 'analytics': return (
-        <Analytics 
-          subscriptions={subscriptions} 
-          budgetLimits={budgetLimits} 
-          setBudgetLimits={setBudgetLimits}
-          savingsGoal={savingsGoal}
-          setSavingsGoal={setSavingsGoal}
-          totalSaved={totalSaved}
-          lifetimeSpend={metrics.lifetimeSpend}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Analytics 
+            subscriptions={subscriptions} 
+            budgetLimits={budgetLimits} 
+            setBudgetLimits={setBudgetLimits}
+            savingsGoal={savingsGoal}
+            setSavingsGoal={setSavingsGoal}
+            totalSaved={totalSaved}
+            lifetimeSpend={metrics.lifetimeSpend}
+          />
+        </Suspense>
       );
-      case 'compare': return <Comparison />;
-      case 'discover': return <Discover />;
+      case 'compare': return <Suspense fallback={<LoadingFallback />}><Comparison /></Suspense>;
+      case 'discover': return <Suspense fallback={<LoadingFallback />}><Discover /></Suspense>;
       case 'settings': return (
-        <SettingsPage 
-          subscriptions={subscriptions} 
-          onUpdateSubscriptions={undefined /* Settings no longer directly updates subs state via prop in this arch, listeners do it */}
-          user={user}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <SettingsPage 
+            subscriptions={subscriptions} 
+            onUpdateSubscriptions={undefined}
+            user={user}
+          />
+        </Suspense>
       );
-      case 'help': return <HelpCenter />;
+      case 'help': return <Suspense fallback={<LoadingFallback />}><HelpCenter /></Suspense>;
       case 'profile': return (
-        <Profile 
-            user={user} 
-            subscriptions={subscriptions}
-            userKey={userKey}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <Profile 
+              user={user} 
+              subscriptions={subscriptions}
+              userKey={userKey}
+          />
+        </Suspense>
       );
       case 'subscriptions': return (
         <div className="space-y-6">
@@ -658,7 +656,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
              <button onClick={() => setIsMobileMenuOpen(true)} className="text-secondary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
                 <Menu size={24} />
              </button>
-             <span className="font-bold text-primary text-lg">SubscriptionHub</span>
+             <span className="font-bold text-primary text-lg">SubSense</span>
              <div className="flex items-center gap-2">
                {/* Mobile Currency Switch */}
                <button onClick={() => setIsCurrencyModalOpen(true)} className="text-primary p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">

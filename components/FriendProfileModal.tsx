@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { X, MapPin, MessageCircle, ArrowRight, Wallet, Calendar, Clock, Plus, Minus, Edit3, Share2 } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Friend } from './Friends';
 

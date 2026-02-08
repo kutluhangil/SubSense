@@ -7,91 +7,418 @@ import {
   updateDoc, 
   deleteDoc, 
   query, 
+  orderBy,
   onSnapshot, 
   getDoc,
-  Timestamp 
+  getDocs,
+  serverTimestamp,
+  increment,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
+import { validateSubscription } from './validateSubscription';
+import { trackEvent } from './analytics';
+
+// --- Types ---
+
+export interface SubscriptionPlan {
+  type: 'free' | 'pro';
+  status: 'active' | 'trial' | 'past_due' | 'canceled' | 'expired';
+  interval?: 'month' | 'year';
+  currentPeriodEnd?: any; // Firestore Timestamp or ISO string
+  cancelAtPeriodEnd?: boolean;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+}
+
+export interface UserProfileData {
+  uid: string;
+  email: string;
+  displayName: string | null;
+  createdAt: any;
+  termsAcceptedAt?: string;
+  preferences: {
+    language: string;
+    theme: string;
+    baseCurrency: string;
+    region: string;
+    analyticsOptOut?: boolean;
+  };
+  stats: {
+    totalSubscriptions: number;
+    monthlySpend: number;
+    annualSpend: number;
+  };
+  analytics?: {
+    lastActiveAt: any;
+    sessionCount: number;
+    signupDate: string;
+    churnRisk?: boolean;
+    featureUsage?: Record<string, number>;
+  };
+  plan: SubscriptionPlan;
+}
+
+// --- Local Fallback Logic ---
+
+const FALLBACK_KEY_PREFIX = 'subscriptionhub_fallback_';
+const fallbackEvents = new EventTarget();
+
+const getLocalData = <T>(key: string): T | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const setLocalData = (key: string, data: any) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    fallbackEvents.dispatchEvent(new CustomEvent('local-update', { detail: { key, data } }));
+  } catch (e) {
+    console.warn("Local storage save failed", e);
+  }
+};
 
 // --- User Management ---
 
-export const initializeUserDocument = async (uid: string, email: string) => {
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
+export const initializeUserDocument = async (
+  user: { uid: string; email: string | null; displayName: string | null }, 
+  additionalData?: { currency?: string; region?: string }
+): Promise<UserProfileData> => {
+  const localKey = `${FALLBACK_KEY_PREFIX}profile_${user.uid}`;
+  const now = new Date().toISOString();
+  
+  const newProfile: UserProfileData = {
+    uid: user.uid,
+    email: user.email || '',
+    displayName: user.displayName,
+    createdAt: now,
+    termsAcceptedAt: now,
+    preferences: {
+      baseCurrency: additionalData?.currency || 'USD',
+      language: 'en',
+      theme: 'system',
+      region: additionalData?.region || 'US',
+      analyticsOptOut: false
+    },
+    stats: {
+      totalSubscriptions: 0,
+      monthlySpend: 0,
+      annualSpend: 0
+    },
+    analytics: {
+      lastActiveAt: now,
+      sessionCount: 1,
+      signupDate: now,
+      featureUsage: {}
+    },
+    plan: {
+      type: 'free',
+      status: 'active'
+    }
+  };
 
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      email,
-      createdAt: Timestamp.now(),
-      settings: {
-        baseCurrency: 'USD',
-        language: 'en',
-        theme: 'system'
+  try {
+    if (!user.email) throw new Error("User email is required");
+
+    const userRef = doc(db, 'users', user.uid);
+    let userSnap;
+    
+    try {
+      userSnap = await getDoc(userRef);
+    } catch (e: any) {
+      if (e.code === 'permission-denied' || e.code === 'unavailable') {
+        console.debug("Firestore read denied/unavailable. Using local fallback for profile.");
+        trackEvent('system_fallback', { type: 'profile_read', reason: e.code });
+        const localProfile = getLocalData<UserProfileData>(localKey);
+        return localProfile || newProfile;
       }
-    });
+      throw e;
+    }
+
+    if (userSnap && userSnap.exists()) {
+      return userSnap.data() as UserProfileData;
+    }
+
+    try {
+      await setDoc(userRef, {
+        ...newProfile,
+        createdAt: serverTimestamp(),
+        'analytics.lastActiveAt': serverTimestamp()
+      });
+    } catch (e: any) {
+      if (e.code === 'permission-denied') {
+        console.info("Firestore write denied. Saving profile locally.");
+        trackEvent('system_fallback', { type: 'profile_write', reason: e.code });
+        setLocalData(localKey, newProfile);
+        return newProfile;
+      }
+      throw e;
+    }
+    
+    return newProfile;
+  } catch (error) {
+    console.error("Error initializing user document:", error);
+    setLocalData(localKey, newProfile);
+    return newProfile;
+  }
+};
+
+export const getUserDocument = async (uid: string): Promise<UserProfileData | null> => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      return snap.data() as UserProfileData;
+    }
+    return null;
+  } catch (error: any) {
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+       // Silent fallback for guest/unauthed
+       trackEvent('system_fallback', { type: 'profile_fetch', reason: error.code });
+       return getLocalData<UserProfileData>(`${FALLBACK_KEY_PREFIX}profile_${uid}`);
+    }
+    console.error("Error fetching user document:", error);
+    return null;
   }
 };
 
 export const updateUserSettings = async (uid: string, settings: any) => {
-  const userRef = doc(db, 'users', uid);
-  await setDoc(userRef, { settings }, { merge: true });
+  try {
+    const userRef = doc(db, 'users', uid);
+    await setDoc(userRef, { preferences: settings }, { merge: true });
+  } catch (error: any) {
+    if (error.code === 'permission-denied') {
+        const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
+        const current = getLocalData<UserProfileData>(localKey);
+        if (current) {
+            current.preferences = { ...current.preferences, ...settings };
+            setLocalData(localKey, current);
+        }
+    } else {
+        console.error("Error updating user settings:", error);
+    }
+  }
 };
 
-export const getUserSettings = async (uid: string) => {
-  const userRef = doc(db, 'users', uid);
-  const snap = await getDoc(userRef);
-  if (snap.exists()) {
-    return snap.data().settings;
+export const updateUserPlan = async (uid: string, planData: Partial<UserProfileData['plan']>) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { plan: planData });
+  } catch (error) {
+    console.error("Error updating plan:", error);
+    // Fallback for demo/local environment without write permissions to 'plan' specifically
+    const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
+    const current = getLocalData<UserProfileData>(localKey);
+    if (current) {
+       current.plan = { ...current.plan, ...planData };
+       setLocalData(localKey, current);
+    }
+    throw error;
   }
-  return null;
+};
+
+export const updateUserActivity = async (uid: string) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      'analytics.lastActiveAt': serverTimestamp(),
+      'analytics.sessionCount': increment(1)
+    });
+  } catch (error) {
+    // Fail silently
+  }
+};
+
+export const updateFeatureUsage = async (uid: string, feature: string) => {
+  if (typeof window !== 'undefined' && localStorage.getItem('analytics_opt_out') === 'true') return;
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, {
+      [`analytics.featureUsage.${feature}`]: increment(1)
+    });
+  } catch (error) {
+    // Fail silently
+  }
 };
 
 // --- Subscriptions ---
 
+export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
+  try {
+    const subsRef = collection(db, 'users', uid, 'subscriptions');
+    const snapshot = await getDocs(subsRef);
+    const subs: Subscription[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (validateSubscription(data as Partial<Subscription>)) {
+        subs.push({ id: doc.id, ...data } as unknown as Subscription);
+      }
+    });
+    return subs;
+  } catch (error: any) {
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+      trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code });
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const localSubs = getLocalData<Subscription[]>(localKey) || [];
+      return localSubs.filter(validateSubscription);
+    }
+    console.error("Error fetching subscriptions:", error);
+    return [];
+  }
+};
+
 export const addSubscription = async (uid: string, subscription: Omit<Subscription, 'id'>) => {
-  const subsRef = collection(db, 'users', uid, 'subscriptions');
-  await addDoc(subsRef, {
-    ...subscription,
-    createdAt: Timestamp.now()
-  });
+  if (!validateSubscription(subscription as Partial<Subscription>)) {
+    console.error("Attempted to add invalid subscription. Operation blocked.");
+    throw new Error("Invalid subscription data. Please check fields.");
+  }
+
+  try {
+    const subsRef = collection(db, 'users', uid, 'subscriptions');
+    await addDoc(subsRef, {
+      ...subscription,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    updateFeatureUsage(uid, 'subscription_added');
+  } catch (error: any) {
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+      console.info("Firestore write denied. Adding subscription locally.");
+      trackEvent('system_fallback', { type: 'sub_add', reason: error.code });
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
+      const newSub = { ...subscription, id: Date.now() } as Subscription;
+      setLocalData(localKey, [...currentSubs, newSub]);
+    } else {
+      console.error("Error adding subscription:", error);
+      throw error;
+    }
+  }
 };
 
 export const updateSubscription = async (uid: string, subId: number | string, data: Partial<Subscription>) => {
-  const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
-  // Remove id from data to avoid overwriting document ID field if it exists
-  const { id, ...updateData } = data as any;
-  await updateDoc(subRef, {
-    ...updateData,
-    updatedAt: Timestamp.now()
-  });
+  if (data.price !== undefined && (typeof data.price !== 'number' || data.price < 0)) throw new Error("Invalid price update");
+  if (data.currency && typeof data.currency !== 'string') throw new Error("Invalid currency update");
+
+  try {
+    if (typeof subId === 'number') {
+        throw { code: 'permission-denied' }; 
+    }
+    const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...updateData } = data as any;
+    
+    await updateDoc(subRef, {
+      ...updateData,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error: any) {
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+        trackEvent('system_fallback', { type: 'sub_update', reason: error.code });
+        const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+        const currentSubs = getLocalData<Subscription[]>(localKey) || [];
+        const updatedSubs = currentSubs.map(s => s.id == subId ? { ...s, ...data } : s);
+        setLocalData(localKey, updatedSubs);
+    } else {
+        console.error("Error updating subscription:", error);
+        throw error;
+    }
+  }
 };
 
 export const deleteSubscription = async (uid: string, subId: number | string) => {
-  const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
-  await deleteDoc(subRef);
+  try {
+    if (typeof subId === 'number') {
+        throw { code: 'permission-denied' };
+    }
+    const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
+    await deleteDoc(subRef);
+  } catch (error: any) {
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+        trackEvent('system_fallback', { type: 'sub_delete', reason: error.code });
+        const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+        const currentSubs = getLocalData<Subscription[]>(localKey) || [];
+        const filteredSubs = currentSubs.filter(s => s.id != subId);
+        setLocalData(localKey, filteredSubs);
+    } else {
+        console.error("Error deleting subscription:", error);
+        throw error;
+    }
+  }
 };
 
-export const subscribeToSubscriptions = (uid: string, callback: (subs: Subscription[]) => void) => {
-  const q = query(collection(db, 'users', uid, 'subscriptions'));
-  return onSnapshot(q, (snapshot) => {
-    const subs: Subscription[] = [];
-    snapshot.forEach((doc) => {
-      subs.push({ id: doc.id, ...doc.data() } as unknown as Subscription);
+export const listenToUserSubscriptions = (
+  uid: string, 
+  onChange: (subs: Subscription[]) => void,
+  onError?: (error: any) => void
+) => {
+  let unsubscribeFirestore = () => {};
+  
+  const handleLocalUpdate = (e: any) => {
+    if (e.detail && e.detail.key === `${FALLBACK_KEY_PREFIX}subs_${uid}`) {
+      const validSubs = (e.detail.data || []).filter(validateSubscription);
+      onChange(validSubs);
+    }
+  };
+
+  try {
+    const q = query(
+      collection(db, 'users', uid, 'subscriptions'),
+      orderBy('createdAt', 'desc')
+    );
+
+    unsubscribeFirestore = onSnapshot(q, (snapshot) => {
+      const subs: Subscription[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        if (validateSubscription(data as Partial<Subscription>)) {
+            subs.push({ id: doc.id, ...data } as unknown as Subscription);
+        }
+      });
+      onChange(subs);
+    }, (error) => {
+      if (error.code === 'permission-denied' || error.code === 'unavailable' || error.code === 'failed-precondition') {
+        console.debug("Firestore realtime connection denied/failed. Switching to local storage mode.");
+        trackEvent('system_fallback', { type: 'sub_listen', reason: error.code });
+        const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
+        onChange(localData.filter(validateSubscription));
+        fallbackEvents.addEventListener('local-update', handleLocalUpdate);
+      } else {
+        console.error("Firestore snapshot error:", error);
+        if (onError) onError(error);
+      }
     });
-    callback(subs);
-  });
+  } catch (error) {
+    console.error("Error setting up subscription listener:", error);
+    const localData = getLocalData<Subscription[]>(`${FALLBACK_KEY_PREFIX}subs_${uid}`) || [];
+    onChange(localData.filter(validateSubscription));
+    fallbackEvents.addEventListener('local-update', handleLocalUpdate);
+  }
+
+  return () => {
+    unsubscribeFirestore();
+    fallbackEvents.removeEventListener('local-update', handleLocalUpdate);
+  };
 };
 
-// --- Migration Tool ---
 export const migrateLocalData = async (uid: string, localSubs: Subscription[]) => {
   if (!localSubs || localSubs.length === 0) return;
   
-  const batchPromises = localSubs.map(sub => {
-    // Remove the numeric ID used locally, let Firestore generate one
-    const { id, ...rest } = sub;
-    return addSubscription(uid, rest);
+  const promises = localSubs.map(sub => {
+      if (validateSubscription(sub)) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id, ...rest } = sub;
+          return addSubscription(uid, rest);
+      }
+      return Promise.resolve();
   });
-
-  await Promise.all(batchPromises);
+  
+  await Promise.all(promises);
 };

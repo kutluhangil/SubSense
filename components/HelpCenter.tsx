@@ -1,13 +1,15 @@
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, PlayCircle, CreditCard, Globe, Users, PieChart, Settings, Mail, HelpCircle, AlertTriangle, ServerOff, Info, Shield, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import ContactSupportModal from './ContactSupportModal';
+import { useFeedback } from '../contexts/FeedbackContext';
 
 const BackgroundVisual = ({ categoryId }: { categoryId: string }) => {
   const commonClasses = "absolute inset-0 w-full h-full opacity-[0.08] dark:opacity-[0.05] pointer-events-none transition-all duration-700 ease-in-out";
   switch(categoryId) {
     case 'limitations':
+    case 'security':
       return (
         <svg className={commonClasses} viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
            <path d="M200 50 L350 350 L50 350 Z" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="10 5" />
@@ -37,6 +39,7 @@ export default function HelpCenter() {
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { t } = useLanguage();
+  const { openFeedback } = useFeedback();
 
   const CATEGORIES = useMemo(() => [
     { 
@@ -56,12 +59,12 @@ export default function HelpCenter() {
       description: t('help.cat.subs_desc')
     },
     { 
-      id: 'analytics', 
-      label: t('help.cat.analytics'), 
-      icon: PieChart, 
-      color: 'text-violet-600 dark:text-violet-400', 
-      bg: 'bg-violet-50 dark:bg-violet-900/20',
-      description: t('help.cat.analytics_desc')
+      id: 'security', 
+      label: t('settings.security'), 
+      icon: Shield, 
+      color: 'text-gray-700 dark:text-gray-300', 
+      bg: 'bg-gray-100 dark:bg-gray-800',
+      description: t('settings.privacy_visibility')
     },
     { 
       id: 'limitations', 
@@ -70,44 +73,22 @@ export default function HelpCenter() {
       color: 'text-amber-600 dark:text-amber-400', 
       bg: 'bg-amber-50 dark:bg-amber-900/20',
       description: t('help.cat.limitations_desc')
-    },
-    { 
-      id: 'compare', 
-      label: t('help.cat.compare'), 
-      icon: Globe, 
-      color: 'text-green-600 dark:text-green-400', 
-      bg: 'bg-green-50 dark:bg-green-900/20',
-      description: t('help.cat.compare_desc')
-    },
-    { 
-      id: 'social', 
-      label: t('help.cat.social'), 
-      icon: Users, 
-      color: 'text-orange-600 dark:text-orange-400', 
-      bg: 'bg-orange-50 dark:bg-orange-900/20',
-      description: t('help.cat.social_desc')
-    },
-    { 
-      id: 'settings', 
-      label: t('help.cat.settings'), 
-      icon: Settings, 
-      color: 'text-gray-600 dark:text-gray-400', 
-      bg: 'bg-gray-50 dark:bg-gray-700/50',
-      description: t('help.cat.settings_desc')
-    },
+    }
   ], [t]);
 
   const FAQS = useMemo(() => [
     { id: 'local-first', category: 'start', question: t('help.faq.local_first.q'), answer: t('help.faq.local_first.a') },
     { id: 'currency-region', category: 'start', question: t('help.faq.currency.q'), answer: t('help.faq.currency.a') },
-    { id: 'account-recovery', category: 'start', question: t('help.faq.account.q'), answer: t('help.faq.account.a') },
+    { id: 'free-pro', category: 'start', question: t('help.faq.free_pro.q'), answer: t('help.faq.free_pro.a') },
     
     // Limitations
     { id: 'limit-storage', category: 'limitations', question: t('help.faq.limit_storage.q'), answer: t('help.faq.limit_storage.a') },
-    { id: 'limit-currency', category: 'limitations', question: t('help.faq.limit_currency.q'), answer: t('help.faq.limit_currency.a') },
     { id: 'limit-support', category: 'limitations', question: t('help.faq.limit_support.q'), answer: t('help.faq.limit_support.a') },
     
-    // Add more mapped FAQs here if needed based on translation keys
+    // Security
+    { id: 'sec-ai', category: 'security', question: t('help.faq.ai_privacy.q'), answer: t('help.faq.ai_privacy.a') },
+    { id: 'account-sync', category: 'security', question: t('help.faq.account.q'), answer: t('help.faq.account.a') },
+    
   ], [t]);
 
   const toggleItem = (id: string) => {
@@ -193,15 +174,15 @@ export default function HelpCenter() {
            {/* Content */}
            <div className="lg:col-span-8 space-y-6">
               
-              {!searchQuery && (
+              {!searchQuery && activeCategoryData && (
                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden flex items-center justify-between">
                     <div className="relative z-10">
-                       <div className={`inline-flex p-3 rounded-xl mb-4 ${activeCategoryData?.bg}`}>
-                          {activeCategoryData && React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
+                       <div className={`inline-flex p-3 rounded-xl mb-4 ${activeCategoryData.bg}`}>
+                          {React.createElement(activeCategoryData.icon, { size: 24, className: activeCategoryData.color })}
                        </div>
-                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData?.label}</h2>
+                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{activeCategoryData.label}</h2>
                        <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                          {activeCategoryData?.description}
+                          {activeCategoryData.description}
                        </p>
                     </div>
                  </div>
@@ -234,6 +215,8 @@ export default function HelpCenter() {
                                 <div className="flex items-center gap-3">
                                    {faq.category === 'limitations' ? (
                                       <AlertTriangle size={18} className="text-amber-500 dark:text-amber-400" />
+                                   ) : faq.category === 'security' ? (
+                                      <Shield size={18} className="text-gray-500 dark:text-gray-400" />
                                    ) : (
                                       <HelpCircle size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-blue-500 transition-colors" />
                                    )}
@@ -283,7 +266,14 @@ export default function HelpCenter() {
                        <h3 className="text-xl font-bold mb-2">{t('help.report')}</h3>
                        <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know.</p>
                     </div>
-                    <div>
+                    <div className="flex gap-3">
+                       <button 
+                         onClick={() => openFeedback('help_center')}
+                         className="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 w-full sm:w-auto border border-white/20"
+                       >
+                          <MessageSquare size={18} />
+                          <span>Send Feedback</span>
+                       </button>
                        <button 
                          onClick={() => setIsContactModalOpen(true)}
                          className="flex items-center justify-center space-x-2 bg-white text-gray-900 px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-all shadow-md active:scale-95 w-full sm:w-auto"

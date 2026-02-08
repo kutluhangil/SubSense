@@ -4,7 +4,8 @@ import { translations, LanguageCode } from '../utils/translations';
 import { CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 import { useAuth } from './AuthContext';
-import { getUserSettings, updateUserSettings } from '../utils/firestore';
+import { updateUserSettings } from '../utils/firestore';
+import { trackEvent } from '../utils/analytics';
 
 export type ThemeOption = 'light' | 'dark' | 'system';
 
@@ -25,20 +26,23 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
-  // --- Local States (Initialized from LocalStorage fallback) ---
+  // --- Local States (Initialized from LocalStorage fallback for guests/initial load) ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
+    if (typeof window === 'undefined') return 'en';
     const saved = localStorage.getItem('userLanguagePreference');
     return (saved === 'en' || saved === 'tr') ? saved : 'en';
   });
 
   const [currentCurrency, setCurrentCurrency] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'USD';
     const saved = localStorage.getItem('userCurrencyPreference');
     return saved || 'USD';
   });
 
   const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
+    if (typeof window === 'undefined') return 'system';
     const saved = localStorage.getItem('userThemePreference');
     return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
   });
@@ -46,22 +50,23 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const dir = (currentLanguage as string) === 'ar' ? 'rtl' : 'ltr';
 
-  // --- Sync with Firestore on Login ---
+  // --- Sync with Firestore Profile (Hydration) ---
   useEffect(() => {
-    if (currentUser) {
-      getUserSettings(currentUser.uid).then(settings => {
-        if (settings) {
-          if (settings.language) setCurrentLanguage(settings.language);
-          if (settings.baseCurrency) setCurrentCurrency(settings.baseCurrency);
-          if (settings.theme) setCurrentTheme(settings.theme);
-        }
-      });
+    if (userProfile && userProfile.preferences) {
+      const { language, theme, baseCurrency } = userProfile.preferences;
+      
+      // Firestore is the source of truth when logged in
+      if (language && language !== currentLanguage) setCurrentLanguage(language as LanguageCode);
+      if (baseCurrency && baseCurrency !== currentCurrency) setCurrentCurrency(baseCurrency);
+      if (theme && theme !== currentTheme) setCurrentTheme(theme as ThemeOption);
     }
-  }, [currentUser]);
+  }, [userProfile]);
 
   // --- Persist Changes ---
   
   const persistSettings = (updates: any) => {
+    if (typeof window === 'undefined') return;
+    
     // Local persistence for fallback/guest
     if (updates.language) localStorage.setItem('userLanguagePreference', updates.language);
     if (updates.baseCurrency) localStorage.setItem('userCurrencyPreference', updates.baseCurrency);
@@ -78,6 +83,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     document.documentElement.lang = currentLanguage;
     document.documentElement.dir = dir;
   }, [currentLanguage, dir]);
@@ -88,6 +94,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Apply Theme
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const applyTheme = () => {
       const isDark = 
         currentTheme === 'dark' || 
@@ -131,11 +138,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCurrentCurrency(curr);
     persistSettings({ baseCurrency: curr });
     showToast(`Base Currency changed to ${curr}`);
+    trackEvent('currency_changed', { to_currency: curr });
   };
 
   const handleSetTheme = (theme: ThemeOption) => {
     setCurrentTheme(theme);
     persistSettings({ theme: theme });
+    trackEvent('theme_changed', { theme: theme });
   };
 
   const t = (key: string): string => {

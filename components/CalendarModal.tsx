@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { X, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Download } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
 

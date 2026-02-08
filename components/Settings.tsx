@@ -1,10 +1,15 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency'; 
 import { User } from '../App';
+import { useFeedback } from '../contexts/FeedbackContext'; 
+import { updateUserSettings } from '../utils/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import UpgradeModal from './UpgradeModal';
+import { createPortalSession } from '../utils/stripe';
 
 interface SettingsProps {
   subscriptions?: Subscription[];
@@ -14,7 +19,10 @@ interface SettingsProps {
 
 export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
   const { t, currentCurrency, setCurrency } = useLanguage();
+  const { currentUser, userProfile, isPro } = useAuth();
   const [showToast, setShowToast] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const { openFeedback } = useFeedback(); 
 
   const handleExportCSV = () => {
     const headers = ["Name", "Category", "Price", "Currency", "Billing Cycle", "Next Payment", "Status"];
@@ -37,7 +45,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "subscription_hub_export.csv");
+    link.setAttribute("download", "subsense_export.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -50,20 +58,40 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
   };
 
   const handleCurrencyChange = (newCurrency: string) => {
-    // 1. Update Global Context & Persistence (Firestore)
     setCurrency(newCurrency);
-
-    // 2. Update Local State for immediate UI feedback if passed
     if (onUpdateSubscriptions) {
         onUpdateSubscriptions(prev => prev.map(sub => ({
             ...sub,
             currency: newCurrency
         })));
     }
-
-    // 3. Show Feedback
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleAnalyticsOptOut = (optOut: boolean) => {
+      localStorage.setItem('analytics_opt_out', String(optOut));
+      if (currentUser) {
+          updateUserSettings(currentUser.uid, { analyticsOptOut: optOut });
+      }
+  };
+
+  const handleManageSubscription = async () => {
+      await createPortalSession();
+  };
+
+  // Helper to format subscription dates safely
+  const getRenewalDate = () => {
+      if (!userProfile?.plan?.currentPeriodEnd) return "Unknown";
+      try {
+          // Handle both Firestore Timestamp and ISO string
+          const date = typeof userProfile.plan.currentPeriodEnd === 'string' 
+            ? new Date(userProfile.plan.currentPeriodEnd) 
+            : userProfile.plan.currentPeriodEnd.toDate();
+          return date.toLocaleDateString();
+      } catch (e) {
+          return "Unknown";
+      }
   };
 
   return (
@@ -79,7 +107,58 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
         
         <div className="xl:col-span-2 space-y-8">
             
-            {/* Currency & Localization */}
+            {/* Subscription Plan Card */}
+            <div className={`rounded-2xl border shadow-sm overflow-hidden ${isPro ? 'bg-gradient-to-r from-indigo-900 to-purple-900 border-indigo-700' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}>
+                <div className={`px-6 py-4 border-b flex items-center gap-3 ${isPro ? 'border-indigo-700/50 bg-black/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30'}`}>
+                    <CreditCard className={isPro ? 'text-indigo-300' : 'text-gray-400'} size={20} />
+                    <h3 className={`text-base font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Subscription Plan</h3>
+                </div>
+                <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h4 className={`text-lg font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                                    {isPro ? 'Pro Plan' : 'Free Plan'}
+                                </h4>
+                                {isPro && (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${userProfile?.plan?.status === 'trial' ? 'bg-blue-400 text-white' : 'bg-yellow-400 text-black'}`}>
+                                        {userProfile?.plan?.status === 'trial' ? 'TRIAL' : 'ACTIVE'}
+                                    </span>
+                                )}
+                            </div>
+                            <p className={`text-sm ${isPro ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {isPro 
+                                    ? `Next billing: ${getRenewalDate()} (${userProfile?.plan?.interval || 'month'}ly)` 
+                                    : 'Upgrade to unlock advanced AI insights.'
+                                }
+                            </p>
+                        </div>
+                        {isPro ? (
+                            <button 
+                                onClick={handleManageSubscription}
+                                className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors flex items-center gap-2"
+                            >
+                                Manage <ExternalLink size={14} />
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={() => setIsUpgradeOpen(true)}
+                                className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 px-5 py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
+                            >
+                                Upgrade <Star size={14} className="fill-current" />
+                            </button>
+                        )}
+                    </div>
+                    {isPro && userProfile?.plan?.cancelAtPeriodEnd && (
+                        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl text-xs text-white flex items-center gap-2">
+                            <Calendar size={14} />
+                            Your subscription will end on {getRenewalDate()}.
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Currency & Preferences */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                     <DollarSign className="text-gray-400" size={20} />
@@ -107,17 +186,16 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             </div>
                          </div>
                          
-                         {/* Important Note */}
                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
                             <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
-                                <strong>Note:</strong> Changing your base currency will update how all subscription prices are displayed and calculated across the app. 
-                                This does not convert prices using exchange rates — it only changes the currency used for your subscriptions.
+                                <strong>Note:</strong> Changing your base currency will update how all subscription prices are displayed and calculated.
                             </p>
                          </div>
                     </div>
                 </div>
             </div>
 
+            {/* AI Settings */}
             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 shadow-sm overflow-hidden">
                  <div className="px-6 py-4 border-b border-indigo-100/50 dark:border-indigo-800/50 flex items-center gap-3">
                     <Zap className="text-indigo-600 dark:text-indigo-400" size={20} />
@@ -134,18 +212,6 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                          <Toggle id="smart_suggestions" defaultChecked color="bg-indigo-600" />
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                         <div>
-                            <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-200">{t('settings.focus_area')}</h4>
-                            <p className="text-xs text-indigo-700/60 dark:text-indigo-300/60">{t('settings.focus_area_desc')}</p>
-                         </div>
-                         <select className="bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs font-semibold rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer">
-                            <option>Budget Saving</option>
-                            <option>Global Comparison</option>
-                            <option>Social Trends</option>
-                         </select>
-                    </div>
-
                     <div className="flex items-start gap-3 p-3 bg-white/60 dark:bg-gray-900/30 rounded-xl border border-indigo-100 dark:border-indigo-800/50">
                         <div className="flex h-5 items-center mt-0.5">
                             <input type="checkbox" id="train-ai" className="text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer" defaultChecked />
@@ -157,6 +223,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                 </div>
             </div>
 
+            {/* Notifications */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                     <Bell className="text-gray-400" size={20} />
@@ -177,13 +244,6 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                         </div>
                         <Toggle id="notify_price" defaultChecked />
                     </div>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('settings.weekly_digest')}</h4>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Summary via email</p>
-                        </div>
-                        <Toggle id="notify_digest" />
-                    </div>
                 </div>
             </div>
 
@@ -191,6 +251,27 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
 
         <div className="space-y-8">
             
+            {/* Feedback & Beta */}
+            <div className="bg-gray-900 dark:bg-blue-600 rounded-2xl shadow-lg shadow-gray-900/20 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-12 bg-white/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 group-hover:bg-white/10 transition-colors"></div>
+                <div className="p-6 text-white relative z-10">
+                    <div className="flex items-center gap-3 mb-3">
+                        <MessageSquare size={20} className="text-white/80" />
+                        <h3 className="font-bold">Beta Feedback</h3>
+                    </div>
+                    <p className="text-sm text-white/70 mb-6 leading-relaxed">
+                        Notice a bug or have a feature idea? Help us shape the future of SubSense.
+                    </p>
+                    <button 
+                        onClick={() => openFeedback('settings')}
+                        className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm"
+                    >
+                        Give Feedback
+                    </button>
+                </div>
+            </div>
+
+            {/* Privacy */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                     <Eye className="text-gray-400" size={20} />
@@ -199,17 +280,6 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                 <div className="p-6 space-y-6">
                     <div className="space-y-4">
                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Globe size={16} className="text-gray-400" />
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">Profile Visibility</span>
-                            </div>
-                            <select className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-xs font-medium rounded-lg px-2 py-1 focus:outline-none cursor-pointer">
-                                <option>Public</option>
-                                <option>Friends Only</option>
-                                <option>Private</option>
-                            </select>
-                         </div>
-                         <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-6">{t('settings.show_stats')}</span>
                             <Toggle id="priv_stats" defaultChecked />
                          </div>
@@ -217,23 +287,39 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-6">{t('settings.show_subs')}</span>
                             <Toggle id="priv_subs" defaultChecked />
                          </div>
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-6">{t('settings.allow_requests')}</span>
-                            <Toggle id="priv_requests" defaultChecked />
-                         </div>
                     </div>
                 </div>
             </div>
 
+            {/* Analytics Opt-Out */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+                    <BarChart className="text-gray-400" size={20} />
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white">Analytics</h3>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">Share Usage Data</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">Help us improve features by sharing anonymous usage stats.</p>
+                        </div>
+                        {/* Logic inverted: Toggle ON means Allow (not opt-out) */}
+                        <Toggle 
+                            id="allow_analytics" 
+                            defaultChecked={!userProfile?.preferences?.analyticsOptOut} 
+                            onChange={(checked) => handleAnalyticsOptOut(!checked)}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Data */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                     <FileText className="text-gray-400" size={20} />
                     <h3 className="text-base font-bold text-gray-900 dark:text-white">Data & Export</h3>
                 </div>
                 <div className="p-6 space-y-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                       Download a copy of your subscription data for your personal records or for use in other applications.
-                    </p>
                     <button 
                       onClick={handleExportCSV}
                       className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 py-2.5 rounded-xl transition-colors"
@@ -243,37 +329,13 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                 </div>
             </div>
 
+            {/* Security */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                     <Shield className="text-gray-400" size={20} />
                     <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.security')}</h3>
                 </div>
                 <div className="p-6 space-y-6">
-                    <div>
-                        <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wide mb-3">{t('settings.recent_activity')}</h4>
-                        <div className="space-y-3">
-                             <div className="flex items-center justify-between text-xs p-3 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-100 dark:border-gray-600">
-                                 <div className="flex items-center gap-3">
-                                     <Monitor size={14} className="text-gray-400" />
-                                     <div>
-                                         <p className="font-semibold text-gray-900 dark:text-white">Chrome on Windows</p>
-                                         <p className="text-gray-500 dark:text-gray-400">New York, USA • Active now</p>
-                                     </div>
-                                 </div>
-                                 <span className="text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-md border border-green-100 dark:border-green-800">Current</span>
-                             </div>
-                             <div className="flex items-center justify-between text-xs p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-                                 <div className="flex items-center gap-3">
-                                     <Smartphone size={14} className="text-gray-400" />
-                                     <div>
-                                         <p className="font-semibold text-gray-900 dark:text-white">iPhone 13 App</p>
-                                         <p className="text-gray-500 dark:text-gray-400">New York, USA • 2h ago</p>
-                                     </div>
-                                 </div>
-                             </div>
-                        </div>
-                    </div>
-                    
                     <button 
                         onClick={handleLogoutAll}
                         className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 py-2.5 rounded-xl transition-colors"
@@ -291,15 +353,16 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
       {showToast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 animate-in slide-in-from-bottom-4 fade-in">
             <CheckCircle2 size={18} className="text-green-400 dark:text-green-600" />
-            <span className="font-medium text-sm">Base currency updated successfully.</span>
+            <span className="font-medium text-sm">Settings updated successfully.</span>
         </div>
       )}
+      
+      <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
     </div>
   );
 }
 
-const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-600" }: { id: string, defaultChecked?: boolean, color?: string }) => {
-  // Initialize state from localStorage or default
+const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-600", onChange }: { id: string, defaultChecked?: boolean, color?: string, onChange?: (val: boolean) => void }) => {
   const [enabled, setEnabled] = useState(() => {
       const saved = localStorage.getItem(`setting_${id}`);
       return saved !== null ? JSON.parse(saved) : defaultChecked;
@@ -309,6 +372,7 @@ const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-
       const newVal = !enabled;
       setEnabled(newVal);
       localStorage.setItem(`setting_${id}`, JSON.stringify(newVal));
+      if (onChange) onChange(newVal);
   };
 
   return (

@@ -2,76 +2,138 @@
 import { GoogleGenAI } from "@google/genai";
 import { convertAmount } from "./currency";
 import { debugLog } from "./debug";
+import { Subscription } from "../components/SubscriptionModal";
+import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get API Key in Vite environment
+const getApiKey = () => {
+  // 1. Try Vite standard (import.meta.env)
+  // Cast to any to safely access properties if types are missing
+  const meta = import.meta as any;
+  if (typeof meta !== 'undefined' && meta.env && meta.env.VITE_GEMINI_API_KEY) {
+    return meta.env.VITE_GEMINI_API_KEY;
+  }
+  // 2. Try process.env safely (for legacy/test envs)
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore ReferenceError
+  }
+  return '';
+};
+
+// Initialize lazily to prevent module-level crash if key is missing
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!aiInstance) {
+    const key = getApiKey();
+    if (key) {
+      aiInstance = new GoogleGenAI({ apiKey: key });
+    } else {
+      console.warn("Gemini API Key missing. AI features will be disabled.");
+    }
+  }
+  return aiInstance;
+};
+
+// Type definition for the structured insight
+export interface AIInsight {
+  type: 'redundancy' | 'optimization' | 'general';
+  title: string;
+  description: string;
+  estimatedSavings: string; // e.g. "$120/yr"
+}
+
+// Simple in-memory cache for the session
+let cachedInsights: { key: string; data: AIInsight[] } | null = null;
 
 /**
- * Prepares a strictly typed and converted payload for Gemini.
- * Ensures the AI never guesses exchange rates.
+ * Prepares a strictly typed, validated, and sanitized payload for Gemini.
  */
-const prepareGeminiPayload = (subscriptions: any[], baseCurrency: string) => {
-  const convertedSubs = subscriptions.map(s => {
-    const originalCost = s.price;
-    const convertedCost = convertAmount(s.price, s.currency, baseCurrency);
-    
-    // Normalize to monthly cost for fair comparison
-    const monthlyCost = s.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
+const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: string) => {
+  const validSubs = subscriptions.filter(validateSubscription);
+
+  const convertedSubs = validSubs.map(s => {
+    const safeSub = sanitizeForAI(s);
+    // Standardize to monthly for analysis
+    const convertedCost = convertAmount(safeSub.price, safeSub.currency, baseCurrency);
+    const monthlyCost = safeSub.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
 
     return {
-      name: s.name,
-      originalCost: `${originalCost} ${s.currency}`,
-      convertedMonthlyCost: parseFloat(monthlyCost.toFixed(2)),
-      billingCycle: s.cycle,
-      category: s.category || 'Uncategorized'
+      name: safeSub.name,
+      category: safeSub.category,
+      billingCycle: safeSub.cycle,
+      costInBaseCurrency: parseFloat(monthlyCost.toFixed(2))
     };
   });
 
-  const totalMonthly = convertedSubs.reduce((acc, s) => acc + s.convertedMonthlyCost, 0);
-  const totalYearly = totalMonthly * 12;
-
   return {
-    baseCurrency,
-    subscriptions: convertedSubs,
-    totals: {
-      monthly: parseFloat(totalMonthly.toFixed(2)),
-      yearly: parseFloat(totalYearly.toFixed(2))
-    }
+    userBaseCurrency: baseCurrency,
+    subscriptions: convertedSubs
   };
 };
 
-export const generateDashboardInsights = async (subscriptions: any[], baseCurrency: string = 'USD', languageCode: string = 'en') => {
+export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en'): Promise<AIInsight[]> => {
+  const ai = getAI();
+  if (!ai) return [];
+
   try {
-    debugLog('AI_LANG', `Generating insights in: ${languageCode}`);
+    // 1. Cache Check
+    const totalValue = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
+    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v2`;
+
+    if (cachedInsights && cachedInsights.key === cacheKey) {
+        debugLog('AI_LANG', 'Returning cached insights');
+        return cachedInsights.data;
+    }
+
+    debugLog('AI_LANG', `Generating strict MVP insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
     
-    // Define language rules based on input code
+    // Strict language instruction
     const langInstruction = languageCode === 'tr' 
-      ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output must be strictly in Turkish."
-      : "OUTPUT LANGUAGE: ENGLISH. Output must be strictly in English.";
+      ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output values must be in Turkish context."
+      : "OUTPUT LANGUAGE: ENGLISH.";
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
-      CONTEXT:
-      You are a financial analyst for a subscription manager app.
+      ROLE: You are a conservative Financial Optimization Engine.
       
-      CRITICAL INSTRUCTIONS:
-      1. ${langInstruction}
-      2. The user's primary currency is ${baseCurrency}. All 'convertedMonthlyCost' values are ALREADY converted to ${baseCurrency}. Do NOT convert yourself.
+      GOAL: Analyze subscriptions to find SPECIFIC savings based on 2 logic patterns only.
+      
+      PATTERNS TO DETECT:
+      1. REDUNDANCY: Multiple active subscriptions in the same narrow category (e.g., 2 Music apps, 2 Video Streaming apps).
+      2. CYCLE OPTIMIZATION: Monthly subscriptions > 10 ${baseCurrency} where switching to Yearly typically saves ~15-20%.
+      
+      CONSTRAINTS:
+      - DO NOT speculate on Foreign Exchange (FX) rates.
+      - DO NOT predict inflation or price hikes.
+      - DO NOT make up generic advice like "Stop spending money".
+      - Use conservative language: "Estimated", "Potential", "Typically".
+      - MAX 2 INSIGHTS total.
+      
+      ${langInstruction}
       
       DATA:
       ${JSON.stringify(payload, null, 2)}
       
-      TASK:
-      Provide 3 short, high-value financial insights based on the data above.
-      
-      RULES:
-      1. Speak ONLY in the target language (${languageCode === 'tr' ? 'Turkish' : 'English'}).
-      2. Focus on:
-         - Top spending categories.
-         - Annual savings opportunities.
-         - Anomalies.
-      3. Output strict JSON array of strings. No markdown.
+      OUTPUT FORMAT:
+      Return a JSON object with a key "insights" containing an array of objects.
+      Schema:
+      {
+        "insights": [
+          {
+            "type": "redundancy" | "optimization",
+            "title": "Short Headline (Max 40 chars)",
+            "description": "1 sentence explanation.",
+            "estimatedSavings": "String with currency symbol, e.g. '$24/yr' or 'None'"
+          }
+        ]
+      }
       `,
       config: {
         responseMimeType: 'application/json',
@@ -80,104 +142,63 @@ export const generateDashboardInsights = async (subscriptions: any[], baseCurren
 
     const text = response.text;
     if (!text) return [];
-    return JSON.parse(text);
+    
+    const resultObj = JSON.parse(text);
+    const results: AIInsight[] = resultObj.insights || [];
+    
+    // Update cache
+    cachedInsights = { key: cacheKey, data: results };
+    
+    return results;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    // Return localized fallbacks
-    if (languageCode === 'tr') {
-        return [
-            "Tasarruf etmek için harcama alışkanlıklarınızı inceleyin.",
-            "Kullanılmayan abonelikleri iptal etmeyi düşünün.",
-            "Uzun vadeli servisler için yıllık faturalandırmayı değerlendirin."
-        ];
-    }
-    return [
-      "Analyze your spending patterns to find savings.",
-      "Check for unused subscriptions to cancel.",
-      "Consider annual billing for long-term services."
+    // Fallback static insights
+    const fallback: AIInsight[] = languageCode === 'tr' ? [
+        { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
+    ] : [
+        { type: 'optimization', title: 'Switch to Annual', description: 'Switching monthly plans to yearly often saves ~20%.', estimatedSavings: 'Est. 20%' }
     ];
+    return fallback;
   }
 };
 
 export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
+  const ai = getAI();
+  if (!ai) return "I'm currently offline or misconfigured. Please try again later.";
+
+  // Existing chat logic remains, but leveraging the same conservative persona
   try {
     debugLog('AI_LANG', `Chat request in: ${languageCode}`);
     const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
 
-    // Strict Language & Terminology Rules
-    let languageRules = "";
-    if (languageCode === 'tr') {
-        languageRules = `
-        CRITICAL LANGUAGE RULE: TURKISH (Türkçe).
-        You MUST respond in Turkish only. Do NOT use English.
-        
-        TERMINOLOGY MAPPING (Use exact terms):
-        - Dashboard -> Panel
-        - Subscription -> Abonelik
-        - Settings -> Ayarlar
-        - Analytics -> Analizler
-        - Compare -> Karşılaştır
-        - Help Center -> Yardım Merkezi
-        
-        TONE:
-        - Professional, helpful, natural Turkish.
-        - Not robotic translation.
-        `;
-    } else {
-        languageRules = `
-        CRITICAL LANGUAGE RULE: ENGLISH.
-        You MUST respond in English only.
-        
-        TONE:
-        - Professional, helpful, concise.
-        `;
-    }
+    let languageRules = languageCode === 'tr' ? "RESPOND IN TURKISH ONLY." : "RESPOND IN ENGLISH ONLY.";
 
     const systemInstruction = `
-    ROLE:
-    You are SubscriptionHub AI, a smart financial companion embedded in a local-first subscription tracking app.
-    
+    ROLE: SubscriptionHub AI Assistant.
     ${languageRules}
     
-    STRICT LIMITATIONS (Must respect these):
-    - NO real-time bank synchronization exists.
-    - NO cloud backup exists (data is local).
-    - NO live human support agents are available.
-    - NO real-time currency exchange trading (rates are reference only).
+    TONE: Professional, concise, data-driven.
     
-    CURRENCY CONTEXT:
-    - User base currency: ${payload.baseCurrency}
-    - All values in context are already converted to ${payload.baseCurrency}.
-    - Do not perform currency conversion math yourself.
+    LIMITATIONS:
+    - You cannot access real-time bank data.
+    - You cannot predict future exchange rates.
     
-    CONTEXT DATA:
+    CONTEXT:
     ${JSON.stringify(payload)}
     
-    BEHAVIOR:
-    1. Answer user questions about their spending, data, or app features.
-    2. If asked about unavailable features (bank sync, cloud), explain politely that this is a local-first MVP app.
-    3. Keep answers short and relevant.
+    GOAL: Help the user understand their spending patterns based ONLY on the provided context.
     `;
 
     const chat = ai.chats.create({
       model: 'gemini-3-pro-preview',
-      config: {
-        systemInstruction: systemInstruction,
-      },
+      config: { systemInstruction },
       history: history
     });
 
     const result = await chat.sendMessage({ message: userMessage });
-    
-    // Safety check (logging only)
-    debugLog('AI_LANG', `Response generated.`, { text: result.text?.substring(0, 50) + "..." });
-    
     return result.text;
   } catch (error) {
     console.error("Gemini Chat Error:", error);
-    if (languageCode === 'tr') {
-        return "Şu anda zeka katmanıma bağlanmakta sorun yaşıyorum. Lütfen birazdan tekrar deneyin.";
-    }
-    return "I'm having trouble connecting to my intelligence layer right now. Please try again in a moment.";
+    return "I'm having trouble connecting to my intelligence layer right now.";
   }
 };

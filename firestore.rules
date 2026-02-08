@@ -1,0 +1,46 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      
+      // Allow update ONLY if NOT modifying the 'plan' object (Subscription status)
+      // This prevents users from manually setting themselves to 'pro' via client SDK
+      allow update: if isOwner(userId) 
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
+        
+      // Allow create (initial signup)
+      allow create: if isOwner(userId);
+      
+      // SUBSCRIPTIONS SUB-COLLECTION (User's tracked items)
+      match /subscriptions/{subscriptionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if false; 
+    }
+    
+    match /beta_feedback/{feedbackId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
