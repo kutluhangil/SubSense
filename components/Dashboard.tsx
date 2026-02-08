@@ -420,7 +420,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                      <ArrowRight size={16} className="rotate-180" /> Back to Dashboard
                   </button>
                </div>
-               <SubscriptionSearchPanel onAddSubscription={handleAddSubscription} />
+               <SubscriptionSearchPanel
+                  onAddSubscription={handleAddSubscription}
+                  existingSubscriptions={subscriptions}
+                  onGoToDashboard={() => { setIsAddModalOpen(false); setCurrentView('dashboard'); }}
+               />
             </div>
          );
       }

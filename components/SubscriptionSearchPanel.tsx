@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, Mic, Plus, PenTool } from 'lucide-react';
 import FloatingLogoLayer from './FloatingLogoLayer';
 import AddSubscriptionModal from './AddSubscriptionModal';
+import DuplicateSubscriptionModal from './DuplicateSubscriptionModal';
 import { BrandIcon } from './BrandIcon';
 import { LogoRenderer } from './LogoRenderer'; // Import
 import { getBrandLogo } from '../utils/logoUtils'; // Import
@@ -10,14 +11,18 @@ import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail, BRAND_COLO
 import { Subscription } from './SubscriptionModal';
 import { useFeedback } from '../contexts/FeedbackContext';
 
+
 interface SubscriptionSearchPanelProps {
    onAddSubscription: (service: Subscription) => void;
+   existingSubscriptions: Subscription[];
+   onGoToDashboard: () => void;
 }
 
-export default function SubscriptionSearchPanel({ onAddSubscription }: SubscriptionSearchPanelProps) {
+export default function SubscriptionSearchPanel({ onAddSubscription, existingSubscriptions, onGoToDashboard }: SubscriptionSearchPanelProps) {
    const { t } = useLanguage();
    const [searchTerm, setSearchTerm] = useState('');
    const [selectedService, setSelectedService] = useState<SubscriptionDetail | null>(null);
+   const [duplicateService, setDuplicateService] = useState<string | null>(null);
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [showToast, setShowToast] = useState(false);
    const { triggerMicroFeedback } = useFeedback();
@@ -30,7 +35,17 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
    }, [searchTerm]);
 
    const handleSelect = (serviceName: string) => {
-      // Look up detailed info, or create a basic fallback
+      // 1. Check for duplicates
+      const isDuplicate = existingSubscriptions.some(sub =>
+         sub.name.toLowerCase() === serviceName.toLowerCase()
+      );
+
+      if (isDuplicate) {
+         setDuplicateService(serviceName);
+         return;
+      }
+
+      // 2. Look up detailed info, or create a basic fallback
       const key = serviceName.toLowerCase();
       const detail = Object.values(SUBSCRIPTION_CATALOG).find(s => s.name.toLowerCase() === key || s.id === key) || {
          id: key,
@@ -178,6 +193,14 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
             onClose={() => setIsModalOpen(false)}
             service={selectedService}
             onAdd={handleConfirmAdd}
+         />
+
+         {/* Duplicate Warning Modal */}
+         <DuplicateSubscriptionModal
+            isOpen={!!duplicateService}
+            onClose={() => setDuplicateService(null)}
+            serviceName={duplicateService || ''}
+            onGoToDashboard={onGoToDashboard}
          />
 
          {/* Toast Notification */}
