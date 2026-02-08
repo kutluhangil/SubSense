@@ -264,24 +264,17 @@ export const updateAchievements = async (uid: string, achievements: string[]) =>
 
 export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
   try {
-    const subsRef = collection(db, 'users', uid, 'subscriptions');
-    const snapshot = await getDocs(subsRef);
-    const subs: Subscription[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      if (validateSubscription(data as Partial<Subscription>)) {
-        subs.push({ id: doc.id, ...data } as unknown as Subscription);
-      }
-    });
+    // Standardized API call
+    const subs = await api.get<Subscription[]>('/subscriptions');
     return subs;
   } catch (error: any) {
-    if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code });
+    if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message.includes('auth')) {
+      trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code || 'auth_error' });
       const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
       const localSubs = getLocalData<Subscription[]>(localKey) || [];
       return localSubs.filter(validateSubscription);
     }
-    console.error("Error fetching subscriptions:", error);
+    console.error("Error fetching subscriptions via API:", error);
     return [];
   }
 };
