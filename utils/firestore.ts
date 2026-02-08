@@ -66,6 +66,7 @@ const FALLBACK_KEY_PREFIX = 'subscriptionhub_fallback_';
 const fallbackEvents = new EventTarget();
 
 const getLocalData = <T>(key: string): T | null => {
+  if (typeof window === 'undefined') return null;
   try {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : null;
@@ -75,6 +76,7 @@ const getLocalData = <T>(key: string): T | null => {
 };
 
 const setLocalData = (key: string, data: any) => {
+  if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(data));
     fallbackEvents.dispatchEvent(new CustomEvent('local-update', { detail: { key, data } }));
@@ -235,8 +237,8 @@ export const updateUserActivity = async (uid: string) => {
 };
 
 export const updateFeatureUsage = async (uid: string, feature: string) => {
+  if (typeof window !== 'undefined' && localStorage.getItem('analytics_opt_out') === 'true') return;
   try {
-    if (localStorage.getItem('analytics_opt_out') === 'true') return;
     const userRef = doc(db, 'users', uid);
     await updateDoc(userRef, {
       [`analytics.featureUsage.${feature}`]: increment(1)

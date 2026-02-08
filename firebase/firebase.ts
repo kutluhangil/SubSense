@@ -7,20 +7,16 @@ import { getAnalytics } from "firebase/analytics";
 import { getPerformance } from "firebase/performance";
 
 // Helper to safely read env vars without crashing if import.meta.env is undefined
+// This handles both Vite (import.meta.env) and potential node-based test environments gracefully
 const getEnv = (key: string, fallback: string) => {
-  try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-       // @ts-ignore
-       return import.meta.env[key] || fallback;
-    }
-  } catch (e) {
-    console.warn("Environment variable access failed, using fallback.");
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+      // @ts-ignore
+      return import.meta.env[key] || fallback;
   }
   return fallback;
 };
 
-// Use environment variables with hardcoded fallbacks for safety
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyArupQpxKTcA1PUoqmUFLf2K31CT4KG_R4"),
   authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "subscriptionhub-85b02.firebaseapp.com"),
@@ -38,7 +34,7 @@ export const auth = app.auth();
 export const functions = app.functions(); // Export functions instance
 
 // Connect to emulators if in localhost (Optional, useful for dev)
-if (window.location.hostname === "localhost") {
+if (typeof window !== 'undefined' && window.location.hostname === "localhost") {
   // functions.useEmulator("localhost", 5001);
 }
 

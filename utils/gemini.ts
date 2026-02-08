@@ -5,7 +5,37 @@ import { debugLog } from "./debug";
 import { Subscription } from "../components/SubscriptionModal";
 import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get API Key in Vite environment
+const getApiKey = () => {
+  // 1. Try Vite standard (import.meta.env)
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) {
+    return import.meta.env.VITE_GEMINI_API_KEY;
+  }
+  // 2. Try process.env safely (for legacy/test envs)
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore ReferenceError
+  }
+  return '';
+};
+
+// Initialize lazily to prevent module-level crash if key is missing
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!aiInstance) {
+    const key = getApiKey();
+    if (key) {
+      aiInstance = new GoogleGenAI({ apiKey: key });
+    } else {
+      console.warn("Gemini API Key missing. AI features will be disabled.");
+    }
+  }
+  return aiInstance;
+};
 
 // Type definition for the structured insight
 export interface AIInsight {
@@ -45,6 +75,9 @@ const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: strin
 };
 
 export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en'): Promise<AIInsight[]> => {
+  const ai = getAI();
+  if (!ai) return [];
+
   try {
     // 1. Cache Check
     const totalValue = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
@@ -128,6 +161,9 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
 };
 
 export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
+  const ai = getAI();
+  if (!ai) return "I'm currently offline or misconfigured. Please try again later.";
+
   // Existing chat logic remains, but leveraging the same conservative persona
   try {
     debugLog('AI_LANG', `Chat request in: ${languageCode}`);
