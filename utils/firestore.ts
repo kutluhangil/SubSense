@@ -1,19 +1,20 @@
 
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
+import {
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
   orderBy,
-  onSnapshot, 
+  onSnapshot,
   getDoc,
   getDocs,
   serverTimestamp,
   increment,
-  Timestamp
+  Timestamp,
+  where
 } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
@@ -57,6 +58,7 @@ export interface UserProfileData {
     churnRisk?: boolean;
     featureUsage?: Record<string, number>;
   };
+  achievements?: string[];
   plan: SubscriptionPlan;
 }
 
@@ -88,12 +90,12 @@ const setLocalData = (key: string, data: any) => {
 // --- User Management ---
 
 export const initializeUserDocument = async (
-  user: { uid: string; email: string | null; displayName: string | null }, 
+  user: { uid: string; email: string | null; displayName: string | null },
   additionalData?: { currency?: string; region?: string }
 ): Promise<UserProfileData> => {
   const localKey = `${FALLBACK_KEY_PREFIX}profile_${user.uid}`;
   const now = new Date().toISOString();
-  
+
   const newProfile: UserProfileData = {
     uid: user.uid,
     email: user.email || '',
@@ -129,7 +131,7 @@ export const initializeUserDocument = async (
 
     const userRef = doc(db, 'users', user.uid);
     let userSnap;
-    
+
     try {
       userSnap = await getDoc(userRef);
     } catch (e: any) {
@@ -161,7 +163,7 @@ export const initializeUserDocument = async (
       }
       throw e;
     }
-    
+
     return newProfile;
   } catch (error) {
     console.error("Error initializing user document:", error);
@@ -180,9 +182,9 @@ export const getUserDocument = async (uid: string): Promise<UserProfileData | nu
     return null;
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
-       // Silent fallback for guest/unauthed
-       trackEvent('system_fallback', { type: 'profile_fetch', reason: error.code });
-       return getLocalData<UserProfileData>(`${FALLBACK_KEY_PREFIX}profile_${uid}`);
+      // Silent fallback for guest/unauthed
+      trackEvent('system_fallback', { type: 'profile_fetch', reason: error.code });
+      return getLocalData<UserProfileData>(`${FALLBACK_KEY_PREFIX}profile_${uid}`);
     }
     console.error("Error fetching user document:", error);
     return null;
@@ -195,14 +197,14 @@ export const updateUserSettings = async (uid: string, settings: any) => {
     await setDoc(userRef, { preferences: settings }, { merge: true });
   } catch (error: any) {
     if (error.code === 'permission-denied') {
-        const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
-        const current = getLocalData<UserProfileData>(localKey);
-        if (current) {
-            current.preferences = { ...current.preferences, ...settings };
-            setLocalData(localKey, current);
-        }
+      const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
+      const current = getLocalData<UserProfileData>(localKey);
+      if (current) {
+        current.preferences = { ...current.preferences, ...settings };
+        setLocalData(localKey, current);
+      }
     } else {
-        console.error("Error updating user settings:", error);
+      console.error("Error updating user settings:", error);
     }
   }
 };
@@ -217,8 +219,8 @@ export const updateUserPlan = async (uid: string, planData: Partial<UserProfileD
     const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
     const current = getLocalData<UserProfileData>(localKey);
     if (current) {
-       current.plan = { ...current.plan, ...planData };
-       setLocalData(localKey, current);
+      current.plan = { ...current.plan, ...planData };
+      setLocalData(localKey, current);
     }
     throw error;
   }
@@ -245,6 +247,15 @@ export const updateFeatureUsage = async (uid: string, feature: string) => {
     });
   } catch (error) {
     // Fail silently
+  }
+};
+
+export const updateAchievements = async (uid: string, achievements: string[]) => {
+  try {
+    const userRef = doc(db, 'users', uid);
+    await updateDoc(userRef, { achievements });
+  } catch (error) {
+    console.error("Error updating achievements:", error);
   }
 };
 
@@ -309,26 +320,26 @@ export const updateSubscription = async (uid: string, subId: number | string, da
 
   try {
     if (typeof subId === 'number') {
-        throw { code: 'permission-denied' }; 
+      throw { code: 'permission-denied' };
     }
     const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...updateData } = data as any;
-    
+
     await updateDoc(subRef, {
       ...updateData,
       updatedAt: serverTimestamp()
     });
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
-        trackEvent('system_fallback', { type: 'sub_update', reason: error.code });
-        const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-        const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-        const updatedSubs = currentSubs.map(s => s.id == subId ? { ...s, ...data } : s);
-        setLocalData(localKey, updatedSubs);
+      trackEvent('system_fallback', { type: 'sub_update', reason: error.code });
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
+      const updatedSubs = currentSubs.map(s => s.id == subId ? { ...s, ...data } : s);
+      setLocalData(localKey, updatedSubs);
     } else {
-        console.error("Error updating subscription:", error);
-        throw error;
+      console.error("Error updating subscription:", error);
+      throw error;
     }
   }
 };
@@ -336,31 +347,31 @@ export const updateSubscription = async (uid: string, subId: number | string, da
 export const deleteSubscription = async (uid: string, subId: number | string) => {
   try {
     if (typeof subId === 'number') {
-        throw { code: 'permission-denied' };
+      throw { code: 'permission-denied' };
     }
     const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
     await deleteDoc(subRef);
   } catch (error: any) {
     if (error.code === 'permission-denied' || error.code === 'unavailable') {
-        trackEvent('system_fallback', { type: 'sub_delete', reason: error.code });
-        const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-        const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-        const filteredSubs = currentSubs.filter(s => s.id != subId);
-        setLocalData(localKey, filteredSubs);
+      trackEvent('system_fallback', { type: 'sub_delete', reason: error.code });
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
+      const filteredSubs = currentSubs.filter(s => s.id != subId);
+      setLocalData(localKey, filteredSubs);
     } else {
-        console.error("Error deleting subscription:", error);
-        throw error;
+      console.error("Error deleting subscription:", error);
+      throw error;
     }
   }
 };
 
 export const listenToUserSubscriptions = (
-  uid: string, 
+  uid: string,
   onChange: (subs: Subscription[]) => void,
   onError?: (error: any) => void
 ) => {
-  let unsubscribeFirestore = () => {};
-  
+  let unsubscribeFirestore = () => { };
+
   const handleLocalUpdate = (e: any) => {
     if (e.detail && e.detail.key === `${FALLBACK_KEY_PREFIX}subs_${uid}`) {
       const validSubs = (e.detail.data || []).filter(validateSubscription);
@@ -379,7 +390,7 @@ export const listenToUserSubscriptions = (
       snapshot.forEach((doc) => {
         const data = doc.data();
         if (validateSubscription(data as Partial<Subscription>)) {
-            subs.push({ id: doc.id, ...data } as unknown as Subscription);
+          subs.push({ id: doc.id, ...data } as unknown as Subscription);
         }
       });
       onChange(subs);
@@ -410,15 +421,89 @@ export const listenToUserSubscriptions = (
 
 export const migrateLocalData = async (uid: string, localSubs: Subscription[]) => {
   if (!localSubs || localSubs.length === 0) return;
-  
+
   const promises = localSubs.map(sub => {
-      if (validateSubscription(sub)) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...rest } = sub;
-          return addSubscription(uid, rest);
-      }
-      return Promise.resolve();
+    if (validateSubscription(sub)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...rest } = sub;
+      return addSubscription(uid, rest);
+    }
+    return Promise.resolve();
   });
-  
+
   await Promise.all(promises);
+};
+
+// --- Friends System ---
+
+export const searchUsers = async (searchTerm: string, currentUserId: string): Promise<UserProfileData[]> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const qEmail = query(usersRef, where('email', '==', searchTerm));
+    const snap = await getDocs(qEmail);
+
+    const results: UserProfileData[] = [];
+    snap.forEach(d => {
+      if (d.id !== currentUserId) results.push(d.data() as UserProfileData);
+    });
+
+    return results;
+  } catch (e) {
+    console.error("Error searching users:", e);
+    return [];
+  }
+};
+
+export const sendFriendRequest = async (fromUid: string, toUid: string) => {
+  try {
+    await setDoc(doc(db, 'users', toUid, 'friendRequests', fromUid), {
+      fromUid,
+      status: 'pending',
+      timestamp: serverTimestamp()
+    });
+    await setDoc(doc(db, 'users', fromUid, 'sentRequests', toUid), {
+      toUid,
+      status: 'pending',
+      timestamp: serverTimestamp()
+    });
+  } catch (e) {
+    console.error("Error sending friend request:", e);
+  }
+};
+
+export const acceptFriendRequest = async (currentUid: string, senderUid: string) => {
+  try {
+    await setDoc(doc(db, 'users', currentUid, 'friends', senderUid), {
+      uid: senderUid,
+      since: serverTimestamp()
+    });
+    await setDoc(doc(db, 'users', senderUid, 'friends', currentUid), {
+      uid: currentUid,
+      since: serverTimestamp()
+    });
+
+    await deleteDoc(doc(db, 'users', currentUid, 'friendRequests', senderUid));
+    await deleteDoc(doc(db, 'users', senderUid, 'sentRequests', currentUid));
+  } catch (e) {
+    console.error("Friend acceptance failed:", e);
+    throw e;
+  }
+};
+
+export const getFriendsList = async (uid: string): Promise<string[]> => {
+  try {
+    const snap = await getDocs(collection(db, 'users', uid, 'friends'));
+    return snap.docs.map(d => d.id);
+  } catch (e) {
+    return [];
+  }
+};
+
+export const getIncomingRequests = async (uid: string) => {
+  try {
+    const snap = await getDocs(collection(db, 'users', uid, 'friendRequests'));
+    return snap.docs.map(d => d.id);
+  } catch (e) {
+    return [];
+  }
 };

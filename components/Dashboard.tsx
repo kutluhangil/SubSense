@@ -139,7 +139,18 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
    const filteredSubscriptions = useMemo(() => {
       if (activeCategory === 'All') return subscriptions;
-      return subscriptions.filter(sub => sub.category === activeCategory);
+
+      // Map simple UI filters to actual data categories
+      const categoryMap: Record<string, string[]> = {
+         'Entertainment': ['Entertainment & Streaming', 'Music & Audio', 'Gaming'],
+         'Productivity': ['Business & SaaS', 'Design & Creativity'],
+         'Tools': ['AI & Dev Tools'],
+         'Shopping': ['Shopping & Local']
+      };
+
+      const targetCategories = categoryMap[activeCategory] || [activeCategory];
+
+      return subscriptions.filter(sub => targetCategories.includes(sub.category));
    }, [subscriptions, activeCategory]);
 
    const showToast = (msg: string) => {
@@ -247,8 +258,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                key={cat}
                onClick={() => setActiveCategory(cat)}
                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${activeCategory === cat
-                     ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
-                     : 'bg-card text-secondary border border-subtle hover:bg-gray-50 dark:hover:bg-gray-800'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+                  : 'bg-card text-secondary border border-subtle hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
             >
                {cat === 'All' ? t('dashboard.filter.all') : t(`dashboard.filter.${cat.toLowerCase()}`)}
@@ -484,8 +495,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                     <button
                                        onClick={() => setIsPreviewSelectorOpen(!isPreviewSelectorOpen)}
                                        className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${previewCurrency
-                                             ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
-                                             : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
+                                          ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
                                           }`}
                                     >
                                        {previewCurrency ? (

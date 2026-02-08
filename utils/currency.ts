@@ -40,31 +40,31 @@ export const CURRENCY_DATA: Record<string, CurrencyMetadata> = {
 // In production, fetch this from an API like https://open.er-api.com/v6/latest/USD
 const DEFAULT_RATES: Record<string, number> = {
   "USD": 1,
-  "EUR": 0.93,
-  "GBP": 0.79,
-  "TRY": 36.50, // Updated 2025 est
-  "JPY": 152.00,
-  "CNY": 7.20,
-  "AUD": 1.54,
-  "CAD": 1.38,
-  "INR": 83.50,
-  "BRL": 5.10,
-  "RUB": 94.00,
-  "KRW": 1340.00,
-  "MXN": 17.10,
+  "EUR": 0.95,
+  "GBP": 0.81,
+  "TRY": 42.50, // 2026 Estimate
+  "JPY": 145.00,
+  "CNY": 7.30,
+  "AUD": 1.58,
+  "CAD": 1.40,
+  "INR": 86.00,
+  "BRL": 5.25,
+  "RUB": 98.00,
+  "KRW": 1380.00,
+  "MXN": 18.50,
   "SAR": 3.75,
   "AED": 3.67,
-  "CHF": 0.91,
-  "SEK": 10.60,
-  "NOK": 10.70,
-  "DKK": 6.95,
-  "PLN": 3.98,
+  "CHF": 0.93,
+  "SEK": 10.90,
+  "NOK": 11.20,
+  "DKK": 7.10,
+  "PLN": 4.10,
 };
 
 export const EXCHANGE_RATES = DEFAULT_RATES;
 
 const CACHE_KEY = 'subscriptionhub_fx_rates';
-const CACHE_VERSION = 'v2_2025'; // Bump this to invalidate old caches
+const CACHE_VERSION = 'v3_2026'; // Bump this to invalidate old caches
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedRates {
