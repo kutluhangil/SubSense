@@ -1,137 +1,154 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { BrandIcon } from './BrandIcon';
+import React, { useEffect, useState, useMemo } from 'react';
+import { LogoRenderer } from './LogoRenderer';
+import { getBrandLogo } from '../utils/logoUtils';
 import { ALL_SUBSCRIPTIONS, BRAND_COLORS } from '../utils/data';
 
-interface Particle {
+interface StarLogo {
   id: number;
+  brand: string;
+  logoUrl: string;
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   size: number;
-  brand: string;
-  rotation: number;
-  rotationSpeed: number;
+  duration: number;
+  delay: number;
   opacity: number;
   scale: number;
-  color: string;
 }
 
-const PARTICLE_COUNT = 30;
+const MAX_STARS = 25; // Desktop limit
+const MIN_STARS = 12; // Mobile limit
 
 export default function FloatingLogoLayer() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const requestRef = useRef<number>(0);
-  const hoveredRef = useRef<number | null>(null);
+  const [stars, setStars] = useState<StarLogo[]>([]);
+  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Initialize particles
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const { offsetWidth: width, offsetHeight: height } = containerRef.current;
-    
-    const initialParticles: Particle[] = Array.from({ length: PARTICLE_COUNT }).map((_, i) => {
-      // Pick a random brand
-      const randomBrand = ALL_SUBSCRIPTIONS[Math.floor(Math.random() * ALL_SUBSCRIPTIONS.length)];
-      const brandKey = randomBrand.toLowerCase().replace(/\s+/g, '');
-      const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
-
-      return {
-        id: i,
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.8, // Slow velocity
-        vy: (Math.random() - 0.5) * 0.8,
-        size: 16 + Math.random() * 16, // Varying sizes
-        brand: randomBrand,
-        rotation: Math.random() * 360,
-        rotationSpeed: (Math.random() - 0.5) * 0.5,
-        opacity: 0.3 + Math.random() * 0.4,
-        scale: 1,
-        color: color
-      };
-    });
-
-    setParticles(initialParticles);
+  // 1. Filter only brands with valid SVGs
+  const validBrands = useMemo(() => {
+    return ALL_SUBSCRIPTIONS.filter(brand => getBrandLogo(brand) !== null);
   }, []);
 
-  // Animation Loop
-  const animate = () => {
-    setParticles(prevParticles => {
-      const { offsetWidth: width, offsetHeight: height } = containerRef.current || { offsetWidth: 1000, offsetHeight: 1000 };
-      
-      return prevParticles.map(p => {
-        // Skip update if hovered
-        if (hoveredRef.current === p.id) {
-            return { ...p, scale: 1.5, opacity: 1 };
-        }
-
-        let newX = p.x + p.vx;
-        let newY = p.y + p.vy;
-        let newVx = p.vx;
-        let newVy = p.vy;
-
-        // Bounce off edges with soft dampening
-        if (newX < 0 || newX > width) newVx = -p.vx;
-        if (newY < 0 || newY > height) newVy = -p.vy;
-
-        return {
-          ...p,
-          x: newX,
-          y: newY,
-          vx: newVx,
-          vy: newVy,
-          rotation: p.rotation + p.rotationSpeed,
-          scale: 1, // Reset scale if not hovered
-          opacity: 0.3 + (Math.sin(Date.now() / 1000 + p.id) * 0.1) // Subtle breathing opacity
-        };
-      });
-    });
-    requestRef.current = requestAnimationFrame(animate);
-  };
-
+  // 2. Handle Resizing & Device Check
   useEffect(() => {
-    requestRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+      setIsMobile(window.innerWidth < 768);
     };
+
+    // Initial call
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // 3. Initialize / Regenerate Stars
+  useEffect(() => {
+    const count = isMobile ? MIN_STARS : MAX_STARS;
+    const newStars: StarLogo[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const brand = validBrands[Math.floor(Math.random() * validBrands.length)];
+      const logoUrl = getBrandLogo(brand)!; // Validated in filter
+
+      // Randomize Position (Avoid Center)
+      // We want a "shooting star" feel, usually moving diagonally from Top-Left or Top-Right.
+      // Let's make them drift slowly across the screen in various directions or a unified flow.
+      // Unified flow (Top-Right to Bottom-Left) looks premium.
+
+      // Logic:
+      // Start randomly off-screen or on-screen.
+      // We will use CSS animations for the movement to ensure smoothness (GPU).
+      // Here we just set initial stable properties.
+
+      // To avoid center:
+      // We can't easily perform "avoid center" with pure CSS animation loops without complex keyframes.
+      // Instead, we'll use a wide dispersion and low opacity so if they cross, it's subtle.
+
+      newStars.push({
+        id: i,
+        brand,
+        logoUrl,
+        x: Math.random() * 100, // %
+        y: Math.random() * 100, // %
+        size: isMobile ? 30 + Math.random() * 20 : 40 + Math.random() * 30,
+        duration: 15 + Math.random() * 20, // 15s to 35s (Slow)
+        delay: Math.random() * -30, // Negative delay to start mid-animation
+        opacity: 0.1 + Math.random() * 0.2, // 0.1 to 0.3 (Very subtle)
+        scale: 0.8 + Math.random() * 0.4,
+      });
+    }
+    setStars(newStars);
+  }, [dimensions.width, isMobile, validBrands]);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map(p => (
-        <div
-          key={p.id}
-          className="absolute flex items-center justify-center pointer-events-auto transition-transform duration-300 ease-out will-change-transform"
-          style={{
-            transform: `translate3d(${p.x}px, ${p.y}px, 0) rotate(${p.rotation}deg) scale(${p.scale})`,
-            opacity: p.opacity,
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-          }}
-          onMouseEnter={() => { hoveredRef.current = p.id; }}
-          onMouseLeave={() => { hoveredRef.current = null; }}
-        >
-          {/* Wing/Trail Effect */}
-          <div 
-            className="absolute inset-0 rounded-full blur-[2px] opacity-50 animate-pulse"
-            style={{ backgroundColor: p.color }}
-          ></div>
-          
-          {/* Icon */}
-          <div className="relative z-10 w-full h-full bg-white rounded-lg shadow-sm border border-black/5 overflow-hidden">
-             <BrandIcon type={p.brand} className="w-full h-full" noBackground />
-          </div>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Background Gradient Mesh (Subtle) */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0)_0%,rgba(240,240,255,0.5)_100%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(15,23,42,0)_0%,rgba(15,23,42,0.8)_100%)] opacity-40"></div>
 
-          {/* Tooltip on Hover */}
-          {hoveredRef.current === p.id && (
-             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-bold rounded shadow-lg whitespace-nowrap z-50 animate-in fade-in zoom-in-95 duration-200">
-                {p.brand}
-             </div>
-          )}
-        </div>
-      ))}
+      {stars.map((star) => {
+        // Safe brand key for colors
+        const brandKey = star.brand.toLowerCase().replace(/\s+/g, '');
+        const brandColor = BRAND_COLORS[brandKey] || '#6366f1';
+
+        return (
+          <div
+            key={star.id}
+            className="absolute will-change-transform"
+            style={{
+              left: `${star.x}%`,
+              top: `${star.y}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity,
+              animation: `float-diagonal ${star.duration}s linear infinite`,
+              animationDelay: `${star.delay}s`,
+            }}
+          >
+            {/* The Logo Container */}
+            <div
+              className="relative w-full h-full flex items-center justify-center transition-transform hover:scale-110 duration-500"
+              style={{ transform: `scale(${star.scale})` }}
+            >
+              {/* Soft Trail / Glow */}
+              <div
+                className="absolute inset-0 rounded-full blur-xl opacity-40"
+                style={{ background: brandColor }}
+              ></div>
+
+              {/* Crisp Logo */}
+              <LogoRenderer
+                logoUrl={star.logoUrl}
+                name={star.brand}
+                className="w-full h-full object-contain drop-shadow-lg"
+                variant="auto" // Let colors pop, but low opacity parent handles subtlety
+              />
+            </div>
+          </div>
+        );
+      })}
+
+      {/* CSS Injection for Animation */}
+      <style>{`
+        @keyframes float-diagonal {
+          0% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          25% {
+            transform: translate(20px, 20px) rotate(2deg);
+          }
+          50% {
+             transform: translate(0, 40px) rotate(-1deg);
+          }
+          75% {
+             transform: translate(-20px, 20px) rotate(1deg);
+          }
+          100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+        }
+        /* More complex motion path if needed, but subtle floating is often better than "shooting" across screen which is distracting */
+      `}</style>
     </div>
   );
 }
