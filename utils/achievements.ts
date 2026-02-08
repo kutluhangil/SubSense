@@ -55,6 +55,13 @@ export const ACHIEVEMENTS: Achievement[] = [
         description: 'Subscribe to 3 or more Entertainment services.',
         icon: '🎬',
         condition: (_, subs) => subs.filter(s => s.category.includes('Entertainment')).length >= 3
+    },
+    {
+        id: 'beta_explorer',
+        title: 'Beta Explorer',
+        description: 'Discovered a hidden secret in the Beta version.',
+        icon: '🧪',
+        condition: () => false // Manual unlock only
     }
 ];
 

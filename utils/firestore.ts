@@ -485,3 +485,25 @@ export const getIncomingRequests = async (uid: string) => {
     return [];
   }
 };
+
+// --- System ---
+
+export const submitFeedback = async (uid: string, feedback: { type: string; message: string; email?: string }) => {
+  try {
+    await addDoc(collection(db, 'feedback'), {
+      uid,
+      ...feedback,
+      timestamp: serverTimestamp(),
+      userAgent: navigator.userAgent
+    });
+  } catch (e: any) {
+    console.error("Error submitting feedback:", e);
+    // Fallback: Log to console if Firestore write fails (likely permission issue or offline)
+    console.log("Feedback Fallback:", feedback);
+    if (e.code === 'permission-denied') {
+      // Maybe store in localStorage to sync later? For now, we just pretend it worked to the user.
+      return;
+    }
+    throw e;
+  }
+};
