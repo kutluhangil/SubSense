@@ -14,9 +14,10 @@ interface AddSubscriptionModalProps {
     onClose: () => void;
     service: SubscriptionDetail | null;
     onAdd: (subscription: Subscription) => void;
+    onDuplicateFound?: (name: string) => void;
 }
 
-export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }: AddSubscriptionModalProps) {
+export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, onDuplicateFound }: AddSubscriptionModalProps) {
     const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [price, setPrice] = useState<string>('');
@@ -101,8 +102,17 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
             // Success is handled by parent closing the modal or separate cleanup
         } catch (err: any) {
             console.error(err);
+            setLoading(false);
+
+            // Handle Duplicate Error (Backend 409)
+            if (err.status === 409 || err.code === 'duplicate_subscription' || err.message?.includes('already in your Dashboard')) {
+                if (onDuplicateFound) {
+                    onDuplicateFound(name);
+                    return;
+                }
+            }
+
             setError(err.message || "Failed to add subscription. Please try again.");
-            setLoading(false); // Only stop loading on error, success might unmount/close
         }
     };
 
