@@ -3,6 +3,7 @@ import { SUBSCRIPTION_CATALOG, BRAND_COLORS } from '../utils/data';
 import SubscriptionProfileModal from './SubscriptionProfileModal';
 import { ArrowRight } from 'lucide-react';
 import { getBrandLogo } from '../utils/logoUtils';
+import { LogoRenderer } from './LogoRenderer';
 
 // --- DATA: BENTO GRID LAYOUT ---
 const EXPLORE_CARDS = [
@@ -192,12 +193,12 @@ export default function Discover() {
             return (
               <CardContainer {...commonProps} className="bg-black text-white group relative">
                 <div className="absolute inset-0">
-                  <img alt="" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ29QXhahgV2gkyou2n_YGIkdkkrsVbFNAX6OpbhzXUxHcH5FNaOrVGdVXw9ztIsWVA_2Ko_WtzYR8o80kfXcL_OsvQuozAyOF-WIoC1_ZJUGuVN_JLxaoDF3_PCR0FrmWUcMZYvh2iFE5pOkSx6fjJ1GWbkCou2q_UxFgZ11R-ha3cPwF9wDpYh4LCYPrGmUQFQH2YD60OQbyEau62TT7wANVBeF2uGwxK4_sZDOXmG1wpmD3yPCv4I795nvk8pKfqFX53n16WkU" />
+                  <img alt="" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ29QXhahgV2gkyou2n_YGIkdkkrsVbFNAX6OpbhzXUxHcH5FNaOrVGdVXw9ztIsWVA_2Ko_WtzYR8o80kfXcL_OsvQuozAyOF-WIoC1_ZJUGuVN_JLxaoDF3_PCR0FrmWUcMZYvh2iFE5pOkSx6fjJ1GWbkCou2q_UxFgZ11R-ha3cPwF9wDpYh4LCyPrGmUQFQH2YD60OQbyEau62TT7wANVBeF2uGwxK4_sZDOXmG1wpmD3yPCv4I795nvk8pKfqFX53n16WkU" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                 </div>
                 <div className="relative z-10 p-6 flex flex-col justify-end h-full">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={service.name} className="h-10 md:h-12 w-auto mb-3 object-contain self-start drop-shadow-lg" />
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-10 md:h-12 w-auto mb-3 self-start drop-shadow-lg" variant="color" />
                   ) : (
                     <h3 className="text-3xl md:text-4xl font-black text-[#E50914] mb-2 uppercase tracking-tighter">{service.name}</h3>
                   )}
@@ -214,7 +215,7 @@ export default function Discover() {
                 <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
                 <div className="relative z-10 p-5 h-full flex flex-col justify-between">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={service.name} className="h-8 w-auto object-contain self-start brightness-0 invert drop-shadow-md" />
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-8 w-auto self-start drop-shadow-md" variant="white" />
                   ) : (
                     <h3 className="text-xl font-bold text-white tracking-tight">{service.name}</h3>
                   )}
@@ -232,7 +233,7 @@ export default function Discover() {
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
                 <div className="relative z-10 p-5 h-full flex flex-col items-center justify-center text-center">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={service.name} className="h-12 w-auto object-contain mb-3 drop-shadow-lg" />
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-12 w-auto mb-3 drop-shadow-lg" variant="white" />
                   ) : (
                     <h3 className="text-2xl font-bold text-white mb-2 tracking-wide font-serif">{service.name}</h3>
                   )}
@@ -247,12 +248,13 @@ export default function Discover() {
             const isDarkBg = card.style === 'appletv';
             const bg = isDarkBg ? 'bg-black dark:bg-[#1c1c1e]' : (card.customBg || 'bg-white dark:bg-zinc-800');
             const text = isDarkBg ? 'text-white' : 'text-gray-900 dark:text-white';
+            const logoVariant = isDarkBg ? 'white' : 'color';
 
             return (
               <CardContainer {...commonProps} className={`group ${bg} border border-gray-100 dark:border-gray-700`}>
                 <div className="relative z-10 p-5 h-full flex flex-col justify-between">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={service.name} className={`h-8 w-auto object-contain self-start ${isDarkBg ? 'brightness-0 invert' : ''}`} />
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-8 w-auto self-start" variant={logoVariant} />
                   ) : (
                     <h3 className={`text-xl font-bold ${text} tracking-tight`}>{service.name}</h3>
                   )}
@@ -269,11 +271,28 @@ export default function Discover() {
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/30"></div>
                 <div className="relative z-10 p-5 h-full flex flex-col justify-between">
                   {logoUrl ? (
-                    <img src={logoUrl} alt={service.name} className="h-8 md:h-10 w-auto object-contain self-start drop-shadow-md brightness-0 invert" />
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-8 md:h-10 w-auto self-start drop-shadow-md" variant="white" />
                   ) : (
                     <h3 className="text-2xl font-black text-white italic tracking-tighter">{service.name}</h3>
                   )}
                   <p className="text-white/90 text-xs font-medium line-clamp-2">{service.description}</p>
+                </div>
+              </CardContainer>
+            );
+          }
+
+          // --- CANVA (Specific handling for white logo on custom gradient) ---
+          if (card.style === 'canva') {
+            return (
+              <CardContainer {...commonProps} className={`group ${card.customBg || 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900'} border border-gray-100 dark:border-gray-800`}>
+                {card.customGradient && <div className={`absolute inset-0 ${card.customGradient} opacity-20`}></div>}
+                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                  {logoUrl ? (
+                    <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-8 w-auto self-start" variant="white" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{service.name}</h3>
+                  )}
+                  <p className="text-gray-600 dark:text-gray-300 text-xs line-clamp-2">{service.description}</p>
                 </div>
               </CardContainer>
             );
@@ -285,7 +304,7 @@ export default function Discover() {
               {card.customGradient && <div className={`absolute inset-0 ${card.customGradient} opacity-20`}></div>}
               <div className="relative z-10 p-5 h-full flex flex-col justify-between">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={service.name} className="h-8 w-auto object-contain self-start" />
+                  <LogoRenderer logoUrl={logoUrl} name={service.name} className="h-8 w-auto self-start" variant="color" />
                 ) : (
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">{service.name}</h3>
                 )}
