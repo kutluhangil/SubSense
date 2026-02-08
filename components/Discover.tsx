@@ -43,6 +43,7 @@ const EXPLORE_CARDS = [
   { id: 'zoom', style: 'youtube', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['zoom'] },
   { id: 'dropbox', style: 'microsoft', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['dropbox'] },
   { id: 'audible', style: 'prime', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['audible'] },
+  { id: 'masterclass', style: 'netflix', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['masterclass'] },
   { id: 'peacock', style: 'hulu', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-black', color: '#000000' },
   { id: 'paramount+', style: 'disney', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#0064FF]', color: '#0064FF' },
 ];
