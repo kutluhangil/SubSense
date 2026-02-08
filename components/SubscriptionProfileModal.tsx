@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Calendar, Globe, Building2, TrendingUp, Users, History, Briefcase } from 'lucide-react';
 import { BrandIcon } from './BrandIcon';
+import { LogoRenderer } from './LogoRenderer';
 import { SubscriptionDetail, BRAND_COLORS } from '../utils/data';
 
 interface SubscriptionProfileModalProps {
@@ -58,12 +59,11 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center pb-6">
                   <div className="relative z-10 transform translate-y-2">
                      {logoUrl ? (
-                        <img
-                           src={logoUrl}
-                           alt={service.name}
-                           className="h-16 md:h-20 w-auto object-contain drop-shadow-2xl filter brightness-0 invert"
-                        // Note: We invert brightness to keep logos white on colored/dark backgrounds for consistency
-                        // Additional logic could apply if logo is already colored, but white often looks best on brand headers
+                        <LogoRenderer
+                           logoUrl={logoUrl}
+                           name={service.name}
+                           className="h-16 md:h-20 w-auto drop-shadow-2xl"
+                           variant="white" // Always use white logo on brand-colored header
                         />
                      ) : (
                         <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-lg flex items-center justify-center p-4">
