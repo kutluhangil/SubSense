@@ -6,10 +6,12 @@ import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { FeedbackProvider } from './contexts/FeedbackContext'; 
+import { FeedbackProvider } from './contexts/FeedbackContext';
 import { migrateLocalData } from './utils/firestore';
 import { WifiOff, Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
+
+import FooterCredit from './components/FooterCredit';
 
 // Lazy Load Pages & Heavy Components
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -66,12 +68,12 @@ function AppContent() {
   useEffect(() => {
     if (currentUser) {
       const hasMigrated = localStorage.getItem(`subscriptionhub.${currentUser.email}.migrated`);
-      
+
       if (!hasMigrated) {
         // Attempt to find legacy data for this email
         const legacyKey = `subscriptionhub.${currentUser.email}.subscriptions`;
         const localData = localStorage.getItem(legacyKey);
-        
+
         if (localData) {
           try {
             const parsedSubs = JSON.parse(localData);
@@ -87,8 +89,8 @@ function AppContent() {
             console.error("Migration failed", e);
           }
         } else {
-           // Mark as migrated to skip check next time even if empty
-           localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
+          // Mark as migrated to skip check next time even if empty
+          localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
         }
       }
     }
@@ -132,7 +134,7 @@ function AppContent() {
   const handleSimulateReset = () => {
     setIsAuthOpen(false);
     setCurrentPage('reset-password');
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
   };
 
   // 4. App-Level Gating: Show loader until auth state is confirmed
@@ -156,22 +158,22 @@ function AppContent() {
           You are offline. Showing cached data.
         </div>
       )}
-      
+
       <Suspense fallback={<PageLoader />}>
         {appUser ? (
           <Dashboard user={appUser} onLogout={handleLogout} />
         ) : (
           <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
             {currentPage === 'reset-password' ? (
-               <ResetPasswordPage onLoginClick={() => {
-                  setCurrentPage('home');
-                  openAuth('login');
-               }} />
+              <ResetPasswordPage onLoginClick={() => {
+                setCurrentPage('home');
+                openAuth('login');
+              }} />
             ) : (
               <>
-                <Navbar 
-                  onOpenAuth={openAuth} 
-                  onNavigate={(page) => setCurrentPage(page as any)} 
+                <Navbar
+                  onOpenAuth={openAuth}
+                  onNavigate={(page) => setCurrentPage(page as any)}
                   currentPage={currentPage as 'home' | 'features'}
                 />
                 <main className="flex-grow flex flex-col">
@@ -181,18 +183,21 @@ function AppContent() {
                     <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
                   )}
                 </main>
+
+
                 <Footer />
+                <FooterCredit />
               </>
             )}
-            <AuthModal 
-              isOpen={isAuthOpen} 
-              onClose={() => setIsAuthOpen(false)} 
+            <AuthModal
+              isOpen={isAuthOpen}
+              onClose={() => setIsAuthOpen(false)}
               initialMode={authMode}
               onLoginSubmit={handleLogin}
               onSignupSubmit={handleSignup}
               onSimulateReset={handleSimulateReset}
             />
-            <DemoModal 
+            <DemoModal
               isOpen={isDemoOpen}
               onClose={closeDemo}
               onSignup={() => openAuth('signup')}
