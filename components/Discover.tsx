@@ -1,60 +1,65 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { SUBSCRIPTION_CATALOG, ALL_SUBSCRIPTIONS } from '../utils/data';
+import { SUBSCRIPTION_CATALOG, BRAND_COLORS } from '../utils/data';
 import SubscriptionProfileModal from './SubscriptionProfileModal';
 import { ArrowRight } from 'lucide-react';
+import { getBrandLogo } from '../utils/logoUtils';
 
-// This data mapping ensures we use the EXACT visual style requested for specific brands
-// while allowing us to populate the grid with 30+ items using variations of these styles.
+// --- DATA: BENTO GRID LAYOUT ---
 const EXPLORE_CARDS = [
-  // Row 1 Visuals
-  { id: 'netflix', style: 'netflix', height: 'h-[420px]' },
-  { id: 'spotify', style: 'spotify', height: 'h-[220px]' },
-  { id: 'youtubepremium', style: 'youtube', height: 'h-[240px]' },
-  { id: 'disney+', style: 'disney', height: 'h-[380px]' },
+  // FEATURED (Row 1-2)
+  { id: 'netflix', style: 'netflix', colSpan: 'col-span-2 md:col-span-2 lg:col-span-2', rowSpan: 'row-span-2', color: BRAND_COLORS['netflix'] },
+  { id: 'spotify', style: 'spotify', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['spotify'] },
+  { id: 'youtubepremium', style: 'youtube', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['youtube'] },
+  { id: 'disney+', style: 'disney', colSpan: 'col-span-2', rowSpan: 'row-span-1', color: BRAND_COLORS['disney'] },
 
-  // Row 2 Visuals
-  { id: 'amazonprimevideo', style: 'prime', height: 'h-[200px]' },
-  { id: 'hbomax', style: 'max', height: 'h-[260px]' },
-  { id: 'appletv+', style: 'appletv', height: 'h-[220px]' },
-  { id: 'hulu', style: 'hulu', height: 'h-[340px]' },
+  // Row 3 (Mixed)
+  { id: 'amazonprimevideo', style: 'prime', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['amazonprimevideo'] },
+  { id: 'hbomax', style: 'max', colSpan: 'col-span-1', rowSpan: 'row-span-2', color: BRAND_COLORS['hbomax'] },
+  { id: 'appletv+', style: 'appletv', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['appletv+'] },
+  { id: 'hulu', style: 'hulu', colSpan: 'col-span-1', rowSpan: 'row-span-2', color: BRAND_COLORS['hulu'] },
 
-  // Row 3 Visuals
-  { id: 'microsoft365', style: 'microsoft', height: 'h-[240px]' },
-  { id: 'canvapro', style: 'canva', height: 'h-[280px]' },
-  { id: 'chatgptplus', style: 'chatgpt', height: 'h-[200px]' },
-  { id: 'adobecreativecloud', style: 'adobe', height: 'h-[300px]' },
-  { id: 'xboxgamepass', style: 'xbox', height: 'h-[240px]' },
+  // Row 4
+  { id: 'microsoft365', style: 'microsoft', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['microsoft365'] },
+  { id: 'canvapro', style: 'canva', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['canvapro'] },
 
-  // Expansion Items (Reusing styles for scale)
-  { id: 'playstationplus', style: 'disney', height: 'h-[320px]', customBg: 'bg-[#00439C]' }, // PS Plus
-  { id: 'googleworkspace', style: 'microsoft', height: 'h-[220px]', customBg: 'bg-blue-50' },
-  { id: 'slack', style: 'slack', height: 'h-[260px]' },
-  { id: 'notionplus', style: 'appletv', height: 'h-[240px]' }, // Notion fits Apple style (minimal)
-  { id: 'figma', style: 'canva', height: 'h-[280px]', customGradient: 'bg-gradient-to-tr from-[#F24E1E] to-[#A259FF]' },
-  { id: 'githubcopilot', style: 'appletv', height: 'h-[220px]' }, // GitHub fits dark style
-  { id: 'amazonprime', style: 'prime', height: 'h-[200px]' },
-  { id: 'discordnitro', style: 'max', height: 'h-[240px]', customBg: 'bg-[#5865F2]' },
-  { id: 'duolingo', style: 'spotify', height: 'h-[220px]', customBg: 'bg-[#58CC02]' },
-  { id: 'masterclass', style: 'netflix', height: 'h-[360px]' },
-  { id: 'audible', style: 'prime', height: 'h-[200px]' },
-  { id: 'midjourney', style: 'appletv', height: 'h-[240px]' },
-  { id: 'zoom', style: 'youtube', height: 'h-[220px]' },
-  { id: 'dropbox', style: 'microsoft', height: 'h-[200px]' },
-  { id: 'twitchturbo', style: 'max', height: 'h-[240px]', customBg: 'bg-[#9146FF]' },
-  { id: 'peacock', style: 'hulu', height: 'h-[280px]', customBg: 'bg-black' },
-  { id: 'paramount+', style: 'disney', height: 'h-[300px]', customBg: 'bg-[#0064FF]' },
+  // Row 5 & Mixed
+  { id: 'chatgptplus', style: 'chatgpt', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['chatgpt'] },
+  { id: 'adobecreativecloud', style: 'adobe', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['adobe'] },
+  { id: 'xboxgamepass', style: 'xbox', colSpan: 'col-span-2', rowSpan: 'row-span-1', color: BRAND_COLORS['xboxgamepass'] },
+
+  // More items - filling the grid
+  { id: 'playstationplus', style: 'disney', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#00439C]', color: '#00439C' },
+  { id: 'googleworkspace', style: 'microsoft', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-blue-50', color: '#4285F4' },
+  { id: 'slack', style: 'slack', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['slack'] },
+  { id: 'notionplus', style: 'appletv', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: '#000000' },
+  { id: 'figma', style: 'canva', colSpan: 'col-span-2', rowSpan: 'row-span-1', customGradient: 'bg-gradient-to-tr from-[#F24E1E] to-[#A259FF]', color: '#F24E1E' },
+  { id: 'githubcopilot', style: 'appletv', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: '#000000' },
+  { id: 'amazonprime', style: 'prime', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['amazonprime'] },
+  { id: 'discordnitro', style: 'max', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#5865F2]', color: '#5865F2' },
+  { id: 'duolingo', style: 'spotify', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#58CC02]', color: '#58CC02' },
+
+  // Remaining items to ensure grid is full and rich
+  { id: 'twitchturbo', style: 'max', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#9146FF]', color: '#9146FF' },
+  { id: 'zoom', style: 'youtube', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['zoom'] },
+  { id: 'dropbox', style: 'microsoft', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['dropbox'] },
+  { id: 'audible', style: 'prime', colSpan: 'col-span-1', rowSpan: 'row-span-1', color: BRAND_COLORS['audible'] },
+  { id: 'peacock', style: 'hulu', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-black', color: '#000000' },
+  { id: 'paramount+', style: 'disney', colSpan: 'col-span-1', rowSpan: 'row-span-1', customBg: 'bg-[#0064FF]', color: '#0064FF' },
 ];
 
 interface CardContainerProps {
   children: React.ReactNode;
   className: string;
+  colSpan?: string;
+  rowSpan?: string;
   onClick: () => void;
 }
 
 const CardContainer: React.FC<CardContainerProps> = ({
   children,
   className,
+  colSpan = 'col-span-1',
+  rowSpan = 'row-span-1',
   onClick,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -63,53 +68,36 @@ const CardContainer: React.FC<CardContainerProps> = ({
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    // Detect dark mode initially and on change
-    const checkDarkMode = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
+    const checkDarkMode = () => setIsDark(document.documentElement.classList.contains('dark'));
     checkDarkMode();
-
-    // Observer for class changes on html element
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
     return () => observer.disconnect();
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-
-    // Disable heavy animation on touch devices
-    if (window.matchMedia('(pointer: coarse)').matches) return;
-
-    // onHover removed
+    if (!ref.current || window.matchMedia('(pointer: coarse)').matches) return;
 
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    // Adjust physics based on theme
-    // Dark mode requires subtler motion to avoid jarring contrast shifts
-    const maxRot = isDark ? 2.5 : 4;
-    const lift = isDark ? -4 : -6;
-    const scale = isDark ? 1.015 : 1.02;
+    // More subtle movement for premium feel
+    const maxRot = isDark ? 2 : 3;
+    const lift = -4;
+    const scale = 1.02;
 
-    // Calculate rotation
     const rotateX = ((y - centerY) / centerY) * -maxRot;
     const rotateY = ((x - centerX) / centerX) * maxRot;
 
     requestAnimationFrame(() => {
       setTransformStyle(`perspective(1000px) translateY(${lift}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`);
-
-      // Dark mode needs lower opacity for reflection to avoid washing out deep blacks
-      const glowOpacity = isDark ? 0.06 : 0.15;
-
+      const glowOpacity = isDark ? 0.08 : 0.15;
       setGlowStyle({
         opacity: 1,
-        background: `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,${glowOpacity}), transparent 80%)`
+        background: `radial-gradient(circle at ${x}px ${y}px, rgba(255,255,255,${glowOpacity}), transparent 70%)`
       });
     });
   };
@@ -119,52 +107,37 @@ const CardContainer: React.FC<CardContainerProps> = ({
     setGlowStyle({ opacity: 0 });
   };
 
-  const cleanClassName = className.trim();
-
-  // Removed focusStyle/dimming logic entirely
-
-  // If we are actively transforming via mouse, that takes precedence
   const finalTransform = transformStyle || 'none';
 
   return (
     <div
       ref={ref}
-      className={`${cleanClassName} transition-all will-change-transform h-80 w-full`} // Enforced height/width
+      className={`${colSpan} ${rowSpan} ${className} relative rounded-2xl will-change-transform h-full w-full overflow-hidden transition-all duration-300`}
       style={{
         transform: finalTransform,
-        transition: transformStyle
-          ? 'none' // No transition during mouse move for instant response
-          : 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
-        boxShadow: transformStyle
-          ? (isDark ? '0 20px 40px -12px rgba(0, 0, 20, 0.5)' : '0 25px 50px -12px rgba(0, 0, 0, 0.25)')
-          : undefined,
-        zIndex: transformStyle ? 20 : 1 // Bring hovered card to front
+        transition: transformStyle ? 'none' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        boxShadow: transformStyle ? (isDark ? '0 20px 40px -12px rgba(0, 0, 0, 0.6)' : '0 25px 50px -12px rgba(0, 0, 0, 0.2)') : undefined,
+        zIndex: transformStyle ? 20 : 1
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
     >
       {children}
-      {/* Soft Light Reflection Overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-20 mix-blend-overlay"
-        style={glowStyle}
-      />
+      <div className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-20 mix-blend-overlay" style={glowStyle} />
     </div>
   );
 }
 
 export default function Discover() {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  // Removed hoveredCardId state
 
-  const handleCardClick = (id: string) => {
-    setSelectedServiceId(id);
-  };
+  const handleCardClick = (id: string) => setSelectedServiceId(id);
 
   const getServiceData = (id: string) => {
     const key = id.toLowerCase();
-    return SUBSCRIPTION_CATALOG[key] || {
+    const catalogItem = SUBSCRIPTION_CATALOG[key];
+    return catalogItem || {
       id: key,
       name: id.charAt(0).toUpperCase() + id.slice(1),
       description: "Manage your subscription efficiently.",
@@ -178,10 +151,15 @@ export default function Discover() {
     };
   };
 
-  return (
-    <div className="animate-in fade-in duration-500">
-      {/* Removed Masonry CSS */}
+  // Find the color for the selected service from our card config or brand map
+  const getServiceColor = (id: string) => {
+    const card = EXPLORE_CARDS.find(c => c.id === id);
+    if (card && card.color) return card.color;
+    return BRAND_COLORS[id] || BRAND_COLORS['default'];
+  };
 
+  return (
+    <div className="animate-in fade-in duration-500 pb-20">
       <header className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Explore Subscriptions</h1>
@@ -192,369 +170,128 @@ export default function Discover() {
         </button>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-fr">
+      {/* BENTO GRID LAYOUT */}
+      {/* Defined minimum height rows to ensure consistent rhythm, but allow spans */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[160px] md:auto-rows-[180px]">
         {EXPLORE_CARDS.map((card) => {
           const service = getServiceData(card.id);
+          const logoUrl = getBrandLogo(card.id);
 
+          // Common card interior props
+          const commonProps = {
+            key: card.id,
+            onClick: () => handleCardClick(card.id),
+            colSpan: card.colSpan,
+            rowSpan: card.rowSpan,
+            className: "shadow-sm hover:shadow-xl cursor-pointer bg-white dark:bg-gray-900",
+          };
 
-          // --- TEMPLATE: NETFLIX STYLE (Cinematic) ---
+          // --- NETFLIX (Cinematic) ---
           if (card.style === 'netflix') {
             return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-black">
+              <CardContainer {...commonProps} className="bg-black text-white group relative">
+                <div className="absolute inset-0">
                   <img alt="" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZ29QXhahgV2gkyou2n_YGIkdkkrsVbFNAX6OpbhzXUxHcH5FNaOrVGdVXw9ztIsWVA_2Ko_WtzYR8o80kfXcL_OsvQuozAyOF-WIoC1_ZJUGuVN_JLxaoDF3_PCR0FrmWUcMZYvh2iFE5pOkSx6fjJ1GWbkCou2q_UxFgZ11R-ha3cPwF9wDpYh4LCYPrGmUQFQH2YD60OQbyEau62TT7wANVBeF2uGwxK4_sZDOXmG1wpmD3yPCv4I795nvk8pKfqFX53n16WkU" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                 </div>
-                <div className="relative z-10 p-6 flex flex-col justify-between h-full">
-                  <div className="flex-1 flex items-end">
-                    <h3 className="text-4xl font-black text-[#E50914] uppercase tracking-tighter mb-2 transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-gray-300 text-sm line-clamp-3 mb-6 font-medium leading-relaxed opacity-90">{service.description}</p>
-                    <div className="flex items-center text-xs font-semibold text-white/70 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
+                <div className="relative z-10 p-6 flex flex-col justify-end h-full">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={service.name} className="h-10 md:h-12 w-auto mb-3 object-contain self-start drop-shadow-lg" />
+                  ) : (
+                    <h3 className="text-3xl md:text-4xl font-black text-[#E50914] mb-2 uppercase tracking-tighter">{service.name}</h3>
+                  )}
+                  <p className="text-gray-300 text-xs md:text-sm line-clamp-3 font-medium opacity-90">{service.description}</p>
                 </div>
               </CardContainer>
             );
           }
 
-          // --- TEMPLATE: SPOTIFY STYLE (Color Overlay) ---
+          // --- SPOTIFY (Flat Brand) ---
           if (card.style === 'spotify') {
             return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${card.customBg || 'bg-[#1DB954]'}`}>
-                  <img alt="" className="w-full h-full object-cover opacity-30 mix-blend-overlay group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9ISkwsBtvU_KO9P1o89YaxZhiFraAAhgwS59O-NsoMO9FNkF8kRCLeHJeDNfJ8QltxlINDQDoW07OeTOl_JrDaIZNBvXMbChVU9qkCbOXEBqFAo8eib2wP0IM77Hp5_MrQygujAObkUVDco190uoFoie1dArA9bmyLPDBZr1v-Y50H_u_AQOAM4UlL-lbulChnJCn8uNw3Idk6gO8UxFslcinemiQHfIxYrq_6twFzVhLpxa7m3BjVBNuetE4eqe3xHYAiOWQaBI" />
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/80 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
+              <CardContainer {...commonProps} className={`group ${card.customBg || 'bg-[#1DB954]'}`}>
+                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={service.name} className="h-8 w-auto object-contain self-start brightness-0 invert drop-shadow-md" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-white tracking-tight">{service.name}</h3>
+                  )}
+                  <p className="text-white/90 text-xs font-medium line-clamp-2">{service.description}</p>
                 </div>
               </CardContainer>
             );
           }
 
-          // --- TEMPLATE: YOUTUBE STYLE (Clean/Light) ---
-          if (card.style === 'youtube') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-gray-800"></div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight condensed transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-gray-900 dark:text-white opacity-60 group-hover:opacity-100 transition-opacity">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: DISNEY STYLE (Deep Blue/Gradient) ---
+          // --- DISNEY (Gradient) ---
           if (card.style === 'disney') {
             const bgClass = card.customBg || 'bg-[#113CCF]';
             return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${bgClass}`}>
-                  <img alt="" className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCY-L5CQ7QZ85SjnVmOhmITG76HlSINjAJ2taa0sUohRi8sFVTMOCWKUyBUHCL62Z4YUg0TEYHjQSV81ylxjlMvFwLxfr5mBwadL2KLJW-O6kvjGCxLkSzltZ2BuOOlvbjQ3qnSvmR0cpzRnsaInIJG_kZc1RespkfPnET116L0uPihelh6EKU20h8hJBb5em4UQkWCPAUbbmBCLWsX4EGF5GIW6xr5CRRp7AJ1TMR8ml_Z-6D0eFse1SaCEX9D3j1tznsY3iNxxGQ" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0e0b30] to-transparent"></div>
-                </div>
-                <div className="relative z-10 p-6 flex flex-col justify-between h-full text-center items-center">
-                  <div className="flex-1 flex items-center justify-center">
-                    <h3 className="text-3xl font-bold text-white tracking-wide font-serif transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-blue-100 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="inline-flex items-center text-xs font-semibold text-white/80 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
+              <CardContainer {...commonProps} className={`group ${bgClass}`}>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60"></div>
+                <div className="relative z-10 p-5 h-full flex flex-col items-center justify-center text-center">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={service.name} className="h-12 w-auto object-contain mb-3 drop-shadow-lg" />
+                  ) : (
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-wide font-serif">{service.name}</h3>
+                  )}
+                  <p className="text-blue-100 text-xs line-clamp-2">{service.description}</p>
                 </div>
               </CardContainer>
             );
           }
 
-          // --- TEMPLATE: PRIME STYLE (Gradient Brand) ---
-          if (card.style === 'prime') {
+          // --- YOUTUBE / GENERIC (Light/Dark Clean) ---
+          if (card.style === 'youtube' || card.style === 'microsoft' || card.style === 'appletv') {
+            const isDarkBg = card.style === 'appletv';
+            const bg = isDarkBg ? 'bg-black dark:bg-[#1c1c1e]' : (card.customBg || 'bg-white dark:bg-zinc-800');
+            const text = isDarkBg ? 'text-white' : 'text-gray-900 dark:text-white';
+
             return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-[#00A8E1]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#00A8E1] to-[#002F6C]"></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="text-white font-bold text-3xl italic tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name.toLowerCase()}</div>
-                  <div>
-                    <p className="text-white/90 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/80 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
+              <CardContainer {...commonProps} className={`group ${bg} border border-gray-100 dark:border-gray-700`}>
+                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={service.name} className={`h-8 w-auto object-contain self-start ${isDarkBg ? 'brightness-0 invert' : ''}`} />
+                  ) : (
+                    <h3 className={`text-xl font-bold ${text} tracking-tight`}>{service.name}</h3>
+                  )}
+                  <p className={`${isDarkBg ? 'text-gray-400' : 'text-gray-500'} text-xs line-clamp-2`}>{service.description}</p>
                 </div>
               </CardContainer>
             );
           }
 
-          // --- TEMPLATE: MAX STYLE (Dark Purple/Black) ---
-          if (card.style === 'max') {
-            const bgClass = card.customBg || 'bg-purple-900';
+          // --- PRIME / BRANDED ---
+          if (card.style === 'prime' || card.style === 'max' || card.style === 'slac' || card.style === 'hulu') {
             return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${bgClass}`}>
-                  <img alt="" className="w-full h-full object-cover opacity-40 mix-blend-multiply group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBF5GL4xU6ZzE7CyjWS4OkkQ4TzxMLUGJCjI1YH4dnRT03NQmVhMth7k_S4Ir9cXsVoFbEVykL7keVbG4a1sKzgMkV7eusuhVUoW37bU_4HSI0qqG-yOTgz_z9-DE_PX_mcUAtzONxU8qx4H0IEybS3-t5Psiwba00eW-gwVOek_LHe0BLBkNXUiJiV9xHTGGjgcVXZS-DN7mkHae3ipuXGgyrS2U4dtXh29w-hLGCqKirpfKe2U_ybZhH0y-xDxmbsM04_e6fzE9c" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80"></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-end">
-                  <div className="mb-auto pt-4">
-                    <h3 className="text-3xl font-black text-white tracking-tighter transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-gray-300 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/70 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
+              <CardContainer {...commonProps} className={`group ${card.customBg || 'bg-gray-800'}`}>
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/30"></div>
+                <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt={service.name} className="h-8 md:h-10 w-auto object-contain self-start drop-shadow-md brightness-0 invert" />
+                  ) : (
+                    <h3 className="text-2xl font-black text-white italic tracking-tighter">{service.name}</h3>
+                  )}
+                  <p className="text-white/90 text-xs font-medium line-clamp-2">{service.description}</p>
                 </div>
               </CardContainer>
             );
           }
 
-          // --- TEMPLATE: APPLE TV STYLE (Minimal Dark) ---
-          if (card.style === 'appletv') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-black dark:bg-[#1c1c1e]"></div>
-                <div className="relative z-10 p-6 h-full flex flex-col items-center justify-center text-center">
-                  <h3 className="text-2xl font-medium text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  <p className="text-gray-400 text-sm mb-6 line-clamp-2 leading-relaxed">{service.description}</p>
-                  <div className="flex items-center text-xs font-semibold text-white/60 group-hover:text-white transition-colors">
-                    Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: HULU STYLE (Vibrant Green/Dark) ---
-          if (card.style === 'hulu') {
-            const bgClass = card.customBg || 'bg-[#1CE783]';
-            const textColor = card.customBg ? 'text-white' : 'text-[#040F1D]';
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${bgClass}`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#040F1D] opacity-90"></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <h3 className="text-4xl font-black text-white tracking-widest uppercase transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  <div>
-                    <p className="text-green-100 text-sm mb-4 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/80 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: MICROSOFT STYLE (Corporate/Light) ---
-          if (card.style === 'microsoft') {
-            const bgClass = card.customBg || 'bg-blue-50';
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${bgClass} dark:bg-slate-800`}>
-                  <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(#2563EB 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform">
-                      Explore <ArrowRight className="ml-1 w-3 h-3" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: CANVA STYLE (Gradient Light) ---
-          if (card.style === 'canva') {
-            const gradient = card.customGradient || 'bg-gradient-to-tr from-[#00C4CC] via-[#7D2AE8] to-[#F1F3F5]';
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className={`absolute inset-0 ${gradient}`}></div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-3xl font-bold text-gray-900 mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1" style={{ fontFamily: 'sans-serif' }}>{service.name}</h3>
-                  </div>
-                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-sm">
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 font-medium">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-[#7D2AE8] group-hover:translate-x-1 transition-transform">
-                      Explore <ArrowRight className="ml-1 w-3 h-3" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: CHATGPT STYLE (Tech/Green) ---
-          if (card.style === 'chatgpt') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-[#10A37F] dark:bg-[#000000]">
-                  <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: ADOBE STYLE (Gradient Red/Orange) ---
-          if (card.style === 'adobe') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#FF0000] via-[#FF9900] to-[#FF0080]"></div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between text-white">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-white/90 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: XBOX STYLE (Gamer Green) ---
-          if (card.style === 'xbox') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-[#107C10]">
-                  <img alt="" className="w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtqf5Q4C-cepR3TFkzxjQmWOCK0AssWQsl0_E49SIbJVAm6DFW1G4tEYA7a7Zfs09-rL5qnupx-UPADFhJxD1Wo5nDzLTK4gBAn4b39395bTW8hzpNAmGZ0uRomeMcsoEqaHGhLdHNa0621jAIfW8uG0cCqDCF9pedmaKt7N6evWv_yVdnyzSlyMnI88IMQJo_0HFXn4UYDdyhZI-nmmFzhJdAQ46gbHIpieURzcpzEZb7PM5KjLbkxsMp2m2hnI5CSD-UNAcTR_E" />
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-green-100 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            );
-          }
-
-          // --- TEMPLATE: SLACK STYLE (Simple Color) ---
-          if (card.style === 'slack') {
-            return (
-              <CardContainer
-                key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className={`relative group overflow-hidden rounded-xl shadow-lg cursor-pointer transition-shadow hover:shadow-2xl`}
-              >
-                <div className="absolute inset-0 bg-[#4A154B]">
-                  <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                </div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight transform transition-transform duration-300 group-hover:-translate-y-1">{service.name}</h3>
-                  </div>
-                  <div>
-                    <p className="text-white/80 text-sm mb-4 line-clamp-2 leading-relaxed">{service.description}</p>
-                    <div className="flex items-center text-xs font-bold text-white/90 group-hover:text-white transition-colors">
-                      Explore <ArrowRight className="ml-1 w-3 h-3 transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </div>
-              </CardContainer>
-            )
-          }
-
-          return null;
+          // --- DEFAULT / OTHER ---
+          return (
+            <CardContainer {...commonProps} className={`group ${card.customBg || 'bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900'} border border-gray-100 dark:border-gray-800`}>
+              {card.customGradient && <div className={`absolute inset-0 ${card.customGradient} opacity-20`}></div>}
+              <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={service.name} className="h-8 w-auto object-contain self-start" />
+                ) : (
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{service.name}</h3>
+                )}
+                <p className="text-gray-600 dark:text-gray-300 text-xs line-clamp-2">{service.description}</p>
+              </div>
+            </CardContainer>
+          );
         })}
       </div>
 
@@ -562,6 +299,8 @@ export default function Discover() {
         isOpen={!!selectedServiceId}
         onClose={() => setSelectedServiceId(null)}
         service={selectedServiceId ? getServiceData(selectedServiceId) : null}
+        themeColor={selectedServiceId ? getServiceColor(selectedServiceId) : undefined}
+        logoUrl={selectedServiceId ? getBrandLogo(selectedServiceId) : undefined}
       />
     </div>
   );
