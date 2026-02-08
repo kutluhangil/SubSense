@@ -1,8 +1,12 @@
 
-import React from 'react';
-import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { LayoutGrid, CreditCard, PieChart, Users, Settings, LogOut, HelpCircle, ArrowRightLeft, User, Compass, Sparkles, Star } from 'lucide-react';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
+import { updateFeatureUsage } from '../utils/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import { trackEvent } from '../utils/analytics';
+import UpgradeModal from './UpgradeModal';
 
 interface SidebarProps {
   onLogout: () => void;
@@ -11,8 +15,20 @@ interface SidebarProps {
   onOpenAI?: () => void; // New prop
 }
 
-export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) {
+const Sidebar = ({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: SidebarProps) => {
   const { t } = useLanguage();
+  const { currentUser, isPro } = useAuth();
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+
+  const handleNavigate = (view: string) => {
+      if (onNavigate) {
+          onNavigate(view);
+          trackEvent('feature_viewed', { feature_name: view });
+          if (currentUser) {
+              updateFeatureUsage(currentUser.uid, `view_${view}`);
+          }
+      }
+  };
 
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: t('sidebar.dashboard') },
@@ -25,9 +41,10 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
   ];
 
   return (
+    <>
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-subtle h-full transition-colors duration-300">
       {/* Logo Area */}
-      <div className="h-20 flex items-center px-6 border-b border-subtle cursor-pointer" onClick={() => onNavigate && onNavigate('dashboard')}>
+      <div className="h-20 flex items-center px-6 border-b border-subtle cursor-pointer" onClick={() => handleNavigate('dashboard')}>
         <Logo className="h-8" />
       </div>
 
@@ -38,7 +55,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <button
             key={item.id}
             data-tour={`nav-${item.id}`}
-            onClick={() => onNavigate && onNavigate(item.id)}
+            onClick={() => handleNavigate(item.id)}
             className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
               currentView === item.id
                 ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 
@@ -70,7 +87,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         <p className="px-4 text-xs font-semibold text-muted uppercase tracking-wider mb-4">{t('sidebar.account')}</p>
         <button 
           data-tour="nav-settings"
-          onClick={() => onNavigate && onNavigate('settings')}
+          onClick={() => handleNavigate('settings')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
             currentView === 'settings' 
             ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 
@@ -81,7 +98,7 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <span>{t('sidebar.settings')}</span>
         </button>
         <button 
-          onClick={() => onNavigate && onNavigate('help')}
+          onClick={() => handleNavigate('help')}
           className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-xl transition-all duration-200 group ${
             currentView === 'help' 
             ? 'bg-gray-50 dark:bg-gray-700/50 text-primary font-medium shadow-sm' 
@@ -92,6 +109,27 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
           <span>{t('sidebar.help')}</span>
         </button>
       </div>
+
+      {/* Pro Upgrade CTA (Only for Free Users) */}
+      {!isPro && (
+        <div className="mx-4 mb-4">
+           <button 
+             onClick={() => setIsUpgradeOpen(true)}
+             className="w-full bg-gradient-to-r from-gray-900 to-gray-800 dark:from-indigo-600 dark:to-purple-600 text-white rounded-xl p-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 group relative overflow-hidden"
+           >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="flex items-center gap-3 relative z-10">
+                 <div className="bg-white/20 p-1.5 rounded-lg">
+                    <Star size={16} className="text-yellow-300 fill-current" />
+                 </div>
+                 <div className="text-left">
+                    <p className="text-xs font-bold">Upgrade to Pro</p>
+                    <p className="text-[10px] text-gray-300">Unlock AI Insights</p>
+                 </div>
+              </div>
+           </button>
+        </div>
+      )}
 
       {/* Bottom Actions */}
       <div className="p-4 border-t border-subtle">
@@ -104,5 +142,10 @@ export default function Sidebar({ onLogout, currentView = 'dashboard', onNavigat
         </button>
       </div>
     </div>
+    
+    <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
+    </>
   );
-}
+};
+
+export default React.memo(Sidebar);

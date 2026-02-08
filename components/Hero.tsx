@@ -7,6 +7,7 @@ import ProfileCarousel from './ProfileCarousel';
 import FeatureGrid from './FeatureGrid';
 import MicroDemoRow from './MicroDemoRow';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
+import PricingSection from './PricingSection';
 
 interface HeroProps {
   onOpenDemo?: () => void;
@@ -92,7 +93,12 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
       {/* 4. Micro Demo Strip */}
       <MicroDemoRow />
 
-      {/* 5. Final CTA Section */}
+      {/* 5. Pricing Section */}
+      <div className="relative z-10">
+         <PricingSection onOpenAuth={handleAuth} />
+      </div>
+
+      {/* 6. Final CTA Section */}
       <div className="relative py-24 px-4 overflow-hidden">
          <div className="absolute inset-0 bg-gray-900 z-0">
             <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>

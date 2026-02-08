@@ -1,12 +1,12 @@
-
 import React, { useState, useMemo } from 'react';
 import { Search, Mic, Plus, PenTool } from 'lucide-react';
 import FloatingLogoLayer from './FloatingLogoLayer';
 import AddSubscriptionModal from './AddSubscriptionModal';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail, BRAND_COLORS } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
+import { useFeedback } from '../contexts/FeedbackContext'; // Import
 
 interface SubscriptionSearchPanelProps {
   onAddSubscription: (service: Subscription) => void;
@@ -18,6 +18,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
   const [selectedService, setSelectedService] = useState<SubscriptionDetail | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const { triggerMicroFeedback } = useFeedback(); // Hook
 
   // Filter subscriptions based on search
   const filteredServices = useMemo(() => {
@@ -58,6 +59,9 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
     setSearchTerm('');
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+    
+    // Trigger feedback contextually
+    triggerMicroFeedback('add_subscription');
   };
 
   return (

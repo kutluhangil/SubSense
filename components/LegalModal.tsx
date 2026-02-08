@@ -18,7 +18,7 @@ export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
     terms: {
       title: t('legal.terms.title'),
       icon: FileText,
-      updated: "MVP Release v1.0",
+      updated: "Release v1.0",
       intro: t('legal.intro'),
       sections: [
         {
@@ -34,20 +34,20 @@ export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
           text: t('legal.section.financial_text')
         },
         {
-          heading: t('help.faq.limit_currency.q'), // Reusing known limitations text
-          text: t('help.faq.limit_currency.a')
+          heading: "4. AI & Currency Limitations",
+          text: "Currency conversions are estimates based on periodic rates. AI-generated insights are for informational purposes only and should not be considered financial advice. Please verify prices with service providers."
         },
         {
-          heading: "5. Limitation of Liability", // Keeping standard legal header
-          text: "SubscriptionHub is provided 'as is' without warranty of any kind."
+          heading: "5. Limitation of Liability", 
+          text: "SubscriptionHub is provided 'as is' without warranty of any kind. We are not liable for any data loss, financial discrepancies, or issues arising from the use of this tool."
         }
       ]
     },
     privacy: {
       title: t('legal.privacy.title'),
       icon: Shield,
-      updated: "MVP Release v1.0",
-      intro: "We believe in privacy by design.",
+      updated: "Release v1.0",
+      intro: "We believe in privacy by design. Your data belongs to you.",
       sections: [
         {
           heading: t('legal.section.privacy_data'),
@@ -55,11 +55,11 @@ export default function LegalModal({ isOpen, onClose, type }: LegalModalProps) {
         },
         {
           heading: "2. No Data Collection",
-          text: "We do not collect usage analytics, tracking pixels, or advertising data."
+          text: "We do not collect usage analytics, tracking pixels, or advertising data. All subscription data is stored locally on your device."
         },
         {
-          heading: t('help.faq.account.q'),
-          text: t('help.faq.account.a')
+          heading: "3. AI Processing",
+          text: "When using AI features, a sanitized, anonymous snapshot of your subscription data (names, prices) is sent to Google Gemini for analysis. No personal identifiers (email, name) are shared with the AI."
         }
       ]
     }

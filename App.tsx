@@ -1,16 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import Features from './components/Features';
 import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
-import Dashboard from './components/Dashboard';
-import DemoModal from './components/DemoModal';
-import ResetPasswordPage from './components/ResetPasswordPage';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { FeedbackProvider } from './contexts/FeedbackContext'; 
 import { migrateLocalData } from './utils/firestore';
+import { WifiOff, Loader2 } from 'lucide-react';
+import { trackPageView } from './utils/analytics';
+
+// Lazy Load Pages & Heavy Components
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const Features = React.lazy(() => import('./components/Features'));
+const DemoModal = React.lazy(() => import('./components/DemoModal'));
+const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage'));
 
 // Types for user interface consistency
 export interface User {
@@ -21,13 +26,41 @@ export interface User {
   uid?: string;
 }
 
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
+    <Loader2 className="animate-spin text-indigo-600" size={32} />
+  </div>
+);
+
 function AppContent() {
-  const { currentUser, login, signup, logout } = useAuth();
+  const { currentUser, login, signup, logout, authInitialized } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
   const { setCurrency } = useLanguage();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // --- Network Status ---
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // --- Analytics: Track Route Changes ---
+  useEffect(() => {
+    if (currentUser) {
+      // Dashboard internal navigation handles its own tracking
+    } else {
+      trackPageView(currentPage);
+    }
+  }, [currentPage, currentUser]);
 
   // --- Migration Logic ---
   useEffect(() => {
@@ -76,15 +109,16 @@ function AppContent() {
   };
 
   // Wrapper for AuthContext login
-  const handleLogin = async (email: string, password: string) => {
-    await login(email, password);
+  const handleLogin = async (email: string, password: string, rememberMe: boolean = false) => {
+    await login(email, password, rememberMe);
     setIsAuthOpen(false);
     setCurrentPage('home');
   };
 
   // Wrapper for AuthContext signup
-  const handleSignup = async (name: string, email: string, password: string, currency: string) => {
-    await signup(email, password, name);
+  const handleSignup = async (name: string, email: string, password: string, currency: string, region: string) => {
+    await signup(email, password, name, currency, region);
+    // LanguageContext listens to profile changes via userProfile, but we can set local state too for instant feedback
     setCurrency(currency);
     setIsAuthOpen(false);
     setCurrentPage('home');
@@ -101,6 +135,11 @@ function AppContent() {
     window.scrollTo(0,0);
   };
 
+  // 4. App-Level Gating: Show loader until auth state is confirmed
+  if (!authInitialized) {
+    return <PageLoader />;
+  }
+
   // Map Firebase user to App User interface
   const appUser: User | null = currentUser ? {
     email: currentUser.email || '',
@@ -109,50 +148,59 @@ function AppContent() {
     uid: currentUser.uid
   } : null;
 
-  if (appUser) {
-    return <Dashboard user={appUser} onLogout={handleLogout} />;
-  }
-
-  if (currentPage === 'reset-password') {
-    return (
-      <div className="min-h-screen bg-white text-gray-900 flex flex-col">
-        <ResetPasswordPage onLoginClick={() => {
-          setCurrentPage('home');
-          openAuth('login');
-        }} />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
-      <Navbar 
-        onOpenAuth={openAuth} 
-        onNavigate={(page) => setCurrentPage(page as any)} 
-        currentPage={currentPage as 'home' | 'features'}
-      />
-      <main className="flex-grow flex flex-col">
-        {currentPage === 'home' ? (
-          <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
+    <>
+      {!isOnline && (
+        <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-xs font-bold text-center py-1 z-[100] flex items-center justify-center gap-2 animate-in slide-in-from-top-1">
+          <WifiOff size={12} />
+          You are offline. Showing cached data.
+        </div>
+      )}
+      
+      <Suspense fallback={<PageLoader />}>
+        {appUser ? (
+          <Dashboard user={appUser} onLogout={handleLogout} />
         ) : (
-          <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
+          <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
+            {currentPage === 'reset-password' ? (
+               <ResetPasswordPage onLoginClick={() => {
+                  setCurrentPage('home');
+                  openAuth('login');
+               }} />
+            ) : (
+              <>
+                <Navbar 
+                  onOpenAuth={openAuth} 
+                  onNavigate={(page) => setCurrentPage(page as any)} 
+                  currentPage={currentPage as 'home' | 'features'}
+                />
+                <main className="flex-grow flex flex-col">
+                  {currentPage === 'home' ? (
+                    <Hero onOpenDemo={openDemo} onOpenAuth={openAuth} />
+                  ) : (
+                    <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
+                  )}
+                </main>
+                <Footer />
+              </>
+            )}
+            <AuthModal 
+              isOpen={isAuthOpen} 
+              onClose={() => setIsAuthOpen(false)} 
+              initialMode={authMode}
+              onLoginSubmit={handleLogin}
+              onSignupSubmit={handleSignup}
+              onSimulateReset={handleSimulateReset}
+            />
+            <DemoModal 
+              isOpen={isDemoOpen}
+              onClose={closeDemo}
+              onSignup={() => openAuth('signup')}
+            />
+          </div>
         )}
-      </main>
-      <Footer />
-      <AuthModal 
-        isOpen={isAuthOpen} 
-        onClose={() => setIsAuthOpen(false)} 
-        initialMode={authMode}
-        onLoginSubmit={handleLogin}
-        onSignupSubmit={handleSignup}
-        onSimulateReset={handleSimulateReset}
-      />
-      <DemoModal 
-        isOpen={isDemoOpen}
-        onClose={closeDemo}
-        onSignup={() => openAuth('signup')}
-      />
-    </div>
+      </Suspense>
+    </>
   );
 }
 
@@ -160,7 +208,9 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <AppContent />
+        <FeedbackProvider>
+          <AppContent />
+        </FeedbackProvider>
       </LanguageProvider>
     </AuthProvider>
   );

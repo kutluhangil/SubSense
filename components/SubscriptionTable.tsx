@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -13,7 +12,7 @@ interface SubscriptionTableProps {
   previewCurrency?: string | null;
 }
 
-export default function SubscriptionTable({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }: SubscriptionTableProps) {
+const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }) => {
   const { formatPrice, formatDate, currentCurrency } = useLanguage();
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -167,4 +166,6 @@ export default function SubscriptionTable({ subscriptions = [], onSelectSubscrip
       </table>
     </div>
   );
-}
+});
+
+export default SubscriptionTable;

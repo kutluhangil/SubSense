@@ -4,6 +4,7 @@ import { MessageSquare, X, Send, Sparkles, User, Bot, Loader2 } from 'lucide-rea
 import { chatWithGemini } from '../utils/gemini';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
+import { trackEvent } from '../utils/analytics';
 
 interface AIAssistantProps {
   isOpen: boolean;
@@ -18,7 +19,7 @@ interface Message {
 }
 
 export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
-  const { currentCurrency, convert, currentLanguage, t } = useLanguage();
+  const { currentCurrency, currentLanguage, t } = useLanguage();
   
   // Initialize messages with localized welcome
   const [messages, setMessages] = useState<Message[]>([]);
@@ -29,6 +30,13 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
         { role: 'model', text: t('ai.welcome_message') }
       ]);
   }, [currentLanguage, t]);
+
+  // Track opening
+  useEffect(() => {
+    if (isOpen) {
+      trackEvent('ai_opened', { from_page: currentPage });
+    }
+  }, [isOpen, currentPage]);
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -50,22 +58,16 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
+    
+    // Analytics: Track query length (privacy safe)
+    trackEvent('ai_query_submitted', { length: userMsg.length });
 
-    // Prepare context with normalized currency values
-    const monthlySpend = subscriptions.reduce((acc, sub) => {
-       const priceInBase = convert(sub.price, sub.currency);
-       return acc + (sub.cycle === 'Monthly' ? priceInBase : priceInBase / 12);
-    }, 0);
-
+    // NOTE: We pass raw subscriptions here, but the utility function `chatWithGemini`
+    // is now responsible for strictly validating, sanitizing, and normalizing them.
+    // This keeps the UI component dumb and the logic centralized.
+    
     const contextData = {
-      subscriptions: subscriptions.map(s => ({ 
-          name: s.name, 
-          price: s.price, 
-          currency: s.currency, 
-          basePrice: convert(s.price, s.currency).toFixed(2),
-          cycle: s.cycle 
-      })),
-      monthlySpend: monthlySpend.toFixed(2),
+      subscriptions: subscriptions,
       baseCurrency: currentCurrency,
       currentPage
     };
@@ -114,7 +116,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                 <h2 className="text-sm font-bold text-gray-900 dark:text-white">{t('ai.assistant_title')}</h2>
                 <div className="flex items-center gap-1">
                    <Sparkles size={10} className="text-indigo-500" />
-                   <p className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
+                   <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
                 </div>
               </div>
             </div>

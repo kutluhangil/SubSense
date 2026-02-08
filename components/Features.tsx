@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { CreditCard, Globe, Bell, PieChart, Users, Shield, ArrowRight, Zap, Smartphone, Layers, CheckCircle2 } from 'lucide-react';
-import BrandIcon from './BrandIcon';
+import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface FeaturesProps {
@@ -163,7 +162,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">Let AI handle the boring part.</h2>
           <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
-            SubTrack automatically updates subscription prices, tracks payment dates, and alerts you about global price changes — so you can focus on what matters.
+            SubSense automatically updates subscription prices, tracks payment dates, and alerts you about global price changes — so you can focus on what matters.
           </p>
         </div>
       </div>
