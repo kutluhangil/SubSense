@@ -30,16 +30,19 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // --- Local States (Initialized from LocalStorage fallback for guests/initial load) ---
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>(() => {
+    if (typeof window === 'undefined') return 'en';
     const saved = localStorage.getItem('userLanguagePreference');
     return (saved === 'en' || saved === 'tr') ? saved : 'en';
   });
 
   const [currentCurrency, setCurrentCurrency] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'USD';
     const saved = localStorage.getItem('userCurrencyPreference');
     return saved || 'USD';
   });
 
   const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
+    if (typeof window === 'undefined') return 'system';
     const saved = localStorage.getItem('userThemePreference');
     return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
   });
@@ -62,6 +65,8 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   // --- Persist Changes ---
   
   const persistSettings = (updates: any) => {
+    if (typeof window === 'undefined') return;
+    
     // Local persistence for fallback/guest
     if (updates.language) localStorage.setItem('userLanguagePreference', updates.language);
     if (updates.baseCurrency) localStorage.setItem('userCurrencyPreference', updates.baseCurrency);
@@ -78,6 +83,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     document.documentElement.lang = currentLanguage;
     document.documentElement.dir = dir;
   }, [currentLanguage, dir]);
@@ -88,6 +94,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Apply Theme
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const applyTheme = () => {
       const isDark = 
         currentTheme === 'dark' || 
