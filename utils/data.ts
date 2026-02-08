@@ -70,7 +70,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "twitch": "#9146FF",
   "twitchturbo": "#9146FF",
   "peacock": "#000000",
-  
+
   // Music
   "applemusic": "#FC3C44",
   "soundcloud": "#FF5500",
@@ -92,7 +92,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "slack": "#4A154B",
   "zoom": "#2D8CFF",
   "dropbox": "#0061FF",
-  
+
   // Gaming
   "gamepass": "#107C10",
   "xboxgamepass": "#107C10",
@@ -101,7 +101,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "eaplay": "#FF4747",
   "ubisoft+": "#0091F2",
   "geforcenow": "#76B900",
-  
+
   // AI
   "chatgpt": "#10A37F",
   "chatgptplus": "#10A37F",
@@ -109,14 +109,20 @@ export const BRAND_COLORS: Record<string, string> = {
   "midjourney": "#FFFFFF", // Often depicted white on black
   "grammarly": "#15C39A",
   "perplexity": "#22B8CF",
-  
+
   // Local / E-com
   "hepsiburada": "#F68B1E",
   "hepsiburadapremium": "#F68B1E",
   "trendyol": "#FF6600",
   "trendyolelite": "#FF6600",
   "getir": "#5D3EBC",
-  
+
+  // Added requested brands
+  "discord": "#5865F2",
+  "discordnitro": "#5865F2",
+  "duolingo": "#58CC02",
+  "masterclass": "#181818",
+
   "default": "#4F46E5" // Indigo-600
 };
 
@@ -159,12 +165,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "260M+",
     website: "netflix.com",
     milestones: [
-        "1997: Founded as a DVD-by-mail service", 
-        "2007: Launched streaming video service", 
-        "2013: Released first original series 'House of Cards'", 
-        "2016: Expanded globally to 130 new countries simultaneously",
-        "2021: Squid Game becomes most-watched show ever",
-        "2022: Launched ad-supported tier"
+      "1997: Founded as a DVD-by-mail service",
+      "2007: Launched streaming video service",
+      "2013: Released first original series 'House of Cards'",
+      "2016: Expanded globally to 130 new countries simultaneously",
+      "2021: Squid Game becomes most-watched show ever",
+      "2022: Launched ad-supported tier"
     ],
   },
   "spotify": {
@@ -182,12 +188,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "602M+ (Total)",
     website: "spotify.com",
     milestones: [
-        "2006: Founded in Stockholm", 
-        "2008: Service launched in Europe", 
-        "2011: Launched in the United States", 
-        "2015: Discover Weekly playlist launched",
-        "2019: Acquired Gimlet Media (Podcast pivot)",
-        "2023: Surpassed 500 million active users"
+      "2006: Founded in Stockholm",
+      "2008: Service launched in Europe",
+      "2011: Launched in the United States",
+      "2015: Discover Weekly playlist launched",
+      "2019: Acquired Gimlet Media (Podcast pivot)",
+      "2023: Surpassed 500 million active users"
     ],
   },
   "youtubepremium": {
@@ -206,11 +212,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Alphabet Inc.",
     website: "youtube.com",
     milestones: [
-        "2005: YouTube founded", 
-        "2006: Acquired by Google for $1.65B", 
-        "2015: Launched YouTube Red", 
-        "2018: Rebranded to YouTube Premium",
-        "2024: Surpassed 100 million subscribers"
+      "2005: YouTube founded",
+      "2006: Acquired by Google for $1.65B",
+      "2015: Launched YouTube Red",
+      "2018: Rebranded to YouTube Premium",
+      "2024: Surpassed 100 million subscribers"
     ],
   },
   "amazonprimevideo": {
@@ -229,11 +235,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Amazon",
     website: "primevideo.com",
     milestones: [
-        "2006: Amazon Unbox launched", 
-        "2011: Included in Prime membership", 
-        "2013: Amazon Studios launches first original series", 
-        "2022: 'The Rings of Power' premieres",
-        "2024: Introduced ads to base tier"
+      "2006: Amazon Unbox launched",
+      "2011: Included in Prime membership",
+      "2013: Amazon Studios launches first original series",
+      "2022: 'The Rings of Power' premieres",
+      "2024: Introduced ads to base tier"
     ],
   },
   "disney+": {
@@ -252,11 +258,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Disney",
     website: "disneyplus.com",
     milestones: [
-        "2019: Launch with 'The Mandalorian'", 
-        "2020: Reached 50 million subscribers in 5 months", 
-        "2020: Released 'Hamilton' and 'Soul' directly to streaming",
-        "2022: Launched ad-supported tier",
-        "2024: Integrated Hulu content into main app"
+      "2019: Launch with 'The Mandalorian'",
+      "2020: Reached 50 million subscribers in 5 months",
+      "2020: Released 'Hamilton' and 'Soul' directly to streaming",
+      "2022: Launched ad-supported tier",
+      "2024: Integrated Hulu content into main app"
     ],
   },
   "hulu": {
@@ -275,11 +281,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Disney",
     website: "hulu.com",
     milestones: [
-        "2008: Public launch", 
-        "2011: Launched original programming", 
-        "2017: Launched Hulu with Live TV", 
-        "2017: 'The Handmaid’s Tale' wins Best Drama Emmy",
-        "2019: Disney assumes full operational control"
+      "2008: Public launch",
+      "2011: Launched original programming",
+      "2017: Launched Hulu with Live TV",
+      "2017: 'The Handmaid’s Tale' wins Best Drama Emmy",
+      "2019: Disney assumes full operational control"
     ],
   },
   "hbomax": {
@@ -298,11 +304,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Warner Bros. Discovery",
     website: "max.com",
     milestones: [
-        "2020: HBO Max launch", 
-        "2021: Same-day theatrical releases (Matrix 4, Dune)", 
-        "2022: Warner Bros. Discovery merger completed",
-        "2023: Rebranded to 'Max'",
-        "2024: House of the Dragon Season 2"
+      "2020: HBO Max launch",
+      "2021: Same-day theatrical releases (Matrix 4, Dune)",
+      "2022: Warner Bros. Discovery merger completed",
+      "2023: Rebranded to 'Max'",
+      "2024: House of the Dragon Season 2"
     ],
   },
   "appletv+": {
@@ -321,11 +327,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Apple Inc.",
     website: "tv.apple.com",
     milestones: [
-        "2019: Launched in over 100 countries", 
-        "2020: 'Ted Lasso' premieres", 
-        "2022: 'CODA' wins Best Picture Oscar", 
-        "2023: Launched MLS Season Pass",
-        "2023: Released 'Killers of the Flower Moon'"
+      "2019: Launched in over 100 countries",
+      "2020: 'Ted Lasso' premieres",
+      "2022: 'CODA' wins Best Picture Oscar",
+      "2023: Launched MLS Season Pass",
+      "2023: Released 'Killers of the Flower Moon'"
     ],
   },
 
@@ -346,11 +352,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Apple Inc.",
     website: "music.apple.com",
     milestones: [
-        "2014: Apple acquires Beats Electronics",
-        "2015: Apple Music launched at WWDC", 
-        "2018: Surpassed 50 million subscribers",
-        "2021: Added Lossless and Spatial Audio", 
-        "2023: Apple Music Classical app launched"
+      "2014: Apple acquires Beats Electronics",
+      "2015: Apple Music launched at WWDC",
+      "2018: Surpassed 50 million subscribers",
+      "2021: Added Lossless and Spatial Audio",
+      "2023: Apple Music Classical app launched"
     ],
   },
 
@@ -371,11 +377,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Microsoft",
     website: "microsoft.com",
     milestones: [
-        "2011: Office 365 for Enterprise launched", 
-        "2013: Office 365 for Home launched", 
-        "2017: Microsoft Teams launched", 
-        "2020: Rebranded to Microsoft 365",
-        "2023: Copilot AI integration announced"
+      "2011: Office 365 for Enterprise launched",
+      "2013: Office 365 for Home launched",
+      "2017: Microsoft Teams launched",
+      "2020: Rebranded to Microsoft 365",
+      "2023: Copilot AI integration announced"
     ],
   },
   "adobecreativecloud": {
@@ -393,11 +399,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "30M+",
     website: "adobe.com",
     milestones: [
-        "1982: Adobe founded", 
-        "1990: Photoshop 1.0 released", 
-        "2013: Shifted entirely to Creative Cloud subscription",
-        "2021: Acquired Frame.io for cloud collaboration",
-        "2023: Launched Firefly Generative AI"
+      "1982: Adobe founded",
+      "1990: Photoshop 1.0 released",
+      "2013: Shifted entirely to Creative Cloud subscription",
+      "2021: Acquired Frame.io for cloud collaboration",
+      "2023: Launched Firefly Generative AI"
     ],
   },
   "canvapro": {
@@ -415,11 +421,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "135M+ (MAU)",
     website: "canva.com",
     milestones: [
-        "2013: Launched in Sydney", 
-        "2015: Reached 4 million users", 
-        "2019: Acquired Pexels and Pixabay", 
-        "2021: Valued at $40 billion",
-        "2023: Launched Magic Studio AI"
+      "2013: Launched in Sydney",
+      "2015: Reached 4 million users",
+      "2019: Acquired Pexels and Pixabay",
+      "2021: Valued at $40 billion",
+      "2023: Launched Magic Studio AI"
     ],
   },
   "googleworkspace": {
@@ -438,11 +444,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Alphabet Inc.",
     website: "workspace.google.com",
     milestones: [
-        "2006: Launched as Google Apps",
-        "2012: Google Drive released",
-        "2016: Rebranded to G Suite",
-        "2020: Rebranded to Google Workspace",
-        "2023: Gemini AI integration"
+      "2006: Launched as Google Apps",
+      "2012: Google Drive released",
+      "2016: Rebranded to G Suite",
+      "2020: Rebranded to Google Workspace",
+      "2023: Gemini AI integration"
     ]
   },
   "slack": {
@@ -461,11 +467,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Salesforce",
     website: "slack.com",
     milestones: [
-        "2013: Public launch",
-        "2019: Direct listing on NYSE",
-        "2020: IBM chooses Slack for 350k employees",
-        "2021: Acquired by Salesforce",
-        "2023: Launched Slack Canvas"
+      "2013: Public launch",
+      "2019: Direct listing on NYSE",
+      "2020: IBM chooses Slack for 350k employees",
+      "2021: Acquired by Salesforce",
+      "2023: Launched Slack Canvas"
     ]
   },
   "notionplus": {
@@ -483,11 +489,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "30M+",
     website: "notion.so",
     milestones: [
-        "2016: Notion 1.0 released",
-        "2018: Notion 2.0 (Databases) released",
-        "2020: Personal plan made free",
-        "2021: Valued at $10 Billion",
-        "2023: Notion AI launched"
+      "2016: Notion 1.0 released",
+      "2018: Notion 2.0 (Databases) released",
+      "2020: Personal plan made free",
+      "2021: Valued at $10 Billion",
+      "2023: Notion AI launched"
     ]
   },
   "figma": {
@@ -505,11 +511,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "4M+",
     website: "figma.com",
     milestones: [
-        "2015: Closed beta launch",
-        "2016: Public launch",
-        "2021: Launched FigJam",
-        "2022: Failed Adobe acquisition attempt",
-        "2023: Dev Mode for developers"
+      "2015: Closed beta launch",
+      "2016: Public launch",
+      "2021: Launched FigJam",
+      "2022: Failed Adobe acquisition attempt",
+      "2023: Dev Mode for developers"
     ]
   },
 
@@ -530,11 +536,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "OpenAI",
     website: "openai.com",
     milestones: [
-        "2015: OpenAI founded", 
-        "2020: GPT-3 released", 
-        "2022: ChatGPT launched (Nov)", 
-        "2023: ChatGPT Plus & GPT-4 released",
-        "2024: Sora video model announced"
+      "2015: OpenAI founded",
+      "2020: GPT-3 released",
+      "2022: ChatGPT launched (Nov)",
+      "2023: ChatGPT Plus & GPT-4 released",
+      "2024: Sora video model announced"
     ],
   },
   "githubcopilot": {
@@ -553,11 +559,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Microsoft",
     website: "github.com",
     milestones: [
-        "2018: Microsoft acquires GitHub",
-        "2021: Copilot Technical Preview launched", 
-        "2022: General Availability", 
-        "2023: Copilot X announced",
-        "2023: Copilot Chat integrated into VS Code"
+      "2018: Microsoft acquires GitHub",
+      "2021: Copilot Technical Preview launched",
+      "2022: General Availability",
+      "2023: Copilot X announced",
+      "2023: Copilot Chat integrated into VS Code"
     ],
   },
   "midjourney": {
@@ -575,10 +581,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "16M+ Discord Members",
     website: "midjourney.com",
     milestones: [
-        "2022: Open Beta launch via Discord",
-        "2023: V5 Model released (Photo-realism)",
-        "2023: Ended free trials due to high demand",
-        "2024: Alpha web interface testing"
+      "2022: Open Beta launch via Discord",
+      "2023: V5 Model released (Photo-realism)",
+      "2023: Ended free trials due to high demand",
+      "2024: Alpha web interface testing"
     ]
   },
 
@@ -599,11 +605,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Microsoft",
     website: "xbox.com",
     milestones: [
-        "2017: Service launched", 
-        "2019: Game Pass for PC launched", 
-        "2020: xCloud streaming added to Ultimate", 
-        "2021: Bethesda games added",
-        "2023: Activision Blizzard acquisition completed"
+      "2017: Service launched",
+      "2019: Game Pass for PC launched",
+      "2020: xCloud streaming added to Ultimate",
+      "2021: Bethesda games added",
+      "2023: Activision Blizzard acquisition completed"
     ],
   },
   "playstationplus": {
@@ -622,11 +628,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Sony",
     website: "playstation.com",
     milestones: [
-        "2010: Launched on PS3",
-        "2013: Required for PS4 online multiplayer",
-        "2020: PS Plus Collection for PS5",
-        "2022: Relaunch with Extra/Premium tiers",
-        "2023: Cloud streaming for PS5 games"
+      "2010: Launched on PS3",
+      "2013: Required for PS4 online multiplayer",
+      "2020: PS Plus Collection for PS5",
+      "2022: Relaunch with Extra/Premium tiers",
+      "2023: Cloud streaming for PS5 games"
     ]
   },
   "twitchturbo": {
@@ -645,11 +651,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Amazon",
     website: "twitch.tv",
     milestones: [
-        "2011: Launched as Justin.tv spin-off",
-        "2013: Twitch Turbo launched",
-        "2014: Acquired by Amazon",
-        "2016: Twitch Prime (now Prime Gaming) launched",
-        "2023: Turbo price increased in some regions"
+      "2011: Launched as Justin.tv spin-off",
+      "2013: Twitch Turbo launched",
+      "2014: Acquired by Amazon",
+      "2016: Twitch Prime (now Prime Gaming) launched",
+      "2023: Turbo price increased in some regions"
     ]
   },
   "discordnitro": {
@@ -667,11 +673,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "196M MAU",
     website: "discord.com",
     milestones: [
-        "2015: Discord launch",
-        "2017: Nitro subscription launched",
-        "2020: Rebranding to 'Your Place to Talk'",
-        "2021: Rejected $12B Microsoft acquisition offer",
-        "2022: Nitro Basic tier introduced"
+      "2015: Discord launch",
+      "2017: Nitro subscription launched",
+      "2020: Rebranding to 'Your Place to Talk'",
+      "2021: Rejected $12B Microsoft acquisition offer",
+      "2022: Nitro Basic tier introduced"
     ]
   },
   "duolingo": {
@@ -689,11 +695,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "83M MAU",
     website: "duolingo.com",
     milestones: [
-        "2011: Public beta launch",
-        "2013: Apple App of the Year",
-        "2017: Duolingo Plus launched",
-        "2021: IPO on NASDAQ",
-        "2023: Rebranded Plus to Super Duolingo"
+      "2011: Public beta launch",
+      "2013: Apple App of the Year",
+      "2017: Duolingo Plus launched",
+      "2021: IPO on NASDAQ",
+      "2023: Rebranded Plus to Super Duolingo"
     ]
   },
   "masterclass": {
@@ -711,11 +717,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "2M+ (Est)",
     website: "masterclass.com",
     milestones: [
-        "2015: Launched with 3 instructors",
-        "2018: Raised $80M Series D",
-        "2020: Usage surged during pandemic",
-        "2021: Valuation tripled to $2.75B",
-        "2023: Launched 'Sessions' for hands-on learning"
+      "2015: Launched with 3 instructors",
+      "2018: Raised $80M Series D",
+      "2020: Usage surged during pandemic",
+      "2021: Valuation tripled to $2.75B",
+      "2023: Launched 'Sessions' for hands-on learning"
     ]
   },
   "dropbox": {
@@ -733,11 +739,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "700M+ Users",
     website: "dropbox.com",
     milestones: [
-        "2007: Y Combinator launch",
-        "2011: Reached 50M users",
-        "2018: IPO on NASDAQ",
-        "2019: Acquired HelloSign",
-        "2023: Dropbox Dash AI launched"
+      "2007: Y Combinator launch",
+      "2011: Reached 50M users",
+      "2018: IPO on NASDAQ",
+      "2019: Acquired HelloSign",
+      "2023: Dropbox Dash AI launched"
     ]
   },
   "zoom": {
@@ -755,11 +761,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     globalUserCount: "300M+ DAU (Peak)",
     website: "zoom.us",
     milestones: [
-        "2011: Founded",
-        "2013: Public launch",
-        "2019: IPO",
-        "2020: 30x growth during pandemic",
-        "2023: Zoom AI Companion launched"
+      "2011: Founded",
+      "2013: Public launch",
+      "2019: IPO",
+      "2020: 30x growth during pandemic",
+      "2023: Zoom AI Companion launched"
     ]
   },
   "peacock": {
@@ -778,11 +784,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Comcast",
     website: "peacocktv.com",
     milestones: [
-        "2020: National launch",
-        "2021: The Office moves to Peacock",
-        "2021: WWE Network integration",
-        "2023: First exclusive NFL playoff game stream",
-        "2023: Prices increased for the first time"
+      "2020: National launch",
+      "2021: The Office moves to Peacock",
+      "2021: WWE Network integration",
+      "2023: First exclusive NFL playoff game stream",
+      "2023: Prices increased for the first time"
     ]
   },
   "paramount+": {
@@ -801,11 +807,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Paramount Global",
     website: "paramountplus.com",
     milestones: [
-        "2014: CBS All Access launch",
-        "2017: First Star Trek original series",
-        "2021: Rebranded to Paramount+",
-        "2022: Halo series premiere",
-        "2023: Integration with Showtime"
+      "2014: CBS All Access launch",
+      "2017: First Star Trek original series",
+      "2021: Rebranded to Paramount+",
+      "2022: Halo series premiere",
+      "2023: Integration with Showtime"
     ]
   },
   "audible": {
@@ -824,11 +830,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Amazon",
     website: "audible.com",
     milestones: [
-        "1995: Company founded",
-        "1997: Released first portable digital audio player",
-        "2008: Acquired by Amazon",
-        "2020: Audible Plus catalog launched",
-        "2023: Exclusive deal with Obama's Higher Ground"
+      "1995: Company founded",
+      "1997: Released first portable digital audio player",
+      "2008: Acquired by Amazon",
+      "2020: Audible Plus catalog launched",
+      "2023: Exclusive deal with Obama's Higher Ground"
     ]
   },
   "amazonprime": {
@@ -847,11 +853,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     parentCompany: "Amazon",
     website: "amazon.com",
     milestones: [
-        "2005: Prime launched ($79/year)",
-        "2011: Prime Video added",
-        "2014: Price increased to $99",
-        "2015: First Prime Day",
-        "2021: Reached 200 million members"
+      "2005: Prime launched ($79/year)",
+      "2011: Prime Video added",
+      "2014: Price increased to $99",
+      "2015: First Prime Day",
+      "2021: Reached 200 million members"
     ]
   }
 };
