@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface LogoRendererProps {
     logoUrl: string;
     name: string;
     className?: string; // For sizing (w, h) and positioning
     variant?: 'color' | 'white' | 'auto'; // 'auto' decides based on logo type or parent
+    fallback?: React.ReactNode;
 }
 
 /* 
@@ -21,15 +22,10 @@ export const LogoRenderer: React.FC<LogoRendererProps> = ({
     logoUrl,
     name,
     className = "",
-    variant = 'auto'
+    variant = 'auto',
+    fallback
 }) => {
-    const lowerName = name.toLowerCase();
-
-    // Check if this logo should preserve its original colors
-    // If the user asks for 'white', we force it (e.g., specific brand header requirement)
-    // If 'auto', we try to be smart.
-    // BUT: The issue described is "white placeholders" or "white-filled shapes".
-    // This often happens when `brightness-0 invert` is applied to a colored SVG.
+    const [hasError, setHasError] = useState(false);
 
     // Detailed Logic:
     // 1. If variant is 'white', we want a monochrome white logo.
@@ -38,9 +34,11 @@ export const LogoRenderer: React.FC<LogoRendererProps> = ({
     // 2. If variant is 'color' (or default context), we want the original SVG colors.
     //    - We should NOT apply `brightness-0 invert` here.
 
-    // The bugs described:
-    // - "Spotify logo does not render (white circle)" -> sounds like a masking or path issue, or white-on-white.
-    // - "PlayStation white-filled" -> applied filter on a shape that shouldn't have it.
+    // If image failed to load, show fallback or nothing
+    if (hasError) {
+        if (fallback) return <>{fallback}</>;
+        return null;
+    }
 
     // Start with base class
     let finalClassName = `object-contain ${className} `;
@@ -68,6 +66,7 @@ export const LogoRenderer: React.FC<LogoRendererProps> = ({
             // Enforce aspect ratio via standard HTML attributes + CSS
             style={{ aspectRatio: 'auto' }}
             loading="lazy"
+            onError={() => setHasError(true)}
         />
     );
 };

@@ -36,35 +36,39 @@ export const CURRENCY_DATA: Record<string, CurrencyMetadata> = {
 
 // Rates relative to USD (Base)
 // In production, fetch this from an API like https://open.er-api.com/v6/latest/USD
+// Rates relative to USD (Base) - Updated ~Feb 2025
+// In production, fetch this from an API like https://open.er-api.com/v6/latest/USD
 const DEFAULT_RATES: Record<string, number> = {
   "USD": 1,
-  "EUR": 0.92,
+  "EUR": 0.93,
   "GBP": 0.79,
-  "TRY": 34.20,
-  "JPY": 150.50,
-  "CNY": 7.23,
-  "AUD": 1.52,
-  "CAD": 1.36,
-  "INR": 83.12,
-  "BRL": 5.05,
-  "RUB": 92.50,
-  "KRW": 1335.00,
-  "MXN": 16.70,
+  "TRY": 36.50, // Updated 2025 est
+  "JPY": 152.00,
+  "CNY": 7.20,
+  "AUD": 1.54,
+  "CAD": 1.38,
+  "INR": 83.50,
+  "BRL": 5.10,
+  "RUB": 94.00,
+  "KRW": 1340.00,
+  "MXN": 17.10,
   "SAR": 3.75,
   "AED": 3.67,
-  "CHF": 0.90,
-  "SEK": 10.50,
-  "NOK": 10.60,
-  "DKK": 6.90,
-  "PLN": 3.95,
+  "CHF": 0.91,
+  "SEK": 10.60,
+  "NOK": 10.70,
+  "DKK": 6.95,
+  "PLN": 3.98,
 };
 
 export const EXCHANGE_RATES = DEFAULT_RATES;
 
 const CACHE_KEY = 'subscriptionhub_fx_rates';
+const CACHE_VERSION = 'v2_2025'; // Bump this to invalidate old caches
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedRates {
+  version: string;
   base: string;
   rates: Record<string, number>;
   updatedAt: number;
@@ -76,8 +80,9 @@ export const getRates = (): Record<string, number> => {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const data: CachedRates = JSON.parse(cached);
+      // Check version matches and not expired
       const age = Date.now() - data.updatedAt;
-      if (age < CACHE_DURATION) {
+      if (data.version === CACHE_VERSION && age < CACHE_DURATION) {
         return data.rates;
       }
     }
@@ -88,14 +93,15 @@ export const getRates = (): Record<string, number> => {
   // 2. Fallback to default rates (Simulation of fresh fetch)
   // In a real app, this would be: await fetch('https://api...').json()
   const freshRates = DEFAULT_RATES;
-  
+
   // Track that we are using default/fallback rates which might be slightly stale
   // This helps us monitor how often we are hitting the fallback
   trackEvent('rate_fetch_error', { reason: 'using_default_static', base: 'USD' });
-  
+
   // 3. Cache the "new" rates
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({
+      version: CACHE_VERSION,
       base: 'USD',
       rates: freshRates,
       updatedAt: Date.now()
@@ -119,7 +125,7 @@ export const convertAmount = (amount: number, fromCurrency: string, toCurrency: 
   // Ensure we have a valid rate, fallback to 1 if missing or 0
   const fromRate = rates[fromCurrency] || 1;
   const toRate = rates[toCurrency] || 1;
-  
+
   if (!amount) return 0;
 
   // Convert to USD (Base) then to Target

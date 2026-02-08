@@ -119,11 +119,13 @@ export default function SubscriptionSearchPanel({ onAddSubscription }: Subscript
                               >
                                  <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center p-1 group-hover/item:scale-110 transition-transform overflow-hidden">
-                                       {logoUrl ? (
-                                          <LogoRenderer logoUrl={logoUrl} name={serviceName} className="w-full h-full" variant="color" />
-                                       ) : (
-                                          <BrandIcon type={serviceName} className="w-full h-full" noBackground />
-                                       )}
+                                       <LogoRenderer
+                                          logoUrl={logoUrl}
+                                          name={serviceName}
+                                          className="w-full h-full"
+                                          variant="color"
+                                          fallback={<BrandIcon type={serviceName} className="w-full h-full" noBackground />}
+                                       />
                                     </div>
                                     <span className="font-semibold text-gray-900 text-base">{serviceName}</span>
                                  </div>

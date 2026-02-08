@@ -130,7 +130,13 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd }
                     <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-4 border-white dark:border-gray-800 flex items-center justify-center absolute -bottom-10 transform">
                         {service ? (
                             logoUrl ? (
-                                <LogoRenderer logoUrl={logoUrl} name={service.name} className="w-12 h-12" variant="color" />
+                                <LogoRenderer
+                                    logoUrl={logoUrl}
+                                    name={service.name}
+                                    className="w-12 h-12"
+                                    variant="color"
+                                    fallback={<BrandIcon type={service.type} className="w-12 h-12" noBackground />}
+                                />
                             ) : (
                                 <BrandIcon type={service.type} className="w-12 h-12" noBackground />
                             )
