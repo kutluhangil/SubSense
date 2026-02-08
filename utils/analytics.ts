@@ -1,4 +1,5 @@
 
+// @ts-ignore
 import { logEvent } from "firebase/analytics";
 import { analytics } from "../firebase/firebase";
 import { IS_BETA, APP_VERSION } from "./constants";

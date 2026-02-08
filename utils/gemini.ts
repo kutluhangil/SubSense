@@ -8,8 +8,10 @@ import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 // Helper to safely get API Key in Vite environment
 const getApiKey = () => {
   // 1. Try Vite standard (import.meta.env)
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GEMINI_API_KEY) {
-    return import.meta.env.VITE_GEMINI_API_KEY;
+  // Cast to any to safely access properties if types are missing
+  const meta = import.meta as any;
+  if (typeof meta !== 'undefined' && meta.env && meta.env.VITE_GEMINI_API_KEY) {
+    return meta.env.VITE_GEMINI_API_KEY;
   }
   // 2. Try process.env safely (for legacy/test envs)
   try {
