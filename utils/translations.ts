@@ -8,7 +8,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "nav.login": "Log in",
     "nav.signup": "Sign up",
     "nav.dashboard": "Dashboard",
-    
+
     // Hero
     "hero.tagline": "Global currency support is here",
     "hero.cta_start": "Start Tracking Free",
@@ -18,7 +18,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "hero.take_control_desc": "Take control of your digital life. Join thousands of smart spenders today.",
     "hero.start_tracking_free": "Start Tracking Free",
     "hero.view_live_demo": "View Live Demo",
-    
+
     // Pricing
     "pricing.title": "Simple, transparent pricing.",
     "pricing.subtitle": "Choose the plan that fits your financial goals.",
@@ -75,7 +75,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "footer.currency": "Currency",
     "footer.region": "Regional Preferences",
     "footer.ai_tooltip": "Translations are AI-powered and continuously improving.",
-    
+
     // Auth
     "auth.welcome": "Welcome back",
     "auth.create": "Create an account",
@@ -131,7 +131,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "dashboard.empty_title": "No subscriptions yet",
     "dashboard.empty_desc": "Start tracking your recurring expenses to unlock insights.",
     "dashboard.add_first": "Add First Subscription",
-    
+
     // Sidebar
     "sidebar.menu": "Menu",
     "sidebar.dashboard": "Dashboard",
@@ -202,12 +202,35 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "profile.yearly": "Yearly Spend",
     "profile.add_friend": "Add Friend",
     "profile.joined": "Joined {0}",
+    "profile.appearance": "Appearance",
+    "profile.all_achievements": "All Achievements",
+    "profile.earned": "Earned",
+    "profile.locked": "Locked",
+    "profile.bio_placeholder": "Tell us about yourself...",
+
+    // Badge Names & Descs
+    "badge.first_sub.name": "First Step",
+    "badge.first_sub.desc": "Added first subscription",
+    "badge.active_tracker.name": "Active Tracker",
+    "badge.active_tracker.desc": "Managed 5+ subscriptions",
+    "badge.top_saver.name": "Top Saver",
+    "badge.top_saver.desc": "Saved by removing a sub",
+    "badge.global_explorer.name": "Explorer",
+    "badge.global_explorer.desc": "Used multi-currency support",
+    "badge.entertainment.name": "Entertainer",
+    "badge.entertainment.desc": "3+ Entertainment subs",
+    "badge.pro_planner.name": "Pro Planner",
+    "badge.pro_planner.desc": "Set a budget limit",
+    "badge.milestone.name": "Milestone",
+    "badge.milestone.desc": "Lifetime spend > $1000",
+    "badge.customizer.name": "Customizer",
+    "badge.customizer.desc": "Updated profile details",
 
     // Stats
     "stats.monthly": "Monthly Spend",
     "stats.active": "Active Subscriptions",
     "stats.forecast": "Annual Forecast",
-    
+
     // Subscription Modal & Table
     "modal.edit_sub": "Edit Subscription",
     "modal.nickname": "Nickname (Optional)",
@@ -226,7 +249,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "table.actions": "Actions",
     "table.view_details": "View Details",
     "table.remove": "Remove",
-    
+
     // Add Subscription
     "add.title": "Add Subscription",
     "add.service_name": "Service Name",
@@ -258,6 +281,18 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "friends.no_info": "This user hasn't shared any information yet.",
     "friends.empty_title": "No friends added yet",
     "friends.empty_desc": "Add friends to compare subscription costs and see what services they use.",
+    "friends.bio_empty": "No bio yet",
+    "friends.sent_alert": "Friend request sent to {0}!",
+    "friends.spends_approx": "Spends ~{0} /mo",
+    "friends.no_public_spend": "No public spend data",
+    "friends.email_label": "Email Address",
+    "friends.email_placeholder": "friend@example.com",
+    "friends.searching": "Searching...",
+    "friends.search_btn": "Search",
+    "friends.results": "Results",
+    "friends.add_action": "Add",
+    "friends.no_users_found": "No users found.",
+    "friends.find_friends_btn": "Find Friends",
 
     // Analytics
     "analytics.title": "Analytics",
@@ -273,7 +308,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "analytics.range.6m": "Last 6 Months",
     "analytics.range.12m": "Last 12 Months",
     "analytics.insight.regional_optimization": "Regional Optimization",
-    
+
     // Compare
     "compare.title": "Compare",
     "compare.subtitle": "Compare subscription costs across different regions in real-time.",
@@ -294,7 +329,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.report": "Report an Issue",
     "help.mvp_notice": "MVP Support",
     "help.no_results": "No results found",
-    
+
     // Categories
     "help.cat.start": "Getting Started",
     "help.cat.start_desc": "Local-first architecture & basics",
@@ -312,12 +347,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.cat.settings_desc": "Preferences & export",
 
     // FAQ Content
-    "help.faq.local_first.q": "How is my data stored?",
-    "help.faq.local_first.a": "SubSense is a 'local-first' application. Your sensitive subscription data lives in your browser's Local Storage. We do not have a central database viewing your finances.",
+    "help.faq.cloud_sync.q": "How is my data stored?",
+    "help.faq.cloud_sync.a": "SubSense now supports Cloud Sync! Your data is securely stored in the cloud, allowing you to access your subscriptions across multiple devices when you log in.",
     "help.faq.currency.q": "How do currency conversions work?",
-    "help.faq.currency.a": "The app uses a fixed set of daily reference rates to estimate costs in your preferred currency. It does NOT connect to live banks or real-time forex markets.",
+    "help.faq.currency.a": "The app uses daily reference rates (e.g. 1 USD = 42.50 TRY) to estimate costs. You can change your base currency in Settings.",
     "help.faq.account.q": "Can I sync data across devices?",
-    "help.faq.account.a": "Not in the MVP. Since data is local to your browser, it does not sync to your phone or other computers automatically. Use the 'Export CSV' feature to backup.",
+    "help.faq.account.a": "Yes! Just log in with the same email address on any device, and your subscriptions, preferences, and friends will automatically sync.",
     "help.faq.ai_privacy.q": "Does AI see my data?",
     "help.faq.ai_privacy.a": "When you request AI insights, we send a sanitized, anonymous list of subscription names and prices to the AI model. No personal identifiers (email, name) are ever shared.",
     "help.faq.free_pro.q": "What is the difference between Free and Pro?",
@@ -326,6 +361,10 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.faq.limit_storage.a": "If you are using the app in 'Guest' mode or without full sync, clearing your browser cache will delete your data. We recommend Exporting CSV regularly.",
     "help.faq.limit_support.q": "How do I get support?",
     "help.faq.limit_support.a": "Use the 'Contact Support' button below. Please note that during the Beta phase, response times may vary.",
+    "help.faq.friends.q": "How do I add friends?",
+    "help.faq.friends.a": "Go to the Friends tab, search for your friend's email address, and send a request. Once accepted, you can compare spending habits.",
+    "help.faq.achievements.q": "What are Achievements?",
+    "help.faq.achievements.a": "Achievements are badges you earn by using the app, such as 'Saver' for reducing monthly spend or 'Socialite' for adding friends.",
 
     // Legal
     "legal.terms.title": "Terms of Service",
@@ -377,7 +416,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "common.send": "Send",
     "common.month": "Month",
     "common.year": "Year",
-    
+
     // AI & Features
     "ai.assistant_title": "AI Assistant",
     "ai.thinking": "Gemini is thinking...",
@@ -387,7 +426,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "ai.welcome_message": "Hello! I'm your Gemini-powered financial assistant. Ask me anything about your subscriptions, spending habits, or how to save money.",
     "ai.error_message": "I'm having trouble connecting to my intelligence layer right now. Please try again in a moment.",
     "ai.insight.default": "Add subscriptions to unlock AI-powered spending insights.",
-    
+
     // Feature Grid
     "features.tag": "Everything you need",
     "features.explore": "Explore Features",
@@ -403,7 +442,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "features.compare.desc": "Compare global subscription prices by region.",
     "features.settings.title": "Settings",
     "features.settings.desc": "Customize your experience and preferences.",
-    
+
     "features.main.hero_title": "Master your recurring expenses effortlessly.",
     "features.main.hero_sub": "Stop losing money on forgotten subscriptions. Track, manage, and optimize your global spending in one secure, local-first dashboard.",
     "features.main.smart_tracking.title": "Smart Tracking",
@@ -434,7 +473,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Image Cropper
     "cropper.adjust": "Adjust Image",
-    
+
     // Messages
     "msg.headline_1": "Master your recurring expenses effortlessly.",
     "msg.subtext_1": "Stop losing money on forgotten subscriptions. Track, manage, and optimize your global spending.",
@@ -463,7 +502,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "nav.login": "Giriş Yap",
     "nav.signup": "Kayıt Ol",
     "nav.dashboard": "Panel",
-    
+
     // Hero
     "hero.tagline": "Küresel para birimi desteği burada",
     "hero.cta_start": "Ücretsiz Takibe Başla",
@@ -473,7 +512,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "hero.take_control_desc": "Dijital hayatınızın kontrolünü elinize alın. Binlerce akıllı harcama yapan kullanıcıya bugün katılın.",
     "hero.start_tracking_free": "Ücretsiz Takibe Başla",
     "hero.view_live_demo": "Canlı Demoyu İncele",
-    
+
     // Pricing
     "pricing.title": "Basit, şeffaf fiyatlandırma.",
     "pricing.subtitle": "Finansal hedeflerinize uygun planı seçin.",
@@ -530,7 +569,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "footer.currency": "Para Birimi",
     "footer.region": "Bölgesel Tercihler",
     "footer.ai_tooltip": "Çeviriler yapay zeka desteklidir ve sürekli geliştirilmektedir.",
-    
+
     // Auth
     "auth.welcome": "Tekrar Hoşgeldiniz",
     "auth.create": "Hesap Oluştur",
@@ -586,7 +625,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "dashboard.empty_title": "Henüz abonelik yok",
     "dashboard.empty_desc": "İçgörülerin kilidini açmak için düzenli giderlerinizi takip etmeye başlayın.",
     "dashboard.add_first": "İlk Aboneliği Ekle",
-    
+
     // Sidebar
     "sidebar.menu": "Menü",
     "sidebar.dashboard": "Panel",
@@ -657,12 +696,35 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "profile.yearly": "Yıllık Harcama",
     "profile.add_friend": "Arkadaş Ekle",
     "profile.joined": "{0} tarihinde katıldı",
+    "profile.appearance": "Görünüm",
+    "profile.all_achievements": "Tüm Başarılar",
+    "profile.earned": "Kazanıldı",
+    "profile.locked": "Kilitli",
+    "profile.bio_placeholder": "Kendinizden bahsedin...",
+
+    // Badge Names & Descs
+    "badge.first_sub.name": "İlk Adım",
+    "badge.first_sub.desc": "İlk abonelik eklendi",
+    "badge.active_tracker.name": "Aktif Takipçi",
+    "badge.active_tracker.desc": "5+ abonelik yönetildi",
+    "badge.top_saver.name": "Tasarruf Uzmanı",
+    "badge.top_saver.desc": "Abonelik silerek tasarruf edildi",
+    "badge.global_explorer.name": "Kaşif",
+    "badge.global_explorer.desc": "Çoklu para birimi kullanıldı",
+    "badge.entertainment.name": "Eğlence",
+    "badge.entertainment.desc": "3+ Eğlence aboneliği",
+    "badge.pro_planner.name": "Pro Planlayıcı",
+    "badge.pro_planner.desc": "Bütçe limiti belirlendi",
+    "badge.milestone.name": "Milestone",
+    "badge.milestone.desc": "Toplam harcama > 1000$",
+    "badge.customizer.name": "Kişiselleştirici",
+    "badge.customizer.desc": "Profil detayları güncellendi",
 
     // Stats
     "stats.monthly": "Aylık Harcama",
     "stats.active": "Aktif Abonelikler",
     "stats.forecast": "Yıllık Tahmin",
-    
+
     // Subscription Modal & Table
     "modal.edit_sub": "Aboneliği Düzenle",
     "modal.nickname": "Takma Ad (İsteğe Bağlı)",
@@ -681,7 +743,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "table.actions": "İşlemler",
     "table.view_details": "Detayları Gör",
     "table.remove": "Kaldır",
-    
+
     // Add Subscription
     "add.title": "Abonelik Ekle",
     "add.service_name": "Servis Adı",
@@ -713,6 +775,18 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "friends.no_info": "Bu kullanıcı henüz herhangi bir bilgi paylaşmadı.",
     "friends.empty_title": "Henüz arkadaş eklenmedi",
     "friends.empty_desc": "Abonelik maliyetlerini karşılaştırmak ve hangi servisleri kullandıklarını görmek için arkadaş ekleyin.",
+    "friends.bio_empty": "Henüz biyografi yok",
+    "friends.sent_alert": "{0} kullanıcısına arkadaşlık isteği gönderildi!",
+    "friends.spends_approx": "Harcama ~{0} /ay",
+    "friends.no_public_spend": "Halka açık harcama verisi yok",
+    "friends.email_label": "E-posta Adresi",
+    "friends.email_placeholder": "arkadas@ornek.com",
+    "friends.searching": "Aranıyor...",
+    "friends.search_btn": "Ara",
+    "friends.results": "Sonuçlar",
+    "friends.add_action": "Ekle",
+    "friends.no_users_found": "Kullanıcı bulunamadı.",
+    "friends.find_friends_btn": "Arkadaş Bul",
 
     // Analytics
     "analytics.title": "Analizler",
@@ -728,7 +802,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "analytics.range.6m": "Son 6 Ay",
     "analytics.range.12m": "Son 12 Ay",
     "analytics.insight.regional_optimization": "Bölgesel Optimizasyon",
-    
+
     // Compare
     "compare.title": "Karşılaştır",
     "compare.subtitle": "Abonelik maliyetlerini farklı bölgelerde gerçek zamanlı olarak karşılaştırın.",
@@ -749,7 +823,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.report": "Sorun Bildir",
     "help.mvp_notice": "MVP Desteği",
     "help.no_results": "Sonuç bulunamadı",
-    
+
     // Categories
     "help.cat.start": "Başlarken",
     "help.cat.start_desc": "Hesap kurulumu & temeller",
@@ -767,12 +841,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.cat.settings_desc": "Tercihler & dışa aktarma",
 
     // FAQ Content
-    "help.faq.local_first.q": "Verilerim nasıl saklanıyor?",
-    "help.faq.local_first.a": "SubSense 'yerel-öncelikli' bir uygulamadır. Tüm hassas abonelik verileriniz tarayıcınızın Yerel Depolama (Local Storage) alanında saklanır. Finansal verilerinizi gören merkezi bir veritabanımız yoktur.",
+    "help.faq.cloud_sync.q": "Verilerim nasıl saklanıyor?",
+    "help.faq.cloud_sync.a": "SubSense artık Bulut Senkronizasyonunu destekliyor! Verileriniz güvenli bir şekilde bulutta saklanır ve giriş yaptığınızda tüm cihazlarınızdan erişilebilir.",
     "help.faq.currency.q": "Para birimi dönüşümleri nasıl çalışır?",
-    "help.faq.currency.a": "Uygulama, tercih ettiğiniz para birimindeki maliyetleri tahmin etmek için sabit bir günlük referans kuru seti kullanır. Canlı bankalara veya gerçek zamanlı forex piyasalarına bağlanmaz.",
+    "help.faq.currency.a": "Uygulama, maliyetleri tahmin etmek için günlük referans kurlarını (örn. 1 USD = 42.50 TRY) kullanır. Temel para biriminizi Ayarlar'dan değiştirebilirsiniz.",
     "help.faq.account.q": "Verileri cihazlar arasında senkronize edebilir miyim?",
-    "help.faq.account.a": "Bu MVP sürümünde hayır. Veriler tarayıcınıza yerel olduğundan, telefonunuz veya diğer bilgisayarlarınızla otomatik olarak senkronize olmaz. Yedekleme için 'CSV Dışa Aktar' özelliğini kullanın.",
+    "help.faq.account.a": "Evet! Herhangi bir cihazda aynı e-posta adresiyle giriş yapmanız yeterlidir; abonelikleriniz, tercihleriniz ve arkadaşlarınız otomatik olarak senkronize edilir.",
     "help.faq.ai_privacy.q": "Yapay zeka verilerimi görüyor mu?",
     "help.faq.ai_privacy.a": "Yapay zeka içgörüleri talep ettiğinizde, abonelik adlarının ve fiyatlarının anonimleştirilmiş, temizlenmiş bir listesini yapay zeka modeline göndeririz. Hiçbir kişisel tanımlayıcı (e-posta, isim) paylaşılmaz.",
     "help.faq.free_pro.q": "Ücretsiz ve Pro arasındaki fark nedir?",
@@ -781,6 +855,10 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "help.faq.limit_storage.a": "Eğer 'Misafir' modundaysanız veya tam senkronizasyon kapalıysa, tarayıcı önbelleğini temizlemek verilerinizi siler. Düzenli olarak CSV dışa aktarımı yapmanızı öneririz.",
     "help.faq.limit_support.q": "Nasıl destek alabilirim?",
     "help.faq.limit_support.a": "Aşağıdaki 'Destekle İletişime Geç' butonunu kullanın. Beta aşamasında yanıt sürelerinin değişebileceğini lütfen unutmayın.",
+    "help.faq.friends.q": "Arkadaş nasıl eklerim?",
+    "help.faq.friends.a": "Arkadaşlar sekmesine gidin, arkadaşınızın e-posta adresini arayın ve istek gönderin. Kabul edildiğinde harcama alışkanlıklarını karşılaştırabilirsiniz.",
+    "help.faq.achievements.q": "Başarılar nedir?",
+    "help.faq.achievements.a": "Başarılar, uygulamayı kullandıkça kazandığınız rozetlerdir. Örn: Aylık harcamayı düşürerek 'Tasarrufçu', arkadaş ekleyerek 'Sosyal' rozeti kazanabilirsiniz.",
 
     // Legal
     "legal.terms.title": "Hizmet Şartları",
@@ -832,7 +910,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "common.send": "Gönder",
     "common.month": "Ay",
     "common.year": "Yıl",
-    
+
     // AI & Features
     "ai.assistant_title": "Yapay Zeka Asistanı",
     "ai.thinking": "Düşünüyor...",
@@ -842,7 +920,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "ai.welcome_message": "Merhaba! Ben finansal asistanınızım.",
     "ai.error_message": "Bağlantı hatası.",
     "ai.insight.default": "Analiz için abonelik ekleyin.",
-    
+
     // Feature Grid
     "features.tag": "İhtiyacınız olan her şey",
     "features.explore": "Özellikleri Keşfet",
@@ -889,7 +967,7 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Image Cropper
     "cropper.adjust": "Ayarla",
-    
+
     // Messages
     "msg.headline_1": "Giderlerinizi yönetin.",
     "msg.subtext_1": "Harcamalarınızı takip edin.",
