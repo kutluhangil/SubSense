@@ -130,9 +130,8 @@ const BetaBadge = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                <BetaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             </div>
-
-            <BetaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
         </>
     );
 };
