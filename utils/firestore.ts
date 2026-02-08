@@ -292,21 +292,6 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
     throw new Error("Invalid subscription data. Please check fields.");
   }
 
-  // Simulate Backend Uniqueness Check (since API might not be fully ready)
-  const existingSubs = await getUserSubscriptions(uid);
-  const isDuplicate = existingSubs.some(sub =>
-    sub.name.toLowerCase() === subscription.name.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    // Throw error structure mimicking an API 409
-    throw {
-      status: 409,
-      message: "This subscription is already in your Dashboard",
-      code: "duplicate_subscription"
-    };
-  }
-
   try {
     // API Call
     await api.post('/subscriptions', subscription);

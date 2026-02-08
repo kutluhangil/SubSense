@@ -35,7 +35,17 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
    }, [searchTerm]);
 
    const handleSelect = (serviceName: string) => {
-      // Look up detailed info, or create a basic fallback
+      // 1. Check for duplicates (Frontend Pre-check)
+      const isDuplicate = existingSubscriptions.some(sub =>
+         sub.name.toLowerCase() === serviceName.toLowerCase()
+      );
+
+      if (isDuplicate) {
+         setDuplicateService(serviceName);
+         return;
+      }
+
+      // 2. Look up detailed info, or create a basic fallback
       const key = serviceName.toLowerCase();
       const detail = Object.values(SUBSCRIPTION_CATALOG).find(s => s.name.toLowerCase() === key || s.id === key) || {
          id: key,
@@ -183,10 +193,6 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
             onClose={() => setIsModalOpen(false)}
             service={selectedService}
             onAdd={handleConfirmAdd}
-            onDuplicateFound={(name) => {
-               setIsModalOpen(false);
-               setDuplicateService(name);
-            }}
          />
 
          {/* Duplicate Warning Modal */}
