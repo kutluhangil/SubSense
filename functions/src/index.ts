@@ -39,7 +39,7 @@ export const createCheckoutSession = functions.https.onCall(async (data, context
         metadata: { firebaseUID: userId },
       });
       customerId = customer.id;
-      
+
       // Save ID immediately
       await db.collection("users").doc(userId).set({
         plan: { stripeCustomerId: customerId }
@@ -124,7 +124,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
         if (uid) {
           // Retrieve the subscription details to get the period end
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          
+
           await db.collection("users").doc(uid).set({
             plan: {
               type: "pro",
@@ -142,11 +142,11 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const uid = await getUserIdFromCustomerId(subscription.customer as string);
-        
+
         if (uid) {
           const status = subscription.status;
           const isActive = status === 'active' || status === 'trialing';
-          
+
           await db.collection("users").doc(uid).set({
             plan: {
               type: isActive ? "pro" : "free",
@@ -192,7 +192,11 @@ async function getUserIdFromCustomerId(customerId: string): Promise<string | nul
     .where("plan.stripeCustomerId", "==", customerId)
     .limit(1)
     .get();
-    
+
   if (snapshot.empty) return null;
   return snapshot.docs[0].id;
 }
+
+// 4. API (Express App)
+import app from "./app";
+export const api = functions.https.onRequest(app);

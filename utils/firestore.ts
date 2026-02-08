@@ -20,6 +20,7 @@ import { db } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
 import { validateSubscription } from './validateSubscription';
 import { trackEvent } from './analytics';
+import { api } from './api';
 
 // --- Types ---
 
@@ -292,25 +293,14 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
   }
 
   try {
-    const subsRef = collection(db, 'users', uid, 'subscriptions');
-    await addDoc(subsRef, {
-      ...subscription,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
+    // API Call
+    await api.post('/subscriptions', subscription);
     updateFeatureUsage(uid, 'subscription_added');
   } catch (error: any) {
-    if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      console.info("Firestore write denied. Adding subscription locally.");
-      trackEvent('system_fallback', { type: 'sub_add', reason: error.code });
-      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-      const newSub = { ...subscription, id: Date.now() } as Subscription;
-      setLocalData(localKey, [...currentSubs, newSub]);
-    } else {
-      console.error("Error adding subscription:", error);
-      throw error;
-    }
+    console.error("Error adding subscription:", error);
+    // Optional: Fallback logic could go here if we want to support offline/guest mode
+    // For now, we propagate the API error to the UI
+    throw error;
   }
 };
 
@@ -320,48 +310,30 @@ export const updateSubscription = async (uid: string, subId: number | string, da
 
   try {
     if (typeof subId === 'number') {
-      throw { code: 'permission-denied' };
+      // API expects string ID. If it's a number, it's a local fallback ID?
+      // For API migration, we assume valid IDs are strings
+      throw new Error("Invalid subscription ID for API update");
     }
-    const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, ...updateData } = data as any;
 
-    await updateDoc(subRef, {
-      ...updateData,
-      updatedAt: serverTimestamp()
-    });
+    // API Call
+    await api.put(`/subscriptions/${subId}`, data);
   } catch (error: any) {
-    if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      trackEvent('system_fallback', { type: 'sub_update', reason: error.code });
-      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-      const updatedSubs = currentSubs.map(s => s.id == subId ? { ...s, ...data } : s);
-      setLocalData(localKey, updatedSubs);
-    } else {
-      console.error("Error updating subscription:", error);
-      throw error;
-    }
+    console.error("Error updating subscription:", error);
+    throw error;
   }
 };
 
 export const deleteSubscription = async (uid: string, subId: number | string) => {
   try {
     if (typeof subId === 'number') {
-      throw { code: 'permission-denied' };
+      throw new Error("Invalid subscription ID for API delete");
     }
-    const subRef = doc(db, 'users', uid, 'subscriptions', String(subId));
-    await deleteDoc(subRef);
+
+    // API Call
+    await api.delete(`/subscriptions/${subId}`);
   } catch (error: any) {
-    if (error.code === 'permission-denied' || error.code === 'unavailable') {
-      trackEvent('system_fallback', { type: 'sub_delete', reason: error.code });
-      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
-      const currentSubs = getLocalData<Subscription[]>(localKey) || [];
-      const filteredSubs = currentSubs.filter(s => s.id != subId);
-      setLocalData(localKey, filteredSubs);
-    } else {
-      console.error("Error deleting subscription:", error);
-      throw error;
-    }
+    console.error("Error deleting subscription:", error);
+    throw error;
   }
 };
 
