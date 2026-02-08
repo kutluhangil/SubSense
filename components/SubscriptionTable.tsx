@@ -90,7 +90,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
               secondaryDisplay = `≈ ${formatPrice(convertedVal, targetCurrency)} ${label}`;
             }
 
-            const logoUrl = getBrandLogo(sub.name);
+            const logoUrl = sub.logo || getBrandLogo(sub.name);
 
             return (
               <tr
@@ -106,7 +106,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
                         name={sub.name}
                         className="w-10 h-10 shadow-sm rounded-xl"
                         variant="color"
-                        fallback={<BrandIcon type={sub.type} className="w-10 h-10 shadow-sm rounded-xl" />}
+                        fallback={<BrandIcon type={sub.type} logo={sub.logo} className="w-10 h-10 shadow-sm rounded-xl" />}
                       />
                     </div>
                     <div>

@@ -302,7 +302,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                   {upcoming.map((sub) => (
                      <div key={sub.id} className="flex items-center gap-3 group">
                         <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                           <BrandIcon type={sub.type} className="w-6 h-6" noBackground />
+                           <BrandIcon type={sub.type} logo={sub.logo} className="w-6 h-6" noBackground />
                         </div>
                         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
                            <div className="flex justify-between items-baseline mb-0.5">

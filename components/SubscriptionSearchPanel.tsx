@@ -193,6 +193,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
             onClose={() => setIsModalOpen(false)}
             service={selectedService}
             onAdd={handleConfirmAdd}
+            existingSubscriptions={existingSubscriptions}
          />
 
          {/* Duplicate Warning Modal */}

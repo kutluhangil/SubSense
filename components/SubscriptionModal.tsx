@@ -23,6 +23,7 @@ export interface Subscription {
   history?: number[];
   category?: string;
   reminderEnabled?: boolean;
+  logo?: string; // Base64 or URL
 }
 
 interface SubscriptionModalProps {
@@ -168,7 +169,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
           <div className="flex items-center gap-4">
             <div className="relative group">
               <div className="absolute -inset-0.5 rounded-xl opacity-30 blur-sm transition duration-300" style={{ backgroundColor: accentColor }}></div>
-              <BrandIcon type={subscription.type} className="w-12 h-12 rounded-xl shadow-sm relative bg-white dark:bg-gray-800" />
+              <BrandIcon type={subscription.type} logo={subscription.logo} className="w-12 h-12 rounded-xl shadow-sm relative bg-white dark:bg-gray-800" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -352,10 +353,10 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                     <div
                       key={d}
                       className={`py-1.5 rounded-lg transition-colors ${d === formData.billingDay
-                          ? 'text-white font-bold'
-                          : d < (formData.billingDay || 0)
-                            ? 'text-gray-300 dark:text-gray-600'
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? 'text-white font-bold'
+                        : d < (formData.billingDay || 0)
+                          ? 'text-gray-300 dark:text-gray-600'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                       style={d === formData.billingDay ? { backgroundColor: accentColor } : {}}
                     >
