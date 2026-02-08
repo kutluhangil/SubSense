@@ -1,4 +1,5 @@
 
+import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebase';
 import { trackEvent } from './analytics';
 
@@ -16,12 +17,13 @@ export const createCheckoutSession = async (uid: string, interval: 'month' | 'ye
   console.log(`[Stripe] Initializing Checkout for ${uid} (${interval})...`);
   
   try {
-    const createSession = functions.httpsCallable('createCheckoutSession');
+    // Modular SDK syntax
+    const createSession = httpsCallable(functions, 'createCheckoutSession');
     const { data } = await createSession({
       interval,
       successUrl: `${getAppUrl()}?payment_success=true`,
       cancelUrl: `${getAppUrl()}?payment_canceled=true`
-    });
+    }) as { data: { url: string } };
 
     trackEvent('checkout_started', { interval });
     
@@ -49,10 +51,10 @@ export const createPortalSession = async () => {
   console.log(`[Stripe] Creating Customer Portal Session...`);
   
   try {
-    const createPortal = functions.httpsCallable('createPortalSession');
+    const createPortal = httpsCallable(functions, 'createPortalSession');
     const { data } = await createPortal({
       returnUrl: getAppUrl()
-    });
+    }) as { data: { url: string } };
 
     trackEvent('portal_opened');
 

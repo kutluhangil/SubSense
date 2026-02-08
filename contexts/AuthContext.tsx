@@ -1,14 +1,21 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo } from 'react';
-import firebase from 'firebase/compat/app';
+import { 
+  User, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  updateProfile,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
+} from 'firebase/auth';
 import { auth } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
-
-// Define User type from compat namespace
-type User = firebase.User;
 
 interface AuthContextType {
   currentUser: User | null;
@@ -36,16 +43,6 @@ export function useAuth() {
   return context;
 }
 
-const DEFAULT_STATS: DerivedStats = {
-  totalSubscriptions: 0,
-  monthlySpend: 0,
-  annualSpend: 0,
-  lifetimeSpend: 0,
-  categoryBreakdown: {},
-  mostExpensiveSub: null,
-  currency: 'USD'
-};
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
@@ -66,13 +63,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
     try {
-      // 1. Create Auth User
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      // 1. Create Auth User (Modular Syntax)
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       if (user) {
-        // 2. Update Profile
-        await user.updateProfile({ displayName: name });
+        // 2. Update Profile (Modular Syntax)
+        await updateProfile(user, { displayName: name });
 
         // 3. Initialize Firestore Document for User
         const profile = await initializeUserDocument(
@@ -96,12 +93,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Log In
   async function login(email: string, password: string, rememberMe: boolean = false) {
     try {
-      const persistence = rememberMe 
-        ? firebase.auth.Auth.Persistence.LOCAL 
-        : firebase.auth.Auth.Persistence.SESSION;
-        
-      await auth.setPersistence(persistence);
-      await auth.signInWithEmailAndPassword(email, password);
+      // Modular Persistence
+      const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+      await setPersistence(auth, persistence);
+      
+      // Modular Sign In
+      await signInWithEmailAndPassword(auth, email, password);
       trackEvent('login_success', { method: 'email' });
     } catch (error) {
       console.error("Login error:", error);
@@ -121,13 +118,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // 2. Clear Local Storage of user-specific data to prevent leaks
     const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith('subscriptionhub.') || key.includes(currentUser?.email || 'unknown'))) {
-            keysToRemove.push(key);
+    if (typeof window !== 'undefined') {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('subscriptionhub.') || key.includes(currentUser?.email || 'unknown'))) {
+                keysToRemove.push(key);
+            }
         }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
     }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
 
     // 3. Reset State
     setCurrentUser(null);
@@ -136,8 +135,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setSubscriptionsLoading(false);
     setWelcomeBackMessage(null);
 
-    // 4. Sign out from Firebase
-    await auth.signOut();
+    // 4. Sign out from Firebase (Modular Syntax)
+    await signOut(auth);
   }
 
   // Mock Upgrade Function (Simulates Payment Success)
@@ -145,7 +144,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser || !userProfile) return;
     
     try {
-      // In a real app, you'd integrate Stripe/LemonSqueezy here
       const newPlan = {
         type: 'pro' as const,
         status: 'active' as const,
@@ -164,7 +162,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }
 
   useEffect(() => {
-    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+    // Modular Auth Observer
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       // Always cleanup previous subscription listener if it exists when auth changes
       if (unsubscribeSubsRef.current) {
         unsubscribeSubsRef.current();
