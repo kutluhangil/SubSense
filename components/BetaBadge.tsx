@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BetaModal from './BetaModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,10 +9,17 @@ const BetaBadge = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [clickCount, setClickCount] = useState(0);
+    const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+    const badgeRef = useRef<HTMLButtonElement>(null);
     const { currentUser } = useAuth();
 
     // Interaction Handlers
     const handleClick = async () => {
+        // Capture position for modal anchor
+        if (badgeRef.current) {
+            setAnchorRect(badgeRef.current.getBoundingClientRect());
+        }
+
         // Increment click count for Easter Egg
         const newCount = clickCount + 1;
         setClickCount(newCount);
@@ -31,13 +38,6 @@ const BetaBadge = () => {
 
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
-
-    // Mobile tap handler (simulated via click for simplicity in this context, 
-    // but in a real touch environment we might want distinct touch start/end logic.
-    // Here, click opens modal, so hover is main "tooltip" trigger on desktop.
-    // On mobile, prolonged press/tap might be needed, but requirements say "Tap mobile" -> tooltip.
-    // However, click also opens modal. To avoid conflict, we'll keep tooltip on hover 
-    // and rely on the modal for the full details on click.)
 
     const triggerEasterEgg = async () => {
         console.log("🧪 Beta Secret Found!");
@@ -69,6 +69,7 @@ const BetaBadge = () => {
             - Rainbow subtle border (via background gradient + padding)
           */}
                 <motion.button
+                    ref={badgeRef}
                     onClick={handleClick}
                     className="relative p-[1px] rounded-full overflow-hidden group focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     whileHover={{ scale: 1.05 }}
@@ -130,8 +131,14 @@ const BetaBadge = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <BetaModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
             </div>
+
+            {/* Render Modal via Portal (handled inside component) */}
+            <BetaModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                anchorRect={anchorRect}
+            />
         </>
     );
 };
