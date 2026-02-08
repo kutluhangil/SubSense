@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Zap, Users, Send, Loader2, CheckCircle2, Bug, MessageSquare } from 'lucide-react';
 import { submitFeedback } from '../utils/firestore';
@@ -8,9 +9,10 @@ import { useAuth } from '../contexts/AuthContext';
 interface BetaModalProps {
     isOpen: boolean;
     onClose: () => void;
+    anchorRect: DOMRect | null;
 }
 
-export default function BetaModal({ isOpen, onClose }: BetaModalProps) {
+export default function BetaModal({ isOpen, onClose, anchorRect }: BetaModalProps) {
     const { currentUser } = useAuth();
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -65,20 +67,32 @@ export default function BetaModal({ isOpen, onClose }: BetaModalProps) {
         }
     };
 
-    return (
+    if (!isOpen || !anchorRect) return null;
+
+    // Calculate Position: Slightly below and right of the anchor
+    const top = anchorRect.bottom + 12; // 12px gap
+    const left = anchorRect.left;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
                     ref={modalRef}
                     initial={{ opacity: 0, scale: 0.92, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92, y: -10 }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="absolute top-full left-0 z-[100] w-[340px] mt-2"
+                    style={{
+                        position: 'fixed',
+                        top: top,
+                        left: left,
+                        zIndex: 9999, // Ensure it's above everything
+                    }}
+                    className="w-[340px]"
                 >
                     <div className="relative bg-white dark:bg-gray-900 rounded-[20px] shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
 
-                        {/* Subtle Rotating Rainbow Border Effect (simulated via absolute div behind or subtle inner shadow/border) */}
+                        {/* Subtle Rotating Rainbow Border Effect */}
                         <div className="absolute inset-0 pointer-events-none rounded-[20px] border border-transparent [background:linear-gradient(45deg,transparent,rgba(255,165,0,0.3),rgba(236,72,153,0.3),rgba(168,85,247,0.3),transparent)_border-box] [mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)]" />
 
                         <div className="p-5">
@@ -95,7 +109,7 @@ export default function BetaModal({ isOpen, onClose }: BetaModalProps) {
                                 </div>
                                 <button
                                     onClick={onClose}
-                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative z-10"
                                 >
                                     <X size={16} />
                                 </button>
@@ -175,7 +189,8 @@ export default function BetaModal({ isOpen, onClose }: BetaModalProps) {
                     </div>
                 </motion.div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
 
