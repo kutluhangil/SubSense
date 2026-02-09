@@ -1,6 +1,6 @@
 
-import * as express from "express";
-import * as cors from "cors";
+import express from "express";
+import cors from "cors";
 import * as admin from "firebase-admin";
 
 // Initialize Firebase Admin if not already initialized
