@@ -6,11 +6,12 @@ import Stripe from "stripe";
 admin.initializeApp();
 const db = admin.firestore();
 
-// initialize Stripe with secret key from environment variables
+// Initialize Stripe conditionally — if not configured, payment features are disabled
 // Set via: firebase functions:config:set stripe.secret="sk_live_..." stripe.webhook_secret="whsec_..."
-const stripe = new Stripe(functions.config().stripe.secret, {
-  apiVersion: "2023-10-16",
-});
+const stripeConfig = functions.config().stripe;
+const stripe = stripeConfig?.secret
+  ? new Stripe(stripeConfig.secret, { apiVersion: "2023-10-16" })
+  : null;
 
 // PRICE IDs (Replace these with your actual Stripe Price IDs)
 const PRICES = {
@@ -22,6 +23,9 @@ const PRICES = {
 export const createCheckoutSession = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+  }
+  if (!stripe) {
+    throw new functions.https.HttpsError("failed-precondition", "Stripe is not configured");
   }
 
   const userId = context.auth.uid;
@@ -75,6 +79,9 @@ export const createPortalSession = functions.https.onCall(async (data, context) 
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
   }
+  if (!stripe) {
+    throw new functions.https.HttpsError("failed-precondition", "Stripe is not configured");
+  }
 
   const userId = context.auth.uid;
   const { returnUrl } = data;
@@ -101,7 +108,11 @@ export const createPortalSession = functions.https.onCall(async (data, context) 
 // 3. Webhook Handler
 export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   const signature = req.headers["stripe-signature"] as string;
-  const webhookSecret = functions.config().stripe.webhook_secret;
+  const webhookSecret = functions.config().stripe?.webhook_secret;
+  if (!stripe || !webhookSecret) {
+    res.status(500).send("Stripe is not configured");
+    return;
+  }
 
   let event;
 
