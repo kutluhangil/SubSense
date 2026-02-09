@@ -14,7 +14,7 @@ import { debugLog } from '../utils/debug';
 
 
 interface SubscriptionSearchPanelProps {
-   onAddSubscription: (service: Subscription) => void;
+   onAddSubscription: (service: Subscription) => Promise<void>;
    existingSubscriptions: Subscription[];
    onGoToDashboard: () => void;
 }
@@ -86,16 +86,21 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
       setIsModalOpen(true);
    };
 
-   const handleConfirmAdd = (subscription: Subscription) => {
-      onAddSubscription(subscription);
-      setIsModalOpen(false);
-      setSelectedService(null);
-      setSearchTerm('');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
-
-      // Trigger feedback contextually
-      triggerMicroFeedback('add_subscription');
+   const handleConfirmAdd = async (subscription: Subscription) => {
+      try {
+         await onAddSubscription(subscription);
+         setIsModalOpen(false);
+         setSelectedService(null);
+         setSearchTerm('');
+         // Contextual feedback is good, but toast is handled by Dashboard now for success
+         triggerMicroFeedback('add_subscription');
+      } catch (error) {
+         console.error("Failed to add subscription:", error);
+         // Keep modal open if error
+         // Ideally show error in modal, but SubscriptionSearchPanel doesn't have an error state for this
+         // The AddSubscriptionModal has internal error state if onAdd throws
+         throw error; // Re-throw so AddSubscriptionModal can catch it and show error
+      }
    };
 
    return (
