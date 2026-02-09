@@ -10,14 +10,24 @@ const db = admin.firestore();
 const subscriptionSchema = z.object({
     name: z.string().min(1, "Name is required"),
     price: z.number().min(0, "Price must be positive"),
-    currency: z.string().length(3, "Currency code must be 3 characters"),
-    billingCycle: z.enum(["monthly", "yearly"]),
+    originalPrice: z.number().min(0).optional(),
+    currency: z.string().min(1, "Currency is required"),
+    // Accept both frontend naming ("cycle") and REST naming ("billingCycle")
+    cycle: z.enum(["Monthly", "Yearly"]).optional(),
+    billingCycle: z.enum(["monthly", "yearly", "Monthly", "Yearly"]).optional(),
     provider: z.string().optional(),
     category: z.string().optional(),
-    startDate: z.string().optional(), // ISO date string
+    startDate: z.string().optional(),
+    nextDate: z.string().optional(),
     description: z.string().optional(),
     active: z.boolean().optional(),
-    logo: z.string().optional(), // Base64 or URL
+    logo: z.string().optional(),
+    type: z.string().optional(),
+    status: z.string().optional(),
+    billingDay: z.number().optional(),
+    notes: z.string().optional(),
+    history: z.array(z.number()).optional(),
+    plan: z.string().optional(),
 });
 
 const updateSubscriptionSchema = subscriptionSchema.partial();
@@ -69,8 +79,6 @@ router.post("/", async (req, res) => {
         // Note: This is simplified. In a real app, might want composite index or stricter check.
         const snapshot = await db.collection("users").doc(userId).collection("subscriptions")
             .where("name", "==", data.name)
-            .where("provider", "==", data.provider || null)
-            .where("billingCycle", "==", data.billingCycle)
             .limit(1)
             .get();
 

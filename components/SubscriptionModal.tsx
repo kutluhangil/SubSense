@@ -7,7 +7,7 @@ import { EXCHANGE_RATES } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 
 export interface Subscription {
-  id: number;
+  id: string | number;
   name: string;
   plan: string;
   price: number;
@@ -31,7 +31,7 @@ interface SubscriptionModalProps {
   onClose: () => void;
   subscription: Subscription | null;
   onSave: (updatedSub: Subscription) => Promise<void> | void;
-  onDelete: (id: number) => Promise<void> | void;
+  onDelete: (id: string | number) => Promise<void> | void;
 }
 
 // Helper to find accent color

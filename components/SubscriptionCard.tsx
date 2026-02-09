@@ -11,7 +11,7 @@ import { debugLog } from '../utils/debug';
 interface SubscriptionCardProps {
     service: SubscriptionDetail;
     existingSubscriptions: Subscription[];
-    onAdd: (sub: Subscription) => void;
+    onAdd: (sub: Subscription) => Promise<void> | void;
     onClose: () => void;
 }
 
@@ -175,8 +175,8 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                         key={c}
                                         onClick={() => setCycle(c)}
                                         className={`py-2.5 rounded-xl text-xs font-bold transition-all ${cycle === c
-                                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5 scaling-100'
-                                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/5 scaling-100'
+                                            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                                             }`}
                                     >
                                         {c}

@@ -88,6 +88,17 @@ const LOGO_MAP: Record<string, string> = {
   'replit': '/images/replit.svg',
   'salesforce': '/images/salesforce-2.svg',
   'masterpass': '/images/masterpass.svg',
+
+  // Additional mappings
+  'midjourney': '/images/Midjourney_Emblem.svg',
+  'procreate': '/images/Procreate_logo.svg',
+  'discovery+': '/images/discovery_plus.svg',
+  'discoveryplus': '/images/discovery_plus.svg',
+  'asana': '/images/asana.svg',
+  'clickup': '/images/clickup.svg',
+  'gain': '/images/gain.svg',
+  'soundcloudgo': '/images/Soundcloud_logo.svg',
+  'soundcloudgo+': '/images/Soundcloud_logo.svg',
 };
 
 // Helper for normalize: lowercase, remove non-alphanumeric
