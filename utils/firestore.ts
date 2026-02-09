@@ -287,8 +287,9 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
 
   try {
     // API Call
-    await api.post('/subscriptions', subscription);
+    const createdSub = await api.post<Subscription>('/subscriptions', subscription);
     updateFeatureUsage(uid, 'subscription_added');
+    return createdSub;
   } catch (error: any) {
     console.error("Error adding subscription:", error);
     // If API returns 409, propagate it
