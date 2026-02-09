@@ -189,7 +189,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
    const handleAddSubscription = async (newSub: Subscription) => {
       if (currentUser) {
          debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription to Firestore', newSub);
-         await addSubscription(currentUser.uid, newSub);
+         // Await the creation. If it fails, it will throw, and the caller (modal) will handle the error.
+         const created = await addSubscription(currentUser.uid, newSub);
+
+         if (created) {
+            showToast(`${newSub.name} added successfully.`);
+         }
+
          trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
          setIsAddModalOpen(false);
          setCurrentView('dashboard');
