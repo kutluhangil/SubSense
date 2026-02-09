@@ -653,7 +653,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             <Sidebar
                onLogout={onLogout}
                currentView={currentView}
-               onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); }}
+               onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); setIsAddModalOpen(false); }}
                onOpenAI={() => setIsAIOpen(!isAIOpen)}
             />
          </div>

@@ -52,7 +52,12 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
             setLogo(null);
             setError(null);
             setLoading(false);
-            debugLog('SUBSCRIPTION_CREATE', 'Modal Opened', { serviceName: service?.name });
+            debugLog('SUBSCRIPTION_CREATE', 'Modal Opened', {
+                receivedService: service,
+                serviceType: typeof service,
+                isNull: service === null,
+                name: service?.name
+            });
         }
     }, [service, isOpen]);
 
@@ -291,8 +296,8 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                                 key={c}
                                                 onClick={() => setCycle(c)}
                                                 className={`py-2.5 rounded-lg text-sm font-bold transition-all ${cycle === c
-                                                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                                        : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                                     }`}
                                             >
                                                 {c}
