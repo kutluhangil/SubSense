@@ -10,6 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail, BRAND_COLORS } from '../utils/data';
 import { Subscription } from './SubscriptionModal';
 import { useFeedback } from '../contexts/FeedbackContext';
+import { debugLog } from '../utils/debug';
 
 
 interface SubscriptionSearchPanelProps {
@@ -35,31 +36,47 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
    }, [searchTerm]);
 
    const handleSelect = (serviceName: string) => {
+      const cleanName = serviceName.trim();
+      debugLog('SUBSCRIPTION_CREATE', `User selected: ${cleanName}`);
+
       // 1. Check for duplicates (Frontend Pre-check)
       const isDuplicate = existingSubscriptions.some(sub =>
-         sub.name.toLowerCase() === serviceName.toLowerCase()
+         sub.name.toLowerCase() === cleanName.toLowerCase()
       );
 
       if (isDuplicate) {
-         setDuplicateService(serviceName);
+         setDuplicateService(cleanName);
          return;
       }
 
       // 2. Look up detailed info, or create a basic fallback
-      const key = serviceName.toLowerCase();
-      const detail = Object.values(SUBSCRIPTION_CATALOG).find(s => s.name.toLowerCase() === key || s.id === key) || {
-         id: key,
-         name: serviceName,
-         description: `${serviceName} subscription.`,
-         foundedYear: "-",
-         founders: "-",
-         ceo: "-",
-         headquarters: "-",
-         price: "0.00",
-         currency: "USD",
-         type: key
-      } as SubscriptionDetail;
+      const key = cleanName.toLowerCase();
 
+      // Try finding by ID first (exact match), then name
+      let detail = Object.values(SUBSCRIPTION_CATALOG).find(s =>
+         s.id === key || s.name.toLowerCase() === key
+      );
+
+      // Explicit Fallback if not found in catalog (should generally be found if in ALL_SUBSCRIPTIONS)
+      if (!detail) {
+         debugLog('SUBSCRIPTION_CREATE', `Service not found in catalog, creating fallback for: ${cleanName}`);
+         detail = {
+            id: key,
+            name: cleanName,
+            description: `${cleanName} subscription.`,
+            foundedYear: "-",
+            founders: "-",
+            ceo: "-",
+            headquarters: "-",
+            price: "0.00",
+            currency: "USD",
+            type: key // This effectively triggers the 'default' or brand icon lookup
+         } as SubscriptionDetail;
+      }
+
+      debugLog('SUBSCRIPTION_CREATE', 'Resolved Service Data', detail);
+
+      // Crucial: Set service BEFORE opening modal (though batching handles it)
       setSelectedService(detail);
       setIsModalOpen(true);
    };
