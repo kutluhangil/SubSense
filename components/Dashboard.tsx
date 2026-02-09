@@ -168,7 +168,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       }
    };
 
-   const handleSubDelete = async (id: number) => {
+   const handleSubDelete = async (id: string | number) => {
       if (currentUser) {
          debugLog('REMOVE_ACTION', `Attempting to delete subscription ID: ${id}`);
          // Optimistic Calc
@@ -202,7 +202,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       }
    };
 
-   const handleMarkAsPaid = async (id: number) => {
+   const handleMarkAsPaid = async (id: string | number) => {
       const sub = subscriptions.find(s => s.id === id);
       if (sub && currentUser) {
          const current = new Date(sub.nextDate);

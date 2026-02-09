@@ -10,13 +10,13 @@ import { convertAmount } from '../utils/currency';
 interface SubscriptionTableProps {
   subscriptions?: Subscription[];
   onSelectSubscription?: (sub: Subscription) => void;
-  onDeleteSubscription?: (id: number) => void;
+  onDeleteSubscription?: (id: string | number) => void;
   previewCurrency?: string | null;
 }
 
 const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }) => {
   const { formatPrice, formatDate, currentCurrency } = useLanguage();
-  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleDropdownClick = (e: React.MouseEvent, id: number) => {
+  const handleDropdownClick = (e: React.MouseEvent, id: string | number) => {
     e.stopPropagation();
     // Toggle: if clicking the same ID, close it; otherwise open new
     setActiveDropdown(prev => prev === id ? null : id);

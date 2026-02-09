@@ -12,7 +12,7 @@ interface AddSubscriptionModalProps {
     isOpen: boolean;
     onClose: () => void;
     service: SubscriptionDetail | null;
-    onAdd: (subscription: Subscription) => void;
+    onAdd: (subscription: Subscription) => Promise<void> | void;
     existingSubscriptions?: Subscription[];
 }
 

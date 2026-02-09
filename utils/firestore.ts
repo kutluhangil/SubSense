@@ -308,15 +308,11 @@ export const updateSubscription = async (uid: string, subId: number | string, da
   if (data.price !== undefined && (typeof data.price !== 'number' || data.price < 0)) throw new Error("Invalid price update");
   if (data.currency && typeof data.currency !== 'string') throw new Error("Invalid currency update");
 
-  try {
-    if (typeof subId === 'number') {
-      // API expects string ID. If it's a number, it's a local fallback ID?
-      // For API migration, we assume valid IDs are strings
-      throw new Error("Invalid subscription ID for API update");
-    }
+  const id = String(subId);
 
+  try {
     // API Call
-    await api.put(`/subscriptions/${subId}`, data);
+    await api.put(`/subscriptions/${id}`, data);
   } catch (error: any) {
     console.error("Error updating subscription:", error);
     throw error;
@@ -324,13 +320,11 @@ export const updateSubscription = async (uid: string, subId: number | string, da
 };
 
 export const deleteSubscription = async (uid: string, subId: number | string) => {
-  try {
-    if (typeof subId === 'number') {
-      throw new Error("Invalid subscription ID for API delete");
-    }
+  const id = String(subId);
 
+  try {
     // API Call
-    await api.delete(`/subscriptions/${subId}`);
+    await api.delete(`/subscriptions/${id}`);
   } catch (error: any) {
     console.error("Error deleting subscription:", error);
     throw error;
