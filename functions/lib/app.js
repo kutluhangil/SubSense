@@ -30,10 +30,7 @@ exports.authenticate = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const admin = __importStar(require("firebase-admin"));
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-    admin.initializeApp();
-}
+// Note: Firebase Admin is initialized in index.ts (the entry point)
 const app = (0, express_1.default)();
 // Middleware
 app.use((0, cors_1.default)({ origin: true }));
