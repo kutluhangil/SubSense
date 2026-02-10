@@ -68,7 +68,10 @@ const authenticate = async (req, res, next) => {
     }
 };
 exports.authenticate = authenticate;
-// Mount Routes
+// Mount Routes — both paths needed:
+// /api/subscriptions → Firebase Hosting rewrites forward the full path
+// /subscriptions    → Direct Cloud Function calls strip the function name
+app.use("/api/subscriptions", exports.authenticate, subscriptions_1.default);
 app.use("/subscriptions", exports.authenticate, subscriptions_1.default);
 // Global Error Handler
 app.use((err, req, res, next) => {
