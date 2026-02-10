@@ -14,7 +14,7 @@ export interface DerivedStats {
 }
 
 export const calculateDerivedStats = (
-  subscriptions: Subscription[], 
+  subscriptions: Subscription[],
   baseCurrency: string
 ): DerivedStats => {
   const stats: DerivedStats = {
@@ -37,8 +37,9 @@ export const calculateDerivedStats = (
   const validSubscriptions = subscriptions.filter(validateSubscription);
 
   validSubscriptions.forEach(sub => {
-    // Only count Active subscriptions for spend stats
-    if (sub.status !== 'Active') return;
+    // Only skip explicitly inactive subscriptions — treat missing status as active
+    const status = sub.status || 'Active';
+    if (status !== 'Active') return;
 
     stats.totalSubscriptions++;
 
@@ -69,12 +70,12 @@ export const calculateDerivedStats = (
 
     // Lifetime Spend (Include History)
     if (sub.history && sub.history.length > 0) {
-        // history is stored in original currency
-        const historyTotal = sub.history.reduce((a, b) => a + b, 0);
-        stats.lifetimeSpend += convertAmount(historyTotal, sub.currency, baseCurrency);
+      // history is stored in original currency
+      const historyTotal = sub.history.reduce((a, b) => a + b, 0);
+      stats.lifetimeSpend += convertAmount(historyTotal, sub.currency, baseCurrency);
     } else {
-        // Fallback: assume at least one payment made if active
-        stats.lifetimeSpend += priceInBase;
+      // Fallback: assume at least one payment made if active
+      stats.lifetimeSpend += priceInBase;
     }
   });
 

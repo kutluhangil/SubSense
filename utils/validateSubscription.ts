@@ -2,7 +2,7 @@
 import { Subscription } from '../components/SubscriptionModal';
 import { CURRENCIES } from './data';
 
-const DEBUG = true; // Enable warnings in console
+const DEBUG = false;
 
 /**
  * Validates a subscription object against strict business rules.
@@ -27,7 +27,7 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
       throw new Error(`Invalid price: ${sub.price}`);
     }
     if (sub.price > 1000000) {
-       throw new Error("Price exceeds realistic limit.");
+      throw new Error("Price exceeds realistic limit.");
     }
 
     // 3. Currency Validation
@@ -38,20 +38,21 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
     }
 
     // 4. Billing Cycle Validation
-    if (sub.cycle !== 'Monthly' && sub.cycle !== 'Yearly') {
+    if (sub.cycle && sub.cycle !== 'Monthly' && sub.cycle !== 'Yearly') {
       throw new Error(`Invalid billing cycle: ${sub.cycle}`);
     }
 
-    // 5. Date Validation
-    // nextDate must be a parseable date string
-    const date = new Date(sub.nextDate || '');
-    if (isNaN(date.getTime())) {
-      throw new Error(`Invalid nextDate: ${sub.nextDate}`);
+    // 5. Date Validation (optional — backend may not always set it)
+    if (sub.nextDate) {
+      const date = new Date(sub.nextDate);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid nextDate: ${sub.nextDate}`);
+      }
     }
 
     // 6. Notes Validation
     if (sub.notes && sub.notes.length > 500) {
-        throw new Error("Notes too long (max 500 chars)");
+      throw new Error("Notes too long (max 500 chars)");
     }
 
     return true;
