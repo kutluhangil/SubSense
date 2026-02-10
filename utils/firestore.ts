@@ -7,7 +7,6 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  orderBy,
   onSnapshot,
   getDoc,
   getDocs,
@@ -292,12 +291,12 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
     return createdSub;
   } catch (error: any) {
     console.error("Error adding subscription:", error);
-    // If API returns 409, propagate it
-    if (error.response && error.response.status === 409) {
+    // If API returns 409 duplicate, propagate it clearly
+    if (error.code === 'DUPLICATE_SUBSCRIPTION') {
       throw {
         status: 409,
-        message: "This subscription is already in your Dashboard",
-        code: "duplicate_subscription"
+        message: error.message || "This subscription is already in your Dashboard",
+        code: "DUPLICATE_SUBSCRIPTION"
       };
     }
     throw error;
@@ -347,17 +346,28 @@ export const listenToUserSubscriptions = (
 
   try {
     const q = query(
-      collection(db, 'users', uid, 'subscriptions'),
-      orderBy('createdAt', 'desc')
+      collection(db, 'users', uid, 'subscriptions')
     );
 
     unsubscribeFirestore = onSnapshot(q, (snapshot) => {
       const subs: Subscription[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
-        if (validateSubscription(data as Partial<Subscription>)) {
-          subs.push({ id: doc.id, ...data } as unknown as Subscription);
+        // Default missing fields so validation doesn't reject valid docs
+        const normalized = {
+          ...data,
+          status: data.status || 'Active',
+          nextDate: data.nextDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        };
+        if (validateSubscription(normalized as Partial<Subscription>)) {
+          subs.push({ id: doc.id, ...normalized } as unknown as Subscription);
         }
+      });
+      // Sort client-side (newest first) since we removed orderBy to avoid index requirement
+      subs.sort((a, b) => {
+        const dateA = new Date(a.nextDate || 0).getTime();
+        const dateB = new Date(b.nextDate || 0).getTime();
+        return dateB - dateA;
       });
       onChange(subs);
     }, (error) => {

@@ -2,11 +2,7 @@
 import express from "express";
 import cors from "cors";
 import * as admin from "firebase-admin";
-
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-    admin.initializeApp();
-}
+// Note: Firebase Admin is initialized in index.ts (the entry point)
 
 const app = express();
 
