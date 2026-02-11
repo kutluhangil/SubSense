@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.api = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
@@ -199,6 +199,43 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
     catch (err) {
         console.error("Webhook processing failed:", err);
         res.status(500).send("Internal Server Error");
+    }
+});
+// 5. User Search (Secure)
+exports.searchUsers = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+    }
+    const { searchTerm } = data;
+    const callerUid = context.auth.uid;
+    if (!searchTerm || typeof searchTerm !== 'string') {
+        return [];
+    }
+    try {
+        const usersRef = db.collection('users');
+        // Simple email exact match for MVP. 
+        // For production, use Algolia or Typesense for "contains" search.
+        const qEmail = usersRef.where('email', '==', searchTerm).limit(5);
+        const snap = await qEmail.get();
+        const results = [];
+        snap.forEach((doc) => {
+            if (doc.id !== callerUid) {
+                const userData = doc.data();
+                // Return only safe public info to avoids leaking sensitive data like 'plan' details if unnecessary
+                results.push({
+                    uid: doc.id,
+                    email: userData.email,
+                    displayName: userData.displayName,
+                    stats: userData.stats || { totalSubscriptions: 0, monthlySpend: 0 },
+                    preferences: userData.preferences || { region: 'Unknown', baseCurrency: 'USD' }
+                });
+            }
+        });
+        return results;
+    }
+    catch (error) {
+        console.error("Search users error:", error);
+        throw new functions.https.HttpsError("internal", "Search failed");
     }
 });
 // Helper to find Firebase User ID by Stripe Customer ID

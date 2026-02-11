@@ -15,7 +15,8 @@ import {
   Timestamp,
   where
 } from 'firebase/firestore';
-import { db } from '../firebase/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
 import { validateSubscription } from './validateSubscription';
 import { trackEvent } from './analytics';
@@ -414,18 +415,11 @@ export const migrateLocalData = async (uid: string, localSubs: Subscription[]) =
 
 export const searchUsers = async (searchTerm: string, currentUserId: string): Promise<UserProfileData[]> => {
   try {
-    const usersRef = collection(db, 'users');
-    const qEmail = query(usersRef, where('email', '==', searchTerm));
-    const snap = await getDocs(qEmail);
-
-    const results: UserProfileData[] = [];
-    snap.forEach(d => {
-      if (d.id !== currentUserId) results.push(d.data() as UserProfileData);
-    });
-
-    return results;
+    const searchFn = httpsCallable<{ searchTerm: string }, UserProfileData[]>(functions, 'searchUsers');
+    const result = await searchFn({ searchTerm });
+    return result.data || [];
   } catch (e) {
-    console.error("Error searching users:", e);
+    console.error("Error searching users via Cloud Function:", e);
     return [];
   }
 };

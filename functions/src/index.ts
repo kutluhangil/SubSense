@@ -195,6 +195,48 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   }
 });
 
+// 5. User Search (Secure)
+export const searchUsers = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const { searchTerm } = data;
+  const callerUid = context.auth.uid;
+
+  if (!searchTerm || typeof searchTerm !== 'string') {
+    return [];
+  }
+
+  try {
+    const usersRef = db.collection('users');
+    // Simple email exact match for MVP. 
+    // For production, use Algolia or Typesense for "contains" search.
+    const qEmail = usersRef.where('email', '==', searchTerm).limit(5);
+    const snap = await qEmail.get();
+
+    const results: any[] = [];
+    snap.forEach((doc) => {
+      if (doc.id !== callerUid) {
+        const userData = doc.data();
+        // Return only safe public info to avoids leaking sensitive data like 'plan' details if unnecessary
+        results.push({
+          uid: doc.id,
+          email: userData.email,
+          displayName: userData.displayName,
+          stats: userData.stats || { totalSubscriptions: 0, monthlySpend: 0 },
+          preferences: userData.preferences || { region: 'Unknown', baseCurrency: 'USD' }
+        });
+      }
+    });
+
+    return results;
+  } catch (error) {
+    console.error("Search users error:", error);
+    throw new functions.https.HttpsError("internal", "Search failed");
+  }
+});
+
 // Helper to find Firebase User ID by Stripe Customer ID
 async function getUserIdFromCustomerId(customerId: string): Promise<string | null> {
   // Ideally, query a reverse mapping or index. 
