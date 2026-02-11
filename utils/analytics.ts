@@ -13,6 +13,8 @@ export type AnalyticsEvent =
   | 'session_start'
   | 'churn_recovery' // User returned after 30 days
   | 'at_risk_recovery' // User returned after 21 days
+  | 'password_reset_request'
+  | 'email_verification_sent'
 
   // Funnel
   | 'funnel_first_sub' // First subscription added

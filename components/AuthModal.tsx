@@ -11,7 +11,7 @@ interface AuthModalProps {
   initialMode: 'login' | 'signup';
   onLoginSubmit?: (email: string, password: string, rememberMe: boolean) => Promise<void>;
   onSignupSubmit?: (name: string, email: string, password: string, currency: string, region: string) => Promise<void>;
-  onSimulateReset?: () => void;
+  onResetPassword?: (email: string) => Promise<void>;
 }
 
 const COUNTRY_TO_CURRENCY: Record<string, string> = {
@@ -22,7 +22,7 @@ const COUNTRY_TO_CURRENCY: Record<string, string> = {
   'Japan': 'JPY'
 };
 
-export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit, onSignupSubmit, onSimulateReset }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit, onSignupSubmit, onResetPassword }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot-password' | 'email-sent'>(initialMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -74,9 +74,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
     setErrorMsg(null);
 
     try {
-      if (mode === 'forgot-password') {
-        // Simulate reset for now or implement firebase reset
-        await new Promise(r => setTimeout(r, 1000));
+      if (mode === 'forgot-password' && onResetPassword) {
+        // Real Firebase Reset
+        await onResetPassword(formData.email);
         setMode('email-sent');
       } else if (mode === 'login' && onLoginSubmit) {
         await onLoginSubmit(formData.email, formData.password, rememberMe);
@@ -252,8 +252,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                   type="submit"
                   disabled={!isValidEmail(formData.email) || isSubmitting}
                   className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all shadow-lg flex items-center justify-center transform active:scale-[0.98] ${isValidEmail(formData.email) && !isSubmitting
-                      ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                     }`}
                 >
                   {isSubmitting ? 'Sending...' : 'Send reset link'}
@@ -339,8 +339,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                       value={formData.confirmPassword}
                       onChange={(e) => handleChange('confirmPassword', e.target.value)}
                       className={`w-full px-4 py-3 bg-gray-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all focus:bg-white placeholder-gray-400 ${formData.confirmPassword && formData.password !== formData.confirmPassword
-                          ? 'border-red-300 focus:ring-red-100'
-                          : 'border-gray-200 focus:ring-gray-900/10 focus:border-gray-900'
+                        ? 'border-red-300 focus:ring-red-100'
+                        : 'border-gray-200 focus:ring-gray-900/10 focus:border-gray-900'
                         }`}
                       placeholder="••••••••"
                       required
@@ -421,8 +421,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                   type="submit"
                   disabled={!formData.agreedToTerms || isSubmitting}
                   className={`w-full py-3.5 rounded-xl text-sm font-bold shadow-lg transition-all transform active:scale-[0.98] flex items-center justify-center mt-2 ${!formData.agreedToTerms || isSubmitting
-                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                      : 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                    : 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
                     }`}
                 >
                   {isSubmitting ? 'Creating Account...' : 'Create Account'}

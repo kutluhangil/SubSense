@@ -35,7 +35,7 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { currentUser, login, signup, logout, authInitialized } = useAuth();
+  const { currentUser, login, signup, logout, authInitialized, resetPassword } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -131,10 +131,9 @@ function AppContent() {
     setCurrentPage('home');
   };
 
-  const handleSimulateReset = () => {
-    setIsAuthOpen(false);
-    setCurrentPage('reset-password');
-    window.scrollTo(0, 0);
+  const handleResetPassword = async (email: string) => {
+    await resetPassword(email);
+    // Success handling is done inside AuthModal (e.g. showing "email sent" mode)
   };
 
   // 4. App-Level Gating: Show loader until auth state is confirmed
@@ -195,7 +194,7 @@ function AppContent() {
               initialMode={authMode}
               onLoginSubmit={handleLogin}
               onSignupSubmit={handleSignup}
-              onSimulateReset={handleSimulateReset}
+              onResetPassword={handleResetPassword}
             />
             <DemoModal
               isOpen={isDemoOpen}
