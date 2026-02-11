@@ -1,15 +1,17 @@
 
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo } from 'react';
-import { 
-  User, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  signOut, 
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
   updateProfile,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from 'firebase/auth';
 import { auth } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan } from '../utils/firestore';
@@ -31,6 +33,7 @@ interface AuthContextType {
   welcomeBackMessage: string | null;
   isPro: boolean;
   upgradeToPro: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,11 +79,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           { uid: user.uid, email: user.email, displayName: name },
           { currency, region }
         );
-        
+
+        // 4. Send Email Verification
+        try {
+          await sendEmailVerification(user);
+          trackEvent('email_verification_sent');
+        } catch (e) {
+          console.warn("Failed to send verification email:", e);
+        }
+
         // Update local state immediately
         setCurrentUser(user);
         setUserProfile(profile);
-        
+
         // Analytics
         trackEvent('signup_success', { method: 'email', currency: currency });
       }
@@ -96,7 +107,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Modular Persistence
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
-      
+
       // Modular Sign In
       await signInWithEmailAndPassword(auth, email, password);
       trackEvent('login_success', { method: 'email' });
@@ -109,7 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Log Out - Enhanced Security
   async function logout() {
     trackEvent('logout');
-    
+
     // 1. Unsubscribe from listeners immediately
     if (unsubscribeSubsRef.current) {
       unsubscribeSubsRef.current();
@@ -119,13 +130,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // 2. Clear Local Storage of user-specific data to prevent leaks
     const keysToRemove = [];
     if (typeof window !== 'undefined') {
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.startsWith('subscriptionhub.') || key.includes(currentUser?.email || 'unknown'))) {
-                keysToRemove.push(key);
-            }
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('subscriptionhub.') || key.includes(currentUser?.email || 'unknown'))) {
+          keysToRemove.push(key);
         }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
     }
 
     // 3. Reset State
@@ -142,22 +153,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Mock Upgrade Function (Simulates Payment Success)
   async function upgradeToPro() {
     if (!currentUser || !userProfile) return;
-    
+
     try {
       const newPlan = {
         type: 'pro' as const,
         status: 'active' as const,
         since: new Date().toISOString()
       };
-      
+
       await updateUserPlan(currentUser.uid, newPlan);
-      
+
       // Optimistic update
       setUserProfile({ ...userProfile, plan: newPlan });
       trackEvent('subscription_upgrade', { plan: 'pro' });
     } catch (e) {
       console.error("Upgrade failed:", e);
       throw e;
+    }
+  }
+
+  // Password Reset
+  async function resetPassword(email: string) {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      trackEvent('password_reset_request');
+    } catch (error) {
+      console.error("Reset password error:", error);
+      throw error;
     }
   }
 
@@ -171,7 +193,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       setCurrentUser(user);
-      
+
       if (user) {
         try {
           // 1. Hydrate User Profile
@@ -180,17 +202,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
           // 2. Analytics: Check for Churn / Return
           if (profile?.analytics?.lastActiveAt) {
-             const lastActive = profile.analytics.lastActiveAt.toDate ? profile.analytics.lastActiveAt.toDate() : new Date(profile.analytics.lastActiveAt);
-             const now = new Date();
-             const daysDiff = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 3600 * 24));
-             
-             if (daysDiff >= 30) {
-                trackEvent('churn_recovery', { days_inactive: daysDiff });
-                setWelcomeBackMessage("Welcome back! It's been a while.");
-             } else if (daysDiff >= 21) {
-                trackEvent('at_risk_recovery', { days_inactive: daysDiff });
-                setWelcomeBackMessage("Good to see you again!");
-             }
+            const lastActive = profile.analytics.lastActiveAt.toDate ? profile.analytics.lastActiveAt.toDate() : new Date(profile.analytics.lastActiveAt);
+            const now = new Date();
+            const daysDiff = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 3600 * 24));
+
+            if (daysDiff >= 30) {
+              trackEvent('churn_recovery', { days_inactive: daysDiff });
+              setWelcomeBackMessage("Welcome back! It's been a while.");
+            } else if (daysDiff >= 21) {
+              trackEvent('at_risk_recovery', { days_inactive: daysDiff });
+              setWelcomeBackMessage("Good to see you again!");
+            }
           }
 
           // 3. Analytics: Update Activity
@@ -206,7 +228,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             console.error("Subscription Sync Error:", error);
             setSubscriptionsLoading(false);
           });
-          
+
           unsubscribeSubsRef.current = unsub;
 
         } catch (err) {
@@ -219,7 +241,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setSubscriptions([]);
         setSubscriptionsLoading(false);
       }
-      
+
       setLoading(false);
       setAuthInitialized(true);
     }, (error) => {
@@ -255,7 +277,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signup,
     login,
     logout,
-    upgradeToPro
+    upgradeToPro,
+    resetPassword
   };
 
   return (
