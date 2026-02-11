@@ -86,20 +86,20 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
     const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v2`;
 
     if (cachedInsights && cachedInsights.key === cacheKey) {
-        debugLog('AI_LANG', 'Returning cached insights');
-        return cachedInsights.data;
+      debugLog('AI_LANG', 'Returning cached insights');
+      return cachedInsights.data;
     }
 
     debugLog('AI_LANG', `Generating strict MVP insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
-    
+
     // Strict language instruction
-    const langInstruction = languageCode === 'tr' 
+    const langInstruction = languageCode === 'tr'
       ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output values must be in Turkish context."
       : "OUTPUT LANGUAGE: ENGLISH.";
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: `
       ROLE: You are a conservative Financial Optimization Engine.
       
@@ -142,21 +142,21 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
 
     const text = response.text;
     if (!text) return [];
-    
+
     const resultObj = JSON.parse(text);
     const results: AIInsight[] = resultObj.insights || [];
-    
+
     // Update cache
     cachedInsights = { key: cacheKey, data: results };
-    
+
     return results;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
     // Fallback static insights
     const fallback: AIInsight[] = languageCode === 'tr' ? [
-        { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
+      { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
     ] : [
-        { type: 'optimization', title: 'Switch to Annual', description: 'Switching monthly plans to yearly often saves ~20%.', estimatedSavings: 'Est. 20%' }
+      { type: 'optimization', title: 'Switch to Annual', description: 'Switching monthly plans to yearly often saves ~20%.', estimatedSavings: 'Est. 20%' }
     ];
     return fallback;
   }
@@ -190,7 +190,7 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     `;
 
     const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-2.0-flash',
       config: { systemInstruction },
       history: history
     });
