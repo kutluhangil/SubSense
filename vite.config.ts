@@ -8,10 +8,25 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'firebase/app', 'firebase/auth', 'firebase/firestore'],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('react/')) {
+              return 'react-vendor';
+            }
+            if (id.includes('firebase')) {
+              return 'firebase-vendor';
+            }
+            if (id.includes('framer-motion')) {
+              return 'framer-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'lucide-icons';
+            }
+            return 'vendor';
+          }
         },
       },
     },

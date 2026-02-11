@@ -181,6 +181,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                         <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Service Name</label>
                                         <input
                                             type="text"
+                                            autoComplete="off"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             placeholder="e.g. Gym Membership"
@@ -195,6 +196,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                             <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price</label>
                                             <input
                                                 type="number"
+                                                autoComplete="off"
                                                 value={price}
                                                 onChange={(e) => setPrice(e.target.value)}
                                                 placeholder="0.00"

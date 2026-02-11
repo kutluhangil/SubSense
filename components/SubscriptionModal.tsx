@@ -213,6 +213,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{t('modal.nickname')}</label>
                     <input
                       type="text"
+                      autoComplete="off"
                       value={formData.nickname}
                       onChange={(e) => handleChange('nickname', e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
@@ -280,6 +281,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                         <input
                           type="number"
                           step="0.01"
+                          autoComplete="off"
                           value={formData.originalPrice}
                           onChange={(e) => handleChange('originalPrice', parseFloat(e.target.value))}
                           className="w-full pl-8 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all font-medium"

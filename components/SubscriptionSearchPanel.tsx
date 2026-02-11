@@ -128,6 +128,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                   </div>
                   <input
                      type="text"
+                     autoComplete="off"
                      value={searchTerm}
                      onChange={(e) => setSearchTerm(e.target.value)}
                      placeholder={t('search.placeholder')}

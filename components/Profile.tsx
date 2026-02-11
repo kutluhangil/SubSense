@@ -79,8 +79,8 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
    // Map to View Model
    const badges = allAchievements.map(ach => ({
       id: ach.id,
-      name: t(ach.name) !== ach.name ? t(ach.name) : ach.name, // Check if key exists (simple fallback logic)
-      desc: t(ach.desc) !== ach.desc ? t(ach.desc) : ach.desc,
+      name: t(ach.title) !== ach.title ? t(ach.title) : ach.title, // Check if key exists (simple fallback logic)
+      desc: t(ach.description) !== ach.description ? t(ach.description) : ach.description,
       icon: Trophy, // Fallback icon, logic below could map specific icons if needed or update Achievements definition to use Lucide components
       // Simple color mapping based on ID hash or hardcoded fallback
       color: unlockedIds.includes(ach.id) ? 'from-yellow-400 to-orange-600' : 'from-gray-400 to-gray-600',
@@ -243,6 +243,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('settings.full_name')}</label>
                            <input
                               type="text"
+                              autoComplete="name"
                               value={user.name}
                               disabled={true}
                               className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed"
@@ -254,6 +255,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                               <Mail size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                               <input
                                  type="email"
+                                 autoComplete="email"
                                  value={user.email}
                                  disabled={true}
                                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed"
@@ -266,6 +268,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                               <Phone size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                               <input
                                  type="tel"
+                                 autoComplete="tel"
                                  value={profileData.phone}
                                  disabled={!isEditing}
                                  onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -280,6 +283,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                               <MapPin size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                               <input
                                  type="text"
+                                 autoComplete="address-level2"
                                  value={profileData.location}
                                  disabled={!isEditing}
                                  onChange={(e) => handleInputChange('location', e.target.value)}
@@ -293,7 +297,8 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                            <div className="relative">
                               <LinkIcon size={16} className="absolute left-3.5 top-2.5 text-gray-400" />
                               <input
-                                 type="text"
+                                 type="url"
+                                 autoComplete="url"
                                  value={profileData.website}
                                  disabled={!isEditing}
                                  onChange={(e) => handleInputChange('website', e.target.value)}
