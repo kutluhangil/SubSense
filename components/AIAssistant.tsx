@@ -20,15 +20,15 @@ interface Message {
 
 export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
   const { currentCurrency, currentLanguage, t } = useLanguage();
-  
+
   // Initialize messages with localized welcome
   const [messages, setMessages] = useState<Message[]>([]);
-  
+
   // Reset welcome message when language changes or on mount
   useEffect(() => {
-      setMessages([
-        { role: 'model', text: t('ai.welcome_message') }
-      ]);
+    setMessages([
+      { role: 'model', text: t('ai.welcome_message') }
+    ]);
   }, [currentLanguage, t]);
 
   // Track opening
@@ -58,14 +58,14 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setIsLoading(true);
-    
+
     // Analytics: Track query length (privacy safe)
     trackEvent('ai_query_submitted', { length: userMsg.length });
 
     // NOTE: We pass raw subscriptions here, but the utility function `chatWithGemini`
     // is now responsible for strictly validating, sanitizing, and normalizing them.
     // This keeps the UI component dumb and the logic centralized.
-    
+
     const contextData = {
       subscriptions: subscriptions,
       baseCurrency: currentCurrency,
@@ -74,8 +74,8 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
 
     // Format history for Gemini SDK
     const historyForGemini = messages.map(m => ({
-        role: m.role === 'model' ? 'model' : 'user',
-        parts: [{ text: m.text }]
+      role: m.role === 'model' ? 'model' : 'user',
+      parts: [{ text: m.text }]
     }));
 
     // Pass strict language code to the utility
@@ -101,11 +101,11 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
       )}
 
       {/* Slide-over Panel */}
-      <div 
+      <div
         className={`fixed inset-y-0 right-0 z-[60] w-full sm:w-[400px] bg-white dark:bg-gray-900 shadow-2xl transform transition-transform duration-500 ease-spring ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="h-full flex flex-col">
-          
+
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
             <div className="flex items-center gap-3">
@@ -115,8 +115,8 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
               <div>
                 <h2 className="text-sm font-bold text-gray-900 dark:text-white">{t('ai.assistant_title')}</h2>
                 <div className="flex items-center gap-1">
-                   <Sparkles size={10} className="text-indigo-500" />
-                   <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
+                  <Sparkles size={10} className="text-indigo-500" />
+                  <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{t('ai.powered_by')}</p>
                 </div>
               </div>
             </div>
@@ -132,12 +132,11 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white'}`}>
                   {msg.role === 'user' ? <User size={14} className="text-gray-600 dark:text-gray-300" /> : <Bot size={14} />}
                 </div>
-                <div 
-                  className={`p-4 rounded-2xl text-sm leading-relaxed max-w-[80%] shadow-sm ${
-                    msg.role === 'user' 
-                    ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tr-none' 
-                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-indigo-100 dark:border-indigo-900/30'
-                  }`}
+                <div
+                  className={`p-4 rounded-2xl text-sm leading-relaxed max-w-[80%] shadow-sm ${msg.role === 'user'
+                      ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tr-none'
+                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-indigo-100 dark:border-indigo-900/30'
+                    }`}
                 >
                   {msg.text}
                 </div>
@@ -145,13 +144,13 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
             ))}
             {isLoading && (
               <div className="flex gap-3">
-                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
-                    <Bot size={14} />
-                 </div>
-                 <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none border border-indigo-100 dark:border-indigo-900/30 flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-indigo-500" />
-                    <span className="text-xs text-gray-500">{t('ai.thinking')}</span>
-                 </div>
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center flex-shrink-0">
+                  <Bot size={14} />
+                </div>
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-none border border-indigo-100 dark:border-indigo-900/30 flex items-center gap-2">
+                  <Loader2 size={16} className="animate-spin text-indigo-500" />
+                  <span className="text-xs text-gray-500">{t('ai.thinking')}</span>
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -159,9 +158,9 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
 
           {/* Privacy Note */}
           <div className="px-6 py-2 bg-gray-50 dark:bg-black/40 text-center">
-             <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
-                <ShieldIcon /> {t('ai.disclaimer')}
-             </p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
+              <ShieldIcon /> {t('ai.disclaimer')}
+            </p>
           </div>
 
           {/* Input Area */}
@@ -169,12 +168,13 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
             <form onSubmit={handleSend} className="relative">
               <input
                 type="text"
+                autoComplete="off"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t('ai.ask_placeholder')}
                 className="w-full pl-4 pr-12 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"
               />
-              <button 
+              <button
                 type="submit"
                 disabled={!input.trim() || isLoading}
                 className="absolute right-2 top-2 p-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform"
@@ -186,11 +186,11 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
 
         </div>
       </div>
-      
+
       {/* Backdrop for mobile/focus */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[1px] z-50 transition-opacity" 
+        <div
+          className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[1px] z-50 transition-opacity"
           onClick={onClose}
         ></div>
       )}

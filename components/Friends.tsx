@@ -176,6 +176,7 @@ export default function Friends() {
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">{t('friends.email_label')}</label>
                 <input
                   type="email"
+                  autoComplete="email"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('friends.email_placeholder')}

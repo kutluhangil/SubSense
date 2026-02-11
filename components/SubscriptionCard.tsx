@@ -213,8 +213,8 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                                 whileTap={{ scale: 0.97 }}
                                                 onClick={() => setSelectedTierIndex(idx)}
                                                 className={`relative py-3 px-2.5 rounded-xl text-center transition-all border-2 ${isSelected
-                                                        ? 'border-current bg-current/5 shadow-sm'
-                                                        : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
+                                                    ? 'border-current bg-current/5 shadow-sm'
+                                                    : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
                                                     }`}
                                                 style={isSelected ? { borderColor: brandColor, color: brandColor } : {}}
                                             >
@@ -261,6 +261,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                     </div>
                                     <input
                                         type="number"
+                                        autoComplete="off"
                                         value={price}
                                         onChange={(e) => {
                                             setPrice(e.target.value);

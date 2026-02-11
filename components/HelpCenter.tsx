@@ -135,6 +135,7 @@ export default function HelpCenter() {
                         <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
                         <input
                            type="text"
+                           autoComplete="off"
                            placeholder={t('help.search')}
                            value={searchQuery}
                            onChange={(e) => setSearchQuery(e.target.value)}
@@ -153,8 +154,8 @@ export default function HelpCenter() {
                               key={cat.id}
                               onClick={() => { setActiveCategory(cat.id); setSearchQuery(''); }}
                               className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 group text-left ${activeCategory === cat.id && !searchQuery
-                                    ? `${cat.bg} shadow-sm ring-1 ring-black/5 dark:ring-white/10`
-                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                                 ? `${cat.bg} shadow-sm ring-1 ring-black/5 dark:ring-white/10`
+                                 : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                                  }`}
                            >
                               <div className={`p-2 rounded-lg ${activeCategory === cat.id ? 'bg-white dark:bg-gray-800 shadow-sm' : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-white dark:group-hover:bg-gray-600'} transition-colors mr-3`}>
@@ -234,8 +235,8 @@ export default function HelpCenter() {
                                  {openItems.includes(faq.id) && (
                                     <div className="px-6 pb-6 pt-0 ml-7">
                                        <div className={`text-sm leading-relaxed p-4 rounded-xl border animate-in fade-in slide-in-from-top-1 duration-200 ${faq.category === 'limitations'
-                                             ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30 text-amber-900 dark:text-amber-100'
-                                             : 'bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300'
+                                          ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30 text-amber-900 dark:text-amber-100'
+                                          : 'bg-gray-50 dark:bg-gray-900/50 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300'
                                           }`}>
                                           {faq.answer}
                                        </div>
