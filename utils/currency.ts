@@ -75,12 +75,11 @@ interface CachedRates {
 }
 
 export const getRates = (): Record<string, number> => {
-  // 1. Try to get cached rates
+  // 1. Try to get cached rates (live or static)
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const data: CachedRates = JSON.parse(cached);
-      // Check version matches and not expired
       const age = Date.now() - data.updatedAt;
       if (data.version === CACHE_VERSION && age < CACHE_DURATION) {
         return data.rates;
@@ -90,27 +89,94 @@ export const getRates = (): Record<string, number> => {
     console.warn("Failed to load cached FX rates", e);
   }
 
-  // 2. Fallback to default rates (Simulation of fresh fetch)
-  // In a real app, this would be: await fetch('https://api...').json()
-  const freshRates = DEFAULT_RATES;
+  // 2. Return defaults immediately (non-blocking fetch will update cache)
+  return DEFAULT_RATES;
+};
 
-  // Track that we are using default/fallback rates which might be slightly stale
-  // This helps us monitor how often we are hitting the fallback
-  trackEvent('rate_fetch_error', { reason: 'using_default_static', base: 'USD' });
-
-  // 3. Cache the "new" rates
+/**
+ * Fetches live exchange rates from Open ER API (free, no key required).
+ * Returns the rates object or null if fetch fails.
+ */
+const fetchLiveRates = async (): Promise<Record<string, number> | null> => {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      version: CACHE_VERSION,
-      base: 'USD',
-      rates: freshRates,
-      updatedAt: Date.now()
-    }));
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+
+    const json = await response.json();
+    if (json.result !== 'success' || !json.rates) return null;
+
+    // Merge with our supported currencies — keep only codes we support
+    const supportedCodes = Object.keys(DEFAULT_RATES);
+    const liveRates: Record<string, number> = {};
+    supportedCodes.forEach(code => {
+      liveRates[code] = json.rates[code] ?? DEFAULT_RATES[code] ?? 1;
+    });
+
+    return liveRates;
   } catch (e) {
-    // Ignore storage errors
+    // Network error, timeout, or abort — silent fallback
+    console.debug("Live FX fetch failed, using cached/default rates", e);
+    return null;
+  }
+};
+
+/**
+ * Non-blocking initialization: fetches live rates and caches them.
+ * Safe to call multiple times — skips if cache is fresh.
+ * Call this once on app startup.
+ */
+export const initializeRates = async (): Promise<void> => {
+  // Skip if cache is still fresh
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const data: CachedRates = JSON.parse(cached);
+      const age = Date.now() - data.updatedAt;
+      if (data.version === CACHE_VERSION && age < CACHE_DURATION) {
+        return; // Cache is fresh, no need to fetch
+      }
+    }
+  } catch (e) {
+    // Proceed to fetch
   }
 
-  return freshRates;
+  const liveRates = await fetchLiveRates();
+
+  if (liveRates) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        version: CACHE_VERSION,
+        base: 'USD',
+        rates: liveRates,
+        updatedAt: Date.now(),
+        source: 'live'
+      }));
+      trackEvent('rate_fetch_success', { base: 'USD', source: 'open.er-api.com' });
+    } catch (e) {
+      // Storage error — rates still usable in memory this session
+    }
+  } else {
+    // Cache the defaults so we don't re-fetch on every call
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        version: CACHE_VERSION,
+        base: 'USD',
+        rates: DEFAULT_RATES,
+        updatedAt: Date.now(),
+        source: 'default'
+      }));
+    } catch (e) {
+      // Ignore
+    }
+    trackEvent('rate_fetch_error', { reason: 'api_unavailable', base: 'USD' });
+  }
 };
 
 /**
