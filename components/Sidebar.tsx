@@ -20,8 +20,6 @@ const Sidebar = ({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: 
   const { t } = useLanguage();
   const { currentUser, isPro } = useAuth();
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-  const [upgradeRect, setUpgradeRect] = useState<DOMRect | null>(null);
-  const upgradeBtnRef = React.useRef<HTMLButtonElement>(null);
 
   const handleNavigate = (view: string) => {
     if (onNavigate) {
@@ -115,13 +113,7 @@ const Sidebar = ({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: 
         {!isPro && (
           <div className="mx-4 mb-4">
             <button
-              ref={upgradeBtnRef}
-              onClick={() => {
-                if (upgradeBtnRef.current) {
-                  setUpgradeRect(upgradeBtnRef.current.getBoundingClientRect());
-                }
-                setIsUpgradeOpen(true);
-              }}
+              onClick={() => setIsUpgradeOpen(true)}
               className="w-full bg-gradient-to-r from-gray-900 to-gray-800 dark:from-indigo-600 dark:to-purple-600 text-white rounded-xl p-3 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 group relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -150,11 +142,7 @@ const Sidebar = ({ onLogout, currentView = 'dashboard', onNavigate, onOpenAI }: 
         </div>
       </div>
 
-      <UpgradeModal
-        isOpen={isUpgradeOpen}
-        onClose={() => setIsUpgradeOpen(false)}
-        anchorRect={upgradeRect}
-      />
+      <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
     </>
   );
 };
