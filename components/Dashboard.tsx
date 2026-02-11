@@ -10,6 +10,7 @@ import OnboardingTour from './OnboardingTour';
 import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
 import CurrencySelector from './CurrencySelector';
+import BudgetAlert from './BudgetAlert';
 import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
@@ -23,6 +24,7 @@ import {
 } from '../utils/firestore';
 import { calculateDerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
+import { sendRenewalNotifications, generateRenewalNotifications, getUpcomingRenewals } from '../utils/notificationService';
 
 // Lazy Load Heavy Components
 const Analytics = React.lazy(() => import('./Analytics'));
@@ -132,10 +134,29 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
    const [isAIOpen, setIsAIOpen] = useState(false);
    const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
    const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
+   const [isBudgetEditorOpen, setIsBudgetEditorOpen] = useState(false);
 
    const [notifications, setNotifications] = useState([
       { id: 1, text: `Welcome to SubSense, ${user.name}!`, time: "Just now", read: false, type: 'info' },
    ]);
+
+   // Generate renewal notifications when subscriptions change
+   useEffect(() => {
+      if (!subscriptions.length || subscriptionsLoading) return;
+
+      // In-app notifications
+      const renewalAlerts = generateRenewalNotifications(subscriptions);
+      if (renewalAlerts.length > 0) {
+         setNotifications(prev => {
+            const existingIds = new Set(prev.map(n => n.id));
+            const newAlerts = renewalAlerts.filter(a => !existingIds.has(a.id));
+            return [...newAlerts, ...prev];
+         });
+      }
+
+      // Browser push notifications (only if permission granted)
+      sendRenewalNotifications(subscriptions);
+   }, [subscriptions, subscriptionsLoading]);
 
    const filteredSubscriptions = useMemo(() => {
       if (activeCategory === 'All') return subscriptions;
@@ -319,9 +340,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                            </div>
                            <div className="flex justify-between items-center">
                               <span className="text-[10px] text-secondary">{sub.nextDate}</span>
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>
-                                 {sub.status}
-                              </span>
+                              {(() => {
+                                 const renewals = getUpcomingRenewals([sub]);
+                                 const isRenewingSoon = renewals.length > 0;
+                                 if (isRenewingSoon) {
+                                    const dayText = renewals[0].daysUntil === 0 ? 'Today' : renewals[0].daysUntil === 1 ? 'Tomorrow' : `${renewals[0].daysUntil}d`;
+                                    return <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 animate-pulse">{dayText}</span>;
+                                 }
+                                 return <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>{sub.status}</span>;
+                              })()}
                            </div>
                         </div>
                         <button
@@ -492,6 +519,46 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                         currencyCode={previewCurrency || currentCurrency}
                      />
                   </div>
+
+                  {/* Budget Alerts */}
+                  <div className="mt-4">
+                     <BudgetAlert
+                        categoryBreakdown={metrics.categoryBreakdown}
+                        budgetLimits={budgetLimits}
+                        onEditBudgets={() => setIsBudgetEditorOpen(!isBudgetEditorOpen)}
+                     />
+                  </div>
+
+                  {/* Inline Budget Editor */}
+                  {isBudgetEditorOpen && (
+                     <div className="bg-card rounded-2xl border border-subtle shadow-sm p-5 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <h3 className="text-sm font-bold text-primary mb-4">Set Monthly Budget Limits</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                           {Object.entries(budgetLimits).map(([category, limit]) => (
+                              <div key={category}>
+                                 <label className="text-[10px] font-medium text-muted block mb-1">{category}</label>
+                                 <input
+                                    type="number"
+                                    value={limit}
+                                    onChange={(e) => setBudgetLimits(prev => ({
+                                       ...prev,
+                                       [category]: Math.max(0, Number(e.target.value))
+                                    }))}
+                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-subtle text-primary text-sm rounded-lg px-3 py-1.5 font-medium"
+                                    min="0"
+                                    step="10"
+                                 />
+                              </div>
+                           ))}
+                        </div>
+                        <button
+                           onClick={() => setIsBudgetEditorOpen(false)}
+                           className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                           Done
+                        </button>
+                     </div>
+                  )}
 
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
                      <div className="lg:col-span-2 space-y-6">

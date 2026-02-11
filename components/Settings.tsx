@@ -10,6 +10,7 @@ import { updateUserSettings } from '../utils/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from './UpgradeModal';
 import { createPortalSession } from '../utils/stripe';
+import { requestNotificationPermission, getNotificationStatus } from '../utils/notificationService';
 
 interface SettingsProps {
     subscriptions?: Subscription[];
@@ -215,11 +216,26 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('settings.payment_due')}</h4>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">3 days before renewal</p>
+                                    {(() => {
+                                        const status = getNotificationStatus();
+                                        if (status === 'denied') return <p className="text-[10px] text-red-500 mt-1">⚠ Notifications blocked in browser. Please enable in browser settings.</p>;
+                                        if (status === 'unsupported') return <p className="text-[10px] text-gray-400 mt-1">Browser doesn't support notifications</p>;
+                                        if (status === 'granted') return <p className="text-[10px] text-green-500 mt-1">✓ Browser notifications enabled</p>;
+                                        return null;
+                                    })()}
                                 </div>
                                 <Toggle
                                     id="notify_payment"
                                     defaultChecked={userProfile?.preferences?.notifyPayment ?? true}
-                                    onChange={(val) => handlePreferenceUpdate('notifyPayment', val)}
+                                    onChange={async (val) => {
+                                        if (val) {
+                                            const granted = await requestNotificationPermission();
+                                            if (!granted) {
+                                                // Permission was denied — the status text above will update on next render
+                                            }
+                                        }
+                                        handlePreferenceUpdate('notifyPayment', val);
+                                    }}
                                 />
                             </div>
                             <div className="flex items-center justify-between">

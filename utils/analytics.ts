@@ -5,7 +5,7 @@ import { analytics } from "../firebase/firebase";
 import { IS_BETA, APP_VERSION } from "./constants";
 
 // Types for strict event logging
-export type AnalyticsEvent = 
+export type AnalyticsEvent =
   // Auth & Lifecycle
   | 'signup_success'
   | 'login_success'
@@ -13,37 +13,38 @@ export type AnalyticsEvent =
   | 'session_start'
   | 'churn_recovery' // User returned after 30 days
   | 'at_risk_recovery' // User returned after 21 days
-  
+
   // Funnel
   | 'funnel_first_sub' // First subscription added
   | 'funnel_second_sub' // Second subscription added
-  
+
   // Subscriptions
   | 'subscription_added'
   | 'subscription_edited'
   | 'subscription_removed'
   | 'mark_as_paid'
   | 'subscription_upgrade'
-  
+
   // Features (Engagement)
   | 'feature_viewed' // Generic feature view (dashboard, analytics, etc)
   | 'export_data'
   | 'theme_changed'
   | 'currency_changed'
-  
+
   // AI
   | 'ai_opened'
   | 'ai_query_submitted'
-  
+
   // Payments
   | 'checkout_started'
   | 'portal_opened'
-  
+
   // System & Monitoring
   | 'app_error'
   | 'performance_metric'
   | 'system_fallback'
   | 'rate_fetch_error'
+  | 'rate_fetch_success'
   | 'data_integrity_warning';
 
 interface EventParams {
@@ -63,7 +64,7 @@ export const trackEvent = (eventName: AnalyticsEvent, params: EventParams = {}) 
 
   // 2. Environment Check
   // In development, we log to console instead of sending to Firebase to save quota and noise
-  
+
   // Safely check for DEV environment
   let isDev = false;
   try {
@@ -72,7 +73,7 @@ export const trackEvent = (eventName: AnalyticsEvent, params: EventParams = {}) 
   } catch (e) {
     // Ignore error if import.meta is not available
   }
-  
+
   const safeParams = {
     ...params,
     app_version: APP_VERSION,
