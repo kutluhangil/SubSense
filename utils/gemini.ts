@@ -1,42 +1,23 @@
 
-import { GoogleGenAI } from "@google/genai";
 import { convertAmount } from "./currency";
 import { debugLog } from "./debug";
 import { Subscription } from "../components/SubscriptionModal";
 import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
-// Helper to safely get API Key in Vite environment
+// Gemini REST API — works directly in the browser (no SDK needed)
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
 const getApiKey = () => {
-  // 1. Try Vite standard (import.meta.env)
-  // Cast to any to safely access properties if types are missing
   const meta = import.meta as any;
   if (typeof meta !== 'undefined' && meta.env && meta.env.VITE_GEMINI_API_KEY) {
     return meta.env.VITE_GEMINI_API_KEY;
   }
-  // 2. Try process.env safely (for legacy/test envs)
   try {
     if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
       return process.env.API_KEY;
     }
-  } catch (e) {
-    // Ignore ReferenceError
-  }
+  } catch (e) { /* ignore */ }
   return '';
-};
-
-// Initialize lazily to prevent module-level crash if key is missing
-let aiInstance: GoogleGenAI | null = null;
-
-const getAI = () => {
-  if (!aiInstance) {
-    const key = getApiKey();
-    if (key) {
-      aiInstance = new GoogleGenAI({ apiKey: key });
-    } else {
-      console.warn("Gemini API Key missing. AI features will be disabled.");
-    }
-  }
-  return aiInstance;
 };
 
 // Type definition for the structured insight
@@ -44,7 +25,7 @@ export interface AIInsight {
   type: 'redundancy' | 'optimization' | 'general';
   title: string;
   description: string;
-  estimatedSavings: string; // e.g. "$120/yr"
+  estimatedSavings: string;
 }
 
 // Simple in-memory cache for the session
@@ -58,7 +39,6 @@ const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: strin
 
   const convertedSubs = validSubs.map(s => {
     const safeSub = sanitizeForAI(s);
-    // Standardize to monthly for analysis
     const convertedCost = convertAmount(safeSub.price, safeSub.currency, baseCurrency);
     const monthlyCost = safeSub.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
 
@@ -76,14 +56,100 @@ const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: strin
   };
 };
 
+/**
+ * Direct REST call to Gemini API — browser-compatible, no CORS issues.
+ */
+const callGemini = async (prompt: string, systemInstruction?: string): Promise<string | null> => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("Gemini API Key missing. AI features disabled.");
+    return null;
+  }
+
+  const body: any = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: "application/json",
+    }
+  };
+
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+
+  const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Gemini API Error:", res.status, errText);
+    throw new Error(`Gemini API returned ${res.status}`);
+  }
+
+  const data = await res.json();
+  // Extract text from the response
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+};
+
+/**
+ * Direct REST call for chat — supports multi-turn conversation history.
+ */
+const callGeminiChat = async (
+  history: { role: string; parts: { text: string }[] }[],
+  userMessage: string,
+  systemInstruction?: string
+): Promise<string | null> => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("Gemini API Key missing. AI features disabled.");
+    return null;
+  }
+
+  // Build the contents array (history + new user message)
+  const contents = [
+    ...history.map(h => ({
+      role: h.role,
+      parts: h.parts
+    })),
+    { role: "user", parts: [{ text: userMessage }] }
+  ];
+
+  const body: any = {
+    contents,
+    generationConfig: {}
+  };
+
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+
+  const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Gemini Chat API Error:", res.status, errText);
+    throw new Error(`Gemini API returned ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+};
+
 export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en'): Promise<AIInsight[]> => {
-  const ai = getAI();
-  if (!ai) return [];
+  const apiKey = getApiKey();
+  if (!apiKey) return [];
 
   try {
-    // 1. Cache Check
+    // Cache Check
     const totalValue = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
-    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v2`;
+    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v3`;
 
     if (cachedInsights && cachedInsights.key === cacheKey) {
       debugLog('AI_LANG', 'Returning cached insights');
@@ -93,14 +159,11 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
     debugLog('AI_LANG', `Generating strict MVP insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
 
-    // Strict language instruction
     const langInstruction = languageCode === 'tr'
       ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output values must be in Turkish context."
       : "OUTPUT LANGUAGE: ENGLISH.";
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: `
+    const prompt = `
       ROLE: You are a conservative Financial Optimization Engine.
       
       GOAL: Analyze subscriptions to find SPECIFIC savings based on 2 logic patterns only.
@@ -134,25 +197,18 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
           }
         ]
       }
-      `,
-      config: {
-        responseMimeType: 'application/json',
-      }
-    });
+    `;
 
-    const text = response.text;
+    const text = await callGemini(prompt);
     if (!text) return [];
 
     const resultObj = JSON.parse(text);
     const results: AIInsight[] = resultObj.insights || [];
 
-    // Update cache
     cachedInsights = { key: cacheKey, data: results };
-
     return results;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    // Fallback static insights
     const fallback: AIInsight[] = languageCode === 'tr' ? [
       { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
     ] : [
@@ -163,10 +219,9 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
 };
 
 export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
-  const ai = getAI();
-  if (!ai) return "I'm currently offline or misconfigured. Please try again later.";
+  const apiKey = getApiKey();
+  if (!apiKey) return "I'm currently offline or misconfigured. Please try again later.";
 
-  // Existing chat logic remains, but leveraging the same conservative persona
   try {
     debugLog('AI_LANG', `Chat request in: ${languageCode}`);
     const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
@@ -189,14 +244,8 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     GOAL: Help the user understand their spending patterns based ONLY on the provided context.
     `;
 
-    const chat = ai.chats.create({
-      model: 'gemini-2.0-flash',
-      config: { systemInstruction },
-      history: history
-    });
-
-    const result = await chat.sendMessage({ message: userMessage });
-    return result.text;
+    const text = await callGeminiChat(history, userMessage, systemInstruction);
+    return text || "I couldn't generate a response. Please try again.";
   } catch (error) {
     console.error("Gemini Chat Error:", error);
     return "I'm having trouble connecting to my intelligence layer right now.";
