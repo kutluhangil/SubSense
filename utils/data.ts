@@ -126,6 +126,18 @@ export const BRAND_COLORS: Record<string, string> = {
   "default": "#4F46E5" // Indigo-600
 };
 
+export interface PlanTier {
+  name: string;           // English name: "Standard with Ads"
+  nameLocalized?: string; // Localized: "Reklamlı"
+  price: number;
+  cycle: 'Monthly' | 'Yearly';
+}
+
+export interface RegionPricing {
+  currency: string;
+  tiers: PlanTier[];
+}
+
 export interface SubscriptionDetail {
   id: string;
   name: string;
@@ -144,6 +156,10 @@ export interface SubscriptionDetail {
   parentCompany?: string;
   milestones?: string[];
   subsidiaries?: string;
+  regions?: {
+    US?: RegionPricing;
+    TR?: RegionPricing;
+  };
 }
 
 // THE CENTRAL DATASET
@@ -158,11 +174,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Reed Hastings, Marc Randolph",
     ceo: "Ted Sarandos, Greg Peters",
     headquarters: "Los Gatos, California",
-    price: "15.49",
+    price: "17.99",
     currency: "USD",
     type: "netflix",
     netWorth: "$260 Billion",
-    globalUserCount: "260M+",
+    globalUserCount: "283M+",
     website: "netflix.com",
     milestones: [
       "1997: Founded as a DVD-by-mail service",
@@ -170,8 +186,27 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2013: Released first original series 'House of Cards'",
       "2016: Expanded globally to 130 new countries simultaneously",
       "2021: Squid Game becomes most-watched show ever",
-      "2022: Launched ad-supported tier"
+      "2022: Launched ad-supported tier",
+      "2025: Surpassed 280 million subscribers"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Standard with Ads", price: 7.99, cycle: "Monthly" },
+          { name: "Standard", price: 17.99, cycle: "Monthly" },
+          { name: "Premium (4K)", price: 24.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Basic", nameLocalized: "Temel", price: 189.99, cycle: "Monthly" },
+          { name: "Standard", nameLocalized: "Standart", price: 289.99, cycle: "Monthly" },
+          { name: "Premium (4K)", nameLocalized: "Premium (4K)", price: 379.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "spotify": {
     id: "spotify",
@@ -181,11 +216,11 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Daniel Ek, Martin Lorentzon",
     ceo: "Daniel Ek",
     headquarters: "Stockholm, Sweden",
-    price: "10.99",
+    price: "11.99",
     currency: "USD",
     type: "spotify",
-    netWorth: "$65 Billion",
-    globalUserCount: "602M+ (Total)",
+    netWorth: "$90 Billion",
+    globalUserCount: "675M+ (Total)",
     website: "spotify.com",
     milestones: [
       "2006: Founded in Stockholm",
@@ -193,8 +228,29 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2011: Launched in the United States",
       "2015: Discover Weekly playlist launched",
       "2019: Acquired Gimlet Media (Podcast pivot)",
-      "2023: Surpassed 500 million active users"
+      "2023: Surpassed 500 million active users",
+      "2025: Surpassed 670 million total users"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 11.99, cycle: "Monthly" },
+          { name: "Duo", price: 16.99, cycle: "Monthly" },
+          { name: "Family", price: 19.99, cycle: "Monthly" },
+          { name: "Student", price: 5.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Individual", nameLocalized: "Bireysel", price: 99, cycle: "Monthly" },
+          { name: "Duo", nameLocalized: "Duo", price: 135, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 165, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 55, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "youtubepremium": {
     id: "youtubepremium",
@@ -218,6 +274,24 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2018: Rebranded to YouTube Premium",
       "2024: Surpassed 100 million subscribers"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 13.99, cycle: "Monthly" },
+          { name: "Family", price: 22.99, cycle: "Monthly" },
+          { name: "Student", price: 7.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Individual", nameLocalized: "Bireysel", price: 139.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 259.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 79.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "amazonprimevideo": {
     id: "amazonprimevideo",
@@ -241,6 +315,21 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2022: 'The Rings of Power' premieres",
       "2024: Introduced ads to base tier"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Prime Video (Standalone)", price: 8.99, cycle: "Monthly" },
+          { name: "Amazon Prime (Bundle)", price: 14.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Prime Video", nameLocalized: "Prime Video", price: 39.90, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "disney+": {
     id: "disney+",
@@ -264,6 +353,22 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2022: Launched ad-supported tier",
       "2024: Integrated Hulu content into main app"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Basic (with Ads)", price: 9.99, cycle: "Monthly" },
+          { name: "Premium (No Ads)", price: 15.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Standard", nameLocalized: "Standart", price: 249.90, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Premium", price: 449.90, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "hulu": {
     id: "hulu",
@@ -287,6 +392,15 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2017: 'The Handmaid’s Tale' wins Best Drama Emmy",
       "2019: Disney assumes full operational control"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Hulu (with Ads)", price: 7.99, cycle: "Monthly" },
+          { name: "Hulu (No Ads)", price: 17.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "hbomax": {
     id: "hbomax",
@@ -310,6 +424,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2023: Rebranded to 'Max'",
       "2024: House of the Dragon Season 2"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "With Ads", price: 9.99, cycle: "Monthly" },
+          { name: "Ad-Free", price: 15.99, cycle: "Monthly" },
+          { name: "Ultimate (4K)", price: 19.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "appletv+": {
     id: "appletv+",
@@ -333,6 +457,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2023: Launched MLS Season Pass",
       "2023: Released 'Killers of the Flower Moon'"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Apple TV+", price: 9.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Apple TV+", nameLocalized: "Apple TV+", price: 64.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
 
   // --- MUSIC ---
@@ -358,6 +496,24 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Added Lossless and Spatial Audio",
       "2023: Apple Music Classical app launched"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 10.99, cycle: "Monthly" },
+          { name: "Family", price: 16.99, cycle: "Monthly" },
+          { name: "Student", price: 5.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Individual", nameLocalized: "Bireysel", price: 54.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 84.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 29.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
 
   // --- PRODUCTIVITY ---
@@ -383,6 +539,22 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: Rebranded to Microsoft 365",
       "2023: Copilot AI integration announced"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Personal", price: 6.99, cycle: "Monthly" },
+          { name: "Family", price: 9.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Personal", nameLocalized: "Kişisel", price: 179.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "adobecreativecloud": {
     id: "adobecreativecloud",
@@ -405,6 +577,23 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Acquired Frame.io for cloud collaboration",
       "2023: Launched Firefly Generative AI"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Photography Plan", price: 9.99, cycle: "Monthly" },
+          { name: "Single App", price: 22.99, cycle: "Monthly" },
+          { name: "All Apps", price: 54.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 249.99, cycle: "Monthly" },
+          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 1399.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "canvapro": {
     id: "canvapro",
@@ -427,6 +616,22 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Valued at $40 billion",
       "2023: Launched Magic Studio AI"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Pro", price: 14.99, cycle: "Monthly" },
+          { name: "Teams", price: 10.00, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Pro", nameLocalized: "Pro", price: 179.99, cycle: "Monthly" },
+          { name: "Teams", nameLocalized: "Ekip", price: 119.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "googleworkspace": {
     id: "googleworkspace",
@@ -449,7 +654,24 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2016: Rebranded to G Suite",
       "2020: Rebranded to Google Workspace",
       "2023: Gemini AI integration"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Business Starter", price: 6.00, cycle: "Monthly" },
+          { name: "Business Standard", price: 12.00, cycle: "Monthly" },
+          { name: "Business Plus", price: 18.00, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Business Starter", nameLocalized: "İşletme Başlangıç", price: 119.99, cycle: "Monthly" },
+          { name: "Business Standard", nameLocalized: "İşletme Standart", price: 239.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "slack": {
     id: "slack",
@@ -472,7 +694,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: IBM chooses Slack for 350k employees",
       "2021: Acquired by Salesforce",
       "2023: Launched Slack Canvas"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Pro", price: 7.25, cycle: "Monthly" },
+          { name: "Business+", price: 12.50, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "notionplus": {
     id: "notionplus",
@@ -494,7 +725,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: Personal plan made free",
       "2021: Valued at $10 Billion",
       "2023: Notion AI launched"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Plus", price: 8.00, cycle: "Monthly" },
+          { name: "Business", price: 15.00, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "figma": {
     id: "figma",
@@ -516,7 +756,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Launched FigJam",
       "2022: Failed Adobe acquisition attempt",
       "2023: Dev Mode for developers"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Professional", price: 12.00, cycle: "Monthly" },
+          { name: "Organization", price: 45.00, cycle: "Monthly" }
+        ]
+      }
+    }
   },
 
   // --- AI & DEV ---
@@ -542,6 +791,21 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2023: ChatGPT Plus & GPT-4 released",
       "2024: Sora video model announced"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Plus", price: 20.00, cycle: "Monthly" },
+          { name: "Pro", price: 200.00, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Plus", nameLocalized: "Plus", price: 649.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "githubcopilot": {
     id: "githubcopilot",
@@ -565,6 +829,15 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2023: Copilot X announced",
       "2023: Copilot Chat integrated into VS Code"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 10.00, cycle: "Monthly" },
+          { name: "Business", price: 19.00, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "midjourney": {
     id: "midjourney",
@@ -585,7 +858,17 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2023: V5 Model released (Photo-realism)",
       "2023: Ended free trials due to high demand",
       "2024: Alpha web interface testing"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Basic", price: 10.00, cycle: "Monthly" },
+          { name: "Standard", price: 30.00, cycle: "Monthly" },
+          { name: "Pro", price: 60.00, cycle: "Monthly" }
+        ]
+      }
+    }
   },
 
   // --- GAMING ---
@@ -611,6 +894,24 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Bethesda games added",
       "2023: Activision Blizzard acquisition completed"
     ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Core", price: 9.99, cycle: "Monthly" },
+          { name: "Standard", price: 14.99, cycle: "Monthly" },
+          { name: "Ultimate", price: 19.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Core", nameLocalized: "Temel", price: 179, cycle: "Monthly" },
+          { name: "Standard", nameLocalized: "Standart", price: 279, cycle: "Monthly" },
+          { name: "Ultimate", nameLocalized: "Ultimate", price: 449, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "playstationplus": {
     id: "playstationplus",
@@ -633,7 +934,25 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: PS Plus Collection for PS5",
       "2022: Relaunch with Extra/Premium tiers",
       "2023: Cloud streaming for PS5 games"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Essential", price: 9.99, cycle: "Monthly" },
+          { name: "Extra", price: 14.99, cycle: "Monthly" },
+          { name: "Premium", price: 17.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Essential", nameLocalized: "Temel", price: 250, cycle: "Monthly" },
+          { name: "Extra", nameLocalized: "Ekstra", price: 370, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Premium", price: 470, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "twitchturbo": {
     id: "twitchturbo",
@@ -656,7 +975,15 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2014: Acquired by Amazon",
       "2016: Twitch Prime (now Prime Gaming) launched",
       "2023: Turbo price increased in some regions"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Turbo", price: 11.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "discordnitro": {
     id: "discordnitro",
@@ -678,7 +1005,23 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: Rebranding to 'Your Place to Talk'",
       "2021: Rejected $12B Microsoft acquisition offer",
       "2022: Nitro Basic tier introduced"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Nitro Basic", price: 2.99, cycle: "Monthly" },
+          { name: "Nitro", price: 9.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 44.99, cycle: "Monthly" },
+          { name: "Nitro", nameLocalized: "Nitro", price: 149.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "duolingo": {
     id: "duolingo",
@@ -700,7 +1043,24 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2017: Duolingo Plus launched",
       "2021: IPO on NASDAQ",
       "2023: Rebranded Plus to Super Duolingo"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Super", price: 6.99, cycle: "Monthly" },
+          { name: "Max", price: 13.99, cycle: "Monthly" },
+          { name: "Family", price: 9.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Super", nameLocalized: "Super", price: 209.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 299.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "masterclass": {
     id: "masterclass",
@@ -722,7 +1082,17 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: Usage surged during pandemic",
       "2021: Valuation tripled to $2.75B",
       "2023: Launched 'Sessions' for hands-on learning"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 15.00, cycle: "Monthly" },
+          { name: "Duo", price: 20.00, cycle: "Monthly" },
+          { name: "Family", price: 23.00, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "dropbox": {
     id: "dropbox",
@@ -744,7 +1114,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2018: IPO on NASDAQ",
       "2019: Acquired HelloSign",
       "2023: Dropbox Dash AI launched"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Plus", price: 11.99, cycle: "Monthly" },
+          { name: "Professional", price: 24.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "zoom": {
     id: "zoom",
@@ -766,7 +1145,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2019: IPO",
       "2020: 30x growth during pandemic",
       "2023: Zoom AI Companion launched"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Pro", price: 13.33, cycle: "Monthly" },
+          { name: "Business", price: 21.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "peacock": {
     id: "peacock",
@@ -789,7 +1177,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: WWE Network integration",
       "2023: First exclusive NFL playoff game stream",
       "2023: Prices increased for the first time"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Premium (with Ads)", price: 7.99, cycle: "Monthly" },
+          { name: "Premium Plus (No Ads)", price: 13.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "paramount+": {
     id: "paramount+",
@@ -812,7 +1209,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2021: Rebranded to Paramount+",
       "2022: Halo series premiere",
       "2023: Integration with Showtime"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Essential (with Ads)", price: 5.99, cycle: "Monthly" },
+          { name: "Showtime Bundle (No Ads)", price: 11.99, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "audible": {
     id: "audible",
@@ -835,7 +1241,16 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2008: Acquired by Amazon",
       "2020: Audible Plus catalog launched",
       "2023: Exclusive deal with Obama's Higher Ground"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Plus (1 Credit/mo)", price: 7.95, cycle: "Monthly" },
+          { name: "Premium (2 Credits/mo)", price: 14.95, cycle: "Monthly" }
+        ]
+      }
+    }
   },
   "amazonprime": {
     id: "amazonprime",
@@ -858,6 +1273,22 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2014: Price increased to $99",
       "2015: First Prime Day",
       "2021: Reached 200 million members"
-    ]
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Monthly", price: 14.99, cycle: "Monthly" },
+          { name: "Annual", price: 139.00, cycle: "Yearly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Monthly", nameLocalized: "Aylık", price: 99, cycle: "Monthly" },
+          { name: "Annual", nameLocalized: "Yıllık", price: 799, cycle: "Yearly" }
+        ]
+      }
+    }
   }
 };
