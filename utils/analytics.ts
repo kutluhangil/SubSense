@@ -15,6 +15,7 @@ export type AnalyticsEvent =
   | 'at_risk_recovery' // User returned after 21 days
   | 'password_reset_request'
   | 'email_verification_sent'
+  | 'email_verification_resent'
 
   // Funnel
   | 'funnel_first_sub' // First subscription added

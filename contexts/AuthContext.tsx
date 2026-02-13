@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useMemo, useCallback } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -34,6 +34,11 @@ interface AuthContextType {
   isPro: boolean;
   upgradeToPro: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  // Email verification
+  needsEmailVerification: boolean;
+  pendingVerificationEmail: string | null;
+  resendVerificationEmail: () => Promise<void>;
+  clearVerificationState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +60,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [authInitialized, setAuthInitialized] = useState(false);
   const [welcomeBackMessage, setWelcomeBackMessage] = useState<string | null>(null);
 
+  // Email Verification State
+  const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+
   // Determine Pro Status (Default false if no profile)
   const isPro = useMemo(() => {
     return userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
@@ -66,16 +75,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
     try {
-      // 1. Create Auth User (Modular Syntax)
+      // 1. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       if (user) {
-        // 2. Update Profile (Modular Syntax)
+        // 2. Update Profile
         await updateProfile(user, { displayName: name });
 
         // 3. Initialize Firestore Document for User
-        const profile = await initializeUserDocument(
+        await initializeUserDocument(
           { uid: user.uid, email: user.email, displayName: name },
           { currency, region }
         );
@@ -84,35 +93,55 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         try {
           await sendEmailVerification(user);
           trackEvent('email_verification_sent');
-        } catch (e) {
-          console.warn("Failed to send verification email:", e);
+        } catch (_e) {
+          // Silently fail — user can resend from verification screen
         }
 
-        // Update local state immediately
-        setCurrentUser(user);
-        setUserProfile(profile);
+        // 5. Set verification state (user stays signed in to allow resending)
+        setPendingVerificationEmail(email);
+        setNeedsEmailVerification(true);
 
         // Analytics
         trackEvent('signup_success', { method: 'email', currency: currency });
       }
     } catch (error) {
-      console.error("Signup error:", error);
       throw error;
     }
   }
 
-  // Log In
+  // Log In — enforces email verification
   async function login(email: string, password: string, rememberMe: boolean = false) {
     try {
-      // Modular Persistence
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
 
-      // Modular Sign In
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // SECURITY: Block unverified users
+      if (!user.emailVerified) {
+        // Attempt to re-send verification email for convenience
+        try {
+          await sendEmailVerification(user);
+        } catch (_e) {
+          // Rate limited or other issue
+        }
+
+        // Set verification state (user stays signed in)
+        setPendingVerificationEmail(email);
+        setNeedsEmailVerification(true);
+
+        throw new Error('EMAIL_NOT_VERIFIED');
+      }
+
+      // Clear verification state on successful verified login
+      setNeedsEmailVerification(false);
+      setPendingVerificationEmail(null);
       trackEvent('login_success', { method: 'email' });
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      if (error.message === 'EMAIL_NOT_VERIFIED') {
+        throw error; // Re-throw our custom error
+      }
       throw error;
     }
   }
@@ -145,6 +174,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setSubscriptions([]);
     setSubscriptionsLoading(false);
     setWelcomeBackMessage(null);
+    setNeedsEmailVerification(false);
+    setPendingVerificationEmail(null);
 
     // 4. Sign out from Firebase (Modular Syntax)
     await signOut(auth);
@@ -172,16 +203,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }
 
-  // Password Reset
+  // Password Reset — normalized error to prevent email enumeration
   async function resetPassword(email: string) {
     try {
       await sendPasswordResetEmail(auth, email);
       trackEvent('password_reset_request');
-    } catch (error) {
-      console.error("Reset password error:", error);
-      throw error;
+    } catch (_error: any) {
+      // SECURITY: Always succeed silently to prevent email enumeration.
+      // Firebase may throw 'auth/user-not-found' for non-existent emails.
+      // We don't reveal that info to the client.
+      trackEvent('password_reset_request');
     }
   }
+
+  // Resend Verification Email (Client SDK)
+  const resendVerificationEmail = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      await sendEmailVerification(currentUser);
+      trackEvent('email_verification_resent');
+    } catch (_e) {
+      // ignore
+    }
+  }, [currentUser]);
+
+  // Clear verification state (e.g., when user navigates away)
+  const clearVerificationState = useCallback(() => {
+    setNeedsEmailVerification(false);
+    setPendingVerificationEmail(null);
+  }, []);
 
   useEffect(() => {
     // Modular Auth Observer
@@ -195,6 +246,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCurrentUser(user);
 
       if (user) {
+        // SECURITY: Block unverified users but keep them signed in
+        if (!user.emailVerified) {
+          setPendingVerificationEmail(user.email);
+          setNeedsEmailVerification(true);
+          // Do NOT sign out.
+        } else {
+          setNeedsEmailVerification(false);
+          setPendingVerificationEmail(null);
+        }
+
         try {
           // 1. Hydrate User Profile
           const profile = await getUserDocument(user.uid);
@@ -278,7 +339,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     login,
     logout,
     upgradeToPro,
-    resetPassword
+    resetPassword,
+    // Email verification
+    needsEmailVerification,
+    pendingVerificationEmail,
+    resendVerificationEmail,
+    clearVerificationState
   };
 
   return (

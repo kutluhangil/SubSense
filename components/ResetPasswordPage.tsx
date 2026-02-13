@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle, ArrowRight, Check } from 'lucide-react';
+import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
+import { auth } from '../firebase/firebase';
 import Logo from './Logo';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -15,6 +17,11 @@ export default function ResetPasswordPage({ onLoginClick }: ResetPasswordPagePro
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Get Action Code from URL
+  const queryParams = new URLSearchParams(window.location.search);
+  const actionCode = queryParams.get('oobCode');
 
   // Validation Rules
   const validations = {
@@ -26,16 +33,37 @@ export default function ResetPasswordPage({ onLoginClick }: ResetPasswordPagePro
 
   const isFormValid = Object.values(validations).every(Boolean);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) return;
+    if (!actionCode) {
+      setErrorMsg("Invalid or missing reset code. Please try requesting a new password reset link.");
+      return;
+    }
 
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setErrorMsg(null);
+
+    try {
+      // 1. Verify code (optional, but confirmPasswordReset does it implicitly)
+      // 2. Confirm Reset
+      await confirmPasswordReset(auth, actionCode, password);
+
       setStep('success');
-    }, 1500);
+    } catch (error: any) {
+      console.error("Password reset failed:", error);
+      let msg = "Failed to reset password. The link may have expired.";
+      if (error.code === 'auth/weak-password') {
+        msg = "Password is too weak.";
+      } else if (error.code === 'auth/expired-action-code') {
+        msg = "This link has expired. Please request a new one.";
+      } else if (error.code === 'auth/invalid-action-code') {
+        msg = "Invalid reset link. Please try again.";
+      }
+      setErrorMsg(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,6 +85,12 @@ export default function ResetPasswordPage({ onLoginClick }: ResetPasswordPagePro
                   Your new password must be different to previously used passwords.
                 </p>
               </div>
+
+              {errorMsg && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-xs font-semibold border border-red-100 mb-6 text-center">
+                  {errorMsg}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -115,8 +149,8 @@ export default function ResetPasswordPage({ onLoginClick }: ResetPasswordPagePro
                   type="submit"
                   disabled={!isFormValid || isSubmitting}
                   className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all shadow-lg flex items-center justify-center transform active:scale-[0.98] ${isFormValid && !isSubmitting
-                      ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                    ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-900/20'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                     }`}
                 >
                   {isSubmitting ? 'Resetting password...' : 'Reset password'}

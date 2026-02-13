@@ -250,6 +250,8 @@ async function getUserIdFromCustomerId(customerId: string): Promise<string | nul
   return snapshot.docs[0].id;
 }
 
+
+
 // 4. API (Express App)
 import app from "./app";
 export const api = functions.https.onRequest(app);
