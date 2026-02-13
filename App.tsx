@@ -11,6 +11,8 @@ import { migrateLocalData } from './utils/firestore';
 import { WifiOff, Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
 
+import { applyActionCode } from 'firebase/auth';
+import { auth } from './firebase/firebase';
 import FooterCredit from './components/FooterCredit';
 
 // Lazy Load Pages & Heavy Components
@@ -18,6 +20,7 @@ const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Features = React.lazy(() => import('./components/Features'));
 const DemoModal = React.lazy(() => import('./components/DemoModal'));
 const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage'));
+const VerifyEmailPage = React.lazy(() => import('./components/VerifyEmailPage'));
 
 // Types for user interface consistency
 export interface User {
@@ -35,7 +38,7 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { currentUser, login, signup, logout, authInitialized, resetPassword } = useAuth();
+  const { currentUser, login, signup, logout, authInitialized, resetPassword, needsEmailVerification, pendingVerificationEmail, clearVerificationState } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
@@ -53,6 +56,39 @@ function AppContent() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+
+  // --- Handle Firebase Email Links (Verification & Password Reset) ---
+  useEffect(() => {
+    const handleEmailActions = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
+      const actionCode = params.get('oobCode');
+
+      if (!mode || !actionCode) return;
+
+      if (mode === 'resetPassword') {
+        setCurrentPage('reset-password');
+      } else if (mode === 'verifyEmail') {
+        try {
+          await applyActionCode(auth, actionCode);
+          // Reload user to update emailVerified status if logged in
+          if (auth.currentUser) {
+            await auth.currentUser.reload();
+            // Force auth context to refresh (usually happens via onAuthStateChanged automatically)
+          }
+          // Clear URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+          // Show success (you might want a toast here, for now we let the gated UI handle it)
+          // Since emailVerified is now true, the VerifyEmailPage gate will lift automatically upon next auth check/reload
+        } catch (error) {
+          console.error("Email verification failed:", error);
+          // UI will show unverified state nicely
+        }
+      }
+    };
+
+    handleEmailActions();
   }, []);
 
   // --- Analytics: Track Route Changes ---
@@ -110,20 +146,29 @@ function AppContent() {
     setIsDemoOpen(false);
   };
 
-  // Wrapper for AuthContext login
+  // Wrapper for AuthContext login — handles EMAIL_NOT_VERIFIED
   const handleLogin = async (email: string, password: string, rememberMe: boolean = false) => {
-    await login(email, password, rememberMe);
-    setIsAuthOpen(false);
-    setCurrentPage('home');
+    try {
+      await login(email, password, rememberMe);
+      setIsAuthOpen(false);
+      setCurrentPage('home');
+    } catch (err: any) {
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        // Close auth modal — the VerifyEmailPage will be shown by the gating logic
+        setIsAuthOpen(false);
+        return; // Don't re-throw; the UI state handles this
+      }
+      throw err; // Re-throw other errors so AuthModal can display them
+    }
   };
 
   // Wrapper for AuthContext signup
   const handleSignup = async (name: string, email: string, password: string, currency: string, region: string) => {
     await signup(email, password, name, currency, region);
-    // LanguageContext listens to profile changes via userProfile, but we can set local state too for instant feedback
+    // After signup, user is signed out and needsEmailVerification=true
+    // The VerifyEmailPage will be shown automatically
     setCurrency(currency);
     setIsAuthOpen(false);
-    setCurrentPage('home');
   };
 
   const handleLogout = async () => {
@@ -159,7 +204,20 @@ function AppContent() {
       )}
 
       <Suspense fallback={<PageLoader />}>
-        {appUser ? (
+        {/* Email Verification Gate */}
+        {needsEmailVerification && pendingVerificationEmail ? (
+          <VerifyEmailPage
+            email={pendingVerificationEmail}
+            onBackToLogin={() => {
+              clearVerificationState();
+              openAuth('login');
+            }}
+            onResendAttempt={() => {
+              // Verification email is automatically re-sent when user tries to log in
+              // with an unverified account. We show a helpful message on the VerifyEmailPage.
+            }}
+          />
+        ) : appUser ? (
           <Dashboard user={appUser} onLogout={handleLogout} />
         ) : (
           <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">

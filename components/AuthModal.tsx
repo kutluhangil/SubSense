@@ -89,14 +89,28 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
         await onSignupSubmit(formData.fullName, formData.email, formData.password, formData.currency, formData.country);
       }
     } catch (err: any) {
-      console.error(err);
-      // Firebase error mapping (simplified)
+      // If user needs email verification, parent handles navigation.
+      // Don't show an error in the modal \u2014 the VerifyEmailPage will appear.
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        return;
+      }
+
+      // Firebase error normalization \u2014 prevent email enumeration
       let msg = "An error occurred. Please try again.";
-      if (err.message.includes('auth/invalid-credential') || err.message.includes('auth/user-not-found') || err.message.includes('auth/wrong-password')) {
+      const code = err?.code || err?.message || '';
+
+      if (code.includes('auth/invalid-credential') || code.includes('auth/user-not-found') || code.includes('auth/wrong-password')) {
+        // SECURITY: Generic message prevents revealing if email exists
         msg = "Invalid email or password.";
-      } else if (err.message.includes('auth/email-already-in-use')) {
+      } else if (code.includes('auth/email-already-in-use')) {
         msg = "Account already exists with this email.";
-      } else if (err.message) {
+      } else if (code.includes('auth/weak-password')) {
+        msg = "Password must be at least 6 characters.";
+      } else if (code.includes('auth/too-many-requests')) {
+        msg = "Too many attempts. Please try again later.";
+      } else if (code.includes('auth/network-request-failed')) {
+        msg = "Network error. Please check your connection.";
+      } else if (err.message && !err.message.startsWith('auth/')) {
         msg = err.message;
       }
       setErrorMsg(msg);

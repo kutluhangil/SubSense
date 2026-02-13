@@ -11,21 +11,27 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
     // USERS COLLECTION
     match /users/{userId} {
+      // Allow read for owner (needed for UI hydration even if unverified)
       allow read: if isOwner(userId);
       
       // Allow update ONLY if NOT modifying the 'plan' object (Subscription status)
-      // This prevents users from manually setting themselves to 'pro' via client SDK
-      allow update: if isOwner(userId) 
+      // AND email is verified (prevents spam/bots from modifying accounts)
+      allow update: if isOwner(userId) && isVerified()
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
         
-      // Allow create (initial signup)
+      // Allow create (initial signup) - verification obviously not required yet
       allow create: if isOwner(userId);
       
       // SUBSCRIPTIONS SUB-COLLECTION (User's tracked items)
+      // CRITICAL: Only verified users can manage subscriptions
       match /subscriptions/{subscriptionId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && isVerified();
       }
     }
 
