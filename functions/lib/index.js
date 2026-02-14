@@ -26,10 +26,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.api = exports.sendCustomVerificationEmail = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
+const verificationTemplate_1 = require("./email/verificationTemplate");
 admin.initializeApp();
 const db = admin.firestore();
 // Initialize Stripe conditionally — if not configured, payment features are disabled
@@ -249,6 +250,74 @@ async function getUserIdFromCustomerId(customerId) {
     if (snapshot.empty)
         return null;
     return snapshot.docs[0].id;
+}
+// --- EMAIL SYSTEM ---
+// 6. Send Custom Verification Email
+exports.sendCustomVerificationEmail = functions.https.onCall(async (data, context) => {
+    // Ensure we are authenticated (or we can secure purely by email if needed, but authenticating is safer for rate limits)
+    // Actually, for signup flow, user is signed in but unverified.
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+    }
+    const email = data.email || context.auth.token.email;
+    const redirectUrl = data.redirectUrl || 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail'; // Default to Prod
+    if (!email) {
+        throw new functions.https.HttpsError("invalid-argument", "Email is required");
+    }
+    try {
+        // 1. Generate the link using Admin SDK
+        // This bypasses the default template and gives us the raw link
+        const link = await admin.auth().generateEmailVerificationLink(email, {
+            url: redirectUrl,
+            handleCodeInApp: true
+        });
+        // 2. Generate the HTML
+        const html = (0, verificationTemplate_1.getVerificationEmailTemplate)(link, "SubSense");
+        // 3. Send via SendGrid (or log if no key)
+        await sendEmail(email, "Verify your email for SubSense", html);
+        return { success: true };
+    }
+    catch (error) {
+        console.error("Error sending custom verification email:", error);
+        throw new functions.https.HttpsError("internal", error.message);
+    }
+});
+// Helper: Send Email (SendGrid / Log)
+// Requires: firebase functions:config:set sendgrid.key="SG.xxx"
+async function sendEmail(to, subject, html) {
+    var _a;
+    const sendgridKey = (_a = functions.config().sendgrid) === null || _a === void 0 ? void 0 : _a.key;
+    if (sendgridKey) {
+        // Production: Send via SendGrid API
+        // Using fetch (available in Node 18+)
+        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sendgridKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                personalizations: [{ to: [{ email: to }] }],
+                from: { email: 'noreply@subsense.app', name: 'SubSense Team' },
+                subject: subject,
+                content: [{ type: 'text/html', value: html }]
+            })
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            console.error("SendGrid Error:", err);
+            throw new Error("Failed to send email provider request");
+        }
+    }
+    else {
+        // Development / No Key: Log it
+        console.log(">>> [MOCK EMAIL SENT] >>>");
+        console.log(`To: ${to}`);
+        console.log(`Subject: ${subject}`);
+        console.log(`Link logic works. HTML content generated (${html.length} chars).`);
+        console.log("Check Firebase Functions logs to confirm trigger.");
+        console.log("<<< [MOCK EMAIL END] <<<");
+    }
 }
 // 4. API (Express App)
 const app_1 = __importDefault(require("./app"));
