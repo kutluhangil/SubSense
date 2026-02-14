@@ -15,6 +15,7 @@ export default function VerifyEmailPage({ email, onBackToLogin, onResendAttempt 
     const [resendCount, setResendCount] = useState(0);
     const [showResendSuccess, setShowResendSuccess] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     // Cooldown timer
     useEffect(() => {
@@ -30,25 +31,35 @@ export default function VerifyEmailPage({ email, onBackToLogin, onResendAttempt 
         if (cooldown > 0 || resendCount >= 5 || isResending) return;
 
         setIsResending(true);
+        setErrorMsg(null);
+
         try {
             await resendVerificationEmail();
-        } catch (_e) {
-            // Silently handle — Cloud Function always returns success for security
+
+            // Show success feedback
+            setShowResendSuccess(true);
+            setTimeout(() => setShowResendSuccess(false), 4000);
+
+            setResendCount(prev => prev + 1);
+            // Exponential cooldown: 60s, 90s, 120s, 180s, 300s
+            const cooldownDurations = [60, 90, 120, 180, 300];
+            const nextCooldown = cooldownDurations[Math.min(resendCount, cooldownDurations.length - 1)];
+            setCooldown(nextCooldown);
+
+            // Also trigger parent's callback (optional)
+            if (onResendAttempt) onResendAttempt();
+
+        } catch (err: any) {
+            console.error("Resend failed:", err);
+            let msg = "Failed to resend email. Please try again later.";
+            if (err.code === 'auth/too-many-requests') {
+                msg = "Too many requests. Please wait a bit.";
+                setCooldown(60); // Enforce cooldown
+            }
+            setErrorMsg(msg);
+        } finally {
+            setIsResending(false);
         }
-        setIsResending(false);
-
-        setResendCount(prev => prev + 1);
-        // Exponential cooldown: 60s, 90s, 120s, 180s, 300s
-        const cooldownDurations = [60, 90, 120, 180, 300];
-        const nextCooldown = cooldownDurations[Math.min(resendCount, cooldownDurations.length - 1)];
-        setCooldown(nextCooldown);
-
-        // Show success feedback
-        setShowResendSuccess(true);
-        setTimeout(() => setShowResendSuccess(false), 4000);
-
-        // Also trigger parent's callback
-        onResendAttempt();
     }, [cooldown, resendCount, isResending, resendVerificationEmail, onResendAttempt]);
 
     // Mask email for privacy: kut***@gmail.com
@@ -111,6 +122,13 @@ export default function VerifyEmailPage({ email, onBackToLogin, onResendAttempt 
                         </div>
                     </div>
 
+                    {/* Error Feedback */}
+                    {errorMsg && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-xs font-bold text-red-600 animate-in slide-in-from-top-2 duration-200">
+                            ⚠️ {errorMsg}
+                        </div>
+                    )}
+
                     {/* Resend Success Toast */}
                     {showResendSuccess && (
                         <div className="mb-4 p-3 bg-green-50 border border-green-100 rounded-xl flex items-center gap-2 text-xs font-bold text-green-600 animate-in slide-in-from-top-2 duration-200">
@@ -124,8 +142,8 @@ export default function VerifyEmailPage({ email, onBackToLogin, onResendAttempt 
                         onClick={handleResend}
                         disabled={cooldown > 0 || resendCount >= 5 || isResending}
                         className={`w-full rounded-xl py-3.5 font-bold text-sm transition-all flex items-center justify-center gap-2 mb-3 ${cooldown > 0 || resendCount >= 5
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm'
                             }`}
                     >
                         <RefreshCw size={16} className={isResending ? 'animate-spin' : ''} />
