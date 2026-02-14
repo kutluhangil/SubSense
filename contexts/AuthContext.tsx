@@ -91,10 +91,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // 4. Send Email Verification
         try {
-          await sendEmailVerification(user);
+          // Construct the URL for redirecting back to the app after verification
+          const actionCodeSettings = {
+            url: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail',
+            handleCodeInApp: true,
+          };
+
+          await sendEmailVerification(user, actionCodeSettings);
           trackEvent('email_verification_sent');
-        } catch (_e) {
-          // Silently fail — user can resend from verification screen
+          console.log("Verification email sent to:", user.email);
+        } catch (emailError: any) {
+          console.error("Failed to send verification email:", emailError);
+          // We don't throw here to avoid rolling back the user creation, 
+          // but we log it clearly. The user is still created.
         }
 
         // 5. Set verification state (user stays signed in to allow resending)
@@ -120,11 +129,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // SECURITY: Block unverified users
       if (!user.emailVerified) {
-        // Attempt to re-send verification email for convenience
+        // Attempt to re-send verification email for convenience (with error logging)
         try {
           await sendEmailVerification(user);
-        } catch (_e) {
-          // Rate limited or other issue
+          console.log("Auto-resent verification email on login attempt");
+        } catch (resendError) {
+          console.warn("Could not auto-resend verification email during login:", resendError);
         }
 
         // Set verification state (user stays signed in)
@@ -221,10 +231,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser) return;
 
     try {
-      await sendEmailVerification(currentUser);
+      // Construct the URL for redirecting back to the app after verification
+      const actionCodeSettings = {
+        url: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail',
+        handleCodeInApp: true,
+      };
+
+      await sendEmailVerification(currentUser, actionCodeSettings);
       trackEvent('email_verification_resent');
-    } catch (_e) {
-      // ignore
+      console.log("Verification email resent successfully");
+    } catch (error: any) {
+      console.error("Error resending verification email:", error);
+      throw error; // Re-throw to allow UI to show error message
     }
   }, [currentUser]);
 
