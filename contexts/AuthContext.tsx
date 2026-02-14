@@ -13,7 +13,8 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification
 } from 'firebase/auth';
-import { auth } from '../firebase/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
@@ -89,21 +90,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           { currency, region }
         );
 
-        // 4. Send Email Verification
+        // 4. Send Custom Email Verification
         try {
-          // Construct the URL for redirecting back to the app after verification
-          const actionCodeSettings = {
-            url: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail',
-            handleCodeInApp: true,
-          };
+          // Use our custom Cloud Function for branded email
+          const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
+          await sendCustomVerification({
+            email: user.email,
+            redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
+          });
 
-          await sendEmailVerification(user, actionCodeSettings);
           trackEvent('email_verification_sent');
-          console.log("Verification email sent to:", user.email);
+          console.log("Branded verification email sent to:", user.email);
         } catch (emailError: any) {
-          console.error("Failed to send verification email:", emailError);
-          // We don't throw here to avoid rolling back the user creation, 
-          // but we log it clearly. The user is still created.
+          console.error("Failed to send custom verification email:", emailError);
+          // Fallback to default if Cloud Function fails
+          try {
+            await sendEmailVerification(user);
+            console.log("Fallback to default Firebase email sent.");
+          } catch (fallbackError) {
+            console.error("Critical: Failed to send both custom and fallback verification emails", fallbackError);
+          }
         }
 
         // 5. Set verification state (user stays signed in to allow resending)
@@ -131,8 +137,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user.emailVerified) {
         // Attempt to re-send verification email for convenience (with error logging)
         try {
-          await sendEmailVerification(user);
-          console.log("Auto-resent verification email on login attempt");
+          const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
+          await sendCustomVerification({
+            email: user.email,
+            redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
+          });
+          console.log("Auto-resent custom verification email on login attempt");
         } catch (resendError) {
           console.warn("Could not auto-resend verification email during login:", resendError);
         }
@@ -231,17 +241,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser) return;
 
     try {
-      // Construct the URL for redirecting back to the app after verification
-      const actionCodeSettings = {
-        url: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail',
-        handleCodeInApp: true,
-      };
+      // Use Custom Cloud Function
+      const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
+      await sendCustomVerification({
+        email: currentUser.email,
+        redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
+      });
 
-      await sendEmailVerification(currentUser, actionCodeSettings);
       trackEvent('email_verification_resent');
-      console.log("Verification email resent successfully");
+      console.log("Custom verification email resent successfully");
     } catch (error: any) {
-      console.error("Error resending verification email:", error);
+      console.error("Error resending custom verification email:", error);
       throw error; // Re-throw to allow UI to show error message
     }
   }, [currentUser]);

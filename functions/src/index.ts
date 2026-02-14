@@ -2,6 +2,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
+import { getVerificationEmailTemplate } from "./email/verificationTemplate";
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -248,6 +249,83 @@ async function getUserIdFromCustomerId(customerId: string): Promise<string | nul
 
   if (snapshot.empty) return null;
   return snapshot.docs[0].id;
+}
+
+
+// --- EMAIL SYSTEM ---
+
+// 6. Send Custom Verification Email
+export const sendCustomVerificationEmail = functions.https.onCall(async (data, context) => {
+  // Ensure we are authenticated (or we can secure purely by email if needed, but authenticating is safer for rate limits)
+  // Actually, for signup flow, user is signed in but unverified.
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const email = data.email || context.auth.token.email;
+  const redirectUrl = data.redirectUrl || 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail'; // Default to Prod
+
+  if (!email) {
+    throw new functions.https.HttpsError("invalid-argument", "Email is required");
+  }
+
+  try {
+    // 1. Generate the link using Admin SDK
+    // This bypasses the default template and gives us the raw link
+    const link = await admin.auth().generateEmailVerificationLink(email, {
+      url: redirectUrl,
+      handleCodeInApp: true
+    });
+
+    // 2. Generate the HTML
+    const html = getVerificationEmailTemplate(link, "SubSense");
+
+    // 3. Send via SendGrid (or log if no key)
+    await sendEmail(email, "Verify your email for SubSense", html);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error sending custom verification email:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
+// Helper: Send Email (SendGrid / Log)
+// Requires: firebase functions:config:set sendgrid.key="SG.xxx"
+async function sendEmail(to: string, subject: string, html: string) {
+  const sendgridKey = functions.config().sendgrid?.key;
+
+  if (sendgridKey) {
+    // Production: Send via SendGrid API
+    // Using fetch (available in Node 18+)
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sendgridKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: 'noreply@subsense.app', name: 'SubSense Team' }, // Update this sender!
+        subject: subject,
+        content: [{ type: 'text/html', value: html }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("SendGrid Error:", err);
+      throw new Error("Failed to send email provider request");
+    }
+  } else {
+    // Development / No Key: Log it
+    console.log(">>> [MOCK EMAIL SENT] >>>");
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Link logic works. HTML content generated (${html.length} chars).`);
+    console.log("Check Firebase Functions logs to confirm trigger.");
+    console.log("<<< [MOCK EMAIL END] <<<");
+  }
 }
 
 
