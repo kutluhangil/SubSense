@@ -4,6 +4,7 @@ import { X, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { APP_VERSION } from '../utils/constants';
 
 interface ContactSupportModalProps {
@@ -18,6 +19,7 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { currentUser } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (isOpen) {
@@ -82,10 +84,10 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-               Beta Feedback
+               {t('contact.title')}
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-               Found a bug or have an idea? Let us know.
+               {t('contact.desc')}
             </p>
           </div>
           <button 
@@ -105,11 +107,11 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Describe the issue or feature request..."
+                      placeholder={t('contact.placeholder')}
                       className="w-full p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-white transition-all resize-none placeholder-gray-400 shadow-sm min-h-[140px]"
                    />
                    <div className="absolute bottom-3 right-3 pointer-events-none text-[10px] text-gray-400 bg-white/80 dark:bg-gray-800/80 px-1 rounded">
-                      CMD+Enter to send
+                      {t('contact.shortcut')}
                    </div>
                 </div>
 
@@ -126,7 +128,7 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                      onClick={onClose}
                      className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                    >
-                     Cancel
+                     {t('contact.cancel')}
                    </button>
                    <button 
                      type="submit" 
@@ -140,11 +142,11 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                       {isSending ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Sending...
+                          {t('contact.sending')}
                         </>
                       ) : (
                         <>
-                          Send Feedback <Send size={16} />
+                          {t('contact.send')} <Send size={16} />
                         </>
                       )}
                    </button>
@@ -155,15 +157,15 @@ export default function ContactSupportModal({ isOpen, onClose }: ContactSupportM
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-green-200 dark:border-green-800">
                    <CheckCircle size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Message Sent</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('contact.sent_title')}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto leading-relaxed">
-                   Thanks for helping us improve SubSense!
+                   {t('contact.sent_desc')}
                 </p>
                 <button 
                   onClick={onClose}
                   className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-md active:scale-95"
                 >
-                  Close
+                  {t('contact.close')}
                 </button>
              </div>
            )}

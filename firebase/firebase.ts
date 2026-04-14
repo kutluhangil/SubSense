@@ -27,12 +27,12 @@ const getEnv = (key: string, fallback: string): string => {
 };
 
 const firebaseConfig = {
-  apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyArupQpxKTcA1PUoqmUFLf2K31CT4KG_R4"),
-  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "subscriptionhub-85b02.firebaseapp.com"),
-  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", "subscriptionhub-85b02"),
-  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", "subscriptionhub-85b02.firebasestorage.app"),
-  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "86302718224"),
-  appId: getEnv("VITE_FIREBASE_APP_ID", "1:86302718224:web:f9f646d77fa9fb92050d95")
+  apiKey: getEnv("VITE_FIREBASE_API_KEY", ""),
+  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", ""),
+  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", ""),
+  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", ""),
+  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", ""),
+  appId: getEnv("VITE_FIREBASE_APP_ID", "")
 };
 
 // --- Initialization ---

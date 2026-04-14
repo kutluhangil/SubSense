@@ -302,7 +302,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          return (
             <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 text-center">
                <h3 className="font-bold text-primary text-sm mb-2">{t('dashboard.upcoming')}</h3>
-               <p className="text-xs text-muted">No upcoming payments.</p>
+               <p className="text-xs text-muted">{t('dashboard.no_upcoming')}</p>
             </div>
          );
       }
@@ -344,7 +344,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                  const renewals = getUpcomingRenewals([sub]);
                                  const isRenewingSoon = renewals.length > 0;
                                  if (isRenewingSoon) {
-                                    const dayText = renewals[0].daysUntil === 0 ? 'Today' : renewals[0].daysUntil === 1 ? 'Tomorrow' : `${renewals[0].daysUntil}d`;
+                                    const dayText = renewals[0].daysUntil === 0 ? t('dashboard.today') : renewals[0].daysUntil === 1 ? t('dashboard.tomorrow') : `${renewals[0].daysUntil}d`;
                                     return <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 animate-pulse">{dayText}</span>;
                                  }
                                  return <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>{sub.status}</span>;
@@ -354,7 +354,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                         <button
                            onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
                            className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                           title="Mark as paid"
+                           title={t('dashboard.mark_paid')}
                         >
                            <CheckCircle2 size={16} />
                         </button>
@@ -397,7 +397,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                   </div>
                </div>
             ) : breakdown.length === 0 ? (
-               <div className="text-center py-4 text-xs text-muted">Add subscriptions to see stats.</div>
+               <div className="text-center py-4 text-xs text-muted">{t('dashboard.add_stats_hint')}</div>
             ) : (
                <div className="flex items-center gap-6">
                   <div className="relative w-24 h-24 flex-shrink-0">
@@ -418,7 +418,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                         })}
                      </svg>
                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-muted">Oct</span>
+                        <span className="text-[10px] font-bold text-muted">
+                           {new Date().toLocaleString('default', { month: 'short' })}
+                        </span>
                      </div>
                   </div>
                   <div className="flex-1 space-y-2">
@@ -450,7 +452,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                      onClick={() => setIsAddModalOpen(false)}
                      className="text-sm font-medium text-secondary hover:text-primary flex items-center gap-2"
                   >
-                     <ArrowRight size={16} className="rotate-180" /> Back to Dashboard
+                     <ArrowRight size={16} className="rotate-180" /> {t('dashboard.back')}
                   </button>
                </div>
                <SubscriptionSearchPanel
@@ -532,7 +534,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                   {/* Inline Budget Editor */}
                   {isBudgetEditorOpen && (
                      <div className="bg-card rounded-2xl border border-subtle shadow-sm p-5 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <h3 className="text-sm font-bold text-primary mb-4">Set Monthly Budget Limits</h3>
+                        <h3 className="text-sm font-bold text-primary mb-4">{t('dashboard.budget_limits')}</h3>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                            {Object.entries(budgetLimits).map(([category, limit]) => (
                               <div key={category}>
@@ -555,7 +557,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                            onClick={() => setIsBudgetEditorOpen(false)}
                            className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
                         >
-                           Done
+                           {t('dashboard.done')}
                         </button>
                      </div>
                   )}
@@ -602,7 +604,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                                                 onClick={() => { setPreviewCurrency(null); setIsPreviewSelectorOpen(false); }}
                                                 className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'} `}
                                              >
-                                                Off (Original)
+                                                {t('dashboard.off_original')}
                                                 {!previewCurrency && <CheckCircle2 size={12} />}
                                              </button>
                                              <div className="h-px bg-gray-100 dark:bg-gray-700"></div>
