@@ -1,11 +1,5 @@
 <!-- Banner -->
-<div align="center">
-  <img width="1200" alt="SubSense Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-
-  <br />
-  <br />
-
-  <h1 align="center">SubSense<br/>The Intelligent Subscription Tracker</h1>
+<h1 align="center">SubSense<br/>The Intelligent Subscription Tracker</h1>
 
   <p align="center">
     <strong>Track, manage, and optimize your global subscriptions with Gemini AI.</strong>
