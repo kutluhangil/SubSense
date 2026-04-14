@@ -53,8 +53,8 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
     };
 
     const handleLogoutAll = () => {
-        if (window.confirm("Are you sure you want to log out of all devices?")) {
-            alert("All other sessions have been invalidated.");
+        if (window.confirm(t('settings.logout_confirm'))) {
+            alert(t('settings.sessions_cleared'));
         }
     };
 
@@ -133,23 +133,23 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                         {/* ... (Keeping inner content same) ... */}
                         <div className={`px-6 py-4 border-b flex items-center gap-3 ${isPro ? 'border-indigo-700/50 bg-black/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30'}`}>
                             <CreditCard className={isPro ? 'text-indigo-300' : 'text-gray-400'} size={20} />
-                            <h3 className={`text-base font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Subscription Plan</h3>
+                            <h3 className={`text-base font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{t('settings.subscription_plan')}</h3>
                         </div>
                         <div className="p-6">
                             {/* ... Content ... */}
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h4 className={`text-lg font-bold ${isPro ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                                        {isPro ? 'Pro Plan' : 'Free Plan'}
+                                        {isPro ? t('settings.pro_plan') : t('settings.free_plan')}
                                     </h4>
                                     <p className={`text-sm ${isPro ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
-                                        {isPro ? `Next billing: ${getRenewalDate()}` : 'Upgrade to unlock advanced AI insights.'}
+                                        {isPro ? t('settings.next_billing').replace('{0}', getRenewalDate()) : t('settings.upgrade_prompt')}
                                     </p>
                                 </div>
                                 {isPro ? (
-                                    <button onClick={handleManageSubscription} className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors">Manage</button>
+                                    <button onClick={handleManageSubscription} className="text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors">{t('settings.manage')}</button>
                                 ) : (
-                                    <button onClick={() => setIsUpgradeOpen(true)} className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 px-5 py-2.5 rounded-xl">Upgrade</button>
+                                    <button onClick={() => setIsUpgradeOpen(true)} className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 px-5 py-2.5 rounded-xl">{t('settings.upgrade')}</button>
                                 )}
                             </div>
                         </div>
@@ -159,12 +159,12 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <DollarSign className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Currency & Preferences</h3>
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.currency_section')}</h3>
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <label className="text-sm font-bold text-gray-900 dark:text-white">Base Currency</label>
+                                    <label className="text-sm font-bold text-gray-900 dark:text-white">{t('settings.base_currency_label')}</label>
                                     <div className="relative min-w-[200px]">
                                         <select
                                             value={currentCurrency}
@@ -215,12 +215,12 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('settings.payment_due')}</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">3 days before renewal</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('settings.notify_payment_desc')}</p>
                                     {(() => {
                                         const status = getNotificationStatus();
-                                        if (status === 'denied') return <p className="text-[10px] text-red-500 mt-1">⚠ Notifications blocked in browser. Please enable in browser settings.</p>;
-                                        if (status === 'unsupported') return <p className="text-[10px] text-gray-400 mt-1">Browser doesn't support notifications</p>;
-                                        if (status === 'granted') return <p className="text-[10px] text-green-500 mt-1">✓ Browser notifications enabled</p>;
+                                        if (status === 'denied') return <p className="text-[10px] text-red-500 mt-1">{t('settings.notification_denied')}</p>;
+                                        if (status === 'unsupported') return <p className="text-[10px] text-gray-400 mt-1">{t('settings.notification_unsupported')}</p>;
+                                        if (status === 'granted') return <p className="text-[10px] text-green-500 mt-1">{t('settings.notification_granted')}</p>;
                                         return null;
                                     })()}
                                 </div>
@@ -241,7 +241,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             <div className="flex items-center justify-between">
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('settings.price_alerts')}</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">Global price changes</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('settings.notify_price_desc')}</p>
                                 </div>
                                 <Toggle
                                     id="notify_price"
@@ -261,16 +261,16 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                         <div className="p-6 text-white relative z-10">
                             <div className="flex items-center gap-3 mb-3">
                                 <MessageSquare size={20} className="text-white/80" />
-                                <h3 className="font-bold">Beta Feedback</h3>
+                                <h3 className="font-bold">{t('settings.beta_feedback_section')}</h3>
                             </div>
                             <p className="text-sm text-white/70 mb-6 leading-relaxed">
-                                Notice a bug or have a feature idea? Help us shape the future of SubSense.
+                                {t('settings.beta_feedback_desc')}
                             </p>
                             <button
                                 onClick={() => openFeedback('settings')}
                                 className="w-full bg-white text-gray-900 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors shadow-sm"
                             >
-                                Give Feedback
+                                {t('settings.give_feedback')}
                             </button>
                         </div>
                     </div>
@@ -299,13 +299,13 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <BarChart className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Analytics</h3>
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.analytics_section')}</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">Share Usage Data</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">Help us improve features by sharing anonymous usage stats.</p>
+                                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">{t('settings.share_usage')}</h4>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">{t('settings.share_usage_desc')}</p>
                                 </div>
                                 {/* Logic inverted: Toggle ON means Allow (not opt-out) */}
                                 <Toggle
@@ -321,7 +321,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <FileText className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Data & Export</h3>
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.data_export_section')}</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <button
@@ -357,7 +357,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
             {showToast && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-[100] animate-in slide-in-from-bottom-4 fade-in">
                     <CheckCircle2 size={18} className="text-green-400 dark:text-green-600" />
-                    <span className="font-medium text-sm">Settings updated successfully.</span>
+                    <span className="font-medium text-sm">{t('settings.saved_toast')}</span>
                 </div>
             )}
 

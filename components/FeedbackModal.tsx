@@ -4,6 +4,7 @@ import { X, Send, AlertCircle, CheckCircle, ThumbsUp, MessageSquare } from 'luci
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { APP_VERSION, FEEDBACK_CATEGORIES } from '../utils/constants';
 
 interface FeedbackModalProps {
@@ -13,6 +14,7 @@ interface FeedbackModalProps {
 }
 
 export default function FeedbackModal({ isOpen, onClose, context = 'general' }: FeedbackModalProps) {
+  const { t } = useLanguage();
   const [category, setCategory] = useState('idea');
   const [message, setMessage] = useState('');
   const [rating, setRating] = useState<number | null>(null);
@@ -56,11 +58,11 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (onCooldown) {
-        setError("Please wait a moment before sending more feedback.");
+        setError(t('feedback.cooldown_error'));
         return;
     }
     if (!message.trim() && !rating) {
-        setError("Please provide a rating or a message.");
+        setError(t('feedback.validation_error'));
         return;
     }
 
@@ -119,10 +121,10 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
           <div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-               Share Feedback
+               {t('feedback.title')}
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-               Help us improve the {APP_VERSION} beta.
+               {t('feedback.desc')}
             </p>
           </div>
           <button 
@@ -165,7 +167,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                       ref={textareaRef}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="What's on your mind? Be as specific as you can..."
+                      placeholder={t('feedback.placeholder')}
                       className="w-full p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none placeholder-gray-400 shadow-sm min-h-[120px]"
                       maxLength={500}
                    />
@@ -195,7 +197,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                         </div>
                         <input type="checkbox" className="hidden" checked={contactMe} onChange={(e) => setContactMe(e.target.checked)} />
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200">
-                            You can contact me about this
+                            {t('feedback.contact_me')}
                         </span>
                     </label>
                 </div>
@@ -213,7 +215,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                      onClick={onClose}
                      className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
                    >
-                     Cancel
+                     {t('feedback.cancel')}
                    </button>
                    <button 
                      type="submit" 
@@ -224,7 +226,7 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                         : 'bg-gray-900 dark:bg-blue-600 hover:bg-gray-800 dark:hover:bg-blue-700 active:scale-95'
                      }`}
                    >
-                      {isSending ? 'Sending...' : (onCooldown ? 'Wait...' : 'Send Feedback')}
+                      {isSending ? t('feedback.sending') : (onCooldown ? t('feedback.wait') : t('feedback.send'))}
                       {!isSending && !onCooldown && <Send size={16} />}
                    </button>
                 </div>
@@ -234,9 +236,9 @@ export default function FeedbackModal({ isOpen, onClose, context = 'general' }: 
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-green-200 dark:border-green-800">
                    <CheckCircle size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Thanks for the feedback!</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('feedback.sent_title')}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mx-auto leading-relaxed">
-                   Your input helps us build a better product.
+                   {t('feedback.sent_desc')}
                 </p>
              </div>
            )}
