@@ -7,17 +7,9 @@ import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 // Gemini REST API — works directly in the browser (no SDK needed)
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
-const getApiKey = () => {
-  const meta = import.meta as any;
-  if (typeof meta !== 'undefined' && meta.env && meta.env.VITE_GEMINI_API_KEY) {
-    return meta.env.VITE_GEMINI_API_KEY;
-  }
-  try {
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      return process.env.API_KEY;
-    }
-  } catch (e) { /* ignore */ }
-  return '';
+const getApiKey = (): string => {
+  // Use direct static access so Vite replaces this at build time.
+  return (import.meta.env.VITE_GEMINI_API_KEY as string) || '';
 };
 
 // Type definition for the structured insight
