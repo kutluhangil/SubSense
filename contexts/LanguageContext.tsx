@@ -42,9 +42,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
-    if (typeof window === 'undefined') return 'system';
+    if (typeof window === 'undefined') return 'light';
     const saved = localStorage.getItem('userThemePreference');
-    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
+    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'light';
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);

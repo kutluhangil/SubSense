@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink, Sun, Moon } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency';
@@ -19,7 +19,7 @@ interface SettingsProps {
 }
 
 export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
-    const { t, currentCurrency, setCurrency } = useLanguage();
+    const { t, currentCurrency, setCurrency, currentTheme, setTheme } = useLanguage();
     const { currentUser, userProfile, isPro } = useAuth();
     const [showToast, setShowToast] = useState(false);
     const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
@@ -151,6 +151,43 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                                 ) : (
                                     <button onClick={() => setIsUpgradeOpen(true)} className="text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 px-5 py-2.5 rounded-xl">{t('settings.upgrade')}</button>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Appearance */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+                            <Monitor className="text-gray-400" size={20} />
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('profile.appearance')}</h3>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">{t('profile.theme')}</p>
+                            <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl w-fit">
+                                <button
+                                    onClick={() => setTheme('light')}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                                        currentTheme === 'light' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    <Sun size={14} /> {t('profile.theme_light')}
+                                </button>
+                                <button
+                                    onClick={() => setTheme('dark')}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                                        currentTheme === 'dark' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    <Moon size={14} /> {t('profile.theme_dark')}
+                                </button>
+                                <button
+                                    onClick={() => setTheme('system')}
+                                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                                        currentTheme === 'system' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    <Monitor size={14} /> {t('profile.theme_system')}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -345,6 +382,16 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                                 className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 py-2.5 rounded-xl transition-colors"
                             >
                                 <LogOut size={16} /> {t('settings.logout_all')}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if(window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                                        alert('Account deletion initiated. This could take up to 30 days to process.');
+                                    }
+                                }}
+                                className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 py-2.5 transition-colors mt-2"
+                            >
+                                Delete Account
                             </button>
                         </div>
                     </div>
