@@ -16,23 +16,15 @@ import { getAnalytics, Analytics, isSupported as isAnalyticsSupported } from "fi
 import { getPerformance, FirebasePerformance } from "firebase/performance";
 
 // --- Configuration ---
-// Safe fallback mechanism for environment variables
-const getEnv = (key: string, fallback: string): string => {
-  // Cast to any to avoid TS errors
-  const meta = import.meta as any;
-  if (typeof meta !== 'undefined' && meta.env) {
-      return (meta.env[key] as string) || fallback;
-  }
-  return fallback;
-};
-
+// Use direct static import.meta.env accesses so Vite can statically replace them
+// at build time. Dynamic wrapper functions prevent Vite's static analysis.
 const firebaseConfig = {
-  apiKey: getEnv("VITE_FIREBASE_API_KEY", ""),
-  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", ""),
-  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", ""),
-  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", ""),
-  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", ""),
-  appId: getEnv("VITE_FIREBASE_APP_ID", "")
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            as string || "",
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        as string || "",
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         as string || "",
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     as string || "",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string || "",
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID             as string || "",
 };
 
 // Guard: if critical Firebase config is missing, surface a clear error instead of
