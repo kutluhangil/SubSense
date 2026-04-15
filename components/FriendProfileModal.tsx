@@ -72,11 +72,11 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
            {/* Stats Grid */}
            <div className="grid grid-cols-3 gap-4">
               <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friend.total_active')}</p>
+                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friends.total_active')}</p>
                  <p className="text-xl font-bold text-gray-900">{friend.totalSubs}</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100 relative overflow-hidden">
-                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friend.lifetime')}</p>
+                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friends.lifetime')}</p>
                  <p className="text-xl font-bold text-gray-900">
                     {friend.currency === 'USD' ? '$' : friend.currency === 'EUR' ? '€' : friend.currency === 'GBP' ? '£' : '₺'}
                     {friend.totalSpent.toLocaleString()}
@@ -87,7 +87,7 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
                  </svg>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friend.monthly')}</p>
+                 <p className="text-xs text-gray-500 uppercase font-semibold mb-1">{t('friends.monthly')}</p>
                  <p className="text-xl font-bold text-gray-900">
                     {friend.currency === 'USD' ? '$' : friend.currency === 'EUR' ? '€' : friend.currency === 'GBP' ? '£' : '₺'}
                     {friend.monthlySpend.toLocaleString()}
@@ -97,7 +97,7 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
 
            {/* Shared Services */}
            <div>
-              <h3 className="text-sm font-bold text-gray-900 mb-3">{t('friend.shared')}</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-3">{t('friends.shared')}</h3>
               <div className="flex flex-wrap gap-3">
                  {friend.sharedSubs.map((sub, i) => (
                     <div key={i} className="group relative">
@@ -110,17 +110,17 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
                     </div>
                  ))}
                  {friend.sharedSubs.length === 0 && (
-                    <p className="text-sm text-gray-400 italic">{t('friend.no_shared')}</p>
+                    <p className="text-sm text-gray-400 italic">{t('friends.no_shared')}</p>
                  )}
               </div>
            </div>
 
            {/* About Section */}
            <div>
-              <h3 className="text-sm font-bold text-gray-900 mb-2">{t('friend.about')}</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">{t('friends.about')}</h3>
               <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
                  <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                    {friend.about || t('friend.no_info')}
+                    {friend.about || t('friends.no_info')}
                  </p>
                  <div className="flex flex-wrap gap-2">
                     {friend.tags.map((tag, i) => (
@@ -134,7 +134,7 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
 
            {/* Recent Activity */}
            <div>
-              <h3 className="text-sm font-bold text-gray-900 mb-3">{t('friend.activity')}</h3>
+              <h3 className="text-sm font-bold text-gray-900 mb-3">{t('friends.activity')}</h3>
               <div className="space-y-3">
                  {friend.recentActivity.map((activity, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -164,11 +164,11 @@ export default function FriendProfileModal({ isOpen, onClose, friend }: FriendPr
         <div className="p-6 border-t border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row gap-3">
            <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white px-4 py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors shadow-sm active:scale-95">
               <MessageCircle size={18} />
-              {t('friend.message')}
+              {t('friends.message')}
            </button>
            <button className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-4 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm active:scale-95">
               <Share2 size={18} />
-              {t('friend.view_shared')}
+              {t('friends.view_shared')}
            </button>
         </div>
 

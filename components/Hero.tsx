@@ -22,6 +22,15 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
     if (onOpenAuth) onOpenAuth(mode);
   };
 
+  const handleDemo = () => {
+    if (onOpenDemo) {
+      onOpenDemo();
+    } else {
+      // Fallback — open the public live demo in a new tab
+      window.open('https://sub-sense-ashy.vercel.app', '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       
@@ -58,7 +67,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                       {t('hero.start_tracking_free')}
                     </button>
                     <button 
-                      onClick={onOpenDemo}
+                      onClick={handleDemo}
                       className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
                     >
                       {t('hero.view_live_demo')}
@@ -116,7 +125,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                  {t('hero.start_tracking_free')}
                </button>
                <button 
-                 onClick={onOpenDemo}
+                 onClick={handleDemo}
                  className="w-full sm:w-auto px-8 py-4 bg-transparent border border-gray-600 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all"
                >
                  {t('hero.view_live_demo')}
