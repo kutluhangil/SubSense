@@ -2,76 +2,104 @@
 
 <br />
 
-<img src="public/logo.png" alt="SubSense Logo" width="72" height="72" />
+<img src="public/logo.png" alt="SubSense" width="84" height="84" />
 
-<h1>SubSense</h1>
+<br /><br />
 
-<p><strong>The Intelligent Subscription Tracker</strong></p>
+# SubSense
+
+### The Intelligent Subscription Tracker
 
 <p>
-  <a href="https://sub-sense-ashy.vercel.app">🌐 Live App</a> &nbsp;·&nbsp;
-  <a href="#-getting-started">Quick Start</a> &nbsp;·&nbsp;
-  <a href="#-features">Features</a> &nbsp;·&nbsp;
-  <a href="#-tech-stack">Tech Stack</a> &nbsp;·&nbsp;
-  <a href="#-deployment">Deploy</a>
+  Track every subscription. Understand your real spending.<br />
+  Let AI tell you exactly where you're wasting money.
 </p>
 
 <br />
 
 <p>
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" />
-  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-  <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat-square&logo=vite&logoColor=white" />
-  <img src="https://img.shields.io/badge/Firebase-12-FFCA28?style=flat-square&logo=firebase&logoColor=black" />
-  <img src="https://img.shields.io/badge/Gemini_AI-1.5_Flash-4285F4?style=flat-square&logo=google&logoColor=white" />
-  <img src="https://img.shields.io/badge/Status-Beta-orange?style=flat-square" />
-  <img src="https://img.shields.io/badge/License-MIT-22c55e?style=flat-square" />
+  <a href="https://sub-sense-ashy.vercel.app"><b>Live Demo</b></a>
+  &nbsp;·&nbsp;
+  <a href="#-quick-start">Quick Start</a>
+  &nbsp;·&nbsp;
+  <a href="#-features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#-deployment">Deployment</a>
+  &nbsp;·&nbsp;
+  <a href="#-roadmap">Roadmap</a>
 </p>
 
 <br />
 
----
+<p>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Firebase-12-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" />
+  <img src="https://img.shields.io/badge/Gemini_AI-1.5-4285F4?style=for-the-badge&logo=google&logoColor=white" />
+</p>
 
-### 🇹🇷 Türkçe Açıklama
+<p>
+  <img src="https://img.shields.io/badge/status-beta-ff9500?style=flat-square" />
+  <img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" />
+  <img src="https://img.shields.io/badge/PRs-welcome-blueviolet?style=flat-square" />
+  <img src="https://img.shields.io/badge/platform-web-lightgrey?style=flat-square" />
+</p>
 
-**SubSense**, dijital aboneliklerinizi tek ekrandan takip etmenizi, analiz etmenizi ve optimize etmenizi sağlayan akıllı bir abonelik yönetim uygulamasıdır. Google Gemini yapay zekası ile gereksiz harcamaları tespit eder, 20'den fazla döviz birimini anlık olarak çevirir ve aboneliklerinizi global fiyatlarla karşılaştırarak tasarruf fırsatlarını gün yüzüne çıkarır. Tamamen ücretsiz başlayabilir, verileriniz güvende kalır.
-
----
+<br />
 
 </div>
 
-<br />
-
-## Overview
-
-Most people have no idea how much they're spending on subscriptions each month. Services pile up silently — a forgotten trial here, a price hike there — and before you know it, hundreds of dollars are quietly leaving your account. **SubSense** puts you back in control.
-
-Track every subscription in one place. Understand your real spending in your own currency. Let AI tell you exactly where you're wasting money. Simple.
-
-<br />
-
-## Screenshots
+---
 
 <div align="center">
-  <table>
+
+### 🇹🇷 Türkçe
+
+**SubSense**, dijital aboneliklerinizi tek bir akıllı panelden yönetmenizi sağlayan modern bir abonelik takip uygulamasıdır. Google Gemini yapay zekası ile gereksiz harcamalarınızı tespit eder, 20'den fazla döviz birimini anlık olarak çevirir ve aboneliklerinizi global fiyatlarla karşılaştırarak size özel tasarruf fırsatları sunar. Kurulumu dakikalar içinde tamamlanır, verileriniz her zaman size aittir.
+
+</div>
+
+---
+
+<br />
+
+## 🎯 Why SubSense?
+
+Most people have no idea how much they're actually spending on subscriptions. Trials forgotten. Prices silently raised. Services doubled up without anyone noticing. By the time you check, hundreds of dollars have quietly slipped away each month.
+
+**SubSense fixes this with three simple promises:**
+
+```
+ 1.  See every subscription in one place
+ 2.  Know your real total, in your own currency
+ 3.  Get AI-driven advice on what to cancel
+```
+
+<br />
+
+## 📸 Screenshots
+
+<div align="center">
+  <table border="0">
     <tr>
-      <td align="center">
-        <img src="docs/screenshots/landing.png" alt="Landing Page" width="480" />
-        <br /><sub><b>Landing — Hero & Features</b></sub>
+      <td align="center" width="50%">
+        <img src="docs/screenshots/landing.png" alt="Landing" width="100%" />
+        <br /><sub><b>Landing</b> · Hero & Feature Preview</sub>
       </td>
-      <td align="center">
-        <img src="docs/screenshots/explore.png" alt="Explore Subscriptions" width="480" />
-        <br /><sub><b>Explore — Discover New Services</b></sub>
+      <td align="center" width="50%">
+        <img src="docs/screenshots/explore.png" alt="Explore" width="100%" />
+        <br /><sub><b>Explore</b> · Subscription Catalog</sub>
       </td>
     </tr>
     <tr>
-      <td align="center">
-        <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="480" />
-        <br /><sub><b>Dashboard — Subscription Overview</b></sub>
+      <td align="center" width="50%">
+        <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="100%" />
+        <br /><sub><b>Dashboard</b> · Subscription Overview</sub>
       </td>
-      <td align="center">
-        <img src="docs/screenshots/analytics.png" alt="Analytics" width="480" />
-        <br /><sub><b>Analytics — Spend Breakdown</b></sub>
+      <td align="center" width="50%">
+        <img src="docs/screenshots/analytics.png" alt="Analytics" width="100%" />
+        <br /><sub><b>Analytics</b> · Spending Breakdown</sub>
       </td>
     </tr>
   </table>
@@ -79,99 +107,111 @@ Track every subscription in one place. Understand your real spending in your own
 
 <br />
 
-## Features
+## ✨ Features
 
 <table>
   <tr>
     <td width="50%" valign="top">
       <h3>🧠 Gemini AI Insights</h3>
-      Powered by Google Gemini 1.5 Flash. Detects redundant subscriptions, identifies optimization opportunities, and calculates estimated savings — all personalized to your actual usage.
+      <p>Powered by Google Gemini 1.5 Flash. Detects redundant subscriptions, suggests optimizations, and estimates exact monthly savings — tailored to your real usage.</p>
     </td>
     <td width="50%" valign="top">
-      <h3>🌍 Multi-Currency Support</h3>
-      Track subscriptions in 20+ currencies simultaneously. Real-time conversion ensures your monthly totals are always accurate in your preferred base currency.
+      <h3>🌍 20+ Currencies</h3>
+      <p>Track subscriptions in any currency. Automatic conversion keeps your totals always accurate in your preferred base currency.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3>📊 Analytics Dashboard</h3>
-      Visualize your spending by category, billing cycle, and over time. Spot trends before they become problems. Monthly and annual breakdowns at a glance.
+      <h3>📊 Smart Analytics</h3>
+      <p>Visualize spending by category, billing cycle, and timeline. Monthly and annual breakdowns at a glance — spot trends before they become problems.</p>
     </td>
     <td width="50%" valign="top">
       <h3>🔍 Global Price Compare</h3>
-      Compare what you pay against global averages and regional pricing for popular services. Find out if you're overpaying — and by how much.
+      <p>Compare your prices against global averages and regional pricing for top services. Know if you're overpaying — and by exactly how much.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
       <h3>🔔 Budget Alerts</h3>
-      Set monthly spending limits and get notified when you're approaching them. Never get blindsided by unexpected charges again.
+      <p>Set monthly spending limits and get notified before you hit them. Never get blindsided by unexpected charges again.</p>
     </td>
     <td width="50%" valign="top">
-      <h3>🧭 Explore & Discover</h3>
-      Browse a curated catalog of popular subscription services with rich descriptions. Discover alternatives and new tools tailored to your digital lifestyle.
+      <h3>🧭 Explore Catalog</h3>
+      <p>Browse curated subscription services with rich descriptions. Discover alternatives, new tools, and great deals you didn't know existed.</p>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3>🎨 Premium UI & Dark Mode</h3>
-      Glassmorphic design with smooth Framer Motion animations. Full dark mode support. Responsive across all screen sizes.
+      <h3>🎨 Premium UI</h3>
+      <p>Glassmorphic design with fluid Framer Motion animations. Full dark mode, fully responsive, pixel-perfect on every screen.</p>
     </td>
     <td width="50%" valign="top">
       <h3>🔒 Privacy First</h3>
-      Your subscription data lives in your Firebase account — not sold, not shared. Auth is handled by Firebase, no passwords stored by us.
+      <p>Your data stays in your Firebase account. Never sold, never shared, never analyzed for ads. Your financial life, your rules.</p>
     </td>
   </tr>
 </table>
 
 <br />
 
-## Tech Stack
+## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 19, TypeScript 5.8, Vite 6 |
-| **Styling** | TailwindCSS, Framer Motion |
-| **Auth & DB** | Firebase Auth, Firestore |
-| **Backend** | Firebase Cloud Functions (Node.js + Express) |
-| **AI** | Google Gemini 1.5 Flash |
-| **Payments** | Stripe (Checkout + Billing Portal + Webhooks) |
-| **Email** | SendGrid (via Cloud Functions) |
-| **Deployment** | Vercel (frontend) · Docker + Nginx (self-hosted) |
-| **Icons** | Lucide React, Google Material Icons |
+<table>
+  <tr>
+    <td><b>Frontend</b></td>
+    <td>React 19 · TypeScript 5.8 · Vite 6 · TailwindCSS · Framer Motion</td>
+  </tr>
+  <tr>
+    <td><b>Backend</b></td>
+    <td>Firebase Auth · Firestore · Cloud Functions (Node.js + Express)</td>
+  </tr>
+  <tr>
+    <td><b>AI & Services</b></td>
+    <td>Google Gemini 1.5 Flash · Stripe · SendGrid</td>
+  </tr>
+  <tr>
+    <td><b>Deployment</b></td>
+    <td>Vercel · Docker · Nginx · Ubuntu Server</td>
+  </tr>
+  <tr>
+    <td><b>Icons & Design</b></td>
+    <td>Lucide React · Google Material Icons · Custom SVG</td>
+  </tr>
+</table>
 
 <br />
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js v18+
-- A Firebase project (Auth + Firestore enabled)
-- A Gemini API key — [Get one here](https://aistudio.google.com/app/apikey)
+- Node.js **v18+**
+- A Firebase project with **Auth** and **Firestore** enabled
+- A Gemini API key — [get one free here](https://aistudio.google.com/app/apikey)
 
 ### Installation
 
 ```bash
-# 1. Clone the repository
+# Clone
 git clone https://github.com/your-username/SubSense.git
 cd SubSense
 
-# 2. Install dependencies
+# Install
 npm install
 
-# 3. Configure environment variables
+# Configure
 cp .env.example .env.local
-# → Fill in your keys (see Environment Variables section below)
+# → Fill in your keys (see below)
 
-# 4. Start the dev server
+# Run
 npm run dev
-# → Open http://localhost:5173
 ```
+
+Open [http://localhost:5173](http://localhost:5173) and you're in.
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the project root:
 
 ```env
 # Firebase
@@ -186,23 +226,23 @@ VITE_FIREBASE_APP_ID=
 VITE_GEMINI_API_KEY=
 ```
 
-> **Note:** Never commit `.env.local` to version control. It's already in `.gitignore`.
+> ⚠️ **Never commit `.env.local`.** It's already in `.gitignore`.
 
 <br />
 
-## Deployment
+## 📦 Deployment
 
-### Option A — Vercel (Recommended)
+### Option A — Vercel <sub>(recommended)</sub>
 
-The fastest way to get production-ready:
+The fastest path to production:
 
 ```bash
-npm run build   # Verify the build passes locally first
+npm run build   # Verify locally first
 ```
 
-Then connect the repo to Vercel and add the environment variables under **Settings → Environment Variables**. Vercel handles the rest.
+Connect the repo to Vercel, add your env vars under **Settings → Environment Variables**, and deploy. Done.
 
-### Option B — Self-Hosted (Docker + Nginx)
+### Option B — Self-Hosted <sub>(Docker + Nginx)</sub>
 
 Deploy to your own server using the included Docker setup:
 
@@ -210,103 +250,124 @@ Deploy to your own server using the included Docker setup:
 # On your Ubuntu server
 cd SubSense/server
 
-# Build and start all containers
+# Build and launch
 docker compose up -d --build
 
-# Check status
+# Verify
 docker compose ps
 docker compose logs nginx --tail=20
 ```
 
-The app will be available on the port configured in `server/docker-compose.yml` (default: `3002`).
+App serves on port `3002` by default — configurable in `server/docker-compose.yml`.
 
 <details>
-<summary><b>Docker Architecture</b></summary>
+<summary><b>🐳 Architecture Diagram</b></summary>
+
+<br />
 
 ```
-┌─────────────────────────────────────────┐
-│              Host Server                │
-│                                         │
-│  ┌──────────────┐   ┌────────────────┐  │
-│  │  Nginx Proxy │   │ Frontend       │  │
-│  │  :3002 → :80 │──▶│ (Vite build)   │  │
-│  │              │   │ Nginx :3000    │  │
-│  └──────────────┘   └────────────────┘  │
-│                                         │
-│  subsense_net (Docker bridge network)   │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│                 Host Server                 │
+│                                             │
+│   ┌──────────────┐      ┌────────────────┐  │
+│   │ Nginx Proxy  │      │  Frontend      │  │
+│   │ :3002 → :80  │ ───▶ │  (Vite build)  │  │
+│   │              │      │  Nginx :3000   │  │
+│   └──────────────┘      └────────────────┘  │
+│                                             │
+│      subsense_net (Docker bridge)           │
+└─────────────────────────────────────────────┘
 ```
+
+The outer Nginx handles TLS termination and routing. The inner container serves the static Vite build with SPA fallback.
 
 </details>
 
 <br />
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 SubSense/
-├── components/          # All React UI components
-│   ├── Dashboard.tsx    # Main app dashboard
-│   ├── Analytics.tsx    # Spending analytics & charts
-│   ├── AIAssistant.tsx  # Gemini AI chat interface
-│   ├── Explore.tsx      # Subscription discovery
-│   ├── Friends.tsx      # Social features (coming soon)
-│   └── ...
+├── components/             React UI components
+│   ├── Dashboard.tsx       Main app dashboard
+│   ├── Analytics.tsx       Spending analytics
+│   ├── AIAssistant.tsx     Gemini AI interface
+│   ├── Explore.tsx         Subscription discovery
+│   └── …
+│
 ├── firebase/
-│   └── firebase.ts      # Firebase initialization & exports
-├── functions/           # Firebase Cloud Functions (backend)
+│   └── firebase.ts         Firebase initialization
+│
+├── functions/              Cloud Functions (backend)
 │   └── src/
-│       ├── index.ts     # Stripe + email functions
-│       └── app.ts       # Express API router
-├── hooks/               # Custom React hooks
-├── utils/               # Services & helpers
-│   ├── gemini.ts        # Gemini AI integration
-│   ├── currency.ts      # Multi-currency conversion
-│   ├── firestore.ts     # Firestore data layer
-│   └── stripe.ts        # Stripe client service
-├── server/              # Self-hosting configuration
-│   ├── Dockerfile       # Multi-stage build (Node → Nginx)
+│       ├── index.ts        Stripe + email handlers
+│       └── app.ts          Express API router
+│
+├── hooks/                  Custom React hooks
+│
+├── utils/                  Services & helpers
+│   ├── gemini.ts           Gemini AI integration
+│   ├── currency.ts         Multi-currency logic
+│   ├── firestore.ts        Firestore data layer
+│   └── stripe.ts           Stripe client service
+│
+├── server/                 Self-hosting config
+│   ├── Dockerfile          Multi-stage build
 │   ├── docker-compose.yml
-│   └── nginx/           # Nginx configs
-└── public/              # Static assets & brand logos
+│   └── nginx/              Nginx configs
+│
+└── public/                 Static assets & logos
 ```
 
 <br />
 
-## Roadmap
+## 🗺 Roadmap
 
-- [x] Core subscription tracking
-- [x] Multi-currency conversion
-- [x] Gemini AI optimization insights
-- [x] Analytics dashboard
-- [x] Stripe subscription (Free / Pro)
-- [x] Explore & discover catalog
-- [x] Self-hosted Docker deployment
-- [ ] Friends & social sharing (Beta blocked)
-- [ ] Real-time exchange rates
-- [ ] Mobile app (React Native)
-- [ ] CSV / Apple Wallet import
-- [ ] Renewal push notifications
+| Status | Feature |
+|:-:|---|
+| ✅ | Core subscription tracking |
+| ✅ | Multi-currency conversion (20+) |
+| ✅ | Gemini AI optimization insights |
+| ✅ | Analytics dashboard |
+| ✅ | Stripe billing (Free / Pro) |
+| ✅ | Explore & discover catalog |
+| ✅ | Self-hosted Docker deployment |
+| 🔄 | Friends & social sharing |
+| 🔄 | Real-time exchange rates |
+| ⏳ | Mobile app (React Native) |
+| ⏳ | CSV & Apple Wallet import |
+| ⏳ | Renewal push notifications |
 
-<br />
-
-## Contributing
-
-Contributions, issues, and feature requests are welcome.
-
-1. Fork the project
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'feat: add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-Please follow the existing code style and keep PRs focused on a single concern.
+<sub>✅ Shipped · 🔄 In progress · ⏳ Planned</sub>
 
 <br />
 
-## License
+## 🤝 Contributing
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+Contributions, issues, and feature requests are warmly welcome.
+
+```bash
+# 1. Fork the project
+# 2. Create your feature branch
+git checkout -b feature/amazing-feature
+
+# 3. Commit your changes
+git commit -m "feat: add amazing feature"
+
+# 4. Push to the branch
+git push origin feature/amazing-feature
+
+# 5. Open a Pull Request
+```
+
+Please keep PRs focused on a single concern and follow the existing code style.
+
+<br />
+
+## 📄 License
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <br />
 
@@ -316,11 +377,11 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 
 <br />
 
-Built with focus, coffee, and a healthy distrust of surprise subscription charges.
+<sub>Built with focus, coffee, and a healthy distrust of surprise subscription charges.</sub>
 
-<br />
+<br /><br />
 
-<a href="https://sub-sense-ashy.vercel.app"><strong>subsense.app →</strong></a>
+<a href="https://sub-sense-ashy.vercel.app"><b>subsense.app →</b></a>
 
 <br /><br />
 
