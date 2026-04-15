@@ -35,6 +35,35 @@ const firebaseConfig = {
   appId: getEnv("VITE_FIREBASE_APP_ID", "")
 };
 
+// Guard: if critical Firebase config is missing, surface a clear error instead of
+// crashing the module silently and producing a blank white screen.
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  const msg =
+    "SubSense: Firebase environment variables are missing.\n" +
+    "Make sure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set in your " +
+    "Vercel project settings (Settings → Environment Variables) and redeploy.";
+  console.error(msg);
+  // Show a visible error overlay so users/developers see the issue immediately.
+  if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      const root = document.getElementById("root");
+      if (root && !root.children.length) {
+        root.innerHTML = `<div style="font-family:monospace;padding:32px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
+          <h2 style="color:#ff4444">⚙️ Configuration Error</h2>
+          <p style="color:#ffa">Firebase environment variables are not set.</p>
+          <p style="font-size:13px;color:#ccc">Add these to your Vercel project → Settings → Environment Variables and redeploy:</p>
+          <ul style="font-size:12px;color:#7df">
+            <li>VITE_FIREBASE_API_KEY</li><li>VITE_FIREBASE_AUTH_DOMAIN</li>
+            <li>VITE_FIREBASE_PROJECT_ID</li><li>VITE_FIREBASE_STORAGE_BUCKET</li>
+            <li>VITE_FIREBASE_MESSAGING_SENDER_ID</li><li>VITE_FIREBASE_APP_ID</li>
+            <li>VITE_GEMINI_API_KEY</li>
+          </ul>
+        </div>`;
+      }
+    });
+  }
+}
+
 // --- Initialization ---
 
 // 1. Initialize App (Singleton pattern)
@@ -63,8 +92,15 @@ try {
   });
 } catch (e) {
   // Fallback to existing instance if HMR re-initializes
-  // or if persistent cache fails
-  db = getFirestore(app);
+  // or if persistent cache fails (e.g. missing projectId, IndexedDB unavailable)
+  try {
+    db = getFirestore(app);
+  } catch (e2) {
+    // Last resort: if both fail (e.g. completely invalid config), assign a dummy
+    // so the module exports don't blow up. Auth will surface a proper error.
+    console.error("Firestore initialization failed completely:", e2);
+    db = {} as Firestore;
+  }
 }
 
 // 5. Initialize Analytics & Performance (Browser Only)
