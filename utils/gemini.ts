@@ -5,7 +5,8 @@ import { Subscription } from "../components/SubscriptionModal";
 import { validateSubscription, sanitizeForAI } from "./validateSubscription";
 
 // Gemini REST API — works directly in the browser (no SDK needed)
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+// Using gemini-1.5-flash: stable, fast, production-ready model
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 const getApiKey = (): string => {
   // Use direct static access so Vite replaces this at build time.
@@ -97,7 +98,7 @@ const callGeminiChat = async (
   const apiKey = getApiKey();
   if (!apiKey) {
     console.warn("Gemini API Key missing. AI features disabled.");
-    return null;
+    return "The Gemini API key is missing. Please configure VITE_GEMINI_API_KEY in your environment to chat with me. (API anahtarı eksik, lütfen .env dosyanızı yapılandırın)";
   }
 
   // Build the contents array (history + new user message)
@@ -136,7 +137,13 @@ const callGeminiChat = async (
 
 export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en'): Promise<AIInsight[]> => {
   const apiKey = getApiKey();
-  if (!apiKey) return [];
+  if (!apiKey) {
+    return [{
+      title: "AI Disabled",
+      description: "Please set VITE_GEMINI_API_KEY in your Vercel/server environment to enable AI Insights.",
+      impact: "neutral"
+    }];
+  }
 
   try {
     // Cache Check

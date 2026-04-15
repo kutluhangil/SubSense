@@ -310,38 +310,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                      </div>
                   </div>
 
-                  {/* Avatar & Theme */}
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                     <h3 className="text-base font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                        <Monitor size={18} className="text-gray-400" /> {t('profile.appearance')}
-                     </h3>
-
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                           <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3 block">{t('profile.theme')}</label>
-                           <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-xl w-fit">
-                              <button
-                                 onClick={() => setTheme('light')}
-                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'light' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                              >
-                                 <Sun size={14} /> {t('profile.theme_light')}
-                              </button>
-                              <button
-                                 onClick={() => setTheme('dark')}
-                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'dark' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                              >
-                                 <Moon size={14} /> {t('profile.theme_dark')}
-                              </button>
-                              <button
-                                 onClick={() => setTheme('system')}
-                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${currentTheme === 'system' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                              >
-                                 <Monitor size={14} /> {t('profile.theme_system')}
-                              </button>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
 
                </div>
 

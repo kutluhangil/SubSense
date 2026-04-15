@@ -414,12 +414,30 @@ export const migrateLocalData = async (uid: string, localSubs: Subscription[]) =
 // --- Friends System ---
 
 export const searchUsers = async (searchTerm: string, currentUserId: string): Promise<UserProfileData[]> => {
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return [];
+
   try {
-    const searchFn = httpsCallable<{ searchTerm: string }, UserProfileData[]>(functions, 'searchUsers');
-    const result = await searchFn({ searchTerm });
-    return result.data || [];
-  } catch (e) {
-    console.error("Error searching users via Cloud Function:", e);
+    // Query by exact email match (most reliable without full-text search)
+    const snapshot = await getDocs(
+      query(
+        collection(db, 'users'),
+        where('email', '==', term)
+      )
+    );
+
+    const results: UserProfileData[] = [];
+    snapshot.forEach((d) => {
+      const data = d.data() as UserProfileData;
+      // Exclude the current user from results
+      if (data.uid !== currentUserId) {
+        results.push(data);
+      }
+    });
+
+    return results;
+  } catch (e: any) {
+    console.error("Error searching users:", e);
     return [];
   }
 };

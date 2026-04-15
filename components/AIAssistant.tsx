@@ -72,11 +72,13 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
       currentPage
     };
 
-    // Format history for Gemini SDK
-    const historyForGemini = messages.map(m => ({
-      role: m.role === 'model' ? 'model' : 'user',
-      parts: [{ text: m.text }]
-    }));
+    // Format history for Gemini SDK, skipping the initial welcome message
+    const historyForGemini = messages
+      .filter((m, idx) => !(idx === 0 && m.role === 'model'))
+      .map(m => ({
+        role: m.role === 'model' ? 'model' : 'user',
+        parts: [{ text: m.text }]
+      }));
 
     // Pass strict language code to the utility
     const responseText = await chatWithGemini(historyForGemini, userMsg, contextData, currentLanguage);

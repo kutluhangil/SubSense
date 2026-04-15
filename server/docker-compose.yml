@@ -1,0 +1,61 @@
+version: '3.8'
+
+# SubSense — Production Docker Compose
+# Designed for Ubuntu Server (single-host, small-to-medium scale)
+# Run: docker compose up -d
+
+networks:
+  subsense_net:
+    driver: bridge
+
+volumes:
+  nginx_logs:
+  app_uploads:
+
+services:
+
+  # ── Frontend (Nginx serves built Vite app) ──────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    container_name: subsense_frontend
+    restart: unless-stopped
+    networks:
+      - subsense_net
+    volumes:
+      - app_uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Reverse Proxy (Nginx) ────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: subsense_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - subsense_net
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites-available/subsense.conf:/etc/nginx/conf.d/subsense.conf:ro
+      - nginx_logs:/var/log/nginx
+      # SSL certificates (populated by ssl.sh / certbot)
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - frontend
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
