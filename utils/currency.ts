@@ -17,7 +17,7 @@ export const CURRENCY_DATA: Record<string, CurrencyMetadata> = {
   GBP: { code: 'GBP', symbol: '£', name: 'British Pound', flag: '🇬🇧' },
   TRY: { code: 'TRY', symbol: '₺', name: 'Turkish Lira', flag: '🇹🇷' },
   JPY: { code: 'JPY', symbol: '¥', name: 'Japanese Yen', flag: '🇯🇵' },
-  CNY: { code: 'CNY', symbol: '¥', name: 'Chinese Yuan', flag: '🇨🇳' },
+  CNY: { code: 'CNY', symbol: '元', name: 'Chinese Yuan', flag: '🇨🇳' },
   AUD: { code: 'AUD', symbol: 'A$', name: 'Australian Dollar', flag: '🇦🇺' },
   CAD: { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar', flag: '🇨🇦' },
   INR: { code: 'INR', symbol: '₹', name: 'Indian Rupee', flag: '🇮🇳' },
@@ -34,31 +34,30 @@ export const CURRENCY_DATA: Record<string, CurrencyMetadata> = {
   PLN: { code: 'PLN', symbol: 'zł', name: 'Polish Złoty', flag: '🇵🇱' },
 };
 
-// Rates relative to USD (Base)
-// In production, fetch this from an API like https://open.er-api.com/v6/latest/USD
-// Rates relative to USD (Base) - Updated ~Feb 2025
-// In production, fetch this from an API like https://open.er-api.com/v6/latest/USD
+// Rates relative to USD (Base) — fallback defaults (~Apr 2026).
+// Live rates are fetched at runtime from https://open.er-api.com/v6/latest/USD
+// and cached for 24 hours via localStorage.
 const DEFAULT_RATES: Record<string, number> = {
   "USD": 1,
-  "EUR": 0.95,
-  "GBP": 0.81,
-  "TRY": 42.50, // 2026 Estimate
-  "JPY": 145.00,
-  "CNY": 7.30,
-  "AUD": 1.58,
-  "CAD": 1.40,
-  "INR": 86.00,
-  "BRL": 5.25,
-  "RUB": 98.00,
-  "KRW": 1380.00,
-  "MXN": 18.50,
+  "EUR": 0.93,
+  "GBP": 0.79,
+  "TRY": 38.50,
+  "JPY": 152.00,
+  "CNY": 7.25,
+  "AUD": 1.52,
+  "CAD": 1.36,
+  "INR": 83.50,
+  "BRL": 5.05,
+  "RUB": 92.50,
+  "KRW": 1350.00,
+  "MXN": 17.20,
   "SAR": 3.75,
   "AED": 3.67,
-  "CHF": 0.93,
-  "SEK": 10.90,
-  "NOK": 11.20,
-  "DKK": 7.10,
-  "PLN": 4.10,
+  "CHF": 0.89,
+  "SEK": 10.50,
+  "NOK": 10.80,
+  "DKK": 6.90,
+  "PLN": 3.95,
 };
 
 export const EXCHANGE_RATES = DEFAULT_RATES;

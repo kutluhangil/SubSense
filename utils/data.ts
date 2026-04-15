@@ -396,8 +396,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Hulu (with Ads)", price: 7.99, cycle: "Monthly" },
-          { name: "Hulu (No Ads)", price: 17.99, cycle: "Monthly" }
+          { name: "Hulu (with Ads)", price: 9.99, cycle: "Monthly" },
+          { name: "Hulu (No Ads)", price: 18.99, cycle: "Monthly" }
         ]
       }
     }
@@ -410,7 +410,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "WarnerMedia",
     ceo: "David Zaslav",
     headquarters: "New York City, New York",
-    price: "15.99",
+    price: "16.99",
     currency: "USD",
     type: "hbomax",
     netWorth: "$25 Billion (Warner Bros. Discovery)",
@@ -429,8 +429,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         currency: "USD",
         tiers: [
           { name: "With Ads", price: 9.99, cycle: "Monthly" },
-          { name: "Ad-Free", price: 15.99, cycle: "Monthly" },
-          { name: "Ultimate (4K)", price: 19.99, cycle: "Monthly" }
+          { name: "Ad-Free", price: 16.99, cycle: "Monthly" },
+          { name: "Ultimate (4K)", price: 20.99, cycle: "Monthly" }
         ]
       }
     }
@@ -525,7 +525,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Microsoft",
     ceo: "Satya Nadella",
     headquarters: "Redmond, Washington",
-    price: "6.99",
+    price: "9.99",
     currency: "USD",
     type: "microsoft365",
     netWorth: "$3 Trillion (Microsoft)",
@@ -543,8 +543,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Personal", price: 6.99, cycle: "Monthly" },
-          { name: "Family", price: 9.99, cycle: "Monthly" }
+          { name: "Personal", price: 9.99, cycle: "Monthly" },
+          { name: "Family", price: 12.99, cycle: "Monthly" }
         ]
       },
       TR: {
@@ -564,7 +564,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "John Warnock, Charles Geschke",
     ceo: "Shantanu Narayen",
     headquarters: "San Jose, California",
-    price: "54.99",
+    price: "59.99",
     currency: "USD",
     type: "adobe",
     netWorth: "$220 Billion",
