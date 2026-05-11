@@ -558,6 +558,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "dashboard.off_original": "Off (Original)",
     "dashboard.today": "Today",
     "dashboard.tomorrow": "Tomorrow",
+    "dashboard.sub_removed": "Subscription removed.",
+    "dashboard.sub_paid": "{name} marked as paid.",
+    "app.offline": "You are offline. Showing cached data.",
   },
   tr: {
     // Navigation
@@ -1115,5 +1118,8 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "dashboard.off_original": "Kapalı (Orijinal)",
     "dashboard.today": "Bugün",
     "dashboard.tomorrow": "Yarın",
+    "dashboard.sub_removed": "Abonelik kaldırıldı.",
+    "dashboard.sub_paid": "{name} ödendi olarak işaretlendi.",
+    "app.offline": "Çevrimdışısınız. Önbelleğe alınan veriler gösteriliyor.",
   }
 };

@@ -98,15 +98,8 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
     const handlePreferenceUpdate = async (key: string, value: boolean) => {
         if (!currentUser) return;
 
-        // Optimistic update handled by Toggle's local state + localStorage
-        // Backend update:
         try {
-            await updateUserSettings(currentUser.uid, {
-                preferences: {
-                    ...userProfile?.preferences, // Keep existing 
-                    [key]: value
-                }
-            });
+            await updateUserSettings(currentUser.uid, { [key]: value });
         } catch (e) {
             console.error("Failed to sync preference", e);
         }

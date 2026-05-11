@@ -43,7 +43,7 @@ function AppContent() {
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
-  const { setCurrency } = useLanguage();
+  const { setCurrency, t } = useLanguage();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   // --- Network Status ---
@@ -199,7 +199,7 @@ function AppContent() {
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-xs font-bold text-center py-1 z-[100] flex items-center justify-center gap-2 animate-in slide-in-from-top-1">
           <WifiOff size={12} />
-          You are offline. Showing cached data.
+          {t('app.offline')}
         </div>
       )}
 

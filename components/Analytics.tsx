@@ -3,6 +3,7 @@ import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizonta
 import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, SUBSCRIPTION_CATALOG } from '../utils/data';
+import { CURRENCY_DATA } from '../utils/currency';
 import { Subscription } from './SubscriptionModal';
 import { debugLog } from '../utils/debug';
 
@@ -440,7 +441,8 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
       ) : (
         <div className="space-y-6">
             {subscriptions.slice(0, 5).map((sub, i) => {
-                const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
+                const idNum = typeof sub.id === 'number' ? sub.id : sub.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+                const width = Math.min(100, Math.max(20, (idNum % 60) + 20));
                 const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
                 const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
                 const mockDuration = `${Math.floor(width / 8)}m`; 
@@ -479,22 +481,23 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
   );
 };
 
-const SmartBudgetMonitor = ({ 
+const SmartBudgetMonitor = ({
   categoryTotals,
-  budgetLimits = {}, 
-  setBudgetLimits, 
+  budgetLimits = {},
+  setBudgetLimits,
   formatPrice,
   monthsInPeriod
-}: { 
-  categoryTotals: Record<string, number>, 
-  budgetLimits: Record<string, number>, 
-  setBudgetLimits: any, 
+}: {
+  categoryTotals: Record<string, number>,
+  budgetLimits: Record<string, number>,
+  setBudgetLimits: any,
   formatPrice: (v: number) => string,
   monthsInPeriod: number
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
-  const { t } = useLanguage();
+  const { t, currentCurrency } = useLanguage();
+  const currencySymbol = CURRENCY_DATA[currentCurrency]?.symbol || currentCurrency;
 
   const categories = Object.keys(budgetLimits);
   
@@ -560,9 +563,9 @@ const SmartBudgetMonitor = ({
                  <div key={cat} className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 dark:text-gray-400">{cat}</label>
                     <div className="relative">
-                       <span className="absolute left-3 top-2.5 text-gray-400">$</span>
-                       <input 
-                         type="number" 
+                       <span className="absolute left-3 top-2.5 text-gray-400">{currencySymbol}</span>
+                       <input
+                         type="number"
                          value={localLimits[cat]}
                          onChange={(e) => setLocalLimits(prev => ({...prev, [cat]: parseFloat(e.target.value) || 0}))}
                          className="w-full pl-6 pr-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm"

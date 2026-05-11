@@ -202,7 +202,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             trackEvent('subscription_removed', { category: subToDelete.category });
          }
          await deleteSubscription(currentUser.uid, id);
-         showToast(`Subscription removed.`);
+         showToast(t('dashboard.sub_removed'));
          setSelectedSub(null);
       }
    };
@@ -214,7 +214,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          const created = await addSubscription(currentUser.uid, newSub);
 
          if (created) {
-            showToast(`${newSub.name} added successfully.`);
+            showToast(t('add.success'));
          }
 
          trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
@@ -237,7 +237,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
          await updateSubscription(currentUser.uid, id, { nextDate, history: newHistory });
          trackEvent('mark_as_paid', { cycle: sub.cycle });
-         showToast(`${sub.name} marked as paid.`);
+         showToast(t('dashboard.sub_paid').replace('{name}', sub.name));
       }
    };
 

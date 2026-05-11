@@ -263,7 +263,7 @@ export const sendCustomVerificationEmail = functions.https.onCall(async (data, c
   }
 
   const email = data.email || context.auth.token.email;
-  const redirectUrl = data.redirectUrl || 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail'; // Default to Prod
+  const redirectUrl = data.redirectUrl || functions.config().app?.url || 'https://subsense.app';
 
   if (!email) {
     throw new functions.https.HttpsError("invalid-argument", "Email is required");
