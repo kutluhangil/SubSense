@@ -116,11 +116,19 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sub.status === 'Active'
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                    }`}>
-                    {sub.status}
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    sub.status === 'Active'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                      : sub.status === 'Trial'
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  }`}>
+                    {sub.status === 'Trial' ? '⏰ Trial' : sub.status}
+                    {sub.status === 'Trial' && sub.trialEndDate && (
+                      <span className="ml-1 opacity-70">
+                        · {Math.max(0, Math.ceil((new Date(sub.trialEndDate).getTime() - Date.now()) / 86400000))}d left
+                      </span>
+                    )}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

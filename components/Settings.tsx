@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink, Sun, Moon } from 'lucide-react';
+import { Bell, Shield, Eye, Globe, Zap, LogOut, Monitor, Smartphone, Download, Upload, FileText, DollarSign, CheckCircle2, MessageSquare, BarChart, CreditCard, Star, Calendar, ExternalLink, Sun, Moon, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Subscription } from './SubscriptionModal';
 import { CURRENCY_DATA } from '../utils/currency';
@@ -11,6 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from './UpgradeModal';
 import { createPortalSession } from '../utils/stripe';
 import { requestNotificationPermission, getNotificationStatus } from '../utils/notificationService';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase/firebase';
 
 interface SettingsProps {
     subscriptions?: Subscription[];
@@ -20,9 +22,12 @@ interface SettingsProps {
 
 export default function Settings({ subscriptions = [], onUpdateSubscriptions, user }: SettingsProps) {
     const { t, currentCurrency, setCurrency, currentTheme, setTheme } = useLanguage();
-    const { currentUser, userProfile, isPro } = useAuth();
+    const { currentUser, userProfile, isPro, logout } = useAuth();
     const [showToast, setShowToast] = useState(false);
     const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
     const { openFeedback } = useFeedback();
 
     const handleExportCSV = () => {
@@ -79,6 +84,72 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
 
     const handleManageSubscription = async () => {
         await createPortalSession();
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!currentUser) return;
+        setIsDeletingAccount(true);
+        try {
+            const deleteAccount = httpsCallable(functions, 'deleteUserAccount');
+            await deleteAccount({});
+            await logout();
+        } catch (e: any) {
+            console.error('Account deletion failed:', e);
+            alert(t('settings.delete_error'));
+            setIsDeletingAccount(false);
+        }
+        setShowDeleteConfirm(false);
+    };
+
+    const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !onUpdateSubscriptions) return;
+        setIsImporting(true);
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const text = event.target?.result as string;
+                const lines = text.split('\n').filter(l => l.trim());
+                // Expect header: Name,Category,Price,Currency,Billing Cycle,Next Payment,Status
+                const header = lines[0].toLowerCase();
+                if (!header.includes('name') || !header.includes('price')) {
+                    alert(t('settings.import_invalid_format'));
+                    setIsImporting(false);
+                    return;
+                }
+                const imported: Subscription[] = lines.slice(1).map((line, idx) => {
+                    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                    return {
+                        id: `imported_${Date.now()}_${idx}`,
+                        name: cols[0] || 'Imported',
+                        category: cols[1] || 'Other',
+                        price: parseFloat(cols[2]) || 0,
+                        currency: cols[3] || 'USD',
+                        cycle: (cols[4] === 'Yearly' ? 'Yearly' : 'Monthly') as 'Monthly' | 'Yearly',
+                        nextDate: cols[5] || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        status: (cols[6] === 'Active' ? 'Active' : 'Inactive') as 'Active' | 'Inactive',
+                        type: cols[0] || 'custom',
+                        plan: 'Imported',
+                    } as Subscription;
+                }).filter(s => s.name && s.price >= 0);
+
+                if (imported.length === 0) {
+                    alert(t('settings.import_no_rows'));
+                    setIsImporting(false);
+                    return;
+                }
+
+                onUpdateSubscriptions(prev => [...prev, ...imported]);
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 3000);
+            } catch {
+                alert(t('settings.import_error'));
+            } finally {
+                setIsImporting(false);
+                e.target.value = '';
+            }
+        };
+        reader.readAsText(file);
     };
 
     // Helper to format subscription dates safely
@@ -353,13 +424,18 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             <FileText className="text-gray-400" size={20} />
                             <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.data_export_section')}</h3>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-3">
                             <button
                                 onClick={handleExportCSV}
                                 className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 py-2.5 rounded-xl transition-colors"
                             >
-                                <Download size={16} /> Export as CSV
+                                <Download size={16} /> {t('settings.export_csv')}
                             </button>
+                            <label className={`w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 py-2.5 rounded-xl transition-colors cursor-pointer ${isImporting ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                                {isImporting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                {isImporting ? t('settings.importing') : t('settings.import_csv')}
+                                <input type="file" accept=".csv" className="hidden" onChange={handleCSVImport} disabled={isImporting} />
+                            </label>
                         </div>
                     </div>
 
@@ -369,23 +445,39 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                             <Shield className="text-gray-400" size={20} />
                             <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.security')}</h3>
                         </div>
-                        <div className="p-6 space-y-6">
+                        <div className="p-6 space-y-4">
                             <button
                                 onClick={handleLogoutAll}
                                 className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 py-2.5 rounded-xl transition-colors"
                             >
                                 <LogOut size={16} /> {t('settings.logout_all')}
                             </button>
-                            <button
-                                onClick={() => {
-                                    if(window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                                        alert('Account deletion initiated. This could take up to 30 days to process.');
-                                    }
-                                }}
-                                className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 py-2.5 transition-colors mt-2"
-                            >
-                                Delete Account
-                            </button>
+
+                            {!showDeleteConfirm ? (
+                                <button
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 py-2 transition-colors"
+                                >
+                                    <Trash2 size={15} /> {t('settings.delete_account')}
+                                </button>
+                            ) : (
+                                <div className="border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 space-y-3 animate-in fade-in duration-200">
+                                    <div className="flex items-start gap-2">
+                                        <AlertTriangle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs text-red-700 dark:text-red-300 leading-relaxed">{t('settings.delete_warning')}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 py-2 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50">{t('common.cancel')}</button>
+                                        <button
+                                            onClick={handleDeleteAccount}
+                                            disabled={isDeletingAccount}
+                                            className="flex-1 py-2 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 flex items-center justify-center gap-1"
+                                        >
+                                            {isDeletingAccount ? <><Loader2 size={12} className="animate-spin" /> {t('common.deleting')}</> : t('settings.delete_confirm_btn')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -24,7 +24,7 @@ import {
 } from '../utils/firestore';
 import { calculateDerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
-import { sendRenewalNotifications, generateRenewalNotifications, getUpcomingRenewals } from '../utils/notificationService';
+import { sendRenewalNotifications, generateRenewalNotifications, getUpcomingRenewals, sendBudgetAlertNotifications } from '../utils/notificationService';
 
 // Lazy Load Heavy Components
 const Analytics = React.lazy(() => import('./Analytics'));
@@ -156,7 +156,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
       // Browser push notifications (only if permission granted)
       sendRenewalNotifications(subscriptions);
-   }, [subscriptions, subscriptionsLoading]);
+      sendBudgetAlertNotifications(metrics.categoryBreakdown, budgetLimits);
+   }, [subscriptions, subscriptionsLoading, metrics.categoryBreakdown, budgetLimits]);
 
    const filteredSubscriptions = useMemo(() => {
       if (activeCategory === 'All') return subscriptions;

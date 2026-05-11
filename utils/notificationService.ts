@@ -126,6 +126,52 @@ export const sendRenewalNotifications = (subscriptions: Subscription[]): void =>
 };
 
 /**
+ * Sends browser push notifications when a category exceeds its budget.
+ * Runs once per category per day to avoid spam.
+ */
+export const sendBudgetAlertNotifications = (
+    categoryBreakdown: Record<string, number>,
+    budgetLimits: Record<string, number>
+): void => {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+    const BUDGET_KEY = 'subsense_budget_notified';
+    const today = new Date().toDateString();
+
+    let notifiedToday: Set<string>;
+    try {
+        const stored = localStorage.getItem(BUDGET_KEY);
+        const parsed = stored ? JSON.parse(stored) : null;
+        notifiedToday = parsed?.date === today ? new Set(parsed.cats || []) : new Set();
+    } catch {
+        notifiedToday = new Set();
+    }
+
+    let changed = false;
+    Object.entries(budgetLimits).forEach(([cat, limit]) => {
+        if (limit <= 0) return;
+        const spent = categoryBreakdown[cat] || 0;
+        if (spent > limit && !notifiedToday.has(cat)) {
+            try {
+                new Notification(`⚠️ Budget exceeded: ${cat}`, {
+                    body: `You've gone over your ${cat} budget this month.`,
+                    icon: '/favicon.ico',
+                    tag: `budget-${cat}`,
+                });
+                notifiedToday.add(cat);
+                changed = true;
+            } catch { /* ignore */ }
+        }
+    });
+
+    if (changed) {
+        try {
+            localStorage.setItem(BUDGET_KEY, JSON.stringify({ date: today, cats: Array.from(notifiedToday) }));
+        } catch { /* ignore */ }
+    }
+};
+
+/**
  * Generates in-app notification objects from upcoming renewals.
  * Use this to populate the Dashboard notification dropdown.
  */

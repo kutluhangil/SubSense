@@ -330,6 +330,38 @@ async function sendEmail(to: string, subject: string, html: string) {
 
 
 
+// 7. Delete User Account (wipes Auth + Firestore)
+export const deleteUserAccount = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+  }
+
+  const uid = context.auth.uid;
+
+  try {
+    // Delete all sub-collections in a batch
+    const batch = db.batch();
+
+    const collectionsToDelete = ['subscriptions', 'friends', 'friendRequests', 'sentRequests'];
+    for (const col of collectionsToDelete) {
+      const snap = await db.collection('users').doc(uid).collection(col).get();
+      snap.docs.forEach(d => batch.delete(d.ref));
+    }
+
+    // Delete the user document
+    batch.delete(db.collection('users').doc(uid));
+    await batch.commit();
+
+    // Delete Firebase Auth user (must be last — invalidates token)
+    await admin.auth().deleteUser(uid);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Account deletion failed:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
 // 4. API (Express App)
 import app from "./app";
 export const api = functions.https.onRequest(app);

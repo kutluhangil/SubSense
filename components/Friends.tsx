@@ -4,6 +4,7 @@ import { BrandIcon } from './BrandIcon';
 import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { convertAmount, CURRENCY_DATA } from '../utils/currency';
 import { searchUsers, sendFriendRequest, getFriendsList, getUserDocument, UserProfileData } from '../utils/firestore';
 
 // Helper to convert Firestore profile to UI format
@@ -33,7 +34,7 @@ export default function Friends() {
   const [selectedFriend, setSelectedFriend] = useState<UserProfileData | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t, currentCurrency, formatPrice } = useLanguage();
 
   // Load Friends
   useEffect(() => {
@@ -135,7 +136,7 @@ export default function Friends() {
 
               <div className="text-xs text-gray-400 italic">
                 {friend.stats.monthlySpend > 0
-                  ? t('friends.spends_approx').replace('{0}', String(friend.stats.monthlySpend))
+                  ? t('friends.spends_approx').replace('{0}', formatPrice(convertAmount(friend.stats.monthlySpend, friend.preferences.baseCurrency || 'USD', currentCurrency)))
                   : t('friends.no_public_spend')}
               </div>
             </div>

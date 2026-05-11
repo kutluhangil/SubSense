@@ -11,19 +11,21 @@ export interface Subscription {
   name: string;
   plan: string;
   price: number;
-  originalPrice?: number; // Price in original currency
-  currency: string; // Original currency code
+  originalPrice?: number;
+  currency: string;
   cycle: 'Monthly' | 'Yearly';
   nextDate: string;
+  startDate?: string;
   type: string;
-  status: 'Active' | 'Expiring' | 'Inactive';
+  status: 'Active' | 'Trial' | 'Expiring' | 'Inactive';
+  trialEndDate?: string;
   nickname?: string;
   notes?: string;
   billingDay?: number;
   history?: number[];
   category?: string;
   reminderEnabled?: boolean;
-  logo?: string; // Base64 or URL
+  logo?: string;
 }
 
 interface SubscriptionModalProps {
@@ -292,6 +294,37 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                     </div>
                   </div>
 
+                  {/* Status */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{t('modal.status')}</label>
+                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                      {(['Active', 'Trial', 'Inactive'] as const).map(s => (
+                        <button
+                          key={s}
+                          onClick={() => handleChange('status', s)}
+                          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${formData.status === s ? 'bg-white dark:bg-gray-600 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                          style={formData.status === s ? { color: accentColor, fontWeight: 'bold' } : {}}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Trial End Date */}
+                  {formData.status === 'Trial' && (
+                    <div className="animate-in fade-in duration-200">
+                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{t('modal.trial_end')}</label>
+                      <input
+                        type="date"
+                        value={formData.trialEndDate ? new Date(formData.trialEndDate).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleChange('trialEndDate', e.target.value)}
+                        className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/30"
+                      />
+                      <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">⏰ {t('modal.trial_hint')}</p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{t('modal.notes')}</label>
                     <textarea
@@ -381,6 +414,37 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                 </div>
               </div>
 
+              {/* Payment History Sparkline */}
+              {subscription.history && subscription.history.length > 1 && (
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <TrendingUp size={14} style={{ color: accentColor }} /> {t('modal.payment_history')}
+                  </h3>
+                  <div className="flex items-end gap-1 h-14">
+                    {subscription.history.slice(-12).map((amount, i, arr) => {
+                      const maxVal = Math.max(...arr);
+                      const height = maxVal > 0 ? Math.max(10, (amount / maxVal) * 100) : 10;
+                      const isLatest = i === arr.length - 1;
+                      return (
+                        <div key={i} className="relative group flex-1 flex flex-col items-center justify-end h-full">
+                          <div
+                            className="w-full rounded-t transition-all duration-500"
+                            style={{
+                              height: `${height}%`,
+                              backgroundColor: isLatest ? accentColor : `${accentColor}50`,
+                            }}
+                          />
+                          <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                            {subscription.currency} {amount.toFixed(2)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2">{subscription.history.length} {t('modal.payments_recorded')}</p>
+                </div>
+              )}
+
               {/* Action Buttons */}
               <div className="space-y-3">
                 <button
@@ -388,13 +452,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                   disabled={loading}
                   className="w-full py-3 rounded-xl font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-red-100 dark:hover:border-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading && error ? (
-                    <span>Processing...</span> // Indicate working if retrying etc, but usually handleSave locks it.
-                  ) : (
-                    <>
-                      <Trash2 size={16} /> {t('modal.delete')}
-                    </>
-                  )}
+                  <Trash2 size={16} /> {t('modal.delete')}
                 </button>
               </div>
 

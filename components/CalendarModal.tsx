@@ -51,7 +51,9 @@ END:VEVENT`;
 
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//SubscriptionHub//MVP//EN
+PRODID:-//SubSense//Subscription Tracker//EN
+X-WR-CALNAME:SubSense Payments
+X-WR-TIMEZONE:UTC
 ${events}
 END:VCALENDAR`;
 
@@ -115,12 +117,12 @@ END:VCALENDAR`;
              </div>
           </div>
           <div className="flex items-center gap-2">
-             <button 
+             <button
                 onClick={handleExportICS}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors"
                 title="Export to Google Calendar, Apple Calendar, or Outlook"
              >
-                <Download size={14} /> Add to Calendar
+                <Download size={14} /> <span className="hidden sm:inline">Add to Calendar</span><span className="sm:hidden">iCal</span>
              </button>
              <button 
                 onClick={onClose}
