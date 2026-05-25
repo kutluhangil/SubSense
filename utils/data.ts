@@ -102,7 +102,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "ubisoft+": "#0091F2",
   "geforcenow": "#76B900",
 
-  // AI
+  // AI Services
   "chatgpt": "#10A37F",
   "chatgptplus": "#10A37F",
   "githubcopilot": "#181717",

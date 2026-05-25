@@ -75,18 +75,21 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
 
     try {
       if (mode === 'forgot-password' && onResetPassword) {
-        // Real Firebase Reset
         await onResetPassword(formData.email);
         setMode('email-sent');
       } else if (mode === 'login' && onLoginSubmit) {
         await onLoginSubmit(formData.email, formData.password, rememberMe);
-        // Parent closes modal on success
       } else if (mode === 'signup' && onSignupSubmit) {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error("Passwords do not match");
+        if (!formData.fullName.trim()) {
+          throw new Error("Please enter your full name.");
         }
-        // Pass country/region as the 5th argument
-        await onSignupSubmit(formData.fullName, formData.email, formData.password, formData.currency, formData.country);
+        if (formData.password.length < 6) {
+          throw new Error("Password must be at least 6 characters.");
+        }
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error("Passwords do not match.");
+        }
+        await onSignupSubmit(formData.fullName.trim(), formData.email, formData.password, formData.currency, formData.country);
       }
     } catch (err: any) {
       // If user needs email verification, parent handles navigation.
@@ -359,6 +362,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                       placeholder="••••••••"
                       required
                     />
+                    {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                      <p className="text-red-500 text-[11px] font-medium mt-1">Passwords do not match</p>
+                    )}
                   </div>
                 </div>
 

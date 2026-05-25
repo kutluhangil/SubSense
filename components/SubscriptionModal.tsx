@@ -36,7 +36,6 @@ interface SubscriptionModalProps {
   onDelete: (id: string | number) => Promise<void> | void;
 }
 
-// Helper to find accent color
 const getAccentColor = (type: string, name: string) => {
   const normalizedType = type?.toLowerCase().replace(/\s+/g, '') || '';
   const normalizedName = name?.toLowerCase().replace(/\s+/g, '') || '';
@@ -89,7 +88,6 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
     setError(null);
   };
 
-  // Currency conversion handling for edit mode
   const handleCurrencyChange = (newCurrency: string) => {
     const currentPrice = formData.originalPrice;
     const currentCurrency = formData.currency || 'USD';
@@ -116,9 +114,6 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
       setLoading(true);
       setError(null);
 
-      // In edit mode, price and originalPrice are effectively the same concept 
-      // (the amount user pays in their specific currency).
-      // We ensure 'price' property reflects this updated amount.
       const finalData: Subscription = {
         ...subscription,
         ...formData,

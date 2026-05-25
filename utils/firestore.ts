@@ -508,10 +508,7 @@ export const submitFeedback = async (uid: string, feedback: { type: string; mess
     });
   } catch (e: any) {
     console.error("Error submitting feedback:", e);
-    // Fallback: Log to console if Firestore write fails (likely permission issue or offline)
-    console.log("Feedback Fallback:", feedback);
     if (e.code === 'permission-denied') {
-      // Maybe store in localStorage to sync later? For now, we just pretend it worked to the user.
       return;
     }
     throw e;

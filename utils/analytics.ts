@@ -34,7 +34,7 @@ export type AnalyticsEvent =
   | 'theme_changed'
   | 'currency_changed'
 
-  // AI
+  // AI Events
   | 'ai_opened'
   | 'ai_query_submitted'
 

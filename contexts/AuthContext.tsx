@@ -61,38 +61,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [authInitialized, setAuthInitialized] = useState(false);
   const [welcomeBackMessage, setWelcomeBackMessage] = useState<string | null>(null);
 
-  // Email Verification State
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
-  // Determine Pro Status (Default false if no profile)
   const isPro = useMemo(() => {
     return userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
   }, [userProfile]);
 
-  // Store the unsubscribe function to clean up on logout/unmount
   const unsubscribeSubsRef = useRef<(() => void) | null>(null);
 
-  // Sign Up
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
     try {
-      // 1. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       if (user) {
-        // 2. Update Profile
         await updateProfile(user, { displayName: name });
 
-        // 3. Initialize Firestore Document for User
         await initializeUserDocument(
           { uid: user.uid, email: user.email, displayName: name },
           { currency, region }
         );
 
-        // 4. Send Custom Email Verification
         try {
-          // Use our custom Cloud Function for branded email
           const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
           await sendCustomVerification({
             email: user.email,
@@ -100,23 +91,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
 
           trackEvent('email_verification_sent');
-          console.log("Branded verification email sent to:", user.email);
-        } catch (emailError: any) {
-          console.error("Failed to send custom verification email:", emailError);
-          // Fallback to default if Cloud Function fails
+        } catch {
           try {
             await sendEmailVerification(user);
-            console.log("Fallback to default Firebase email sent.");
           } catch (fallbackError) {
-            console.error("Critical: Failed to send both custom and fallback verification emails", fallbackError);
+            console.error("Verification email delivery failed", fallbackError);
           }
         }
 
-        // 5. Set verification state (user stays signed in to allow resending)
         setPendingVerificationEmail(email);
         setNeedsEmailVerification(true);
 
-        // Analytics
         trackEvent('signup_success', { method: 'email', currency: currency });
       }
     } catch (error) {
@@ -124,7 +109,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }
 
-  // Log In — enforces email verification
   async function login(email: string, password: string, rememberMe: boolean = false) {
     try {
       const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
@@ -133,7 +117,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // SECURITY: Block unverified users
       if (!user.emailVerified) {
         // Attempt to re-send verification email for convenience (with error logging)
         try {
@@ -142,41 +125,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             email: user.email,
             redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
           });
-          console.log("Auto-resent custom verification email on login attempt");
-        } catch (resendError) {
-          console.warn("Could not auto-resend verification email during login:", resendError);
+        } catch {
+          // Best-effort resend; ignore failures silently
         }
 
-        // Set verification state (user stays signed in)
         setPendingVerificationEmail(email);
         setNeedsEmailVerification(true);
 
         throw new Error('EMAIL_NOT_VERIFIED');
       }
 
-      // Clear verification state on successful verified login
       setNeedsEmailVerification(false);
       setPendingVerificationEmail(null);
       trackEvent('login_success', { method: 'email' });
     } catch (error: any) {
-      if (error.message === 'EMAIL_NOT_VERIFIED') {
-        throw error; // Re-throw our custom error
-      }
       throw error;
     }
   }
 
-  // Log Out - Enhanced Security
   async function logout() {
     trackEvent('logout');
 
-    // 1. Unsubscribe from listeners immediately
     if (unsubscribeSubsRef.current) {
       unsubscribeSubsRef.current();
       unsubscribeSubsRef.current = null;
     }
 
-    // 2. Clear Local Storage of user-specific data to prevent leaks
     const keysToRemove = [];
     if (typeof window !== 'undefined') {
       for (let i = 0; i < localStorage.length; i++) {
@@ -188,7 +162,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       keysToRemove.forEach(k => localStorage.removeItem(k));
     }
 
-    // 3. Reset State
     setCurrentUser(null);
     setUserProfile(null);
     setSubscriptions([]);
@@ -197,11 +170,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setNeedsEmailVerification(false);
     setPendingVerificationEmail(null);
 
-    // 4. Sign out from Firebase (Modular Syntax)
     await signOut(auth);
   }
 
-  // Mock Upgrade Function (Simulates Payment Success)
   async function upgradeToPro() {
     if (!currentUser || !userProfile) return;
 
@@ -214,7 +185,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       await updateUserPlan(currentUser.uid, newPlan);
 
-      // Optimistic update
       setUserProfile({ ...userProfile, plan: newPlan });
       trackEvent('subscription_upgrade', { plan: 'pro' });
     } catch (e) {
@@ -223,25 +193,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }
 
-  // Password Reset — normalized error to prevent email enumeration
   async function resetPassword(email: string) {
     try {
       await sendPasswordResetEmail(auth, email);
       trackEvent('password_reset_request');
-    } catch (_error: any) {
-      // SECURITY: Always succeed silently to prevent email enumeration.
-      // Firebase may throw 'auth/user-not-found' for non-existent emails.
-      // We don't reveal that info to the client.
+    } catch {
       trackEvent('password_reset_request');
     }
   }
 
-  // Resend Verification Email (Client SDK)
   const resendVerificationEmail = useCallback(async () => {
     if (!currentUser) return;
 
     try {
-      // Use Custom Cloud Function
       const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
       await sendCustomVerification({
         email: currentUser.email,
@@ -249,23 +213,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       trackEvent('email_verification_resent');
-      console.log("Custom verification email resent successfully");
     } catch (error: any) {
-      console.error("Error resending custom verification email:", error);
-      throw error; // Re-throw to allow UI to show error message
+      throw error;
     }
   }, [currentUser]);
 
-  // Clear verification state (e.g., when user navigates away)
   const clearVerificationState = useCallback(() => {
     setNeedsEmailVerification(false);
     setPendingVerificationEmail(null);
   }, []);
 
   useEffect(() => {
-    // Modular Auth Observer
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      // Always cleanup previous subscription listener if it exists when auth changes
       if (unsubscribeSubsRef.current) {
         unsubscribeSubsRef.current();
         unsubscribeSubsRef.current = null;
@@ -274,22 +233,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCurrentUser(user);
 
       if (user) {
-        // SECURITY: Block unverified users but keep them signed in
         if (!user.emailVerified) {
           setPendingVerificationEmail(user.email);
           setNeedsEmailVerification(true);
-          // Do NOT sign out.
         } else {
           setNeedsEmailVerification(false);
           setPendingVerificationEmail(null);
         }
 
         try {
-          // 1. Hydrate User Profile
           const profile = await getUserDocument(user.uid);
           setUserProfile(profile);
 
-          // 2. Analytics: Check for Churn / Return
           if (profile?.analytics?.lastActiveAt) {
             const lastActive = profile.analytics.lastActiveAt.toDate ? profile.analytics.lastActiveAt.toDate() : new Date(profile.analytics.lastActiveAt);
             const now = new Date();
@@ -304,11 +259,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
           }
 
-          // 3. Analytics: Update Activity
           await updateUserActivity(user.uid);
           trackEvent('session_start');
 
-          // 4. Start Realtime Subscription Listener
           setSubscriptionsLoading(true);
           const unsub = listenToUserSubscriptions(user.uid, (subs) => {
             setSubscriptions(subs);
@@ -325,7 +278,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSubscriptionsLoading(false);
         }
       } else {
-        // Clear state on logout / initial null
         setUserProfile(null);
         setSubscriptions([]);
         setSubscriptionsLoading(false);
@@ -347,7 +299,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  // Calculate Derived Stats whenever subscriptions or base currency changes
   const derivedStats = useMemo(() => {
     const baseCurrency = userProfile?.preferences?.baseCurrency || 'USD';
     return calculateDerivedStats(subscriptions, baseCurrency);

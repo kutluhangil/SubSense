@@ -15,18 +15,16 @@ import { applyActionCode } from 'firebase/auth';
 import { auth } from './firebase/firebase';
 import FooterCredit from './components/FooterCredit';
 
-// Lazy Load Pages & Heavy Components
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Features = React.lazy(() => import('./components/Features'));
 const DemoModal = React.lazy(() => import('./components/DemoModal'));
 const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage'));
 const VerifyEmailPage = React.lazy(() => import('./components/VerifyEmailPage'));
 
-// Types for user interface consistency
 export interface User {
   email: string;
   name: string;
-  passwordHash: string; // Kept for interface compat, unused in Firebase
+  passwordHash: string;
   currency?: string;
   uid?: string;
 }
@@ -58,7 +56,6 @@ function AppContent() {
     };
   }, []);
 
-  // --- Handle Firebase Email Links (Verification & Password Reset) ---
   useEffect(() => {
     const handleEmailActions = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -72,18 +69,12 @@ function AppContent() {
       } else if (mode === 'verifyEmail') {
         try {
           await applyActionCode(auth, actionCode);
-          // Reload user to update emailVerified status if logged in
           if (auth.currentUser) {
             await auth.currentUser.reload();
-            // Force auth context to refresh (usually happens via onAuthStateChanged automatically)
           }
-          // Clear URL parameters
           window.history.replaceState({}, document.title, window.location.pathname);
-          // Show success (you might want a toast here, for now we let the gated UI handle it)
-          // Since emailVerified is now true, the VerifyEmailPage gate will lift automatically upon next auth check/reload
         } catch (error) {
           console.error("Email verification failed:", error);
-          // UI will show unverified state nicely
         }
       }
     };
@@ -91,11 +82,8 @@ function AppContent() {
     handleEmailActions();
   }, []);
 
-  // --- Analytics: Track Route Changes ---
   useEffect(() => {
-    if (currentUser) {
-      // Dashboard internal navigation handles its own tracking
-    } else {
+    if (!currentUser) {
       trackPageView(currentPage);
     }
   }, [currentPage, currentUser]);
@@ -114,10 +102,8 @@ function AppContent() {
           try {
             const parsedSubs = JSON.parse(localData);
             if (Array.isArray(parsedSubs) && parsedSubs.length > 0) {
-              console.log("Migrating local data to Firestore...");
               migrateLocalData(currentUser.uid, parsedSubs).then(() => {
                 localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
-                // Optional: Clear legacy data
                 localStorage.removeItem(legacyKey);
               });
             }
@@ -125,7 +111,6 @@ function AppContent() {
             console.error("Migration failed", e);
           }
         } else {
-          // Mark as migrated to skip check next time even if empty
           localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
         }
       }
@@ -146,7 +131,6 @@ function AppContent() {
     setIsDemoOpen(false);
   };
 
-  // Wrapper for AuthContext login — handles EMAIL_NOT_VERIFIED
   const handleLogin = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
       await login(email, password, rememberMe);
@@ -154,19 +138,15 @@ function AppContent() {
       setCurrentPage('home');
     } catch (err: any) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
-        // Close auth modal — the VerifyEmailPage will be shown by the gating logic
         setIsAuthOpen(false);
-        return; // Don't re-throw; the UI state handles this
+        return;
       }
-      throw err; // Re-throw other errors so AuthModal can display them
+      throw err;
     }
   };
 
-  // Wrapper for AuthContext signup
   const handleSignup = async (name: string, email: string, password: string, currency: string, region: string) => {
     await signup(email, password, name, currency, region);
-    // After signup, user is signed out and needsEmailVerification=true
-    // The VerifyEmailPage will be shown automatically
     setCurrency(currency);
     setIsAuthOpen(false);
   };
@@ -178,15 +158,12 @@ function AppContent() {
 
   const handleResetPassword = async (email: string) => {
     await resetPassword(email);
-    // Success handling is done inside AuthModal (e.g. showing "email sent" mode)
   };
 
-  // 4. App-Level Gating: Show loader until auth state is confirmed
   if (!authInitialized) {
     return <PageLoader />;
   }
 
-  // Map Firebase user to App User interface
   const appUser: User | null = currentUser ? {
     email: currentUser.email || '',
     name: currentUser.displayName || 'User',

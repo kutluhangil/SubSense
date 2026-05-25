@@ -4,9 +4,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// ─── Global Error Diagnostics ──────────────────────────────────────────────
-// Catches module-level crashes that happen BEFORE React mounts.
-// These would otherwise produce a silent white screen.
 window.onerror = (msg, _src, line, _col, err) => {
   const container = document.getElementById('root');
   if (container && !container.children.length) {
@@ -31,7 +28,6 @@ window.addEventListener('unhandledrejection', (event) => {
       </div>`;
   }
 });
-// ───────────────────────────────────────────────────────────────────────────
 
 const containerId = 'root';
 const container = document.getElementById(containerId);

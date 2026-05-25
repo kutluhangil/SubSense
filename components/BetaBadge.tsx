@@ -76,7 +76,6 @@ const BetaBadge = () => {
     };
 
     const triggerEasterEgg = async () => {
-        console.log("🧪 Beta Secret Found!");
         if (currentUser) {
             try {
                 const userDoc = await getUserDocument(currentUser.uid);
