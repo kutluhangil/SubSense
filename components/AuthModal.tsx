@@ -304,6 +304,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                       onChange={(e) => handleChange('fullName', e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all focus:bg-white placeholder-gray-400"
                       placeholder="John Doe"
+                      maxLength={60}
                       required
                     />
                   </div>

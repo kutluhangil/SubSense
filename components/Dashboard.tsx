@@ -53,6 +53,18 @@ const LoadingFallback = () => (
    </div>
 );
 
+const PAGE_TITLES: Record<string, string> = {
+   dashboard: 'Dashboard — SubSense',
+   subscriptions: 'Subscriptions — SubSense',
+   analytics: 'Analytics — SubSense',
+   compare: 'Compare — SubSense',
+   discover: 'Discover — SubSense',
+   settings: 'Settings — SubSense',
+   help: 'Help — SubSense',
+   profile: 'Profile — SubSense',
+   friends: 'Friends — SubSense',
+};
+
 export default function Dashboard({ onLogout, user }: DashboardProps) {
    const { currentUser, subscriptions, derivedStats, subscriptionsLoading } = useAuth();
    const [currentView, setCurrentView] = useState('dashboard');
@@ -93,8 +105,11 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
    const { t, formatPrice, currentCurrency, setCurrency } = useLanguage();
 
-   // --- Preview State ---
    const [previewCurrency, setPreviewCurrency] = useState<string | null>(null);
+
+   useEffect(() => {
+      document.title = PAGE_TITLES[currentView] || 'SubSense';
+   }, [currentView]);
 
    const handleOnboardingComplete = () => {
       setShowOnboarding(false);

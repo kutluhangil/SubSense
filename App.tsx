@@ -44,7 +44,6 @@ function AppContent() {
   const { setCurrency, t } = useLanguage();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // --- Network Status ---
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -55,6 +54,17 @@ function AppContent() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      home: 'SubSense — Track Your Subscriptions',
+      features: 'Features — SubSense',
+      'reset-password': 'Reset Password — SubSense',
+    };
+    if (!currentUser) {
+      document.title = titles[currentPage] || 'SubSense';
+    }
+  }, [currentPage, currentUser]);
 
   useEffect(() => {
     const handleEmailActions = async () => {
@@ -162,6 +172,23 @@ function AppContent() {
 
   if (!authInitialized) {
     return <PageLoader />;
+  }
+
+  const pathname = window.location.pathname;
+  if (pathname !== '/' && pathname !== '') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-8xl font-black text-gray-900 mb-4">404</div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Page not found</h1>
+        <p className="text-gray-500 text-sm mb-8 max-w-xs">The page you're looking for doesn't exist or has been moved.</p>
+        <a
+          href="/"
+          className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
+        >
+          Go to SubSense
+        </a>
+      </div>
+    );
   }
 
   const appUser: User | null = currentUser ? {

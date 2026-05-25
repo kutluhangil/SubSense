@@ -216,6 +216,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                       className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all"
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="e.g. Family Account"
+                      maxLength={80}
                     />
                   </div>
 
@@ -326,6 +327,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
                       value={formData.notes}
                       onChange={(e) => handleChange('notes', e.target.value)}
                       rows={3}
+                      maxLength={500}
                       className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all resize-none"
                       style={{ '--tw-ring-color': accentColor } as React.CSSProperties}
                       placeholder="Add notes about this subscription..."
