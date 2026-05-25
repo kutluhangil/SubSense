@@ -32,13 +32,13 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
   };
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-white dark:bg-gray-900 overflow-hidden transition-colors duration-300">
       
       {/* 1. Dynamic Background Layer */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-100/40 rounded-full blur-[120px] animate-blob"></div>
-         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] bg-purple-100/40 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
-         <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-indigo-50/50 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-[120px] animate-blob"></div>
+         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] bg-purple-100/40 dark:bg-purple-900/20 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
+         <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-indigo-50/50 dark:bg-indigo-900/20 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
       </div>
 
       {/* 2. Hero Content */}
@@ -48,14 +48,14 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
               
               {/* Left Column: Text & CTA */}
               <div className="text-center lg:text-left">
-                 <div className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 text-sm leading-6 text-blue-700 mb-8 hover:bg-blue-100 transition-colors cursor-default backdrop-blur-sm">
+                 <div className="inline-flex items-center rounded-full border border-blue-100 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/30 px-3 py-1 text-sm leading-6 text-blue-700 dark:text-blue-300 mb-8 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors cursor-default backdrop-blur-sm">
                     <Sparkles size={14} className="mr-2 text-blue-500" />
                     <span>{t('hero.tagline')}</span>
                  </div>
 
                  <HeroTextRotator />
 
-                 <p className="mt-6 text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                 <p className="mt-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                     {t('hero.take_control_desc')}
                  </p>
 
@@ -68,17 +68,17 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                     </button>
                     <button 
                       onClick={handleDemo}
-                      className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+                      className="w-full sm:w-auto px-8 py-4 text-base font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
                     >
                       {t('hero.view_live_demo')}
                     </button>
                  </div>
                  
-                 <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500">
+                 <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex -space-x-2">
-                       <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
-                       <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
-                       <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white"></div>
+                       <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 border-2 border-white dark:border-gray-800"></div>
+                       <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-500 border-2 border-white dark:border-gray-800"></div>
+                       <div className="w-8 h-8 rounded-full bg-gray-400 dark:bg-gray-400 border-2 border-white dark:border-gray-800"></div>
                     </div>
                     <span>{t('hero.trusted')}</span>
                  </div>
@@ -86,7 +86,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
 
               {/* Right Column: Profile Carousel */}
               <div className="relative h-[400px] lg:h-[500px] flex items-center">
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-white/80 z-20 pointer-events-none lg:hidden"></div> {/* Fade for mobile */}
+                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-white/80 dark:via-gray-900/50 dark:to-gray-900/80 z-20 pointer-events-none lg:hidden"></div>
                  <ProfileCarousel onProfileClick={setSelectedProfile} />
               </div>
 
@@ -95,7 +95,7 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
       </div>
 
       {/* 3. Feature Overview Grid */}
-      <div className="relative z-10 bg-white/50 backdrop-blur-sm border-t border-gray-100/50">
+      <div className="relative z-10 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-t border-gray-100/50 dark:border-gray-800/50">
          <FeatureGrid />
       </div>
 

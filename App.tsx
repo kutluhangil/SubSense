@@ -224,7 +224,7 @@ function AppContent() {
         ) : appUser ? (
           <Dashboard user={appUser} onLogout={handleLogout} />
         ) : (
-          <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
+          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col selection:bg-gray-100 selection:text-gray-900 dark:selection:bg-gray-800 dark:selection:text-gray-100">
             {currentPage === 'reset-password' ? (
               <ResetPasswordPage onLoginClick={() => {
                 setCurrentPage('home');

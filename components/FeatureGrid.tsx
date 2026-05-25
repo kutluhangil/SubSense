@@ -144,7 +144,7 @@ export default function FeatureGrid() {
       title: t('features.dashboard.title'),
       desc: t('features.dashboard.desc'),
       color: "#3B82F6", // blue-500
-      bg: "bg-blue-50",
+      bg: "bg-blue-50 dark:bg-blue-900/30",
       hoverBorder: "group-hover:border-blue-500/50"
     },
     {
@@ -152,8 +152,8 @@ export default function FeatureGrid() {
       icon: Users,
       title: t('features.friends.title'),
       desc: t('features.friends.desc'),
-      color: "#0D9488", // teal-600
-      bg: "bg-teal-50",
+      color: "#0D9488",
+      bg: "bg-teal-50 dark:bg-teal-900/30",
       hoverBorder: "group-hover:border-teal-500/50"
     },
     {
@@ -161,8 +161,8 @@ export default function FeatureGrid() {
       icon: CreditCard,
       title: t('features.subscriptions.title'),
       desc: t('features.subscriptions.desc'),
-      color: "#9333EA", // purple-600
-      bg: "bg-purple-50",
+      color: "#9333EA",
+      bg: "bg-purple-50 dark:bg-purple-900/30",
       hoverBorder: "group-hover:border-purple-500/50"
     },
     {
@@ -170,8 +170,8 @@ export default function FeatureGrid() {
       icon: PieChart,
       title: t('features.analytics.title'),
       desc: t('features.analytics.desc'),
-      color: "#7C3AED", // violet-600
-      bg: "bg-violet-50",
+      color: "#7C3AED",
+      bg: "bg-violet-50 dark:bg-violet-900/30",
       hoverBorder: "group-hover:border-violet-500/50"
     },
     {
@@ -179,8 +179,8 @@ export default function FeatureGrid() {
       icon: ArrowRightLeft,
       title: t('features.compare.title'),
       desc: t('features.compare.desc'),
-      color: "#EA580C", // orange-600
-      bg: "bg-orange-50",
+      color: "#EA580C",
+      bg: "bg-orange-50 dark:bg-orange-900/30",
       hoverBorder: "group-hover:border-orange-500/50"
     },
     {
@@ -188,8 +188,8 @@ export default function FeatureGrid() {
       icon: Settings,
       title: t('features.settings.title'),
       desc: t('features.settings.desc'),
-      color: "#4B5563", // gray-600
-      bg: "bg-gray-50",
+      color: "#4B5563",
+      bg: "bg-gray-50 dark:bg-gray-700",
       hoverBorder: "group-hover:border-gray-500/50"
     }
   ];
@@ -232,8 +232,8 @@ export default function FeatureGrid() {
   return (
     <div className="py-16 relative" ref={containerRef}>
       <div className="text-center mb-12">
-         <span className="inline-block py-1 px-3 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider mb-3">{t('features.tag')}</span>
-         <h2 className="text-3xl font-bold text-gray-900">{t('features.explore')}</h2>
+         <span className="inline-block py-1 px-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-bold uppercase tracking-wider mb-3">{t('features.tag')}</span>
+         <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t('features.explore')}</h2>
       </div>
       
       {/* Grid Container with Blur Effect on Siblings */}
@@ -249,9 +249,9 @@ export default function FeatureGrid() {
               key={i}
               onMouseEnter={() => handleMouseEnter(i)}
               className={`
-                relative bg-white p-6 rounded-2xl border border-gray-100 shadow-sm 
+                relative bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm
                 transition-all duration-500 ease-out cursor-pointer group
-                ${isActive ? 'scale-105 shadow-xl z-20 ring-1 ring-black/5' : 'hover:border-gray-200'}
+                ${isActive ? 'scale-105 shadow-xl z-20 ring-1 ring-black/5 dark:ring-white/10' : 'hover:border-gray-200 dark:hover:border-gray-600'}
                 ${activeIndex !== null && !isActive ? 'opacity-50 blur-[2px] scale-95' : 'opacity-100 blur-0'}
               `}
             >
@@ -276,18 +276,18 @@ export default function FeatureGrid() {
                {isActive && <FeaturePreviewPopup feature={f} />}
 
                {/* Standard Card Content */}
-               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300 ${isActive ? 'bg-gray-900 text-white' : f.bg}`}>
+               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300 ${isActive ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900' : f.bg}`}>
                   <f.icon size={24} className={`transition-colors duration-300 ${isActive ? 'text-white' : f.color}`} />
                </div>
                
                <div className="flex justify-between items-start relative z-10">
                   <div>
-                     <h3 className={`text-lg font-bold mb-2 transition-colors ${isActive ? 'text-gray-900' : 'text-gray-900'}`}>{f.title}</h3>
-                     <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+                     <h3 className={`text-lg font-bold mb-2 transition-colors ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'}`}>{f.title}</h3>
+                     <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
                   </div>
-                  <ArrowRight 
-                    size={16} 
-                    className={`transition-all duration-300 transform ${isActive ? 'opacity-100 translate-x-1 text-gray-900' : 'opacity-0 -translate-x-2 text-gray-300'}`} 
+                  <ArrowRight
+                    size={16}
+                    className={`transition-all duration-300 transform ${isActive ? 'opacity-100 translate-x-1 text-gray-900 dark:text-white' : 'opacity-0 -translate-x-2 text-gray-300 dark:text-gray-600'}`}
                   />
                </div>
             </div>
