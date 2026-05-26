@@ -179,7 +179,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "netflix",
     netWorth: "$260 Billion",
     globalUserCount: "283M+",
-    website: "netflix.com",
+    website: "https://www.netflix.com/signup",
     milestones: [
       "1997: Founded as a DVD-by-mail service",
       "2007: Launched streaming video service",
@@ -221,7 +221,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "spotify",
     netWorth: "$90 Billion",
     globalUserCount: "675M+ (Total)",
-    website: "spotify.com",
+    website: "https://www.spotify.com/premium/",
     milestones: [
       "2006: Founded in Stockholm",
       "2008: Service launched in Europe",
@@ -266,7 +266,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Alphabet)",
     globalUserCount: "100M+",
     parentCompany: "Alphabet Inc.",
-    website: "youtube.com",
+    website: "https://www.youtube.com/premium",
     milestones: [
       "2005: YouTube founded",
       "2006: Acquired by Google for $1.65B",
@@ -307,7 +307,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Amazon)",
     globalUserCount: "200M+ (Prime)",
     parentCompany: "Amazon",
-    website: "primevideo.com",
+    website: "https://www.primevideo.com",
     milestones: [
       "2006: Amazon Unbox launched",
       "2011: Included in Prime membership",
@@ -345,7 +345,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$200 Billion",
     globalUserCount: "150M+",
     parentCompany: "Disney",
-    website: "disneyplus.com",
+    website: "https://www.disneyplus.com",
     milestones: [
       "2019: Launch with 'The Mandalorian'",
       "2020: Reached 50 million subscribers in 5 months",
@@ -384,7 +384,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "N/A (Disney Owned)",
     globalUserCount: "48M+",
     parentCompany: "Disney",
-    website: "hulu.com",
+    website: "https://www.hulu.com/welcome",
     milestones: [
       "2008: Public launch",
       "2011: Launched original programming",
@@ -416,7 +416,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$25 Billion (Warner Bros. Discovery)",
     globalUserCount: "97M+",
     parentCompany: "Warner Bros. Discovery",
-    website: "max.com",
+    website: "https://www.max.com/plans",
     milestones: [
       "2020: HBO Max launch",
       "2021: Same-day theatrical releases (Matrix 4, Dune)",
@@ -449,7 +449,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Apple)",
     globalUserCount: "25M+ (Est)",
     parentCompany: "Apple Inc.",
-    website: "tv.apple.com",
+    website: "https://tv.apple.com",
     milestones: [
       "2019: Launched in over 100 countries",
       "2020: 'Ted Lasso' premieres",
@@ -488,7 +488,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Apple)",
     globalUserCount: "88M+",
     parentCompany: "Apple Inc.",
-    website: "music.apple.com",
+    website: "https://music.apple.com",
     milestones: [
       "2014: Apple acquires Beats Electronics",
       "2015: Apple Music launched at WWDC",
@@ -531,7 +531,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Microsoft)",
     globalUserCount: "345M (Paid Seats)",
     parentCompany: "Microsoft",
-    website: "microsoft.com",
+    website: "https://www.microsoft.com/microsoft-365/personal-family-office",
     milestones: [
       "2011: Office 365 for Enterprise launched",
       "2013: Office 365 for Home launched",
@@ -569,7 +569,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "adobe",
     netWorth: "$220 Billion",
     globalUserCount: "30M+",
-    website: "adobe.com",
+    website: "https://www.adobe.com/creativecloud/plans.html",
     milestones: [
       "1982: Adobe founded",
       "1990: Photoshop 1.0 released",
@@ -608,7 +608,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "canva",
     netWorth: "$26 Billion",
     globalUserCount: "135M+ (MAU)",
-    website: "canva.com",
+    website: "https://www.canva.com/pro/",
     milestones: [
       "2013: Launched in Sydney",
       "2015: Reached 4 million users",
@@ -647,7 +647,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Alphabet)",
     globalUserCount: "3 Billion+",
     parentCompany: "Alphabet Inc.",
-    website: "workspace.google.com",
+    website: "https://workspace.google.com/pricing",
     milestones: [
       "2006: Launched as Google Apps",
       "2012: Google Drive released",
@@ -687,7 +687,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$27 Billion (Acquisition)",
     globalUserCount: "35M+ DAU",
     parentCompany: "Salesforce",
-    website: "slack.com",
+    website: "https://slack.com/pricing",
     milestones: [
       "2013: Public launch",
       "2019: Direct listing on NYSE",
@@ -718,7 +718,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "notion",
     netWorth: "$10 Billion",
     globalUserCount: "30M+",
-    website: "notion.so",
+    website: "https://www.notion.so/pricing",
     milestones: [
       "2016: Notion 1.0 released",
       "2018: Notion 2.0 (Databases) released",
@@ -749,7 +749,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "figma",
     netWorth: "$10 Billion+",
     globalUserCount: "4M+",
-    website: "figma.com",
+    website: "https://www.figma.com/pricing/",
     milestones: [
       "2015: Closed beta launch",
       "2016: Public launch",
@@ -783,7 +783,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$80 Billion (OpenAI Valuation)",
     globalUserCount: "180M+ (MAU)",
     parentCompany: "OpenAI",
-    website: "openai.com",
+    website: "https://openai.com/chatgpt/pricing/",
     milestones: [
       "2015: OpenAI founded",
       "2020: GPT-3 released",
@@ -821,7 +821,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$7.5 Billion (GitHub Acq.)",
     globalUserCount: "1.3M+ Paid Users",
     parentCompany: "Microsoft",
-    website: "github.com",
+    website: "https://github.com/features/copilot",
     milestones: [
       "2018: Microsoft acquires GitHub",
       "2021: Copilot Technical Preview launched",
@@ -852,7 +852,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "midjourney",
     netWorth: "Private (Est. $10B+)",
     globalUserCount: "16M+ Discord Members",
-    website: "midjourney.com",
+    website: "https://www.midjourney.com/pricing",
     milestones: [
       "2022: Open Beta launch via Discord",
       "2023: V5 Model released (Photo-realism)",
@@ -886,7 +886,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Microsoft)",
     globalUserCount: "34M+",
     parentCompany: "Microsoft",
-    website: "xbox.com",
+    website: "https://www.xbox.com/xbox-game-pass",
     milestones: [
       "2017: Service launched",
       "2019: Game Pass for PC launched",
@@ -927,7 +927,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$100 Billion (Sony)",
     globalUserCount: "47M+",
     parentCompany: "Sony",
-    website: "playstation.com",
+    website: "https://www.playstation.com/ps-plus/",
     milestones: [
       "2010: Launched on PS3",
       "2013: Required for PS4 online multiplayer",
@@ -968,7 +968,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$15 Billion (Est)",
     globalUserCount: "140M MAU",
     parentCompany: "Amazon",
-    website: "twitch.tv",
+    website: "https://www.twitch.tv/turbo",
     milestones: [
       "2011: Launched as Justin.tv spin-off",
       "2013: Twitch Turbo launched",
@@ -981,6 +981,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         currency: "USD",
         tiers: [
           { name: "Turbo", price: 11.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Turbo", nameLocalized: "Turbo", price: 164.99, cycle: "Monthly" }
         ]
       }
     }
@@ -998,7 +1004,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "discord",
     netWorth: "$15 Billion",
     globalUserCount: "196M MAU",
-    website: "discord.com",
+    website: "https://discord.com/nitro",
     milestones: [
       "2015: Discord launch",
       "2017: Nitro subscription launched",
@@ -1036,7 +1042,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "duolingo",
     netWorth: "$9 Billion",
     globalUserCount: "83M MAU",
-    website: "duolingo.com",
+    website: "https://www.duolingo.com/plus",
     milestones: [
       "2011: Public beta launch",
       "2013: Apple App of the Year",
@@ -1075,7 +1081,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "masterclass",
     netWorth: "$2.75 Billion",
     globalUserCount: "2M+ (Est)",
-    website: "masterclass.com",
+    website: "https://www.masterclass.com/subscribe",
     milestones: [
       "2015: Launched with 3 instructors",
       "2018: Raised $80M Series D",
@@ -1107,7 +1113,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "dropbox",
     netWorth: "$9 Billion",
     globalUserCount: "700M+ Users",
-    website: "dropbox.com",
+    website: "https://www.dropbox.com/plans",
     milestones: [
       "2007: Y Combinator launch",
       "2011: Reached 50M users",
@@ -1138,7 +1144,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "zoom",
     netWorth: "$20 Billion",
     globalUserCount: "300M+ DAU (Peak)",
-    website: "zoom.us",
+    website: "https://zoom.us/pricing",
     milestones: [
       "2011: Founded",
       "2013: Public launch",
@@ -1170,7 +1176,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "Comcast Owned",
     globalUserCount: "31M+ Paid",
     parentCompany: "Comcast",
-    website: "peacocktv.com",
+    website: "https://www.peacocktv.com/plans",
     milestones: [
       "2020: National launch",
       "2021: The Office moves to Peacock",
@@ -1202,7 +1208,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$8 Billion (Est. Valuation)",
     globalUserCount: "67M+",
     parentCompany: "Paramount Global",
-    website: "paramountplus.com",
+    website: "https://www.paramountplus.com/plans/",
     milestones: [
       "2014: CBS All Access launch",
       "2017: First Star Trek original series",
@@ -1234,7 +1240,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$1 Billion+ (Amazon Subsid.)",
     globalUserCount: "Millions (Undisclosed)",
     parentCompany: "Amazon",
-    website: "audible.com",
+    website: "https://www.audible.com/ep/membership",
     milestones: [
       "1995: Company founded",
       "1997: Released first portable digital audio player",
@@ -1248,6 +1254,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         tiers: [
           { name: "Plus (1 Credit/mo)", price: 7.95, cycle: "Monthly" },
           { name: "Premium (2 Credits/mo)", price: 14.95, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Plus (1 Credit/mo)", nameLocalized: "Plus (Aylık 1 Kredi)", price: 54.90, cycle: "Monthly" },
+          { name: "Premium (2 Credits/mo)", nameLocalized: "Premium (Aylık 2 Kredi)", price: 89.90, cycle: "Monthly" }
         ]
       }
     }
@@ -1266,7 +1279,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Amazon)",
     globalUserCount: "200M+",
     parentCompany: "Amazon",
-    website: "amazon.com",
+    website: "https://www.amazon.com/prime",
     milestones: [
       "2005: Prime launched ($79/year)",
       "2011: Prime Video added",

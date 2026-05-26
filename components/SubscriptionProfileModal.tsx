@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Globe, Building2, TrendingUp, Users, History, Briefcase } from 'lucide-react';
+import { X, MapPin, Calendar, Globe, Building2, TrendingUp, Users, History, Briefcase, ExternalLink } from 'lucide-react';
 import { BrandIcon } from './BrandIcon';
 import { LogoRenderer } from './LogoRenderer';
 import { SubscriptionDetail, BRAND_COLORS } from '../utils/data';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SubscriptionProfileModalProps {
    isOpen: boolean;
@@ -13,6 +14,7 @@ interface SubscriptionProfileModalProps {
 }
 
 export default function SubscriptionProfileModal({ isOpen, onClose, service, themeColor, logoUrl }: SubscriptionProfileModalProps) {
+   const { t } = useLanguage();
    const [isVisible, setIsVisible] = useState(false);
 
    useEffect(() => {
@@ -83,18 +85,29 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                         <span className="flex items-center gap-1"><MapPin size={14} /> {service.headquarters}</span>
                      )}
                      {service.foundedYear !== 'Unknown' && (
-                        <span className="flex items-center gap-1"><Calendar size={14} /> Est. {service.foundedYear}</span>
+                        <span className="flex items-center gap-1"><Calendar size={14} /> {t('discover.est')} {service.foundedYear}</span>
                      )}
                   </div>
                </div>
 
-               <div className="flex justify-center mb-8">
+               <div className="flex justify-center gap-3 mb-8 flex-wrap">
                   <div className="inline-flex items-end px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2 mb-1">Starting at</span>
+                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mr-2 mb-1">{t('discover.starting_at')}</span>
                      <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">
-                        {service.currency === 'USD' ? '$' : ''}{service.price}<span className="text-sm font-normal text-gray-500 ml-0.5">/mo</span>
+                        {service.currency === 'USD' ? '$' : ''}{service.price}<span className="text-sm font-normal text-gray-500 ml-0.5">{t('discover.per_month')}</span>
                      </p>
                   </div>
+                  {service.website && (
+                     <a
+                        href={service.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                     >
+                        <ExternalLink size={14} />
+                        {t('discover.visit_website')}
+                     </a>
+                  )}
                </div>
 
                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-8 text-sm sm:text-base text-center max-w-lg mx-auto">
@@ -108,7 +121,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                            <Briefcase size={18} />
                         </div>
                         <div>
-                           <p className="text-xs font-bold text-gray-400 uppercase">CEO</p>
+                           <p className="text-xs font-bold text-gray-400 uppercase">{t('discover.ceo')}</p>
                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{service.ceo}</p>
                         </div>
                      </div>
@@ -119,7 +132,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                            <Users size={18} />
                         </div>
                         <div>
-                           <p className="text-xs font-bold text-gray-400 uppercase">Founders</p>
+                           <p className="text-xs font-bold text-gray-400 uppercase">{t('discover.founders')}</p>
                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{service.founders}</p>
                         </div>
                      </div>
@@ -130,7 +143,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                            <Globe size={18} />
                         </div>
                         <div>
-                           <p className="text-xs font-bold text-gray-400 uppercase">Users</p>
+                           <p className="text-xs font-bold text-gray-400 uppercase">{t('discover.users')}</p>
                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{service.globalUserCount}</p>
                         </div>
                      </div>
@@ -141,7 +154,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                            <TrendingUp size={18} />
                         </div>
                         <div>
-                           <p className="text-xs font-bold text-gray-400 uppercase">Valuation</p>
+                           <p className="text-xs font-bold text-gray-400 uppercase">{t('discover.valuation')}</p>
                            <p className="font-semibold text-gray-900 dark:text-white text-sm">{service.netWorth}</p>
                         </div>
                      </div>
@@ -151,7 +164,7 @@ export default function SubscriptionProfileModal({ isOpen, onClose, service, the
                {service.milestones && service.milestones.length > 0 && (
                   <div className="border-t border-gray-100 dark:border-gray-800 pt-6">
                      <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 flex items-center justify-center gap-2">
-                        <History size={16} /> Key Milestones
+                        <History size={16} /> {t('discover.milestones')}
                      </h3>
                      <div className="space-y-4 relative pl-2 lg:pl-0 lg:flex lg:flex-col lg:items-center">
                         {/* Simplified list for centered layout */}

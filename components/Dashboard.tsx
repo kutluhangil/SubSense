@@ -288,7 +288,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                </div>
             ))}
             {notifications.length === 0 && (
-               <div className="p-8 text-center text-muted text-xs">No notifications</div>
+               <div className="p-8 text-center text-muted text-xs">{t('dashboard.no_notifications')}</div>
             )}
          </div>
       </div>

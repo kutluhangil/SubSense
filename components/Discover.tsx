@@ -4,6 +4,7 @@ import SubscriptionProfileModal from './SubscriptionProfileModal';
 import { ArrowRight } from 'lucide-react';
 import { getBrandLogo } from '../utils/logoUtils';
 import { LogoRenderer } from './LogoRenderer';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // --- DATA: BENTO GRID LAYOUT ---
 const EXPLORE_CARDS = [
@@ -132,6 +133,7 @@ const CardContainer: React.FC<CardContainerProps> = ({
 }
 
 export default function Discover() {
+  const { t } = useLanguage();
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
 
   const handleCardClick = (id: string) => setSelectedServiceId(id);
@@ -164,8 +166,8 @@ export default function Discover() {
     <div className="animate-in fade-in duration-500 pb-20">
       <header className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Explore Subscriptions</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Discover new services tailored to your digital life.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('discover.title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('discover.subtitle')}</p>
         </div>
         <button className="md:hidden p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 shadow-sm">
           <span className="material-icons-outlined">menu</span>
