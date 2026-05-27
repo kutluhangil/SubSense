@@ -126,7 +126,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
         onClose();
       } catch (err: any) {
         console.error("Update failed:", err);
-        setError(err.message || "Failed to update subscription. Please try again.");
+        setError(err.message || t('sub.error.update'));
       } finally {
         setLoading(false);
       }
@@ -134,7 +134,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
   };
 
   const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this subscription? This action cannot be undone.")) {
+    if (window.confirm(t('sub.delete_confirm'))) {
       debugLog('REMOVE_ACTION', `Confirmed delete from Edit Modal for ID: ${subscription.id}`);
       setLoading(true);
       setError(null);
@@ -144,7 +144,7 @@ export default function SubscriptionModal({ isOpen, onClose, subscription, onSav
         onClose();
       } catch (err: any) {
         console.error("Delete failed:", err);
-        setError(err.message || "Failed to delete subscription.");
+        setError(err.message || t('sub.error.delete'));
         setLoading(false);
       }
     }

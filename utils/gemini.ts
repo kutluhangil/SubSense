@@ -139,9 +139,10 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
   const apiKey = getApiKey();
   if (!apiKey) {
     return [{
+      type: "general",
       title: "AI Disabled",
       description: "Please set VITE_GEMINI_API_KEY in your Vercel/server environment to enable AI Insights.",
-      impact: "neutral"
+      estimatedSavings: ""
     }];
   }
 

@@ -17,7 +17,7 @@ interface AlertItem {
 }
 
 const BudgetAlert: React.FC<BudgetAlertProps> = ({ categoryBreakdown, budgetLimits, onEditBudgets }) => {
-    const { formatPrice } = useLanguage();
+    const { formatPrice, t } = useLanguage();
 
     // Find categories that exceed 80% of their budget
     const alerts: AlertItem[] = (Object.entries(budgetLimits) as [string, number][])
@@ -36,13 +36,13 @@ const BudgetAlert: React.FC<BudgetAlertProps> = ({ categoryBreakdown, budgetLimi
             <div className="px-5 py-3 border-b border-subtle flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10">
                 <div className="flex items-center gap-2">
                     <AlertTriangle size={16} className="text-amber-500" />
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Budget Alerts</h3>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">{t('budget.title')}</h3>
                 </div>
                 <button
                     onClick={onEditBudgets}
                     className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline"
                 >
-                    Edit Limits
+                    {t('budget.edit_limits')}
                 </button>
             </div>
             <div className="p-4 space-y-3">
@@ -63,7 +63,7 @@ const BudgetAlert: React.FC<BudgetAlertProps> = ({ categoryBreakdown, budgetLimi
                                 <span className="text-xs font-medium text-primary">{category}</span>
                                 <span className={`text-[10px] font-bold ${textColor}`}>
                                     {formatPrice(spent)} / {formatPrice(limit)}
-                                    {isOver && ' — Over budget!'}
+                                    {isOver && ` — ${t('budget.over')}`}
                                 </span>
                             </div>
                             <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">

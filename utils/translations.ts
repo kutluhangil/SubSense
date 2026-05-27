@@ -266,10 +266,93 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Add Subscription
     "add.title": "Add Subscription",
+    "add.custom_title": "Add Custom Subscription",
+    "add.loading": "Adding...",
     "add.service_name": "Service Name",
     "add.first_payment": "First Payment",
     "add.configure": "Configure your subscription details",
     "add.success": "Subscription added successfully.",
+    "add.error.name_required": "Service name is required.",
+    "add.error.price_invalid": "Price must be greater than 0.",
+
+    // Auth errors
+    "auth.signup_title": "Create your account",
+    "auth.forgot_title": "Reset your password",
+    "auth.forgot_desc": "Enter your email address and we'll send you a reset link.",
+    "auth.remember_me": "Remember me",
+    "auth.logging_in": "Logging in...",
+    "auth.sending": "Sending...",
+    "auth.send_reset_link": "Send reset link",
+    "auth.creating": "Creating Account...",
+    "auth.no_account": "Don't have an account?",
+    "auth.has_account": "Already have an account?",
+    "auth.passwords_no_match": "Passwords do not match",
+    "auth.confirm_label": "Confirm",
+    "auth.currency_label": "Currency",
+    "auth.and": "and",
+    "auth.new_password_label": "New Password",
+    "auth.reset_subtitle": "Your new password must be different to previously used passwords.",
+    "auth.resetting": "Resetting password...",
+    "auth.reset_submit": "Reset password",
+    "auth.error.invalid_code": "Invalid or missing reset code. Please try requesting a new password reset link.",
+    "auth.error.reset_failed": "Failed to reset password. The link may have expired.",
+    "auth.error.expired_link": "This link has expired. Please request a new one.",
+    "auth.error.invalid_link": "Invalid reset link. Please try again.",
+    "auth.error.name_required": "Please enter your full name.",
+    "auth.error.password_short": "Password must be at least 6 characters.",
+    "auth.error.password_mismatch": "Passwords do not match.",
+    "auth.error.generic": "An error occurred. Please try again.",
+    "auth.error.invalid_credentials": "Invalid email or password.",
+    "auth.error.email_exists": "Account already exists with this email.",
+    "auth.error.too_many": "Too many attempts. Please try again later.",
+    "auth.error.network": "Network error. Please check your connection.",
+
+    // Subscription Modal
+    "sub.delete_confirm": "Are you sure you want to delete this subscription? This action cannot be undone.",
+    "sub.error.update": "Failed to update subscription. Please try again.",
+    "sub.error.delete": "Failed to delete subscription.",
+
+    // Budget Alerts
+    "budget.title": "Budget Alerts",
+    "budget.edit_limits": "Edit Limits",
+    "budget.over": "Over budget!",
+
+    // Calendar Modal
+    "calendar.title": "Subscription Calendar",
+    "calendar.subtitle": "Overview of your billing cycle",
+    "calendar.add_to_calendar": "Add to Calendar",
+    "calendar.showing_payments": "Showing active recurring payments for this month.",
+    "calendar.est_total": "Est. Total:",
+
+    // Currency Selector
+    "currency.title": "Select Currency",
+    "currency.search": "Search currency (e.g. USD, Euro)",
+
+    // Error Boundary
+    "error.title": "Something went wrong",
+    "error.desc": "We encountered an unexpected error. The application has been paused to prevent data loss.",
+    "error.reload": "Reload Application",
+
+    // Verify Email Page
+    "verify.title": "Verify your email",
+    "verify.sent_to": "We sent a verification link to",
+    "verify.step1": "Check your email inbox (and spam folder)",
+    "verify.step2": "Click the verification link in the email",
+    "verify.step3": "Come back here and log in",
+    "verify.resend_success": "New verification email sent! Check your inbox.",
+    "verify.max_resend": "Maximum resend attempts reached",
+    "verify.resend_in": "Resend in {s}s",
+    "verify.resend": "Resend verification email",
+    "verify.verified_login": "I've verified — Log in",
+    "verify.security_note": "For your security, you must verify your email address before accessing your account. This helps us protect your data.",
+    "verify.resend_error": "Failed to resend email. Please try again later.",
+    "verify.too_many_resend": "Too many requests. Please wait a bit.",
+
+    // SubscriptionSearchPanel
+    "search.find_track": "Find and track your recurring expenses.",
+    "search.create_custom_sub": "Create Custom Subscription",
+    "search.cant_find": "Can't find it? Add custom",
+    "search.sub_added": "Subscription added to Dashboard.",
     "search.title": "Discover Services",
     "search.placeholder": "Search for a subscription service...",
     "search.add_to_dash": "Add to Dashboard",
@@ -579,6 +662,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "app.offline": "You are offline. Showing cached data.",
 
     // Beta Modal
+    "beta.tooltip_1": "This is a Beta.",
+    "beta.tooltip_2": "Yes, things might break.",
+    "beta.tooltip_3": "If you want perfection, come back later.",
+    "beta.tooltip_4": "If you want the future — welcome aboard. 🚀",
+    "beta.nudge_title": "Got feedback?",
+    "beta.nudge_desc": "Beta is the place for it.",
     "beta.title": "What's unstable?",
     "beta.subtitle_1": "You're using an early version of SubSense.",
     "beta.subtitle_2": "Some things are solid. Some are evolving.",
@@ -875,10 +964,93 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
 
     // Add Subscription
     "add.title": "Abonelik Ekle",
+    "add.custom_title": "Özel Abonelik Ekle",
+    "add.loading": "Ekleniyor...",
     "add.service_name": "Servis Adı",
     "add.first_payment": "İlk Ödeme",
     "add.configure": "Abonelik detaylarınızı yapılandırın",
     "add.success": "Abonelik başarıyla eklendi.",
+    "add.error.name_required": "Servis adı gerekli.",
+    "add.error.price_invalid": "Fiyat 0'dan büyük olmalıdır.",
+
+    // Auth errors
+    "auth.signup_title": "Hesabınızı oluşturun",
+    "auth.forgot_title": "Şifrenizi sıfırlayın",
+    "auth.forgot_desc": "E-posta adresinizi girin, sıfırlama bağlantısı gönderelim.",
+    "auth.remember_me": "Beni hatırla",
+    "auth.logging_in": "Giriş yapılıyor...",
+    "auth.sending": "Gönderiliyor...",
+    "auth.send_reset_link": "Sıfırlama bağlantısı gönder",
+    "auth.creating": "Hesap oluşturuluyor...",
+    "auth.no_account": "Hesabınız yok mu?",
+    "auth.has_account": "Zaten hesabınız var mı?",
+    "auth.passwords_no_match": "Şifreler eşleşmiyor",
+    "auth.confirm_label": "Onayla",
+    "auth.currency_label": "Para Birimi",
+    "auth.and": "ve",
+    "auth.new_password_label": "Yeni Şifre",
+    "auth.reset_subtitle": "Yeni şifreniz daha önce kullanılan şifrelerden farklı olmalıdır.",
+    "auth.resetting": "Şifre sıfırlanıyor...",
+    "auth.reset_submit": "Şifreyi Sıfırla",
+    "auth.error.invalid_code": "Geçersiz veya eksik sıfırlama kodu. Lütfen yeni bir şifre sıfırlama bağlantısı isteyin.",
+    "auth.error.reset_failed": "Şifre sıfırlanamadı. Bağlantının süresi dolmuş olabilir.",
+    "auth.error.expired_link": "Bu bağlantının süresi dolmuş. Lütfen yeni bir tane isteyin.",
+    "auth.error.invalid_link": "Geçersiz sıfırlama bağlantısı. Lütfen tekrar deneyin.",
+    "auth.error.name_required": "Lütfen adınızı ve soyadınızı girin.",
+    "auth.error.password_short": "Şifre en az 6 karakter olmalıdır.",
+    "auth.error.password_mismatch": "Şifreler eşleşmiyor.",
+    "auth.error.generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "auth.error.invalid_credentials": "Geçersiz e-posta veya şifre.",
+    "auth.error.email_exists": "Bu e-posta ile zaten bir hesap mevcut.",
+    "auth.error.too_many": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
+    "auth.error.network": "Ağ hatası. Lütfen bağlantınızı kontrol edin.",
+
+    // Subscription Modal
+    "sub.delete_confirm": "Bu aboneliği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "sub.error.update": "Abonelik güncellenemedi. Lütfen tekrar deneyin.",
+    "sub.error.delete": "Abonelik silinemedi.",
+
+    // Budget Alerts
+    "budget.title": "Bütçe Uyarıları",
+    "budget.edit_limits": "Limitleri Düzenle",
+    "budget.over": "Bütçe aşıldı!",
+
+    // Calendar Modal
+    "calendar.title": "Abonelik Takvimi",
+    "calendar.subtitle": "Fatura döngünüze genel bakış",
+    "calendar.add_to_calendar": "Takvime Ekle",
+    "calendar.showing_payments": "Bu ay için aktif yinelenen ödemeler gösteriliyor.",
+    "calendar.est_total": "Tahmini Toplam:",
+
+    // Currency Selector
+    "currency.title": "Para Birimi Seç",
+    "currency.search": "Para birimi ara (örn. USD, Euro)",
+
+    // Error Boundary
+    "error.title": "Bir şeyler yanlış gitti",
+    "error.desc": "Beklenmedik bir hatayla karşılaştık. Veri kaybını önlemek için uygulama duraklatıldı.",
+    "error.reload": "Uygulamayı Yenile",
+
+    // Verify Email Page
+    "verify.title": "E-postanızı doğrulayın",
+    "verify.sent_to": "Doğrulama bağlantısı şu adrese gönderildi:",
+    "verify.step1": "E-posta gelen kutunuzu (ve spam klasörünü) kontrol edin",
+    "verify.step2": "E-postadaki doğrulama bağlantısına tıklayın",
+    "verify.step3": "Buraya geri gelin ve giriş yapın",
+    "verify.resend_success": "Yeni doğrulama e-postası gönderildi! Gelen kutunuzu kontrol edin.",
+    "verify.max_resend": "Maksimum yeniden gönderim sınırına ulaşıldı",
+    "verify.resend_in": "{s}s içinde yeniden gönder",
+    "verify.resend": "Doğrulama e-postasını yeniden gönder",
+    "verify.verified_login": "Doğruladım — Giriş Yap",
+    "verify.security_note": "Güvenliğiniz için, hesabınıza erişmeden önce e-posta adresinizi doğrulamanız gerekmektedir. Bu, verilerinizi korumamıza yardımcı olur.",
+    "verify.resend_error": "E-posta yeniden gönderilemedi. Lütfen daha sonra tekrar deneyin.",
+    "verify.too_many_resend": "Çok fazla istek. Lütfen biraz bekleyin.",
+
+    // SubscriptionSearchPanel
+    "search.find_track": "Yinelenen harcamalarınızı bulun ve takip edin.",
+    "search.create_custom_sub": "Özel Abonelik Oluştur",
+    "search.cant_find": "Bulamıyor musunuz? Özel ekleyin",
+    "search.sub_added": "Abonelik Panele eklendi.",
     "search.title": "Servisleri Keşfet",
     "search.placeholder": "Bir abonelik servisi arayın...",
     "search.add_to_dash": "Panele Ekle",
@@ -1188,6 +1360,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "app.offline": "Çevrimdışısınız. Önbelleğe alınan veriler gösteriliyor.",
 
     // Beta Modal
+    "beta.tooltip_1": "Bu bir Beta sürümü.",
+    "beta.tooltip_2": "Evet, şeyler bozulabilir.",
+    "beta.tooltip_3": "Mükemmellik istiyorsanız, daha sonra gelin.",
+    "beta.tooltip_4": "Geleceği istiyorsanız — hoş geldiniz. 🚀",
+    "beta.nudge_title": "Geri bildiriminiz var mı?",
+    "beta.nudge_desc": "Beta bunun için doğru yer.",
     "beta.title": "Neler kararsız?",
     "beta.subtitle_1": "SubSense'in erken sürümünü kullanıyorsunuz.",
     "beta.subtitle_2": "Bazı şeyler sağlam. Bazıları geliştirilmeye devam ediyor.",

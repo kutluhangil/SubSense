@@ -104,7 +104,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
    };
 
    return (
-      <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden bg-gray-50/50">
+      <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden bg-gray-50/50 dark:bg-gray-900">
 
          {/* 1. Animated Background Layer */}
          <FloatingLogoLayer />
@@ -113,16 +113,16 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
          <div className="relative z-10 w-full max-w-2xl px-4 flex flex-col items-center">
 
             <div className="mb-8 text-center">
-               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight mb-2">
+               <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight mb-2">
                   {t('search.title')}
                </h1>
-               <p className="text-gray-500 text-lg">Find and track your recurring expenses.</p>
+               <p className="text-gray-500 dark:text-gray-400 text-lg">{t('search.find_track')}</p>
             </div>
 
             {/* Search Input Box */}
             <div className="w-full relative group">
                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-               <div className="relative bg-white rounded-2xl shadow-xl border border-gray-100 flex items-center p-2 transition-all group-hover:shadow-2xl group-hover:scale-[1.01]">
+               <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 flex items-center p-2 transition-all group-hover:shadow-2xl group-hover:scale-[1.01]">
                   <div className="pl-4 pr-3 text-gray-400">
                      <Search size={24} />
                   </div>
@@ -132,31 +132,31 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                      value={searchTerm}
                      onChange={(e) => setSearchTerm(e.target.value)}
                      placeholder={t('search.placeholder')}
-                     className="flex-1 h-12 text-lg outline-none text-gray-900 placeholder-gray-400 bg-transparent"
+                     className="flex-1 h-12 text-lg outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-transparent"
                      autoFocus
                   />
-                  <button className="p-3 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors" title={t('search.voice')}>
+                  <button className="p-3 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors" title={t('search.voice')}>
                      <Mic size={20} />
                   </button>
                </div>
 
                {/* Dropdown Suggestions */}
                {filteredServices.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-4 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                  <div className="absolute top-full left-0 right-0 mt-4 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                      <div className="p-2">
                         {filteredServices.map((serviceName, idx) => {
                            const brandKey = serviceName.toLowerCase().replace(/\s+/g, '');
                            const brandColor = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
-                           const logoUrl = getBrandLogo(serviceName); // Check for logo
+                           const logoUrl = getBrandLogo(serviceName);
 
                            return (
                               <div
                                  key={idx}
                                  onClick={() => handleSelect(serviceName)}
-                                 className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors group/item"
+                                 className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-colors group/item"
                               >
                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center p-1 group-hover/item:scale-110 transition-transform overflow-hidden">
+                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-gray-700 shadow-sm border border-gray-100 dark:border-gray-600 flex items-center justify-center p-1 group-hover/item:scale-110 transition-transform overflow-hidden">
                                        <LogoRenderer
                                           logoUrl={logoUrl}
                                           name={serviceName}
@@ -165,7 +165,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                                           fallback={<BrandIcon type={serviceName} className="w-full h-full" noBackground />}
                                        />
                                     </div>
-                                    <span className="font-semibold text-gray-900 text-base">{serviceName}</span>
+                                    <span className="font-semibold text-gray-900 dark:text-white text-base">{serviceName}</span>
                                  </div>
                                  <div className="opacity-0 group-hover/item:opacity-100 transition-opacity">
                                     <Plus size={20} style={{ color: brandColor }} />
@@ -174,12 +174,12 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                            );
                         })}
                      </div>
-                     <div className="bg-gray-50 px-4 py-3 text-center border-t border-gray-100">
+                     <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 text-center border-t border-gray-100 dark:border-gray-600">
                         <button
                            onClick={handleCustomAdd}
-                           className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 w-full"
+                           className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center justify-center gap-1 w-full"
                         >
-                           <PenTool size={12} /> Create Custom Subscription
+                           <PenTool size={12} /> {t('search.create_custom_sub')}
                         </button>
                      </div>
                   </div>
@@ -194,7 +194,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                         <button
                            key={tag}
                            onClick={() => handleSelect(tag)}
-                           className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+                           className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 transition-colors shadow-sm"
                         >
                            {tag}
                         </button>
@@ -202,9 +202,9 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
                   </div>
                   <button
                      onClick={handleCustomAdd}
-                     className="text-xs font-medium text-gray-400 hover:text-gray-900 transition-colors underline"
+                     className="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors underline"
                   >
-                     Can't find it? Add custom
+                     {t('search.cant_find')}
                   </button>
                </div>
             )}
@@ -232,7 +232,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
             <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                <Plus size={12} className="text-white" />
             </div>
-            <span className="font-medium text-sm">Subscription added to Dashboard.</span>
+            <span className="font-medium text-sm">{t('search.sub_added')}</span>
          </div>
 
       </div>

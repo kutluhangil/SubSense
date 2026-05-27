@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BetaModal from './BetaModal';
 import { useAuth } from '../contexts/AuthContext';
 import { updateAchievements, getUserDocument } from '../utils/firestore';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const BetaBadge = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -179,6 +180,7 @@ const BetaBadge = () => {
 };
 
 function BetaTooltip({ isOpen, anchorRect }: { isOpen: boolean; anchorRect: DOMRect | null }) {
+    const { t } = useLanguage();
     if (!isOpen || !anchorRect) return null;
     const top = anchorRect.bottom + 10;
     const left = anchorRect.left + (anchorRect.width / 2);
@@ -196,10 +198,10 @@ function BetaTooltip({ isOpen, anchorRect }: { isOpen: boolean; anchorRect: DOMR
                 >
                     <div className="bg-gray-900/90 backdrop-blur-md border border-gray-700 p-4 rounded-xl shadow-2xl text-center">
                         <p className="text-sm font-medium leading-relaxed bg-gradient-to-r from-orange-200 via-pink-200 to-white bg-clip-text text-transparent">
-                            This is a Beta.<br />
-                            Yes, things might break.<br />
-                            If you want perfection, come back later.<br />
-                            If you want the future — welcome aboard. 🚀
+                            {t('beta.tooltip_1')}<br />
+                            {t('beta.tooltip_2')}<br />
+                            {t('beta.tooltip_3')}<br />
+                            {t('beta.tooltip_4')}
                         </p>
                     </div>
                 </motion.div>
@@ -210,6 +212,7 @@ function BetaTooltip({ isOpen, anchorRect }: { isOpen: boolean; anchorRect: DOMR
 }
 
 function BetaNudge({ isOpen, anchorRect }: { isOpen: boolean; anchorRect: DOMRect | null }) {
+    const { t } = useLanguage();
     if (!isOpen || !anchorRect) return null;
     const top = anchorRect.bottom + 12; // Slightly more spacing
     // Nudge opens to the right of the badge slightly, or centered. Let's aligns left to badge left
@@ -229,9 +232,9 @@ function BetaNudge({ isOpen, anchorRect }: { isOpen: boolean; anchorRect: DOMRec
                     <div className="bg-white dark:bg-gray-800 border-l-4 border-orange-500 rounded-r-lg shadow-xl p-3 flex items-start gap-2">
                         <div className="text-xl">👀</div>
                         <div>
-                            <p className="text-xs font-bold text-gray-900 dark:text-white">Got feedback?</p>
+                            <p className="text-xs font-bold text-gray-900 dark:text-white">{t('beta.nudge_title')}</p>
                             <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
-                                Beta is the place for it.
+                                {t('beta.nudge_desc')}
                             </p>
                         </div>
                     </div>

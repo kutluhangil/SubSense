@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Check, X } from 'lucide-react';
 import { CURRENCY_DATA } from '../utils/currency';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CurrencySelectorProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CurrencySelectorProps {
 }
 
 export default function CurrencySelector({ isOpen, onClose, selectedCurrency, onSelect }: CurrencySelectorProps) {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const currencies = useMemo(() => {
@@ -36,7 +38,7 @@ export default function CurrencySelector({ isOpen, onClose, selectedCurrency, on
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Select Currency</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('currency.title')}</h3>
           <button
             onClick={onClose}
             className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -52,7 +54,7 @@ export default function CurrencySelector({ isOpen, onClose, selectedCurrency, on
             <input
               type="text"
               autoComplete="off"
-              placeholder="Search currency (e.g. USD, Euro)"
+              placeholder={t('currency.search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all"

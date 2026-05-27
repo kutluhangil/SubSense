@@ -68,8 +68,8 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
     };
 
     const handleCustomSave = async () => {
-        if (!name.trim()) { setError("Service name is required."); setShake(true); setTimeout(() => setShake(false), 500); return; }
-        if (!price || parseFloat(price) <= 0) { setError("Price must be greater than 0."); setShake(true); setTimeout(() => setShake(false), 500); return; }
+        if (!name.trim()) { setError(t('add.error.name_required')); setShake(true); setTimeout(() => setShake(false), 500); return; }
+        if (!price || parseFloat(price) <= 0) { setError(t('add.error.price_invalid')); setShake(true); setTimeout(() => setShake(false), 500); return; }
 
         setLoading(true);
         try {
@@ -149,7 +149,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                             >
                                 {/* Custom Form Header */}
                                 <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 sticky top-0 z-10">
-                                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Add Custom Subscription</h2>
+                                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('add.custom_title')}</h2>
                                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-full transition-colors">
                                         <X size={20} />
                                     </button>
@@ -227,7 +227,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                         disabled={loading}
                                         className="w-full py-4 rounded-xl text-white font-bold bg-gray-900 dark:bg-white dark:text-gray-900 hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
                                     >
-                                        {loading ? 'Adding...' : 'Add Custom Subscription'}
+                                        {loading ? t('add.loading') : t('add.custom_title')}
                                     </button>
 
                                 </div>
