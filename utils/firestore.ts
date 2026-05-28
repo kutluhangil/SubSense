@@ -20,7 +20,6 @@ import { db, functions } from '../firebase/firebase';
 import { Subscription } from '../components/SubscriptionModal';
 import { validateSubscription } from './validateSubscription';
 import { trackEvent } from './analytics';
-import { api } from './api';
 
 // --- Types ---
 
@@ -264,17 +263,28 @@ export const updateAchievements = async (uid: string, achievements: string[]) =>
 
 export const getUserSubscriptions = async (uid: string): Promise<Subscription[]> => {
   try {
-    // Standardized API call
-    const subs = await api.get<Subscription[]>('/subscriptions');
+    const snap = await getDocs(collection(db, 'users', uid, 'subscriptions'));
+    const subs: Subscription[] = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      const normalized = {
+        ...data,
+        status: data.status || 'Active',
+        nextDate: data.nextDate || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      };
+      if (validateSubscription(normalized as Partial<Subscription>)) {
+        subs.push({ id: d.id, ...normalized } as unknown as Subscription);
+      }
+    });
     return subs;
   } catch (error: any) {
-    if (error.code === 'permission-denied' || error.code === 'unavailable' || error.message.includes('auth')) {
-      trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code || 'auth_error' });
+    if (error.code === 'permission-denied' || error.code === 'unavailable') {
+      trackEvent('system_fallback', { type: 'subs_fetch', reason: error.code });
       const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
       const localSubs = getLocalData<Subscription[]>(localKey) || [];
       return localSubs.filter(validateSubscription);
     }
-    console.error("Error fetching subscriptions via API:", error);
+    console.error("Error fetching subscriptions:", error);
     return [];
   }
 };
@@ -286,19 +296,25 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
   }
 
   try {
-    // API Call
-    const createdSub = await api.post<Subscription>('/subscriptions', subscription);
+    const colRef = collection(db, 'users', uid, 'subscriptions');
+    const docRef = await addDoc(colRef, {
+      ...subscription,
+      createdAt: serverTimestamp()
+    });
     updateFeatureUsage(uid, 'subscription_added');
-    return createdSub;
+    return { id: docRef.id, ...subscription } as Subscription;
   } catch (error: any) {
     console.error("Error adding subscription:", error);
-    // If API returns 409 duplicate, propagate it clearly
-    if (error.code === 'DUPLICATE_SUBSCRIPTION') {
-      throw {
-        status: 409,
-        message: error.message || "This subscription is already in your Dashboard",
-        code: "DUPLICATE_SUBSCRIPTION"
-      };
+    if (error.code === 'permission-denied') {
+      const localKey = `${FALLBACK_KEY_PREFIX}subs_${uid}`;
+      const current = getLocalData<Subscription[]>(localKey) || [];
+      const name = (subscription as any).name || '';
+      if (current.some(s => s.name?.toLowerCase() === name.toLowerCase())) {
+        throw { status: 409, message: "This subscription is already in your Dashboard", code: "DUPLICATE_SUBSCRIPTION" };
+      }
+      const newSub = { id: Date.now().toString(), ...subscription } as Subscription;
+      setLocalData(localKey, [...current, newSub]);
+      return newSub;
     }
     throw error;
   }
@@ -311,8 +327,8 @@ export const updateSubscription = async (uid: string, subId: number | string, da
   const id = String(subId);
 
   try {
-    // API Call
-    await api.put(`/subscriptions/${id}`, data);
+    const subRef = doc(db, 'users', uid, 'subscriptions', id);
+    await updateDoc(subRef, { ...data, updatedAt: serverTimestamp() });
   } catch (error: any) {
     console.error("Error updating subscription:", error);
     throw error;
@@ -323,8 +339,8 @@ export const deleteSubscription = async (uid: string, subId: number | string) =>
   const id = String(subId);
 
   try {
-    // API Call
-    await api.delete(`/subscriptions/${id}`);
+    const subRef = doc(db, 'users', uid, 'subscriptions', id);
+    await deleteDoc(subRef);
   } catch (error: any) {
     console.error("Error deleting subscription:", error);
     throw error;
