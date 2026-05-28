@@ -251,7 +251,7 @@ export default function HelpCenter() {
                               <Search size={28} className="text-gray-400" />
                            </div>
                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('help.no_results')}</h3>
-                           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Try adjusting your search terms.</p>
+                           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t('help.search_no_results_tip')}</p>
                         </div>
                      )}
                   </div>
@@ -267,7 +267,7 @@ export default function HelpCenter() {
                               <span className="text-sm font-medium">{t('help.mvp_notice')}</span>
                            </div>
                            <h3 className="text-xl font-bold mb-2">{t('help.report')}</h3>
-                           <p className="text-gray-400 text-sm max-w-sm">Found a bug? Let us know.</p>
+                           <p className="text-gray-400 text-sm max-w-sm">{t('help.bug_notice')}</p>
                         </div>
                         <div className="flex gap-3">
                            <button
@@ -275,7 +275,7 @@ export default function HelpCenter() {
                               className="flex items-center justify-center space-x-2 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 w-full sm:w-auto border border-white/20"
                            >
                               <MessageSquare size={18} />
-                              <span>Send Feedback</span>
+                              <span>{t('help.send_feedback_btn')}</span>
                            </button>
                            <button
                               onClick={() => setIsContactModalOpen(true)}

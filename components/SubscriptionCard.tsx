@@ -22,10 +22,24 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
     // Detect region from language
     const detectedRegion: 'TR' | 'US' = currentLanguage === 'tr' ? 'TR' : 'US';
 
-    // Get available tiers for detected region
+    // Get available tiers for detected region; fall back to any available region so
+    // Turkish-only services still show plans for EN users (and vice versa).
     const regionPricing = useMemo(() => {
         if (!service.regions) return null;
-        return service.regions[detectedRegion] || service.regions['US'] || null;
+        return (
+            service.regions[detectedRegion] ||
+            service.regions['US'] ||
+            service.regions['TR'] ||
+            null
+        );
+    }, [service, detectedRegion]);
+
+    // Actual region used (may differ from detectedRegion if fallback kicked in)
+    const activeRegion: 'TR' | 'US' = useMemo(() => {
+        if (!service.regions) return detectedRegion;
+        if (service.regions[detectedRegion]) return detectedRegion;
+        if (service.regions['US']) return 'US';
+        return 'TR';
     }, [service, detectedRegion]);
 
     const tiers = regionPricing?.tiers || [];
@@ -85,12 +99,12 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
 
     const handleSave = async () => {
         if (!price || parseFloat(price) <= 0) {
-            setError(currentLanguage === 'tr' ? "Lütfen geçerli bir fiyat girin." : "Please enter a valid price.");
+            setError(t('card.error.invalid_price'));
             return;
         }
 
         if (existingSubscriptions.some(sub => sub.name.toLowerCase() === service.name.toLowerCase())) {
-            setError(currentLanguage === 'tr' ? "Bu abonelik zaten mevcut." : "You already have this subscription.");
+            setError(t('card.error.duplicate'));
             return;
         }
 
@@ -123,7 +137,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
             onClose();
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Failed to add subscription.");
+            setError(err.message || t('card.error.failed'));
         } finally {
             setLoading(false);
         }
@@ -199,9 +213,9 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                         {tiers.length > 0 && (
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
-                                    {currentLanguage === 'tr' ? 'Plan Seçin' : 'Select Plan'}
+                                    {t('card.select_plan')}
                                     <span className="ml-2 text-[9px] font-medium text-gray-300 dark:text-gray-500 normal-case tracking-normal">
-                                        ({detectedRegion === 'TR' ? '🇹🇷 Türkiye' : '🇺🇸 United States'})
+                                        ({activeRegion === 'TR' ? '🇹🇷 Türkiye' : '🇺🇸 United States'})
                                     </span>
                                 </label>
                                 <div className="grid gap-2" style={{ gridTemplateColumns: tiers.length <= 2 ? `repeat(${tiers.length}, 1fr)` : `repeat(${Math.min(tiers.length, 3)}, 1fr)` }}>
@@ -231,7 +245,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                                     {currencySymbol}{tier.price.toFixed(2)}
                                                 </div>
                                                 <div className="text-[9px] text-gray-400 mt-0.5">
-                                                    /{tier.cycle === 'Monthly' ? (currentLanguage === 'tr' ? 'ay' : 'mo') : (currentLanguage === 'tr' ? 'yıl' : 'yr')}
+                                                    /{tier.cycle === 'Monthly' ? t('card.cycle.mo') : t('card.cycle.yr')}
                                                 </div>
                                                 {isSelected && (
                                                     <motion.div
@@ -253,7 +267,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                         <div className="grid grid-cols-5 gap-3">
                             <div className="col-span-3">
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
-                                    {currentLanguage === 'tr' ? 'Fiyat' : 'Price'}
+                                    {t('card.price')}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -281,7 +295,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                             </div>
                             <div className="col-span-2">
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
-                                    {currentLanguage === 'tr' ? 'Para Birimi' : 'Currency'}
+                                    {t('card.currency')}
                                 </label>
                                 <div className="relative">
                                     <select
@@ -298,7 +312,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                         {/* Cycle Selection */}
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
-                                {currentLanguage === 'tr' ? 'Ödeme Döngüsü' : 'Billing Cycle'}
+                                {t('card.billing_cycle')}
                             </label>
                             <div className="grid grid-cols-2 gap-2 p-1 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                                 {(['Monthly', 'Yearly'] as const).map(c => (
@@ -310,7 +324,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                             : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                                             }`}
                                     >
-                                        {currentLanguage === 'tr' ? (c === 'Monthly' ? 'Aylık' : 'Yıllık') : c}
+                                        {c === 'Monthly' ? t('card.cycle.monthly') : t('card.cycle.yearly')}
                                     </button>
                                 ))}
                             </div>
@@ -319,7 +333,7 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                         {/* Date Picker */}
                         <div>
                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 ml-1">
-                                {currentLanguage === 'tr' ? 'İlk Ödeme' : 'First Payment'}
+                                {t('card.first_payment')}
                             </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -355,10 +369,10 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
                                 <span className="relative z-10 flex items-center gap-2">
                                     {loading ? (
-                                        <>{currentLanguage === 'tr' ? 'Ekleniyor...' : 'Adding...'}</>
+                                        <>{t('card.adding')}</>
                                     ) : (
                                         <>
-                                            {currentLanguage === 'tr' ? "Panele Ekle" : "Add to Dashboard"}
+                                            {t('card.add_to_dashboard')}
                                             <ChevronRight size={18} className="opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
                                         </>
                                     )}

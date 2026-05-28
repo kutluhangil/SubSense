@@ -123,6 +123,16 @@ export const BRAND_COLORS: Record<string, string> = {
   "duolingo": "#58CC02",
   "masterclass": "#181818",
 
+  // Turkish & New Additions
+  "exxen": "#FFD500",
+  "blutv": "#FF5C00",
+  "tabii": "#E30613",
+  "claude": "#D97757",
+  "claudepro": "#D97757",
+  "crunchyroll": "#F47521",
+  "nintendo": "#E60012",
+  "nintendoswitchonline": "#E60012",
+
   "default": "#4F46E5" // Indigo-600
 };
 
@@ -244,10 +254,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 99, cycle: "Monthly" },
-          { name: "Duo", nameLocalized: "Duo", price: 135, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 165, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 55, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 64.99, cycle: "Monthly" },
+          { name: "Duo", nameLocalized: "Duo", price: 84.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 109.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 34.99, cycle: "Monthly" }
         ]
       }
     }
@@ -364,8 +374,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Standard", nameLocalized: "Standart", price: 249.90, cycle: "Monthly" },
-          { name: "Premium", nameLocalized: "Premium", price: 449.90, cycle: "Monthly" }
+          { name: "Standard", nameLocalized: "Standart", price: 279.90, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Premium", price: 549.90, cycle: "Monthly" }
         ]
       }
     }
@@ -443,7 +453,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Apple Inc.",
     ceo: "Tim Cook",
     headquarters: "Cupertino, California",
-    price: "9.99",
+    price: "12.99",
     currency: "USD",
     type: "apple",
     netWorth: "$3 Trillion (Apple)",
@@ -455,19 +465,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2020: 'Ted Lasso' premieres",
       "2022: 'CODA' wins Best Picture Oscar",
       "2023: Launched MLS Season Pass",
-      "2023: Released 'Killers of the Flower Moon'"
+      "2025: Price increased to $12.99/mo"
     ],
     regions: {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Apple TV+", price: 9.99, cycle: "Monthly" }
+          { name: "Apple TV+", price: 12.99, cycle: "Monthly" },
+          { name: "Apple TV+ (Annual)", price: 129.00, cycle: "Yearly" }
         ]
       },
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Apple TV+", nameLocalized: "Apple TV+", price: 64.99, cycle: "Monthly" }
+          { name: "Apple TV+", nameLocalized: "Apple TV+", price: 89.99, cycle: "Monthly" }
         ]
       }
     }
@@ -508,9 +519,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 54.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 84.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 29.99, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 74.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 109.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 39.99, cycle: "Monthly" }
         ]
       }
     }
@@ -583,14 +594,15 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         tiers: [
           { name: "Photography Plan", price: 9.99, cycle: "Monthly" },
           { name: "Single App", price: 22.99, cycle: "Monthly" },
-          { name: "All Apps", price: 54.99, cycle: "Monthly" }
+          { name: "All Apps", price: 59.99, cycle: "Monthly" }
         ]
       },
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 249.99, cycle: "Monthly" },
-          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 1399.99, cycle: "Monthly" }
+          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 279.99, cycle: "Monthly" },
+          { name: "Single App", nameLocalized: "Tek Uygulama", price: 649.99, cycle: "Monthly" },
+          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 1599.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1298,8 +1310,318 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Monthly", nameLocalized: "Aylık", price: 99, cycle: "Monthly" },
-          { name: "Annual", nameLocalized: "Yıllık", price: 799, cycle: "Yearly" }
+          { name: "Monthly", nameLocalized: "Aylık", price: 39.90, cycle: "Monthly" },
+          { name: "Annual", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+
+  // --- TURKISH STREAMING ---
+  "exxen": {
+    id: "exxen",
+    name: "Exxen",
+    description: "Exxen, Acun Ilıcalı tarafından 2021 yılında kurulan Türkiye'nin popüler dijital yayın platformudur. Özel diziler, futbol maçları (Premier Lig, Avrupa kupaları), eğlence programları ve film içerikleri sunar. Kuruluş günü 33 bin abone ile rekor kırarak hızlı bir başlangıç yaptı.\n\nPlatform 'Survivor', 'O Ses Türkiye' gibi popüler programlarla Türk izleyici kitlesine güçlü bir alternatif olarak konumlandı. Yerli dizi yatırımlarıyla orijinal içerik üretiminde de Netflix Türkiye'ye rakip.",
+    foundedYear: "2021",
+    founders: "Acun Ilıcalı",
+    ceo: "Acun Ilıcalı",
+    headquarters: "İstanbul, Türkiye",
+    price: "99.99",
+    currency: "TRY",
+    type: "exxen",
+    globalUserCount: "2M+ (Türkiye)",
+    website: "https://www.exxen.com/uyelik",
+    milestones: [
+      "2021: Platform lansmanı",
+      "2021: İlk gün 33 bin abone",
+      "2022: Premier Lig yayın hakları",
+      "2023: Orijinal dizilerle büyüme",
+      "2025: 2 milyon aktif abone"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Reklamlı", nameLocalized: "Reklamlı", price: 99.99, cycle: "Monthly" },
+          { name: "Reklamsız", nameLocalized: "Reklamsız", price: 169.99, cycle: "Monthly" },
+          { name: "Spor Paketi", nameLocalized: "Spor Paketi", price: 299.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "blutv": {
+    id: "blutv",
+    name: "BluTV",
+    description: "BluTV, 2016 yılında Doğan Holding tarafından kurulan Türkiye'nin ilk yerli dijital yayın platformudur. Yerli ve yabancı diziler, filmler, belgeseller ve çocuk içerikleri sunan kapsamlı bir kütüphaneye sahiptir.\n\nPlatform 'Masum', 'Yeşilçam', 'Saygı' gibi başarılı orijinal yapımlarla bilinir. 2021 yılında Discovery Inc. tarafından satın alındı ve uluslararası içerik kütüphanesine de erişim sağladı.",
+    foundedYear: "2016",
+    founders: "Doğan Holding",
+    ceo: "Aydın Doğan Yalçındağ",
+    headquarters: "İstanbul, Türkiye",
+    price: "89.90",
+    currency: "TRY",
+    type: "blutv",
+    globalUserCount: "1.5M+ (Türkiye)",
+    website: "https://www.blutv.com/uyelik",
+    milestones: [
+      "2016: Platform lansmanı",
+      "2017: 'Masum' dizisi yayını",
+      "2019: HBO işbirliği",
+      "2021: Discovery tarafından satın alındı",
+      "2024: 1.5 milyon abone"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Aylık", nameLocalized: "Aylık", price: 89.90, cycle: "Monthly" },
+          { name: "3 Aylık", nameLocalized: "3 Aylık", price: 239.90, cycle: "Monthly" },
+          { name: "Yıllık", nameLocalized: "Yıllık", price: 799.90, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+  "tabii": {
+    id: "tabii",
+    name: "Tabii",
+    description: "Tabii, TRT'nin 2023 yılında küresel pazarı hedefleyerek başlattığı dijital yayın platformudur. Türk yapımı diziler, filmler, belgeseller ve haber içeriklerini dünya çapında 27 dilde sunar.\n\nPlatform 'Kuruluş Osman', 'Diriliş Ertuğrul' gibi büyük TRT yapımlarına yer veriyor. Devlet destekli olması nedeniyle uygun fiyatlı bir alternatif sunmaya odaklanır.",
+    foundedYear: "2023",
+    founders: "TRT",
+    ceo: "Mehmet Zahid Sobacı (TRT)",
+    headquarters: "Ankara, Türkiye",
+    price: "0",
+    currency: "TRY",
+    type: "tabii",
+    globalUserCount: "Küresel",
+    website: "https://www.tabii.com",
+    milestones: [
+      "2023: Küresel lansman",
+      "2024: 27 dil desteği",
+      "2025: 100+ orijinal yapım"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Ücretsiz", nameLocalized: "Ücretsiz", price: 0, cycle: "Monthly" }
+        ]
+      },
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Free", price: 0, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "trendyolelite": {
+    id: "trendyolelite",
+    name: "Trendyol Elite",
+    description: "Trendyol Elite, Türkiye'nin en büyük e-ticaret platformu Trendyol'un premium üyelik programıdır. Üyeler için ücretsiz hızlı teslimat, özel kampanyalar, Trendyol GO içeren bir abonelik servisidir.\n\n2010 yılında Demet Mutlu tarafından kurulan Trendyol, Alibaba'nın stratejik ortaklığıyla büyüdü ve Türkiye'nin tek decacorn (10+ milyar $ değerli) şirketi oldu. Elite üyelik, sadık müşterilere ek avantajlar sunar.",
+    foundedYear: "2021 (Elite)",
+    founders: "Demet Mutlu (Trendyol)",
+    ceo: "Çağlayan Çetin (Trendyol)",
+    headquarters: "İstanbul, Türkiye",
+    price: "49.90",
+    currency: "TRY",
+    type: "trendyol",
+    globalUserCount: "30M+ (Trendyol)",
+    website: "https://elite.trendyol.com",
+    milestones: [
+      "2010: Trendyol kuruluşu",
+      "2018: Alibaba yatırımı",
+      "2021: Trendyol Elite lansmanı",
+      "2022: Trendyol GO entegrasyonu",
+      "2024: 30 milyon aktif kullanıcı"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Aylık", nameLocalized: "Aylık", price: 49.90, cycle: "Monthly" },
+          { name: "Yıllık", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+  "hepsiburadapremium": {
+    id: "hepsiburadapremium",
+    name: "Hepsiburada Premium",
+    description: "Hepsiburada Premium, Türkiye'nin önde gelen e-ticaret platformu Hepsiburada'nın sadakat programıdır. Üyeler için ücretsiz kargo, hızlı teslimat ve özel indirimler sunan abonelik tabanlı bir hizmettir.\n\n2000 yılında Hanzade Doğan Boyner tarafından kurulan Hepsiburada, 2021'de NASDAQ'ta halka arz edilen ilk Türk teknoloji şirketi oldu. Premium, sadık müşteri tabanını güçlendirmek için tasarlandı.",
+    foundedYear: "2000 (HB), 2020 (Premium)",
+    founders: "Hanzade Doğan Boyner",
+    ceo: "Nilhan Onal Gökçetekin (Hepsiburada)",
+    headquarters: "İstanbul, Türkiye",
+    price: "59.90",
+    currency: "TRY",
+    type: "hepsiburada",
+    globalUserCount: "12M+ (HB)",
+    website: "https://www.hepsiburada.com/premium",
+    milestones: [
+      "2000: Hepsiburada kuruluşu",
+      "2020: Premium programının lansmanı",
+      "2021: NASDAQ halka arzı",
+      "2023: HepsiJet ile entegrasyon"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Aylık", nameLocalized: "Aylık", price: 59.90, cycle: "Monthly" },
+          { name: "Yıllık", nameLocalized: "Yıllık", price: 479, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+
+  // --- AI ADDITIONS ---
+  "claudepro": {
+    id: "claudepro",
+    name: "Claude Pro",
+    description: "Claude Pro is the premium subscription for Anthropic's Claude AI assistant. Launched in late 2023, it offers higher message limits, priority access during peak times, and access to the latest Claude models including Claude Opus 4 and Sonnet 4.\n\nAnthropic was founded in 2021 by former OpenAI executives Dario and Daniela Amodei, with a focus on AI safety research. Claude is positioned as a thoughtful, principled AI assistant emphasizing helpfulness, harmlessness, and honesty.\n\nPro subscribers benefit from extended context windows (up to 200K tokens), file uploads, and the ability to use Claude's coding capabilities through Projects. It directly competes with ChatGPT Plus while emphasizing its constitutional AI approach.",
+    foundedYear: "2021 (Anthropic)",
+    founders: "Dario Amodei, Daniela Amodei",
+    ceo: "Dario Amodei",
+    headquarters: "San Francisco, California",
+    price: "20.00",
+    currency: "USD",
+    type: "claude",
+    netWorth: "$60 Billion (Anthropic)",
+    globalUserCount: "20M+ (Est)",
+    parentCompany: "Anthropic",
+    website: "https://claude.ai/upgrade",
+    milestones: [
+      "2021: Anthropic founded",
+      "2023: Claude 2 released",
+      "2024: Claude 3 family released",
+      "2024: Claude Pro & Team plans launched",
+      "2025: Claude 4 Opus released"
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Pro", price: 20.00, cycle: "Monthly" },
+          { name: "Max (5x usage)", price: 100.00, cycle: "Monthly" },
+          { name: "Team", price: 30.00, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Pro", nameLocalized: "Pro", price: 699.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "crunchyroll": {
+    id: "crunchyroll",
+    name: "Crunchyroll",
+    description: "Crunchyroll is the world's largest anime streaming service, offering thousands of anime titles, manga, and Asian dramas. Founded in 2006 as a video sharing site, it pivoted to legally licensed anime streaming in 2009.\n\nFollowing Sony's acquisition of Funimation in 2021 and the merger of Funimation and Crunchyroll, Crunchyroll became the dominant anime streaming platform globally, available in over 200 countries. It offers simulcasts of new anime episodes hours after their Japanese broadcast.\n\nThe service has expanded into anime film distribution, manga publishing, and exclusive original anime productions, becoming an essential platform for anime fans worldwide.",
+    foundedYear: "2006",
+    founders: "Kun Gao, James Lin",
+    ceo: "Rahul Purini",
+    headquarters: "San Francisco, California",
+    price: "7.99",
+    currency: "USD",
+    type: "crunchyroll",
+    netWorth: "$1.18 Billion (Acquisition)",
+    globalUserCount: "15M+ Paid",
+    parentCompany: "Sony",
+    website: "https://www.crunchyroll.com/welcome",
+    milestones: [
+      "2006: Founded as video site",
+      "2009: Licensed streaming launch",
+      "2018: Reached 1M subscribers",
+      "2021: Sony acquired for $1.18B",
+      "2022: Merged with Funimation"
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Fan", price: 7.99, cycle: "Monthly" },
+          { name: "Mega Fan", price: 11.99, cycle: "Monthly" },
+          { name: "Ultimate Fan", price: 15.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Fan", nameLocalized: "Fan", price: 169.99, cycle: "Monthly" },
+          { name: "Mega Fan", nameLocalized: "Mega Fan", price: 249.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "nintendoswitchonline": {
+    id: "nintendoswitchonline",
+    name: "Nintendo Switch Online",
+    description: "Nintendo Switch Online is Nintendo's subscription service for the Switch console, launched in 2018. It enables online multiplayer for Nintendo games, provides a library of classic NES, SNES, N64, and Game Boy titles, and offers cloud save functionality.\n\nThe Expansion Pack tier adds Nintendo 64, Sega Genesis, and Game Boy Advance classics, plus DLC for select first-party games like Mario Kart 8 Deluxe and Splatoon. It's positioned as essential for the full Switch online experience.\n\nWith over 38 million subscribers, it's one of the most popular gaming subscriptions globally, capitalizing on Nintendo's massive library of beloved franchises like Mario, Zelda, and Pokémon.",
+    foundedYear: "2018",
+    founders: "Nintendo",
+    ceo: "Shuntaro Furukawa",
+    headquarters: "Kyoto, Japan",
+    price: "3.99",
+    currency: "USD",
+    type: "nintendo",
+    netWorth: "$80 Billion (Nintendo)",
+    globalUserCount: "38M+",
+    parentCompany: "Nintendo",
+    website: "https://www.nintendo.com/switch/online",
+    milestones: [
+      "2018: Service launched",
+      "2019: SNES library added",
+      "2021: Expansion Pack launched",
+      "2022: Game Boy & GBA added",
+      "2024: 38M subscribers"
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 3.99, cycle: "Monthly" },
+          { name: "Family", price: 34.99, cycle: "Yearly" },
+          { name: "Expansion Pack", price: 49.99, cycle: "Yearly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Bireysel", nameLocalized: "Bireysel", price: 109.99, cycle: "Monthly" },
+          { name: "Aile (Yıllık)", nameLocalized: "Aile (Yıllık)", price: 999, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+  "tidal": {
+    id: "tidal",
+    name: "Tidal",
+    description: "Tidal is a music streaming service launched in 2014, acquired by Jay-Z in 2015 and partially acquired by Block (formerly Square) in 2021. It positions itself as the premium audiophile alternative to Spotify and Apple Music.\n\nThe service is known for its HiFi tier offering CD-quality audio, and its HiFi Plus tier providing high-resolution lossless audio, Dolby Atmos, and 360 Reality Audio. Tidal also distinguishes itself by offering higher royalty rates to artists.\n\nWith Jay-Z's involvement, Tidal secured exclusive releases from artists like Beyoncé, Kanye West, and Rihanna, building a reputation as an artist-friendly platform with curated content.",
+    foundedYear: "2014",
+    founders: "Aspiro AB",
+    ceo: "Jesse Dorogusker",
+    headquarters: "New York City, New York",
+    price: "10.99",
+    currency: "USD",
+    type: "tidal",
+    netWorth: "$300M (Block Acquisition)",
+    globalUserCount: "5M+",
+    parentCompany: "Block, Inc.",
+    website: "https://tidal.com/pricing",
+    milestones: [
+      "2014: Launched by Aspiro",
+      "2015: Acquired by Jay-Z",
+      "2021: Block (Square) acquisition",
+      "2024: Removed free tier",
+      "2025: Lossless for all subscribers"
+    ],
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Individual", price: 10.99, cycle: "Monthly" },
+          { name: "Family", price: 16.99, cycle: "Monthly" },
+          { name: "Student", price: 5.49, cycle: "Monthly" }
         ]
       }
     }

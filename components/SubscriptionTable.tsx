@@ -15,7 +15,7 @@ interface SubscriptionTableProps {
 }
 
 const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscriptions = [], onSelectSubscription, onDeleteSubscription, previewCurrency }) => {
-  const { formatPrice, formatDate, currentCurrency } = useLanguage();
+  const { formatPrice, formatDate, currentCurrency, t } = useLanguage();
   const [activeDropdown, setActiveDropdown] = useState<string | number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +39,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
     e.stopPropagation();
     setActiveDropdown(null);
     if (onDeleteSubscription) {
-      if (window.confirm(`Are you sure you want to remove ${sub.name}? This cannot be undone.`)) {
+      if (window.confirm(t('sub.delete_confirm_named').replace('{name}', sub.name))) {
         onDeleteSubscription(sub.id);
       }
     }

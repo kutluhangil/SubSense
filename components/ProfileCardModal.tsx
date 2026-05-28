@@ -56,8 +56,8 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
       ></div>
 
       {/* Card Container */}
-      <div 
-        className={`relative w-full max-w-sm bg-white/80 backdrop-blur-xl rounded-[32px] shadow-2xl overflow-hidden border border-white/50 transition-all duration-500 transform ${isLoaded ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}
+      <div
+        className={`relative w-full max-w-sm bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-[32px] shadow-2xl overflow-hidden border border-white/50 dark:border-gray-700/50 transition-all duration-500 transform ${isLoaded ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-10 opacity-0 scale-95'}`}
       >
         {/* Holographic/Gradient Top Decoration */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 opacity-20"></div>
@@ -65,9 +65,9 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
         <div className="absolute top-0 left-0 p-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-900 bg-white/50 hover:bg-white rounded-full transition-colors z-20 backdrop-blur-md"
+          className="absolute top-4 right-4 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white/50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-700 rounded-full transition-colors z-20 backdrop-blur-md"
         >
           <X size={20} />
         </button>
@@ -93,29 +93,29 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
 
            {/* Name & Identity */}
            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 leading-tight">{user.name}</h2>
-              <p className="text-sm font-medium text-indigo-600">@{user.username}</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{user.name}</h2>
+              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">@{user.username}</p>
            </div>
 
            {/* Bio */}
-           <p className="text-sm text-gray-600 leading-relaxed mb-6 px-4">
+           <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-6 px-4">
               {user.bio || t('profile.no_bio')}
            </p>
 
            {/* Metadata Pills */}
            <div className="flex flex-wrap justify-center gap-2 mb-8">
               {user.location && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 border border-gray-200 text-xs font-medium text-gray-600 shadow-sm">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 text-xs font-medium text-gray-600 dark:text-gray-300 shadow-sm">
                     <MapPin size={12} /> {user.location}
                   </span>
               )}
               {user.joinedDate && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 border border-gray-200 text-xs font-medium text-gray-600 shadow-sm">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 text-xs font-medium text-gray-600 dark:text-gray-300 shadow-sm">
                     <Calendar size={12} /> {formatMessage(t('profile.joined'), user.joinedDate)}
                   </span>
               )}
               {user.website && (
-                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-xs font-medium text-blue-600 shadow-sm hover:bg-blue-100 transition-colors">
+                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs font-medium text-blue-600 dark:text-blue-400 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                     <LinkIcon size={12} /> {t('profile.website')}
                   </a>
               )}
@@ -123,13 +123,13 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
 
            {/* Stats Row */}
            <div className="grid grid-cols-2 gap-4 w-full mb-8">
-              <div className="bg-white/60 p-3 rounded-2xl border border-white shadow-sm backdrop-blur-sm">
-                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">{t('profile.active_subs')}</p>
-                 <p className="text-xl font-bold text-gray-900">{user.totalSubs}</p>
+              <div className="bg-white/60 dark:bg-gray-700/60 p-3 rounded-2xl border border-white dark:border-gray-600 shadow-sm backdrop-blur-sm">
+                 <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">{t('profile.active_subs')}</p>
+                 <p className="text-xl font-bold text-gray-900 dark:text-white">{user.totalSubs}</p>
               </div>
-              <div className="bg-white/60 p-3 rounded-2xl border border-white shadow-sm backdrop-blur-sm">
-                 <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-1">{t('profile.monthly')}</p>
-                 <p className="text-xl font-bold text-gray-900">
+              <div className="bg-white/60 dark:bg-gray-700/60 p-3 rounded-2xl border border-white dark:border-gray-600 shadow-sm backdrop-blur-sm">
+                 <p className="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider mb-1">{t('profile.monthly')}</p>
+                 <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {user.currency === 'USD' ? '$' : user.currency}
                     {user.monthlySpend.toLocaleString()}
                  </p>
@@ -139,25 +139,25 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
            {/* Actions */}
            <div className="flex gap-3 w-full">
               {user.isSelf ? (
-                <button 
+                <button
                   onClick={onClose}
-                  className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all"
+                  className="flex-1 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 dark:hover:bg-gray-100 active:scale-95 transition-all"
                 >
                   {t('profile.edit_profile')}
                 </button>
               ) : (
                 <>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 active:scale-95 transition-all">
+                  <button className="flex-1 flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-3 rounded-xl font-semibold shadow-lg shadow-gray-900/20 hover:bg-gray-800 dark:hover:bg-gray-100 active:scale-95 transition-all">
                      <UserPlus size={18} /> {t('profile.add_friend')}
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                         navigator.clipboard.writeText(`https://subsense.app/u/${user.username}`);
-                        alert("Link copied!");
+                        alert(t('profile.link_copied'));
                     }}
-                    className="flex-1 flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-semibold hover:bg-gray-50 active:scale-95 transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
                   >
-                     <LinkIcon size={18} /> Share
+                     <LinkIcon size={18} /> {t('profile.share')}
                   </button>
                 </>
               )}

@@ -49,19 +49,31 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
          return;
       }
 
-      // 2. Look up detailed info, or create a basic fallback
+      // 2. Look up detailed info via robust matching, or create a basic fallback
       const key = cleanName.toLowerCase();
+      const normalizedKey = key.replace(/[^a-z0-9]/g, ''); // "Amazon Prime Video" -> "amazonprimevideo"
 
-      // Try finding by ID first (exact match), then name
-      let detail = Object.values(SUBSCRIPTION_CATALOG).find(s =>
-         s.id === key || s.name.toLowerCase() === key
-      );
+      let detail = Object.values(SUBSCRIPTION_CATALOG).find(s => {
+         const idNorm = s.id.toLowerCase().replace(/[^a-z0-9]/g, '');
+         const nameNorm = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+         return (
+            s.id === key ||
+            s.name.toLowerCase() === key ||
+            idNorm === normalizedKey ||
+            nameNorm === normalizedKey ||
+            // Fuzzy: containment so "Notion" matches "notionplus" and "Amazon Prime" matches "amazonprime"
+            nameNorm.includes(normalizedKey) ||
+            normalizedKey.includes(nameNorm) ||
+            idNorm.includes(normalizedKey) ||
+            normalizedKey.includes(idNorm)
+         );
+      });
 
-      // Explicit Fallback if not found in catalog (should generally be found if in ALL_SUBSCRIPTIONS)
+      // Explicit Fallback if not found in catalog
       if (!detail) {
          debugLog('SUBSCRIPTION_CREATE', `Service not found in catalog, creating fallback for: ${cleanName}`);
          detail = {
-            id: key,
+            id: normalizedKey || key,
             name: cleanName,
             description: `${cleanName} subscription.`,
             foundedYear: "-",
@@ -70,7 +82,7 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
             headquarters: "-",
             price: "0.00",
             currency: "USD",
-            type: key // This effectively triggers the 'default' or brand icon lookup
+            type: normalizedKey || key
          } as SubscriptionDetail;
       }
 

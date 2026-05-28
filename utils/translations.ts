@@ -216,6 +216,50 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "profile.earned": "Earned",
     "profile.locked": "Locked",
     "profile.bio_placeholder": "Tell us about yourself...",
+    "profile.link_copied": "Link copied!",
+    "profile.share": "Share",
+
+    // Image Cropper
+    "cropper.title": "Adjust Image",
+    "cropper.cancel": "Cancel",
+    "cropper.apply": "Apply",
+
+    // Subscription Card / Add flow
+    "card.select_plan": "Select Plan",
+    "card.price": "Price",
+    "card.currency": "Currency",
+    "card.billing_cycle": "Billing Cycle",
+    "card.cycle.monthly": "Monthly",
+    "card.cycle.yearly": "Yearly",
+    "card.cycle.mo": "mo",
+    "card.cycle.yr": "yr",
+    "card.first_payment": "First Payment",
+    "card.adding": "Adding...",
+    "card.add_to_dashboard": "Add to Dashboard",
+    "card.error.invalid_price": "Please enter a valid price.",
+    "card.error.duplicate": "You already have this subscription.",
+    "card.error.failed": "Failed to add subscription.",
+
+    // Upgrade Modal (Pro) — modal-specific (existing upgrade.* keys are for the side panel)
+    "upgrade.title_short": "Upgrade to Pro",
+    "upgrade.modal_subtitle": "Unlock the full potential of SubSense.",
+    "upgrade.feature.unlimited": "Unlimited Subscriptions",
+    "upgrade.feature.ai": "Advanced Analytics & AI",
+    "upgrade.modal_cta": "Upgrade Now",
+    "upgrade.modal_trial_cta": "Start 7-Day Free Trial",
+    "upgrade.modal_secure_note": "Secure payment via Stripe",
+    "upgrade.payment_failed": "Payment initialization failed.",
+    "upgrade.trial_failed": "Could not start trial.",
+
+    // Help Center extras
+    "help.search_no_results_tip": "Try adjusting your search terms.",
+    "help.bug_notice": "Found a bug? Let us know.",
+    "help.send_feedback_btn": "Send Feedback",
+
+    // Misc
+    "discover.default_desc": "Manage your subscription efficiently.",
+    "beta.easter_egg_unlocked": "🧪 You found a beta secret! 'Beta Explorer' badge unlocked.",
+    "sub.delete_confirm_named": "Are you sure you want to remove {name}? This cannot be undone.",
 
     // Badge Names & Descs
     "badge.first_sub.name": "First Step",
@@ -274,6 +318,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "add.success": "Subscription added successfully.",
     "add.error.name_required": "Service name is required.",
     "add.error.price_invalid": "Price must be greater than 0.",
+    "add.error.logo_too_large": "Logo file is too large (max 50KB).",
+    "add.logo": "Logo",
+    "add.name_placeholder": "e.g. Gym Membership",
 
     // Auth errors
     "auth.signup_title": "Create your account",
@@ -914,6 +961,50 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "profile.earned": "Kazanıldı",
     "profile.locked": "Kilitli",
     "profile.bio_placeholder": "Kendinizden bahsedin...",
+    "profile.link_copied": "Bağlantı kopyalandı!",
+    "profile.share": "Paylaş",
+
+    // Image Cropper
+    "cropper.title": "Resmi Ayarla",
+    "cropper.cancel": "İptal",
+    "cropper.apply": "Uygula",
+
+    // Subscription Card / Add flow
+    "card.select_plan": "Plan Seçin",
+    "card.price": "Fiyat",
+    "card.currency": "Para Birimi",
+    "card.billing_cycle": "Ödeme Döngüsü",
+    "card.cycle.monthly": "Aylık",
+    "card.cycle.yearly": "Yıllık",
+    "card.cycle.mo": "ay",
+    "card.cycle.yr": "yıl",
+    "card.first_payment": "İlk Ödeme",
+    "card.adding": "Ekleniyor...",
+    "card.add_to_dashboard": "Panele Ekle",
+    "card.error.invalid_price": "Lütfen geçerli bir fiyat girin.",
+    "card.error.duplicate": "Bu abonelik zaten mevcut.",
+    "card.error.failed": "Abonelik eklenemedi.",
+
+    // Upgrade Modal (Pro) — modal-specific
+    "upgrade.title_short": "Pro'ya Yükselt",
+    "upgrade.modal_subtitle": "SubSense'in tüm potansiyelini açın.",
+    "upgrade.feature.unlimited": "Sınırsız Abonelik",
+    "upgrade.feature.ai": "Gelişmiş Analiz ve Yapay Zeka",
+    "upgrade.modal_cta": "Şimdi Yükselt",
+    "upgrade.modal_trial_cta": "7 Gün Ücretsiz Deneme Başlat",
+    "upgrade.modal_secure_note": "Stripe ile güvenli ödeme",
+    "upgrade.payment_failed": "Ödeme başlatılamadı.",
+    "upgrade.trial_failed": "Deneme süresi başlatılamadı.",
+
+    // Help Center extras
+    "help.search_no_results_tip": "Arama terimlerinizi değiştirmeyi deneyin.",
+    "help.bug_notice": "Hata buldun mu? Bize haber ver.",
+    "help.send_feedback_btn": "Geri Bildirim Gönder",
+
+    // Misc
+    "discover.default_desc": "Aboneliğinizi verimli bir şekilde yönetin.",
+    "beta.easter_egg_unlocked": "🧪 Bir beta sırrı buldun! 'Beta Kâşifi' rozeti açıldı.",
+    "sub.delete_confirm_named": "{name} aboneliğini kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
 
     // Badge Names & Descs
     "badge.first_sub.name": "İlk Adım",
@@ -972,6 +1063,9 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "add.success": "Abonelik başarıyla eklendi.",
     "add.error.name_required": "Servis adı gerekli.",
     "add.error.price_invalid": "Fiyat 0'dan büyük olmalıdır.",
+    "add.error.logo_too_large": "Logo dosyası çok büyük (en fazla 50KB).",
+    "add.logo": "Logo",
+    "add.name_placeholder": "Örn. Spor Salonu Üyeliği",
 
     // Auth errors
     "auth.signup_title": "Hesabınızı oluşturun",

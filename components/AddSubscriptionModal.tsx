@@ -54,7 +54,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 50 * 1024) {
-                setError("Logo file is too large (max 50KB).");
+                setError(t('add.error.logo_too_large'));
                 setShake(true); setTimeout(() => setShake(false), 500);
                 return;
             }
@@ -94,7 +94,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
             await onAdd(newSub);
             onClose();
         } catch (err: any) {
-            setError(err.message || "Failed to add.");
+            setError(err.message || t('card.error.failed'));
             setShake(true); setTimeout(() => setShake(false), 500);
         } finally {
             setLoading(false);
@@ -169,7 +169,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                             ) : (
                                                 <div className="text-center">
                                                     <Upload className="w-6 h-6 mx-auto text-gray-400 mb-1" />
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase">Logo</span>
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase">{t('add.logo')}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -178,13 +178,13 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
 
                                     {/* Name Input */}
                                     <div>
-                                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Service Name</label>
+                                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('add.service_name')}</label>
                                         <input
                                             type="text"
                                             autoComplete="off"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            placeholder="e.g. Gym Membership"
+                                            placeholder={t('add.name_placeholder')}
                                             className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                             autoFocus
                                         />
@@ -193,7 +193,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                     {/* Price & Currency */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Price</label>
+                                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('card.price')}</label>
                                             <input
                                                 type="number"
                                                 autoComplete="off"
@@ -204,7 +204,7 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Currency</label>
+                                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('card.currency')}</label>
                                             <select
                                                 value={currency}
                                                 onChange={(e) => setCurrency(e.target.value)}

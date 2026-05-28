@@ -15,6 +15,7 @@ const BetaBadge = () => {
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
     const badgeRef = useRef<HTMLButtonElement>(null);
     const { currentUser } = useAuth();
+    const { t } = useLanguage();
 
     // Timed Nudge Logic
     useEffect(() => {
@@ -84,7 +85,7 @@ const BetaBadge = () => {
 
                 if (!currentAchievements.includes('beta_explorer')) {
                     await updateAchievements(currentUser.uid, [...currentAchievements, 'beta_explorer']);
-                    alert("🧪 You found a beta secret! 'Beta Explorer' badge unlocked.");
+                    alert(t('beta.easter_egg_unlocked'));
                 }
             } catch (e) {
                 console.error("Failed to unlock achievement", e);

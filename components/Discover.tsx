@@ -144,7 +144,7 @@ export default function Discover() {
     return catalogItem || {
       id: key,
       name: id.charAt(0).toUpperCase() + id.slice(1),
-      description: "Manage your subscription efficiently.",
+      description: t('discover.default_desc'),
       price: "9.99",
       currency: "USD",
       type: key,
