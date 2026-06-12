@@ -24,7 +24,6 @@ const VerifyEmailPage = React.lazy(() => import('./components/VerifyEmailPage'))
 export interface User {
   email: string;
   name: string;
-  passwordHash: string;
   currency?: string;
   uid?: string;
 }
@@ -194,7 +193,6 @@ function AppContent() {
   const appUser: User | null = currentUser ? {
     email: currentUser.email || '',
     name: currentUser.displayName || 'User',
-    passwordHash: '',
     uid: currentUser.uid
   } : null;
 
