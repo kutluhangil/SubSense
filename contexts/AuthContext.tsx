@@ -15,7 +15,7 @@ import {
 } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../firebase/firebase';
-import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan } from '../utils/firestore';
+import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan, updateUserSettings } from '../utils/firestore';
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
@@ -84,19 +84,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
 
         try {
-          const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
-          await sendCustomVerification({
-            email: user.email,
-            redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
-          });
-
+          await sendEmailVerification(user);
           trackEvent('email_verification_sent');
-        } catch {
-          try {
-            await sendEmailVerification(user);
-          } catch (fallbackError) {
-            console.error("Verification email delivery failed", fallbackError);
-          }
+        } catch (error) {
+          console.error("Verification email delivery failed", error);
         }
 
         setPendingVerificationEmail(email);
@@ -120,11 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user.emailVerified) {
         // Attempt to re-send verification email for convenience (with error logging)
         try {
-          const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
-          await sendCustomVerification({
-            email: user.email,
-            redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
-          });
+          await sendEmailVerification(user);
         } catch {
           // Best-effort resend; ignore failures silently
         }
@@ -206,12 +193,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser) return;
 
     try {
-      const sendCustomVerification = httpsCallable(functions, 'sendCustomVerificationEmail');
-      await sendCustomVerification({
-        email: currentUser.email,
-        redirectUrl: window.location.origin ? `${window.location.origin}/?mode=verifyEmail` : undefined
-      });
-
+      await sendEmailVerification(currentUser);
       trackEvent('email_verification_resent');
     } catch (error: any) {
       throw error;
@@ -243,6 +225,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         try {
           const profile = await getUserDocument(user.uid);
+          
+          if (profile && typeof window !== 'undefined') {
+            const localLanguage = localStorage.getItem('userLanguagePreference');
+            if (localLanguage && profile.preferences && profile.preferences.language !== localLanguage) {
+              profile.preferences.language = localLanguage;
+              updateUserSettings(user.uid, { language: localLanguage }).catch(console.error);
+            }
+          }
+
           setUserProfile(profile);
 
           if (profile?.analytics?.lastActiveAt) {

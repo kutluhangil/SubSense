@@ -104,8 +104,8 @@ export const initializeUserDocument = async (
     termsAcceptedAt: now,
     preferences: {
       baseCurrency: additionalData?.currency || 'USD',
-      language: 'en',
-      theme: 'system',
+      language: (typeof window !== 'undefined' ? localStorage.getItem('userLanguagePreference') : null) || 'en',
+      theme: (typeof window !== 'undefined' ? localStorage.getItem('userThemePreference') : null) || 'system',
       region: additionalData?.region || 'US',
       analyticsOptOut: false
     },
