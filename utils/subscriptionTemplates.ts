@@ -11,19 +11,19 @@ export interface SubscriptionTemplate {
 
 export const subscriptionTemplates: SubscriptionTemplate[] = [
   { name: 'Netflix', type: 'Entertainment', price: 15.49, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'netflix' },
-  { name: 'Spotify', type: 'Music', price: 10.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'spotify' },
+  { name: 'Spotify', type: 'Music', price: 11.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'spotify' },
   { name: 'YouTube Premium', type: 'Entertainment', price: 13.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'youtube' },
   { name: 'Amazon Prime', type: 'Shopping', price: 14.99, currency: 'USD', billingCycle: 'Monthly', category: 'Shopping', logo: 'amazon' },
   { name: 'Disney+', type: 'Entertainment', price: 13.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'disney' },
   { name: 'ChatGPT Plus', type: 'Software', price: 20.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'openai' },
-  { name: 'Adobe Creative Cloud', type: 'Software', price: 54.99, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'adobe' },
+  { name: 'Adobe Creative Cloud', type: 'Software', price: 59.99, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'adobe' },
   { name: 'Apple Music', type: 'Music', price: 10.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'apple' },
   { name: 'Xbox Game Pass', type: 'Gaming', price: 16.99, currency: 'USD', billingCycle: 'Monthly', category: 'Gaming', logo: 'xbox' },
   { name: 'PlayStation Plus', type: 'Gaming', price: 17.99, currency: 'USD', billingCycle: 'Monthly', category: 'Gaming', logo: 'playstation' },
   { name: 'GitHub Copilot', type: 'Software', price: 10.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'github' },
   { name: 'Hulu', type: 'Entertainment', price: 7.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'hulu' },
   { name: 'HBO Max', type: 'Entertainment', price: 15.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'hbo' },
-  { name: 'Notion', type: 'Software', price: 8.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'notion' },
+  { name: 'Notion', type: 'Software', price: 10.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'notion' },
   { name: 'Figma', type: 'Software', price: 15.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'figma' },
 ];
 
