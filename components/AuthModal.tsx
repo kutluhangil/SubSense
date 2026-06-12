@@ -31,6 +31,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | null>(null);
   const { t } = useLanguage();
 
+  // FV-09: Per-field error state for inline validation feedback
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [formData, setFormData] = useState({
     fullName: '',
     username: '',
@@ -49,6 +52,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
       setShowPassword(false);
       setRememberMe(false);
       setErrorMsg(null);
+      setFieldErrors({});
       setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
     }
   }, [initialMode, isOpen]);
@@ -63,9 +67,32 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
           newData.currency = suggestedCurrency;
         }
       }
+      // FV-07: Strip emojis and control characters from name fields
+      if (field === 'fullName') {
+        newData.fullName = value.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/gu, '').replace(/[\x00-\x1F\x7F]/g, '');
+      }
       return newData;
     });
     setErrorMsg(null);
+    // Clear the specific field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => { const next = { ...prev }; delete next[field]; return next; });
+    }
+  };
+
+  // FV-09: Real-time per-field validation on blur
+  const handleBlur = (field: string) => {
+    const errors: Record<string, string> = { ...fieldErrors };
+    if (field === 'fullName' && formData.fullName && formData.fullName.trim().length < 2) {
+      errors.fullName = t('auth.error.name_required');
+    } else if (field === 'email' && formData.email && !isValidEmail(formData.email)) {
+      errors.email = t('auth.error.invalid_email') || 'Please enter a valid email address.';
+    } else if (field === 'password' && formData.password && formData.password.length < 6) {
+      errors.password = t('auth.error.password_short');
+    } else {
+      delete errors[field];
+    }
+    setFieldErrors(errors);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -292,38 +319,54 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
             {mode === 'signup' && (
               <form className="space-y-4" onSubmit={handleSubmit}>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{t('auth.fullname')}</label>
-                  <div className="relative group">
-                    <User size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
-                    <input
-                      type="text"
-                      autoComplete="name"
-                      value={formData.fullName}
-                      onChange={(e) => handleChange('fullName', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
-                      placeholder="John Doe"
-                      maxLength={60}
-                      required
-                    />
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{t('auth.fullname')}</label>
+                    <div className="relative group">
+                      <User size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                      <input
+                        type="text"
+                        autoComplete="name"
+                        value={formData.fullName}
+                        onChange={(e) => handleChange('fullName', e.target.value)}
+                        onBlur={() => handleBlur('fullName')}
+                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white ${
+                          fieldErrors.fullName
+                            ? 'border-red-300 dark:border-red-700 focus:ring-red-100 dark:focus:ring-red-900/20'
+                            : 'border-gray-200 dark:border-gray-700 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500'
+                        }`}
+                        placeholder="John Doe"
+                        maxLength={60}
+                        required
+                      />
+                    </div>
+                    {fieldErrors.fullName && (
+                      <p className="text-red-500 dark:text-red-400 text-[11px] font-medium mt-1">{fieldErrors.fullName}</p>
+                    )}
                   </div>
-                </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{t('auth.email')}</label>
-                  <div className="relative group">
-                    <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      value={formData.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
-                      placeholder="name@example.com"
-                      required
-                    />
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{t('auth.email')}</label>
+                    <div className="relative group">
+                      <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                      <input
+                        type="email"
+                        autoComplete="email"
+                        value={formData.email}
+                        onChange={(e) => handleChange('email', e.target.value)}
+                        onBlur={() => handleBlur('email')}
+                        className={`w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white ${
+                          fieldErrors.email
+                            ? 'border-red-300 dark:border-red-700 focus:ring-red-100 dark:focus:ring-red-900/20'
+                            : 'border-gray-200 dark:border-gray-700 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500'
+                        }`}
+                        placeholder="name@example.com"
+                        required
+                      />
+                    </div>
+                    {fieldErrors.email && (
+                      <p className="text-red-500 dark:text-red-400 text-[11px] font-medium mt-1">{fieldErrors.email}</p>
+                    )}
                   </div>
-                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1 col-span-2 sm:col-span-1">
@@ -335,7 +378,12 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                         autoComplete="new-password"
                         value={formData.password}
                         onChange={(e) => handleChange('password', e.target.value)}
-                        className="w-full pl-10 pr-9 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
+                        onBlur={() => handleBlur('password')}
+                        className={`w-full pl-10 pr-9 py-3 bg-gray-50 dark:bg-gray-800 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white ${
+                          fieldErrors.password
+                            ? 'border-red-300 dark:border-red-700 focus:ring-red-100 dark:focus:ring-red-900/20'
+                            : 'border-gray-200 dark:border-gray-700 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500'
+                        }`}
                         placeholder="••••••••"
                         required
                       />
@@ -347,6 +395,9 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
+                    {fieldErrors.password && (
+                      <p className="text-red-500 dark:text-red-400 text-[11px] font-medium mt-1">{fieldErrors.password}</p>
+                    )}
                   </div>
                   <div className="space-y-1 col-span-2 sm:col-span-1">
                     <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{t('auth.confirm_label')}</label>

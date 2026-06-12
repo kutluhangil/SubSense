@@ -150,6 +150,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
    const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
    const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
    const [isBudgetEditorOpen, setIsBudgetEditorOpen] = useState(false);
+   // E-06: Guard against rapid double-click / double-tap triggering duplicate deletes
+   const isDeletingRef = React.useRef(false);
 
    const [notifications, setNotifications] = useState([
       { id: 1, text: `Welcome to SubSense, ${user.name}!`, time: "Just now", read: false, type: 'info' },
@@ -206,6 +208,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
    };
 
    const handleSubDelete = async (id: string | number) => {
+      // E-06: Prevent rapid double-click / double-tap triggering two deletes
+      if (isDeletingRef.current) return;
+      isDeletingRef.current = true;
+
       if (currentUser) {
          debugLog('REMOVE_ACTION', `Attempting to delete subscription ID: ${id}`);
          // Optimistic Calc
@@ -217,9 +223,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             setTotalSaved(prev => prev + monthlyValueBase);
             trackEvent('subscription_removed', { category: subToDelete.category });
          }
-         await deleteSubscription(currentUser.uid, id);
-         showToast(t('dashboard.sub_removed'));
-         setSelectedSub(null);
+         try {
+            await deleteSubscription(currentUser.uid, id);
+            showToast(t('dashboard.sub_removed'));
+            setSelectedSub(null);
+         } finally {
+            isDeletingRef.current = false;
+         }
+      } else {
+         isDeletingRef.current = false;
       }
    };
 

@@ -13,12 +13,20 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
 
   try {
     // 1. Name Validation
-    // Prevent empty, too long, or non-string names
+    // Prevent empty, too long, non-string names, emojis, and control characters
     if (!sub.name || typeof sub.name !== 'string' || sub.name.trim().length === 0) {
       throw new Error(`Invalid name: "${sub.name}"`);
     }
     if (sub.name.length > 50) {
       throw new Error("Name too long (max 50 chars)");
+    }
+    // Reject emojis and control characters (FV-07)
+    const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u;
+    if (emojiRegex.test(sub.name)) {
+      throw new Error("Name must not contain emojis.");
+    }
+    if (/[\x00-\x1F\x7F]/.test(sub.name)) {
+      throw new Error("Name contains invalid control characters.");
     }
 
     // 2. Price Validation
