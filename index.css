@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Theme (Default) */
+    --bg-app: #f9fafb; /* gray-50 */
+    --bg-card: #ffffff; /* white */
+    --bg-sidebar: #ffffff; /* white */
+
+    --text-primary: #111827; /* gray-900 */
+    --text-secondary: #4b5563; /* gray-600 */
+    --text-muted: #9ca3af; /* gray-400 */
+
+    --border-subtle: #f3f4f6; /* gray-100 */
+    --border-subtle-hover: #e5e7eb; /* gray-200 */
+
+    --chart-grid: #f3f4f6;
+    --overlay-bg: rgba(255, 255, 255, 0.8);
+  }
+
+  [data-theme='dark'] {
+    /* Dark Theme (Matches Profile Page Aesthetic) */
+    --bg-app: #111827; /* gray-900 */
+    --bg-card: #1f2937; /* gray-800 */
+    --bg-sidebar: #1f2937; /* gray-800 */
+
+    --text-primary: #f9fafb; /* gray-50 */
+    --text-secondary: #d1d5db; /* gray-300 */
+    --text-muted: #9ca3af; /* gray-400 */
+
+    --border-subtle: #374151; /* gray-700 */
+    --border-subtle-hover: #4b5563; /* gray-600 */
+
+    --chart-grid: #374151;
+    --overlay-bg: rgba(31, 41, 55, 0.8);
+  }
+
+  body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle-hover);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+/* Global Smooth Theme Transition */
+body, div, nav, aside, section, article, header, footer, button, input, textarea, select, table, tr, td, th, span, p, h1, h2, h3, h4, h5, h6 {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}

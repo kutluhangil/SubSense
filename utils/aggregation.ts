@@ -44,7 +44,8 @@ export const calculateDerivedStats = (
     stats.totalSubscriptions++;
 
     // Normalize price to base currency
-    const priceInBase = convertAmount(sub.price, sub.currency, baseCurrency);
+    const effectivePrice = sub.isShared && sub.myShare !== undefined ? sub.myShare : sub.price;
+    const priceInBase = convertAmount(effectivePrice, sub.currency, baseCurrency);
 
     // Monthly Spend Calculation
     let monthlyCost = 0;

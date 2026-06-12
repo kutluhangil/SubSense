@@ -3,6 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import './index.css';
 
 window.onerror = (msg, _src, line, _col, err) => {
   const container = document.getElementById('root');

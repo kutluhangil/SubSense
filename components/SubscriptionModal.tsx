@@ -26,6 +26,8 @@ export interface Subscription {
   category?: string;
   reminderEnabled?: boolean;
   logo?: string;
+  isShared?: boolean;
+  myShare?: number;
 }
 
 interface SubscriptionModalProps {

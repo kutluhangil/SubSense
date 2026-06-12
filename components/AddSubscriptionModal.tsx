@@ -5,6 +5,8 @@ import { CURRENCIES, BRAND_COLORS, SubscriptionDetail } from '../utils/data';
 import { debugLog } from '../utils/debug';
 import { generatePlaceholderLogo } from '../utils/logoGenerator';
 import { Subscription } from './SubscriptionModal';
+import { SubscriptionTemplate, getSuggestions } from '../utils/subscriptionTemplates';
+import { Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SubscriptionCard from './SubscriptionCard';
 
@@ -32,6 +34,10 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
     const [logo, setLogo] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [shake, setShake] = useState(false);
+    const [isShared, setIsShared] = useState(false);
+    const [myShare, setMyShare] = useState<string>('');
+    const [suggestions, setSuggestions] = useState<SubscriptionTemplate[]>([]);
+
 
     // Reset Custom Form
     useEffect(() => {
@@ -46,6 +52,10 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
             setLogo(null);
             setError(null);
             setLoading(false);
+            setIsShared(false);
+            setMyShare('');
+            setSuggestions([]);
+
             debugLog('SUBSCRIPTION_CREATE', 'Custom Modal Opened');
         }
     }, [service, isOpen]);
@@ -75,6 +85,9 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
         try {
             const priceVal = parseFloat(price);
             const dateObj = new Date(startDate);
+            const shareVal = isShared && myShare ? parseFloat(myShare) : undefined;
+            if (isShared && (!shareVal || shareVal <= 0)) { setError("Lütfen geçerli bir pay tutarı girin."); setShake(true); setTimeout(() => setShake(false), 500); return; }
+
             const newSub: any = {
                 name: name,
                 price: priceVal,
@@ -88,7 +101,9 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                 category: category,
                 notes: notes,
                 logo: logo || generatePlaceholderLogo(name),
-                history: [priceVal]
+                history: [priceVal],
+                isShared: isShared,
+                myShare: shareVal
             };
 
             await onAdd(newSub);
@@ -177,17 +192,42 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                     </div>
 
                                     {/* Name Input */}
-                                    <div>
+                                    <div className="relative">
                                         <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('add.service_name')}</label>
                                         <input
                                             type="text"
                                             autoComplete="off"
                                             value={name}
-                                            onChange={(e) => setName(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setName(val);
+                                                setSuggestions(getSuggestions(val));
+                                            }}
                                             placeholder={t('add.name_placeholder')}
                                             className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-lg font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                             autoFocus
                                         />
+                                        {suggestions.length > 0 && (
+                                            <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                                                {suggestions.map((s, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center"
+                                                        onClick={() => {
+                                                            setName(s.name);
+                                                            setPrice(s.price.toString());
+                                                            setCurrency(s.currency);
+                                                            setCategory(s.category);
+                                                            setCycle(s.billingCycle);
+                                                            setSuggestions([]);
+                                                        }}
+                                                    >
+                                                        <span className="font-semibold text-gray-900 dark:text-white">{s.name}</span>
+                                                        <span className="text-xs text-gray-500">{s.price} {s.currency}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Price & Currency */}
@@ -213,6 +253,34 @@ export default function AddSubscriptionModal({ isOpen, onClose, service, onAdd, 
                                                 {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
                                             </select>
                                         </div>
+                                    </div>
+
+
+                                    {/* Split the Bill */}
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/10 rounded-xl p-4 border border-indigo-100 dark:border-indigo-900/20">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input type="checkbox" checked={isShared} onChange={(e) => setIsShared(e.target.checked)} className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 bg-white border-gray-300" />
+                                            <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300 font-semibold text-sm">
+                                                <Users size={16} /> Bu ortak bir abonelik (Masrafı bölüşüyoruz)
+                                            </div>
+                                        </label>
+                                        
+                                        {isShared && (
+                                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4">
+                                                <label className="block text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-2">Benim Payım</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        value={myShare}
+                                                        onChange={(e) => setMyShare(e.target.value)}
+                                                        placeholder="Örn: 50"
+                                                        className="w-full bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 text-lg font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                                                    />
+                                                    <div className="absolute right-4 top-3 text-gray-400 font-bold">{currency}</div>
+                                                </div>
+                                                <p className="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-2 font-medium">Bütçenize toplam fiyat ({price || 0} {currency}) yerine sizin payınız eklenecektir.</p>
+                                            </motion.div>
+                                        )}
                                     </div>
 
                                     {/* Error & Action */}
