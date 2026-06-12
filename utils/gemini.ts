@@ -106,6 +106,8 @@ export const generateDashboardInsights = async (
       PATTERNS TO DETECT:
       1. REDUNDANCY: Multiple active subscriptions in the same narrow category (e.g., 2 Music apps, 2 Video Streaming apps).
       2. CYCLE OPTIMIZATION: Monthly subscriptions > 10 ${baseCurrency} where switching to Yearly typically saves ~15-20%.
+      3. ALTERNATIVES (Alternatif & Tasarruf): Suggest free or cheaper alternatives for expensive tools (e.g. Adobe CC -> Figma/Affinity, Netflix -> Stremio).
+      4. PRICE HIKE DETECTOR (Gizli Zam Dedektörü): If you know the recent price of a popular service and the user is paying more, warn them about a potential price hike or wrong plan.
       
       CONSTRAINTS:
       - DO NOT speculate on Foreign Exchange (FX) rates.
@@ -178,7 +180,8 @@ export const chatWithGemini = async (
     CONTEXT:
     ${JSON.stringify(payload)}
     
-    GOAL: Help the user understand their spending patterns based ONLY on the provided context.
+    GOAL: Help the user understand their spending patterns based ONLY on the provided context. 
+    You are an expert at finding hidden price hikes (Gizli Zam Dedektörü) and suggesting cheaper alternatives (Alternatif ve Tasarruf). If the user asks about a service, suggest a cheaper/free alternative if one exists.
     `;
 
     const text = await callGeminiChatProxy(history, userMessage, systemInstruction);

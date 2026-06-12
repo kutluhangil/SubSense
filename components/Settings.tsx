@@ -13,7 +13,8 @@ import { createPortalSession } from '../utils/stripe';
 import { requestNotificationPermission, getNotificationStatus } from '../utils/notificationService';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebase';
-
+import { db } from '../firebase/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 interface SettingsProps {
     subscriptions?: Subscription[];
     onUpdateSubscriptions?: React.Dispatch<React.SetStateAction<Subscription[]>>;
@@ -98,8 +99,17 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
             alert(t('settings.delete_error'));
             setIsDeletingAccount(false);
         }
-        setShowDeleteConfirm(false);
     };
+
+    const handleGenerateCalendarToken = async () => {
+        if (!currentUser) return;
+        const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        await updateUserSettings(currentUser.uid, { calendarToken: newToken });
+    };
+
+    const calendarUrl = currentUser && userProfile?.preferences?.calendarToken 
+        ? `https://us-central1-${functions.app.options.projectId}.cloudfunctions.net/generateCalendarFeed?token=${userProfile.preferences.calendarToken}`
+        : '';
 
     const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -350,6 +360,43 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                                     onChange={(val) => handlePreferenceUpdate('notifyPrice', val)}
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Calendar Sync */}
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+                            <Calendar className="text-gray-400" size={20} />
+                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Takvim Senkronizasyonu</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Abonelik ödeme günlerinizi Google veya Apple Takvim üzerinden takip edin. 
+                            </p>
+                            
+                            {userProfile?.preferences?.calendarToken ? (
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 break-all text-xs font-mono text-gray-500">
+                                        {calendarUrl}
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(calendarUrl);
+                                            alert("Takvim linki kopyalandı!");
+                                        }}
+                                        className="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                                    >
+                                        Linki Kopyala
+                                    </button>
+                                </div>
+                            ) : (
+                                <button 
+                                    onClick={handleGenerateCalendarToken}
+                                    className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-3 rounded-xl hover:shadow-lg transition active:scale-95"
+                                >
+                                    Takvim Linki Oluştur
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

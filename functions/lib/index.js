@@ -22,11 +22,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.api = exports.sendCustomVerificationEmail = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.geminiChatProxy = exports.geminiProxy = exports.api = exports.deleteUserAccount = exports.sendCustomVerificationEmail = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const stripe_1 = __importDefault(require("stripe"));
@@ -254,13 +257,14 @@ async function getUserIdFromCustomerId(customerId) {
 // --- EMAIL SYSTEM ---
 // 6. Send Custom Verification Email
 exports.sendCustomVerificationEmail = functions.https.onCall(async (data, context) => {
+    var _a;
     // Ensure we are authenticated (or we can secure purely by email if needed, but authenticating is safer for rate limits)
     // Actually, for signup flow, user is signed in but unverified.
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
     const email = data.email || context.auth.token.email;
-    const redirectUrl = data.redirectUrl || 'https://subscriptionhub-85b02.web.app/?mode=verifyEmail'; // Default to Prod
+    const redirectUrl = data.redirectUrl || ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.url) || 'https://subsense.app';
     if (!email) {
         throw new functions.https.HttpsError("invalid-argument", "Email is required");
     }
@@ -319,7 +323,94 @@ async function sendEmail(to, subject, html) {
         console.log("<<< [MOCK EMAIL END] <<<");
     }
 }
+// 7. Delete User Account (wipes Auth + Firestore)
+exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
+    }
+    const uid = context.auth.uid;
+    try {
+        // Delete all sub-collections in a batch
+        const batch = db.batch();
+        const collectionsToDelete = ['subscriptions', 'friends', 'friendRequests', 'sentRequests'];
+        for (const col of collectionsToDelete) {
+            const snap = await db.collection('users').doc(uid).collection(col).get();
+            snap.docs.forEach(d => batch.delete(d.ref));
+        }
+        // Delete the user document
+        batch.delete(db.collection('users').doc(uid));
+        await batch.commit();
+        // Delete Firebase Auth user (must be last — invalidates token)
+        await admin.auth().deleteUser(uid);
+        return { success: true };
+    }
+    catch (error) {
+        console.error("Account deletion failed:", error);
+        throw new functions.https.HttpsError("internal", error.message);
+    }
+});
 // 4. API (Express App)
 const app_1 = __importDefault(require("./app"));
 exports.api = functions.https.onRequest(app_1.default);
+// ── GEMINI PROXY FUNCTIONS ────────────────────────────────────────────────
+// The Gemini API key is stored server-side in Firebase Functions config.
+// Set it via: firebase functions:config:set gemini.key="AIza..."
+// This ensures the key NEVER appears in the frontend bundle.
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+async function callGeminiRaw(contents, systemInstruction, responseMimeType) {
+    var _a, _b, _c, _d, _e, _f;
+    const geminiKey = (_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key;
+    if (!geminiKey) {
+        throw new functions.https.HttpsError("failed-precondition", "Gemini API key is not configured on the server. Run: firebase functions:config:set gemini.key=\"AIza...\"");
+    }
+    const body = {
+        contents,
+        generationConfig: responseMimeType ? { responseMimeType } : {},
+    };
+    if (systemInstruction) {
+        body.systemInstruction = { parts: [{ text: systemInstruction }] };
+    }
+    const res = await fetch(`${GEMINI_API_URL}?key=${geminiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+        const errText = await res.text();
+        console.error("Gemini API Error:", res.status, errText);
+        throw new functions.https.HttpsError("internal", `Gemini API returned ${res.status}`);
+    }
+    const data = await res.json();
+    return ((_f = (_e = (_d = (_c = (_b = data === null || data === void 0 ? void 0 : data.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e[0]) === null || _f === void 0 ? void 0 : _f.text) || null;
+}
+// 8. Gemini Insights Proxy (single-turn, JSON response)
+exports.geminiProxy = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
+    }
+    const { prompt, systemInstruction } = data;
+    if (!prompt || typeof prompt !== "string") {
+        throw new functions.https.HttpsError("invalid-argument", "prompt is required.");
+    }
+    const text = await callGeminiRaw([{ parts: [{ text: prompt }] }], systemInstruction, "application/json");
+    return { text };
+});
+// 9. Gemini Chat Proxy (multi-turn conversation)
+exports.geminiChatProxy = functions.https.onCall(async (data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
+    }
+    const { history, userMessage, systemInstruction } = data;
+    if (!userMessage || typeof userMessage !== "string") {
+        throw new functions.https.HttpsError("invalid-argument", "userMessage is required.");
+    }
+    const contents = [
+        ...(Array.isArray(history) ? history : []),
+        { role: "user", parts: [{ text: userMessage }] },
+    ];
+    const text = await callGeminiRaw(contents, systemInstruction);
+    return { text };
+});
+__exportStar(require("./calendar"), exports);
+__exportStar(require("./emails"), exports);
 //# sourceMappingURL=index.js.map
