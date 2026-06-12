@@ -65,29 +65,8 @@ const MOCK_PROFILES: UserProfile[] = [
 export default function ProfileCarousel({ onProfileClick }: ProfileCarouselProps) {
   const [isPaused, setIsPaused] = useState(false);
   
-  // Sound effect
   const playHoverSound = () => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
-      
-      gain.gain.setValueAtTime(0.02, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
-      // Ignore audio errors
-    }
+    // Sound effect removed per user request
   };
 
   return (
