@@ -3,8 +3,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const isVercel = process.env.VERCEL === '1';
+const basePath = isVercel ? '/' : '/subsense/';
+
 export default defineConfig({
-  base: '/subsense/',
+  base: basePath,
   plugins: [
     react(),
     VitePWA({
@@ -18,8 +21,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/subsense/',
-        start_url: '/subsense/',
+        scope: basePath,
+        start_url: basePath,
         // Place icon-192.png and icon-512.png in /public before deploying
         icons: [
           { src: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
