@@ -5,10 +5,19 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 const isVercel = process.env.VERCEL === '1';
 const basePath = isVercel ? '/' : '/subsense/';
+const appUrl = isVercel
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`
+  : 'https://subsense.app/';
 
 export default defineConfig({
   base: basePath,
   plugins: [
+    {
+      name: 'html-transform',
+      transformIndexHtml(html) {
+        return html.replace(/%APP_URL%/g, appUrl);
+      }
+    },
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -48,7 +57,7 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',
-    sourcemap: false,
+    sourcemap: true,
     chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {

@@ -212,3 +212,34 @@ export const CURRENCY_LOCALES: Record<string, string> = {
   "zh": "zh-CN",
   "ar": "ar-SA"
 };
+
+/**
+ * Heuristic to detect user's default currency based on browser locale and timezone
+ */
+export const getDefaultCurrency = (): string => {
+  try {
+    const locale = navigator.language.toUpperCase();
+    if (locale.includes('TR')) return 'TRY';
+    if (locale.includes('GB')) return 'GBP';
+    if (locale.includes('FR') || locale.includes('DE') || locale.includes('IT') || locale.includes('ES') || locale.includes('NL')) return 'EUR';
+    if (locale.includes('JP')) return 'JPY';
+    if (locale.includes('CN')) return 'CNY';
+    if (locale.includes('AU')) return 'AUD';
+    if (locale.includes('CA')) return 'CAD';
+    if (locale.includes('IN')) return 'INR';
+    if (locale.includes('BR')) return 'BRL';
+    if (locale.includes('RU')) return 'RUB';
+    if (locale.includes('KR')) return 'KRW';
+    if (locale.includes('MX')) return 'MXN';
+    
+    // Fallback to timezone
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === 'Europe/London') return 'GBP';
+    if (tz === 'Europe/Istanbul') return 'TRY';
+    if (tz.startsWith('Europe/')) return 'EUR';
+    if (tz === 'Asia/Tokyo') return 'JPY';
+  } catch (e) {
+    // Silent fail
+  }
+  return 'USD';
+};

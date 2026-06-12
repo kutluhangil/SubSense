@@ -4,6 +4,7 @@ import { X, Mail, Lock, ArrowRight, User, Globe, Check, Eye, EyeOff, ArrowLeft, 
 import { useLanguage } from '../contexts/LanguageContext';
 import LegalModal from './LegalModal';
 import { CURRENCIES } from '../utils/data';
+import { getDefaultCurrency } from '../utils/currency';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
     password: '',
     confirmPassword: '',
     country: 'United States',
-    currency: 'USD',
+    currency: getDefaultCurrency(),
     birthYear: '',
     agreedToTerms: false
   });
@@ -461,6 +462,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                       <input
                         id="terms"
                         type="checkbox"
+                        required
                         checked={formData.agreedToTerms}
                         onChange={(e) => handleChange('agreedToTerms', e.target.checked)}
                         className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 cursor-pointer"

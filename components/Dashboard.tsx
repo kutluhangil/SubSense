@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import UpcomingTimeline from './dashboard/UpcomingTimeline';
+import ExpenseBreakdown from './dashboard/ExpenseBreakdown';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
@@ -323,153 +325,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       </div>
    );
 
-   const UpcomingTimeline = () => {
-      const upcoming = [...subscriptions].sort((a, b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()).slice(0, 4);
-
-      if (upcoming.length === 0 && !subscriptionsLoading) {
-         return (
-            <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 text-center">
-               <h3 className="font-bold text-primary text-sm mb-2">{t('dashboard.upcoming')}</h3>
-               <p className="text-xs text-muted">{t('dashboard.no_upcoming')}</p>
-            </div>
-         );
-      }
-
-      return (
-         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-               <h3 className="font-bold text-primary text-sm flex items-center gap-2">
-                  <Calendar size={16} className="text-muted" /> {t('dashboard.upcoming')}
-               </h3>
-               <button
-                  onClick={() => setIsCalendarOpen(true)}
-                  className="text-[10px] font-bold text-secondary bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-               >
-                  {t('dashboard.view_calendar')}
-               </button>
-            </div>
-            {subscriptionsLoading ? (
-               <div className="space-y-4">
-                  {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"></div>)}
-               </div>
-            ) : (
-               <div className="space-y-4">
-                  {upcoming.map((sub) => (
-                     <div key={sub.id} className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 border border-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                           <BrandIcon type={sub.type} logo={sub.logo} className="w-6 h-6" noBackground />
-                        </div>
-                        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedSub(sub)}>
-                           <div className="flex justify-between items-baseline mb-0.5">
-                              <h4 className="text-sm font-semibold text-primary truncate pr-2">{sub.name}</h4>
-                              <span className="text-xs font-bold text-primary">
-                                 {formatPrice(sub.price, sub.currency)}
-                              </span>
-                           </div>
-                           <div className="flex justify-between items-center">
-                              <span className="text-[10px] text-secondary">{sub.nextDate}</span>
-                              {(() => {
-                                 const renewals = getUpcomingRenewals([sub]);
-                                 const isRenewingSoon = renewals.length > 0;
-                                 if (isRenewingSoon) {
-                                    const dayText = renewals[0].daysUntil === 0 ? t('dashboard.today') : renewals[0].daysUntil === 1 ? t('dashboard.tomorrow') : `${renewals[0].daysUntil}d`;
-                                    return <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 animate-pulse">{dayText}</span>;
-                                 }
-                                 return <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${sub.status === 'Active' ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'}`}>{sub.status}</span>;
-                              })()}
-                           </div>
-                        </div>
-                        <button
-                           onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(sub.id); }}
-                           className="p-1.5 text-muted hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                           title={t('dashboard.mark_paid')}
-                        >
-                           <CheckCircle2 size={16} />
-                        </button>
-                     </div>
-                  ))}
-               </div>
-            )}
-         </div>
-      );
-   };
-
-   const ExpenseBreakdown = () => {
-      // Use derived breakdown logic from stats object to avoid drift
-      // Need to sort and map for chart
-      const breakdown = useMemo(() => {
-         const cats = metrics.categoryBreakdown;
-         const total = metrics.monthlySpend;
-
-         return Object.entries(cats)
-            .sort(([, a], [, b]) => (b as number) - (a as number))
-            .slice(0, 3)
-            .map(([name, value]) => ({
-               name,
-               percentage: total > 0 ? ((value as number) / total) * 100 : 0
-            }));
-      }, [metrics]);
-
-      return (
-         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">
-            <h3 className="font-bold text-primary text-sm mb-4 flex items-center gap-2">
-               <PieChart size={16} className="text-muted" /> {t('dashboard.expense_breakdown')}
-            </h3>
-
-            {subscriptionsLoading ? (
-               <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
-                  <div className="flex-1 space-y-2">
-                     <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full animate-pulse"></div>
-                     <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-2/3 animate-pulse"></div>
-                  </div>
-               </div>
-            ) : breakdown.length === 0 ? (
-               <div className="text-center py-4 text-xs text-muted">{t('dashboard.add_stats_hint')}</div>
-            ) : (
-               <div className="flex items-center gap-6">
-                  <div className="relative w-24 h-24 flex-shrink-0">
-                     <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border-subtle)" strokeWidth="20" />
-                        {breakdown.map((item, i) => {
-                           const dash = item.percentage;
-                           const color = ['#3B82F6', '#8B5CF6', '#10B981'][i] || '#9CA3AF';
-                           return (
-                              <circle
-                                 key={i} cx="50" cy="50" r="40" fill="none"
-                                 stroke={color} strokeWidth="20"
-                                 strokeDasharray={`${dash} 1000`}
-                                 strokeDashoffset={-20 * i}
-                                 className="opacity-90"
-                              />
-                           );
-                        })}
-                     </svg>
-                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-muted">
-                           {new Date().toLocaleString('default', { month: 'short' })}
-                        </span>
-                     </div>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                     {breakdown.map((item, i) => {
-                        const color = ['bg-blue-500', 'bg-purple-500', 'bg-green-500'][i] || 'bg-gray-400';
-                        return (
-                           <div key={i} className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-2 text-primary"><div className={`w-2 h-2 rounded-full ${color}`}></div>{item.name}</div>
-                              <span className="font-bold text-primary">{item.percentage.toFixed(0)}%</span>
-                           </div>
-                        );
-                     })}
-                  </div>
-               </div>
-            )}
-            <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-               {t('dashboard.view_analytics')} <ArrowRight size={10} />
-            </button>
-         </div>
-      );
-   };
+   
 
    const renderContent = () => {
       if (isAddModalOpen) {
@@ -692,8 +548,8 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                      </div>
 
                      <div className="space-y-6">
-                        <UpcomingTimeline />
-                        <ExpenseBreakdown />
+                        <UpcomingTimeline subscriptions={subscriptions} subscriptionsLoading={subscriptionsLoading} setIsCalendarOpen={setIsCalendarOpen} setSelectedSub={setSelectedSub} handleMarkAsPaid={handleMarkAsPaid} />
+                        <ExpenseBreakdown metrics={derivedStats} subscriptionsLoading={subscriptionsLoading} setCurrentView={setCurrentView} />
                      </div>
                   </div>
                </div>
