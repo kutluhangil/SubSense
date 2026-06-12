@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import UpcomingTimeline from './dashboard/UpcomingTimeline';
 import ExpenseBreakdown from './dashboard/ExpenseBreakdown';
+import AnalyticsChart from './AnalyticsChart';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
@@ -549,6 +550,10 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
 
                      <div className="space-y-6">
                         <UpcomingTimeline subscriptions={subscriptions} subscriptionsLoading={subscriptionsLoading} setIsCalendarOpen={setIsCalendarOpen} setSelectedSub={setSelectedSub} handleMarkAsPaid={handleMarkAsPaid} />
+                        <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
+                           <h3 className="text-lg font-bold text-primary mb-4">Analytics</h3>
+                           <AnalyticsChart subscriptions={subscriptions} />
+                        </div>
                         <ExpenseBreakdown metrics={derivedStats} subscriptionsLoading={subscriptionsLoading} setCurrentView={setCurrentView} />
                      </div>
                   </div>
