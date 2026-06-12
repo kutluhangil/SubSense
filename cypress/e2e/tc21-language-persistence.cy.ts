@@ -9,8 +9,8 @@ describe('TC21 — Dil Tercihi Giriş Sonrası Korunmalı', () => {
     cy.visit('/');
 
     // Landing page'de Türkçe'yi seç (dil seçici footer veya navbar'da)
-    cy.contains('Language', { matchCase: false }).then(($el) => {
-      if ($el.length) {
+    cy.contains('Language', { matchCase: false }).then(($el: any) => {
+      if ($el && $el.length) {
         cy.wrap($el).click();
         cy.contains('Türkçe').click();
       }
