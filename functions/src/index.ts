@@ -365,3 +365,88 @@ export const deleteUserAccount = functions.https.onCall(async (data, context) =>
 // 4. API (Express App)
 import app from "./app";
 export const api = functions.https.onRequest(app);
+
+
+// ── GEMINI PROXY FUNCTIONS ────────────────────────────────────────────────
+// The Gemini API key is stored server-side in Firebase Functions config.
+// Set it via: firebase functions:config:set gemini.key="AIza..."
+// This ensures the key NEVER appears in the frontend bundle.
+
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
+async function callGeminiRaw(
+  contents: object[],
+  systemInstruction?: string,
+  responseMimeType?: string
+): Promise<string | null> {
+  const geminiKey = functions.config().gemini?.key;
+  if (!geminiKey) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "Gemini API key is not configured on the server. Run: firebase functions:config:set gemini.key=\"AIza...\""
+    );
+  }
+
+  const body: any = {
+    contents,
+    generationConfig: responseMimeType ? { responseMimeType } : {},
+  };
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+
+  const res = await fetch(`${GEMINI_API_URL}?key=${geminiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("Gemini API Error:", res.status, errText);
+    throw new functions.https.HttpsError("internal", `Gemini API returned ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+}
+
+// 8. Gemini Insights Proxy (single-turn, JSON response)
+export const geminiProxy = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
+  }
+
+  const { prompt, systemInstruction } = data;
+  if (!prompt || typeof prompt !== "string") {
+    throw new functions.https.HttpsError("invalid-argument", "prompt is required.");
+  }
+
+  const text = await callGeminiRaw(
+    [{ parts: [{ text: prompt }] }],
+    systemInstruction,
+    "application/json"
+  );
+
+  return { text };
+});
+
+// 9. Gemini Chat Proxy (multi-turn conversation)
+export const geminiChatProxy = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
+  }
+
+  const { history, userMessage, systemInstruction } = data;
+  if (!userMessage || typeof userMessage !== "string") {
+    throw new functions.https.HttpsError("invalid-argument", "userMessage is required.");
+  }
+
+  const contents = [
+    ...(Array.isArray(history) ? history : []),
+    { role: "user", parts: [{ text: userMessage }] },
+  ];
+
+  const text = await callGeminiRaw(contents, systemInstruction);
+  return { text };
+});

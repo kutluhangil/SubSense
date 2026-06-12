@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: '/subsense/',
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +18,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: '/subsense/',
+        start_url: '/subsense/',
         // Place icon-192.png and icon-512.png in /public before deploying
         icons: [
           { src: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
