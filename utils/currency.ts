@@ -92,38 +92,50 @@ export const getRates = (): Record<string, number> => {
   return DEFAULT_RATES;
 };
 
+// Map a raw {CODE: rate} object (relative to USD) onto our supported codes.
+const mapToSupported = (rates: Record<string, number>): Record<string, number> => {
+  const out: Record<string, number> = {};
+  Object.keys(DEFAULT_RATES).forEach(code => {
+    out[code] = rates[code] ?? DEFAULT_RATES[code] ?? 1;
+  });
+  return out;
+};
+
+const withTimeout = (url: string, ms = 5000): Promise<Response> => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(id));
+};
+
 /**
- * Fetches live exchange rates from Open ER API (free, no key required).
- * Returns the rates object or null if fetch fails.
+ * Primary source: Frankfurter (European Central Bank reference rates, free, no
+ * key, supports TRY). Falls back to Open ER API, then to static defaults.
  */
 const fetchLiveRates = async (): Promise<Record<string, number> | null> => {
+  // 1. Frankfurter (ECB official)
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
-
-    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return null;
-
-    const json = await response.json();
-    if (json.result !== 'success' || !json.rates) return null;
-
-    // Merge with our supported currencies — keep only codes we support
-    const supportedCodes = Object.keys(DEFAULT_RATES);
-    const liveRates: Record<string, number> = {};
-    supportedCodes.forEach(code => {
-      liveRates[code] = json.rates[code] ?? DEFAULT_RATES[code] ?? 1;
-    });
-
-    return liveRates;
+    const symbols = Object.keys(DEFAULT_RATES).filter(c => c !== 'USD').join(',');
+    const res = await withTimeout(`https://api.frankfurter.dev/v2/latest?base=USD&symbols=${symbols}`);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.rates) return mapToSupported({ USD: 1, ...json.rates });
+    }
   } catch (e) {
-    // Network error, timeout, or abort — silent fallback
-    console.debug("Live FX fetch failed, using cached/default rates", e);
-    return null;
+    console.debug('Frankfurter FX failed, trying fallback', e);
   }
+
+  // 2. Open ER API (fallback)
+  try {
+    const res = await withTimeout('https://open.er-api.com/v6/latest/USD');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.result === 'success' && json.rates) return mapToSupported(json.rates);
+    }
+  } catch (e) {
+    console.debug('Open ER API FX failed, using cached/default rates', e);
+  }
+
+  return null;
 };
 
 /**

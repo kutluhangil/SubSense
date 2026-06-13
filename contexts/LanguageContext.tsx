@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, LanguageCode } from '../utils/translations';
 import { CURRENCY_LOCALES, convertAmount, initializeRates } from '../utils/currency';
+import { loadPriceCatalog } from '../utils/priceCatalog';
 import { debugLog } from '../utils/debug';
 import { useAuth } from './AuthContext';
 import { updateUserSettings } from '../utils/firestore';
@@ -92,9 +93,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     debugLog('CURRENCY_CONVERSION', `Base currency set to ${currentCurrency}`);
   }, [currentCurrency]);
 
-  // Warm exchange rate cache on app startup (non-blocking)
+  // Warm exchange rate cache + weekly-synced price catalog on startup (non-blocking)
   useEffect(() => {
     initializeRates();
+    loadPriceCatalog();
   }, []);
 
   // Apply Theme

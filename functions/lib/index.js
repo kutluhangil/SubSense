@@ -413,4 +413,5 @@ exports.geminiChatProxy = functions.https.onCall(async (data, context) => {
 });
 __exportStar(require("./calendar"), exports);
 __exportStar(require("./emails"), exports);
+__exportStar(require("./priceSync"), exports);
 //# sourceMappingURL=index.js.map

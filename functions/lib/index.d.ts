@@ -10,3 +10,4 @@ export declare const geminiProxy: functions.HttpsFunction & functions.Runnable<a
 export declare const geminiChatProxy: functions.HttpsFunction & functions.Runnable<any>;
 export * from './calendar';
 export * from './emails';
+export * from './priceSync';

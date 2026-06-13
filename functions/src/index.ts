@@ -452,3 +452,4 @@ export const geminiChatProxy = functions.https.onCall(async (data, context) => {
 });
 export * from './calendar';
 export * from './emails';
+export * from './priceSync';

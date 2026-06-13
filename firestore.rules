@@ -45,6 +45,17 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // Public price data — written only by the Admin SDK (priceSync function),
+    // which bypasses rules. Clients may read; never write.
+    match /priceCatalog/{brandId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /priceConfig/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

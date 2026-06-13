@@ -1,3 +1,5 @@
+import { getCatalogPrice } from './priceCatalog';
+
 export interface SubscriptionTemplate {
   name: string;
   type: string;
@@ -49,5 +51,11 @@ export const subscriptionTemplates: SubscriptionTemplate[] = [
 export function getSuggestions(query: string): SubscriptionTemplate[] {
   if (!query) return [];
   const lowerQuery = query.toLowerCase();
-  return subscriptionTemplates.filter(t => t.name.toLowerCase().includes(lowerQuery));
+  const matches = subscriptionTemplates.filter(t => t.name.toLowerCase().includes(lowerQuery));
+  // Override the local default with the weekly Gemini-synced price when available.
+  return matches.map(t => {
+    const region: 'tr' | 'us' = t.currency === 'TRY' ? 'tr' : 'us';
+    const synced = getCatalogPrice(t.name, region);
+    return synced ? { ...t, price: synced.price as number, currency: synced.currency } : t;
+  });
 }
