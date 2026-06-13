@@ -7,7 +7,7 @@ import './index.css';
 
 window.onerror = (msg, _src, line, _col, err) => {
   const container = document.getElementById('root');
-  if (container && !container.children.length) {
+  if (container) {
     container.innerHTML = `
       <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
         <h2 style="color:#ff4444">⛔ SubSense Runtime Error</h2>
@@ -21,7 +21,7 @@ window.onerror = (msg, _src, line, _col, err) => {
 
 window.addEventListener('unhandledrejection', (event) => {
   const container = document.getElementById('root');
-  if (container && !container.children.length) {
+  if (container) {
     container.innerHTML = `
       <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
         <h2 style="color:#ff4444">⛔ SubSense Unhandled Promise Rejection</h2>
