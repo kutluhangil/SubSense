@@ -63,11 +63,11 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-subtle text-xs uppercase tracking-wider text-muted font-semibold bg-gray-50/50 dark:bg-gray-800/50">
-            <th className="px-6 py-4 rounded-tl-lg">Service</th>
-            <th className="px-6 py-4">Status</th>
-            <th className="px-6 py-4">Price</th>
-            <th className="px-6 py-4">Next Payment</th>
-            <th className="px-6 py-4 rounded-tr-lg text-right">Actions</th>
+            <th className="px-6 py-4 rounded-tl-lg">{t('table.service')}</th>
+            <th className="px-6 py-4">{t('table.status')}</th>
+            <th className="px-6 py-4">{t('table.price')}</th>
+            <th className="px-6 py-4">{t('table.next_payment')}</th>
+            <th className="px-6 py-4 rounded-tr-lg text-right">{t('table.actions')}</th>
           </tr>
         </thead>
         <tbody className="bg-card">

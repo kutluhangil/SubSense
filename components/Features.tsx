@@ -106,7 +106,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
           <span className="inline-block py-1 px-3 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 text-xs font-bold uppercase tracking-wider mb-6">
             Minimal design, powerful insights
           </span>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12">Designed for clarity. Built for control.</h2>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12">{t('features.section.clarity')}</h2>
 
           <div className="relative mx-auto max-w-5xl">
             <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-gray-900 via-transparent to-transparent z-10 h-full w-full pointer-events-none"></div>
@@ -144,8 +144,8 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
                  {/* Overlay Text */}
                  <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="bg-white/90 backdrop-blur-md px-8 py-4 rounded-2xl shadow-xl border border-white/50 text-center transform translate-y-4 group-hover:translate-y-0 transition-transform">
-                        <p className="font-bold text-gray-900 text-lg">Click to Interact</p>
-                        <p className="text-gray-500 text-sm">Launch the live demo</p>
+                        <p className="font-bold text-gray-900 text-lg">{t('features.section.click_interact')}</p>
+                        <p className="text-gray-500 text-sm">{t('features.section.launch_demo')}</p>
                     </div>
                  </div>
               </div>
@@ -160,7 +160,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 mb-8 animate-pulse">
             <Zap className="w-8 h-8 text-yellow-400" />
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">Let AI handle the boring part.</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t('features.section.ai_boring')}</h2>
           <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
             SubSense automatically updates subscription prices, tracks payment dates, and alerts you about global price changes — so you can focus on what matters.
           </p>
@@ -172,7 +172,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Stay connected with your friends.</h2>
+               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{t('features.section.stay_connected')}</h2>
                <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
                  Add friends, share subscriptions, and compare spending habits globally. Discover new services your network loves and split costs easily.
                </p>
@@ -225,7 +225,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
       <div className="py-20 bg-gray-50 dark:bg-gray-800 border-y border-gray-100 dark:border-gray-700 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Shield className="w-12 h-12 text-gray-900 dark:text-white mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Your data stays yours.</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{t('features.section.data_yours')}</h2>
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             All information is encrypted and stored securely within the platform. You are always in control of what you share and who sees it. We never sell your personal data.
           </p>
@@ -235,7 +235,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
       {/* 7. Final CTA */}
       <div className="py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">Ready to take control of your subscriptions?</h2>
+          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">{t('features.section.ready_cta')}</h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={() => onOpenAuth('signup')}

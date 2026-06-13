@@ -100,7 +100,7 @@ export default function Footer() {
                onClick={() => setIsLimitationsOpen(true)}
                className="text-xs font-bold text-gray-400 hover:text-amber-600 transition-colors flex items-center gap-1"
              >
-                <AlertCircle size={12} /> Beta Limitations
+                <AlertCircle size={12} /> {t('help.cat.limitations')}
              </button>
           </div>
           <div className="flex flex-col items-end gap-2">
