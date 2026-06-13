@@ -18,6 +18,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "hero.take_control_desc": "Take control of your digital life. Join thousands of smart spenders today.",
     "hero.start_tracking_free": "Start Tracking Free",
     "hero.view_live_demo": "View Live Demo",
+    "hero.mock.monthly": "Monthly",
+    "hero.mock.active": "Active",
+    "hero.mock.yearly": "Yearly",
+    "hero.mock.trend": "Spending trend",
+    "hero.mock.renews": "renews in 3 days",
+    "hero.mock.saved": "saved / year",
 
     // Pricing
     "pricing.title": "Simple, transparent pricing.",
@@ -764,6 +770,12 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "hero.take_control_desc": "Dijital hayatınızın kontrolünü elinize alın. Binlerce akıllı harcama yapan kullanıcıya bugün katılın.",
     "hero.start_tracking_free": "Ücretsiz Takibe Başla",
     "hero.view_live_demo": "Canlı Demoyu İncele",
+    "hero.mock.monthly": "Aylık",
+    "hero.mock.active": "Aktif",
+    "hero.mock.yearly": "Yıllık",
+    "hero.mock.trend": "Harcama trendi",
+    "hero.mock.renews": "3 gün içinde yenilenir",
+    "hero.mock.saved": "yıllık tasarruf",
 
     // Pricing
     "pricing.title": "Basit, şeffaf fiyatlandırma.",

@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import React from 'react';
+import { Sparkles } from 'lucide-react';
 import HeroTextRotator from './HeroTextRotator';
 import { useLanguage } from '../contexts/LanguageContext';
-import ProfileCarousel from './ProfileCarousel';
+import FloatingLogoLayer from './FloatingLogoLayer';
+import HeroDashboardMockup from './HeroDashboardMockup';
 import FeatureGrid from './FeatureGrid';
 import MicroDemoRow from './MicroDemoRow';
-import ProfileCardModal, { UserProfile } from './ProfileCardModal';
 import PricingSection from './PricingSection';
+import FinalCTA from './FinalCTA';
 
 interface HeroProps {
   onOpenDemo?: () => void;
@@ -16,7 +17,6 @@ interface HeroProps {
 
 export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
   const { t } = useLanguage();
-  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   const handleAuth = (mode: 'login' | 'signup') => {
     if (onOpenAuth) onOpenAuth(mode);
@@ -36,9 +36,14 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
       
       {/* 1. Dynamic Background Layer */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-[120px] animate-blob"></div>
-         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] bg-purple-100/40 dark:bg-purple-900/20 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
-         <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-indigo-50/50 dark:bg-indigo-900/20 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+         {/* Dot-grid texture for depth */}
+         <div className="absolute inset-0 opacity-[0.5] dark:opacity-[0.35] [background-image:radial-gradient(circle,rgba(99,102,241,0.18)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_30%,#000_30%,transparent_75%)]"></div>
+         {/* Aurora glow */}
+         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-blue-200/40 dark:bg-blue-900/25 rounded-full blur-[120px] animate-blob"></div>
+         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] bg-purple-200/40 dark:bg-purple-900/25 rounded-full blur-[120px] animate-blob animation-delay-2000"></div>
+         <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-indigo-100/50 dark:bg-indigo-900/25 rounded-full blur-[100px] animate-blob animation-delay-4000"></div>
+         {/* Drifting real subscription brand logos */}
+         <FloatingLogoLayer />
       </div>
 
       {/* 2. Hero Content */}
@@ -84,10 +89,9 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
                  </div>
               </div>
 
-              {/* Right Column: Profile Carousel */}
-              <div className="relative h-[400px] lg:h-[500px] flex items-center">
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-white/80 dark:via-gray-900/50 dark:to-gray-900/80 z-20 pointer-events-none lg:hidden"></div>
-                 <ProfileCarousel onProfileClick={setSelectedProfile} />
+              {/* Right Column: Product Mockup */}
+              <div className="relative flex items-center justify-center py-8 lg:py-0">
+                 <HeroDashboardMockup />
               </div>
 
            </div>
@@ -108,38 +112,9 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
       </div>
 
       {/* 6. Final CTA Section */}
-      <div className="relative py-24 px-4 overflow-hidden">
-         <div className="absolute inset-0 bg-gray-900 z-0">
-            <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-         </div>
-         <div className="relative z-10 max-w-4xl mx-auto text-center text-white">
-            <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">{t('hero.join_community')}</h2>
-            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-               {t('hero.take_control_desc')}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-               <button 
-                 onClick={() => handleAuth('signup')}
-                 className="w-full sm:w-auto px-8 py-4 bg-white text-gray-900 rounded-full font-bold text-lg hover:bg-gray-100 hover:scale-105 transition-all shadow-xl"
-               >
-                 {t('hero.start_tracking_free')}
-               </button>
-               <button 
-                 onClick={handleDemo}
-                 className="w-full sm:w-auto px-8 py-4 bg-transparent border border-gray-600 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all"
-               >
-                 {t('hero.view_live_demo')}
-               </button>
-            </div>
-         </div>
+      <div className="relative z-10">
+         <FinalCTA onStart={() => handleAuth('signup')} onDemo={handleDemo} />
       </div>
-
-      {/* Modal Integration */}
-      <ProfileCardModal 
-        isOpen={!!selectedProfile} 
-        onClose={() => setSelectedProfile(null)} 
-        user={selectedProfile} 
-      />
 
       <style>{`
         @keyframes blob {
