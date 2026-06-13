@@ -34,6 +34,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
 
+  <script>
+    window.onerror = (msg, src, line, col, err) => {
+      const root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = `
+          <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
+            <h2 style="color:#ff4444">⛔ SubSense Load Error</h2>
+            <p><strong>${msg}</strong></p>
+            <p>Source: ${src} | Line: ${line}:${col}</p>
+            <pre style="white-space:pre-wrap;font-size:12px;color:#ffa">${err?.stack || 'No stack trace'}</pre>
+          </div>`;
+      }
+      return false;
+    };
+    window.addEventListener('unhandledrejection', (event) => {
+      const root = document.getElementById('root');
+      if (root) {
+        root.innerHTML = `
+          <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
+            <h2 style="color:#ff4444">⛔ SubSense Unhandled Rejection</h2>
+            <pre style="white-space:pre-wrap;font-size:12px;color:#ffa">${String(event.reason?.stack || event.reason)}</pre>
+          </div>`;
+      }
+    });
+  </script>
   <script type="module" src="/index.tsx"></script>
 </head>
 
