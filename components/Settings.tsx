@@ -568,10 +568,15 @@ const Toggle = ({ id, defaultChecked = false, color = "bg-gray-900 dark:bg-blue-
 
     return (
         <button
+            type="button"
+            role="switch"
+            aria-checked={enabled}
             onClick={toggle}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? color : 'bg-gray-200 dark:bg-gray-600'}`}
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${enabled ? color : 'bg-gray-200 dark:bg-gray-600'}`}
         >
-            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-4.5' : 'translate-x-1'}`} style={{ transform: enabled ? 'translateX(18px)' : 'translateX(2px)' }} />
+            <span
+                className={`pointer-events-none absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-white shadow transition-all duration-200 ${enabled ? 'left-[19px]' : 'left-[3px]'}`}
+            />
         </button>
     );
 };

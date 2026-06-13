@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Tailwind v4 defaults the `dark:` variant to the OS prefers-color-scheme
+   media query. This app toggles theme with a `.dark` class on <html>, so we
+   must redefine the variant to be class-based — otherwise the in-app
+   Light/Dark switch is ignored and light mode never applies. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Tailwind v4 theme tokens. v4 does NOT auto-load tailwind.config.js,
    so custom colors/fonts MUST be declared here to generate utilities
    like text-primary, bg-card, border-subtle, font-sans. */
