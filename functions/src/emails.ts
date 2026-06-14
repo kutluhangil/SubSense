@@ -9,12 +9,22 @@ const getDb = () => {
   return admin.firestore();
 };
 
-const RESEND_API_KEY = "re_fQDAZQKM_C82KeeLQDfxFoTrWpcnXVHPU";
-const resend = new Resend(RESEND_API_KEY);
+// Resend API key is read from Functions config — never hardcoded in source.
+// Set via: firebase functions:config:set resend.key="re_..."
+const getResend = (): Resend | null => {
+  const key = functions.config().resend?.key;
+  if (!key) {
+    console.error("resend.key is not configured — skipping email send.");
+    return null;
+  }
+  return new Resend(key);
+};
 
 export const sendRenewalReminders = functions.pubsub.schedule("every day 09:00").timeZone("Europe/Istanbul").onRun(async (context) => {
   const db = getDb();
-  
+  const resend = getResend();
+  if (!resend) return null;
+
   // Calculate target date (3 days from now)
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + 3);
@@ -63,4 +73,5 @@ export const sendRenewalReminders = functions.pubsub.schedule("every day 09:00")
   } catch (error) {
     console.error("Error sending reminders:", error);
   }
+  return null;
 });
