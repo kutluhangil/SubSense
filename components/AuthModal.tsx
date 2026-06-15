@@ -221,7 +221,8 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                     <Mail size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                     <input
                       type="email"
-                      autoComplete="email"
+                      name="email"
+                      autoComplete="username"
                       className="block w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500 transition-all bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
                       placeholder="name@example.com"
                       value={formData.email}
@@ -236,6 +237,7 @@ export default function AuthModal({ isOpen, onClose, initialMode, onLoginSubmit,
                     <Lock size={18} className="absolute left-3.5 top-3 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                     <input
                       type="password"
+                      name="password"
                       autoComplete="current-password"
                       className="block w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 dark:focus:ring-white/10 focus:border-gray-900 dark:focus:border-gray-500 transition-all bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
                       placeholder="••••••••"

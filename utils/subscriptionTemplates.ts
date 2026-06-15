@@ -17,18 +17,18 @@ export interface SubscriptionTemplate {
 export const subscriptionTemplates: SubscriptionTemplate[] = [
   // --- Streaming (TR) ---
   { name: 'Netflix', type: 'Entertainment', price: 289.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'netflix' },
-  { name: 'Disney+', type: 'Entertainment', price: 279.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'disney' },
+  { name: 'Disney+', type: 'Entertainment', price: 449.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'disney' },
   { name: 'Amazon Prime', type: 'Shopping', price: 39.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'amazonprime' },
   { name: 'Exxen', type: 'Entertainment', price: 169.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'exxen' },
   { name: 'BluTV', type: 'Entertainment', price: 89.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'blutv' },
   { name: 'Crunchyroll', type: 'Entertainment', price: 169.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'crunchyroll' },
   // --- Music (TR) ---
-  { name: 'Spotify', type: 'Music', price: 64.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'spotify' },
-  { name: 'YouTube Premium', type: 'Entertainment', price: 139.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'youtube' },
+  { name: 'Spotify', type: 'Music', price: 99.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'spotify' },
+  { name: 'YouTube Premium', type: 'Entertainment', price: 119.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'youtube' },
   { name: 'Apple Music', type: 'Music', price: 74.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'applemusic' },
   // --- Gaming (TR) ---
-  { name: 'Xbox Game Pass', type: 'Gaming', price: 449.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'xboxgamepass' },
-  { name: 'PlayStation Plus', type: 'Gaming', price: 370.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'playstationplus' },
+  { name: 'Xbox Game Pass', type: 'Gaming', price: 529.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'xboxgamepass' },
+  { name: 'PlayStation Plus', type: 'Gaming', price: 600.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'playstationplus' },
   { name: 'Discord Nitro', type: 'Gaming', price: 149.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'discord' },
   { name: 'Twitch Turbo', type: 'Gaming', price: 164.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'twitch' },
   // --- Productivity / SaaS ---

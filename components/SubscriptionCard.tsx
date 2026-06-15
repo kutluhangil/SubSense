@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, ChevronRight, Globe, Building2, AlertCircle, MapPin, Zap } from 'lucide-react';
+import { X, Calendar, ChevronRight, Globe, Building2, AlertCircle, MapPin, Zap, User, TrendingUp } from 'lucide-react';
 import { BRAND_COLORS, CURRENCIES, SubscriptionDetail, PlanTier } from '../utils/data';
 import { LogoRenderer } from './LogoRenderer';
 import { getBrandLogo } from '../utils/logoUtils';
@@ -145,6 +145,18 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
 
     const currencySymbol = CURRENCIES.find(c => c.code === currency)?.symbol || currency;
 
+    // Explore-style key fact (only rendered when the value exists)
+    const fact = (Icon: typeof Calendar, label: string, value?: string) =>
+        value ? (
+            <div className="flex items-center gap-2 rounded-xl bg-gray-50 dark:bg-gray-800/50 px-3 py-2">
+                <Icon size={15} className="shrink-0 text-gray-400" />
+                <div className="min-w-0">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">{label}</p>
+                    <p className="truncate text-xs font-bold text-gray-800 dark:text-gray-200">{value}</p>
+                </div>
+            </div>
+        ) : null;
+
     return (
         <div className="relative w-full max-w-md mx-auto">
             <div className="relative bg-white dark:bg-gray-900 rounded-[24px] shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 flex flex-col max-h-[85vh]">
@@ -204,6 +216,23 @@ export default function SubscriptionCard({ service, existingSubscriptions, onAdd
                             )}
                         </div>
                     </div>
+
+                    {/* About + key facts (Explore-style) */}
+                    {(service.description || service.ceo || service.netWorth || service.founders) && (
+                        <div className="px-6 pb-3 pt-1">
+                            {service.description && (
+                                <p className="mb-4 line-clamp-3 text-center text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                                    {service.description.split('\n')[0]}
+                                </p>
+                            )}
+                            <div className="grid grid-cols-2 gap-2">
+                                {fact(Calendar, t('card.founded'), service.foundedYear?.split(' ')[0])}
+                                {fact(Building2, t('card.hq'), service.headquarters?.split(',')[0])}
+                                {fact(User, t('card.ceo'), service.ceo?.split(',')[0])}
+                                {fact(TrendingUp, t('card.value'), service.netWorth || service.globalUserCount)}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Editor Form */}
                     <div className="px-6 pb-8 pt-2 space-y-5">

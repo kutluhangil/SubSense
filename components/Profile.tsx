@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   User, MapPin, Mail, Phone, Camera, Edit2, Link as LinkIcon, Calendar, Activity,
-  CheckCircle, Zap, Check, Trophy, Wallet, X, Crown, CreditCard,
+  CheckCircle, Zap, Check, Trophy, Wallet, X, Crown, CreditCard, Globe, PieChart, BadgeCheck,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,7 @@ import { Subscription } from './SubscriptionModal';
 import { BrandIcon } from './BrandIcon';
 import ImageCropperModal from './ImageCropperModal';
 import { useAchievements } from '../hooks/useAchievements';
+import { CostDonut } from './AnalyticsCharts';
 import { Card, SectionCard, StatTile, Pill, PrimaryButton, GhostButton, SeeAllLink } from './ui';
 
 interface ProfileProps {
@@ -24,8 +25,8 @@ const DEFAULT_AVATAR =
 const monthly = (s: Subscription) => (s.cycle === 'Monthly' ? s.price : s.price / 12);
 
 export default function Profile({ user, subscriptions, userKey }: ProfileProps) {
-  const { t, formatPrice } = useLanguage();
-  const { isPro } = useAuth();
+  const { t, formatPrice, convert } = useLanguage();
+  const { isPro, currentUser } = useAuth();
 
   const [profileData, setProfileData] = useState(() => {
     try {
@@ -57,10 +58,19 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
 
   // Stats
   const activeSubs = subscriptions.filter((s) => s.status === 'Active');
-  const monthlySpend = activeSubs.reduce((a, s) => a + monthly(s), 0);
+  const monthlySpend = activeSubs.reduce((a, s) => a + convert(monthly(s), s.currency), 0);
   const yearlySpend = monthlySpend * 12;
   const lifetimeSpend = subscriptions.reduce((a, s) => a + (s.history?.reduce((x, y) => x + y, 0) || s.price), 0);
-  const topSubs = [...activeSubs].sort((a, b) => monthly(b) - monthly(a)).slice(0, 5);
+  const topSubs = [...activeSubs].sort((a, b) => convert(monthly(b), b.currency) - convert(monthly(a), a.currency)).slice(0, 5);
+
+  const categoryTotals = useMemo(() => {
+    const m: Record<string, number> = {};
+    activeSubs.forEach((s) => {
+      const c = s.category || 'Other';
+      m[c] = (m[c] || 0) + convert(monthly(s), s.currency);
+    });
+    return m;
+  }, [activeSubs, convert]);
 
   const [localSaved] = useState(() => {
     try {
@@ -79,7 +89,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
   }));
   const earnedCount = badges.filter((b) => b.earned).length;
 
-  // Profile completeness
   const completionFields = [
     !!profileData.bio,
     !!profileData.phone,
@@ -93,15 +102,12 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
     localStorage.setItem(`subscriptionhub.${userKey}.profile`, JSON.stringify(profileData));
   }, [profileData, userKey]);
 
-  const handleInputChange = (field: string, value: string) =>
-    setProfileData((p) => ({ ...p, [field]: value }));
-
+  const handleInputChange = (field: string, value: string) => setProfileData((p) => ({ ...p, [field]: value }));
   const handleSave = () => {
     setIsEditing(false);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
     if (file) {
@@ -115,12 +121,17 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
     }
     e.target.value = '';
   };
-
   const handleCropComplete = (cropped: string) =>
     setProfileData((p) => ({ ...p, [cropperType === 'avatar' ? 'avatar' : 'coverImage']: cropped }));
 
   const inputCls =
     'w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-sm text-gray-900 dark:text-white transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-gray-50/50 disabled:text-gray-500 dark:disabled:bg-gray-800';
+
+  const chip = (icon: React.ReactNode, text: string) => (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-white/10 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+      {icon} {text}
+    </span>
+  );
 
   return (
     <div className="animate-in fade-in duration-500 pb-12">
@@ -128,43 +139,52 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
       <input type="file" ref={coverInputRef} className="hidden" accept="image/png,image/jpeg,image/webp" onChange={(e) => handleFileChange(e, 'cover')} />
 
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* ---------------- Hero ---------------- */}
-        <Card padding="p-0">
-          <div className="group/cover relative h-52 overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-            {profileData.coverImage ? (
-              <img src={profileData.coverImage} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 [background-image:radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:22px_22px]" />
-            )}
-            <button
-              onClick={() => coverInputRef.current?.click()}
-              className="absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-lg bg-black/30 px-3 py-1.5 text-xs font-semibold text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/50 group-hover/cover:opacity-100"
-            >
-              <Camera size={14} /> {t('profile.edit_cover')}
-            </button>
+        {/* ---------------- Premium hero ---------------- */}
+        <Card padding="p-0" className="overflow-visible">
+          <div className="relative rounded-t-2xl overflow-hidden">
+            <div className="group/cover relative h-60">
+              {profileData.coverImage ? (
+                <img src={profileData.coverImage} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,#6366f1,transparent_45%),radial-gradient(circle_at_85%_25%,#a855f7,transparent_45%),radial-gradient(circle_at_50%_90%,#3b82f6,transparent_55%)] bg-indigo-600">
+                  <div className="absolute inset-0 [background-image:radial-gradient(circle,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:24px_24px]" />
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent" />
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                className="absolute bottom-4 right-4 z-20 flex items-center gap-2 rounded-lg bg-black/30 px-3 py-1.5 text-xs font-semibold text-white opacity-0 backdrop-blur-md transition-opacity hover:bg-black/50 group-hover/cover:opacity-100"
+              >
+                <Camera size={14} /> {t('profile.edit_cover')}
+              </button>
+            </div>
           </div>
 
-          <div className="px-6 pb-8 sm:px-8">
-            <div className="-mt-14 mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="px-6 pb-7 sm:px-8">
+            <div className="-mt-16 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex items-end gap-5">
-                <button onClick={() => avatarInputRef.current?.click()} className="group/avatar relative">
-                  <span className="block h-28 w-28 rounded-full bg-white p-1 shadow-lg dark:bg-gray-800">
+                <button onClick={() => avatarInputRef.current?.click()} className="group/avatar relative shrink-0">
+                  <span className="absolute -inset-1 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-blue-500 opacity-70 blur-[6px]" />
+                  <span className="relative block h-32 w-32 rounded-full bg-white p-1.5 shadow-xl dark:bg-gray-800">
                     <img src={profileData.avatar} alt="" className="h-full w-full rounded-full object-cover" />
                   </span>
-                  <span className="absolute inset-1 flex items-center justify-center rounded-full bg-black/40 opacity-0 backdrop-blur-[1px] transition-opacity group-hover/avatar:opacity-100">
-                    <Camera className="text-white" size={22} />
+                  <span className="absolute inset-1.5 flex items-center justify-center rounded-full bg-black/40 opacity-0 backdrop-blur-[1px] transition-opacity group-hover/avatar:opacity-100">
+                    <Camera className="text-white" size={24} />
                   </span>
+                  <span className="absolute bottom-2 right-2 h-4 w-4 rounded-full border-[3px] border-white bg-green-500 dark:border-gray-800" />
                 </button>
-                <div className="mb-2">
-                  <div className="flex items-center gap-2">
+                <div className="mb-1">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h1 className="font-display text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">{user.name}</h1>
-                    {isPro ? (
-                      <Pill color="#f59e0b"><Crown size={11} /> Pro</Pill>
-                    ) : (
-                      <Pill color="#6b7280">Free</Pill>
-                    )}
+                    {isPro ? <Pill color="#f59e0b"><Crown size={11} /> Pro</Pill> : <Pill color="#6b7280">Free</Pill>}
+                    {currentUser?.emailVerified && <BadgeCheck size={18} className="text-blue-500" />}
                   </div>
-                  <p className="font-medium text-gray-500 dark:text-gray-400">{user.email}</p>
+                  <p className="mt-0.5 font-medium text-gray-500 dark:text-gray-400">{user.email}</p>
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                    {chip(<Calendar size={12} />, profileData.joinedDate)}
+                    {profileData.location && chip(<MapPin size={12} />, profileData.location)}
+                    {profileData.website && chip(<Globe size={12} />, profileData.website)}
+                  </div>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -179,7 +199,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
               </div>
             </div>
 
-            <div className="max-w-2xl">
+            <div className="mt-4 max-w-2xl">
               {!isEditing ? (
                 <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{profileData.bio || t('profile.no_bio')}</p>
               ) : (
@@ -206,7 +226,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
         {/* ---------------- Main grid ---------------- */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-8">
-            {/* Personal details */}
             <SectionCard title={t('profile.personal_details')} icon={User}>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="space-y-1.5">
@@ -244,7 +263,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
               </div>
             </SectionCard>
 
-            {/* Top subscriptions (NEW) */}
             <SectionCard title={t('profile.top_subs')} icon={CreditCard} iconColor="#3b82f6">
               {topSubs.length > 0 ? (
                 <div className="space-y-2">
@@ -258,7 +276,7 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                         <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{s.name}</p>
                         <p className="text-[11px] text-gray-400">{s.category || s.cycle}</p>
                       </div>
-                      <span className="text-sm font-bold tabular-nums text-gray-900 dark:text-white">{formatPrice(monthly(s))}<span className="ml-1 text-xs font-normal text-gray-400">/mo</span></span>
+                      <span className="text-sm font-bold tabular-nums text-gray-900 dark:text-white">{formatPrice(convert(monthly(s), s.currency))}<span className="ml-1 text-xs font-normal text-gray-400">/mo</span></span>
                     </div>
                   ))}
                 </div>
@@ -268,9 +286,14 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
             </SectionCard>
           </div>
 
-          {/* Right column */}
           <div className="space-y-6 lg:col-span-4">
-            {/* Achievements */}
+            {/* Spending by category — premium donut */}
+            {activeSubs.length > 0 && (
+              <SectionCard title={t('analytics.cost_dist')} icon={PieChart} iconColor="#22c55e">
+                <CostDonut categoryTotals={categoryTotals} />
+              </SectionCard>
+            )}
+
             <SectionCard
               title={t('profile.achievements')}
               icon={Trophy}
@@ -280,15 +303,12 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
               <div className="grid grid-cols-4 gap-2">
                 {badges.slice(0, 8).map((b) => (
                   <div key={b.id} title={b.name} className={`flex items-center justify-center rounded-xl border p-2 transition-all ${b.earned ? 'border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-gray-700' : 'border-transparent bg-gray-50/50 opacity-40 grayscale dark:bg-gray-800/50'}`}>
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${b.color} text-white shadow-sm`}>
-                      <Trophy size={15} />
-                    </span>
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${b.color} text-white shadow-sm`}><Trophy size={15} /></span>
                   </div>
                 ))}
               </div>
             </SectionCard>
 
-            {/* Account + completeness (NEW) */}
             <SectionCard title={t('profile.account_info')} icon={Activity} iconColor="#8b5cf6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">

@@ -8,7 +8,7 @@ import { SubscriptionDetail } from './data';
 const LOGO_MAP: Record<string, string> = {
   // Streaming
   'netflix': '/images/Netflix.svg',
-  'spotify': '/images/Spotify_icon.svg',
+  'spotify': '/images/spotify.svg',
   'youtube': '/images/YouTube_Premium_logo.svg',
   'youtubepremium': '/images/YouTube_Premium_logo.svg',
   'disney+': '/images/disney+.svg',

@@ -90,7 +90,11 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = React.memo(({ subscr
               secondaryDisplay = `≈ ${formatPrice(convertedVal, targetCurrency)} ${label}`;
             }
 
-            const logoUrl = sub.logo || getBrandLogo(sub.name);
+            // sub.logo may hold a brand KEY (e.g. "spotify") from templates, not a
+            // real URL. Only use it directly when it's an actual URL/data URI;
+            // otherwise resolve the brand logo from the name/type.
+            const isLogoUrl = !!sub.logo && (sub.logo.startsWith('/') || sub.logo.startsWith('http') || sub.logo.startsWith('data:'));
+            const logoUrl = isLogoUrl ? sub.logo : (getBrandLogo(sub.name) || getBrandLogo(sub.type || ''));
 
             return (
               <tr

@@ -254,10 +254,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 64.99, cycle: "Monthly" },
-          { name: "Duo", nameLocalized: "Duo", price: 84.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 109.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 34.99, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 99.99, cycle: "Monthly" },
+          { name: "Duo", nameLocalized: "Duo", price: 129.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 159.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 54.99, cycle: "Monthly" }
         ]
       }
     }
@@ -296,8 +296,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 139.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 259.99, cycle: "Monthly" },
+          { name: "Individual", nameLocalized: "Bireysel", price: 119.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" },
           { name: "Student", nameLocalized: "Öğrenci", price: 79.99, cycle: "Monthly" }
         ]
       }
@@ -374,8 +374,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Standard", nameLocalized: "Standart", price: 279.90, cycle: "Monthly" },
-          { name: "Premium", nameLocalized: "Premium", price: 549.90, cycle: "Monthly" }
+          { name: "Standard", nameLocalized: "Reklamlı", price: 249.90, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Reklamsız", price: 449.90, cycle: "Monthly" }
         ]
       }
     }
@@ -920,7 +920,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         tiers: [
           { name: "Core", nameLocalized: "Temel", price: 179, cycle: "Monthly" },
           { name: "Standard", nameLocalized: "Standart", price: 279, cycle: "Monthly" },
-          { name: "Ultimate", nameLocalized: "Ultimate", price: 449, cycle: "Monthly" }
+          { name: "Ultimate", nameLocalized: "Ultimate", price: 529, cycle: "Monthly" }
         ]
       }
     }
@@ -959,9 +959,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Essential", nameLocalized: "Temel", price: 250, cycle: "Monthly" },
-          { name: "Extra", nameLocalized: "Ekstra", price: 370, cycle: "Monthly" },
-          { name: "Premium", nameLocalized: "Premium", price: 470, cycle: "Monthly" }
+          { name: "Essential", nameLocalized: "Temel", price: 400, cycle: "Monthly" },
+          { name: "Extra", nameLocalized: "Ekstra", price: 600, cycle: "Monthly" },
+          { name: "Deluxe", nameLocalized: "Deluxe", price: 710, cycle: "Monthly" }
         ]
       }
     }
