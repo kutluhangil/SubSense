@@ -5,6 +5,7 @@ import AnalyticsChart from './AnalyticsChart';
 import Sidebar from './Sidebar';
 import StatsCards from './StatsCards';
 import SubscriptionTable from './SubscriptionTable';
+import SubscriptionsPage from './SubscriptionsPage';
 import SubscriptionModal, { Subscription } from './SubscriptionModal';
 import SubscriptionSearchPanel from './SubscriptionSearchPanel';
 import CalendarModal from './CalendarModal';
@@ -551,7 +552,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                      <div className="space-y-6">
                         <UpcomingTimeline subscriptions={subscriptions} subscriptionsLoading={subscriptionsLoading} setIsCalendarOpen={setIsCalendarOpen} setSelectedSub={setSelectedSub} handleMarkAsPaid={handleMarkAsPaid} />
                         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
-                           <h3 className="text-lg font-bold text-primary mb-4">Analytics</h3>
+                           <h3 className="font-display text-lg font-bold text-primary mb-4">{t('analytics.cost_dist')}</h3>
                            <AnalyticsChart subscriptions={subscriptions} />
                         </div>
                         <ExpenseBreakdown metrics={derivedStats} subscriptionsLoading={subscriptionsLoading} setCurrentView={setCurrentView} />
@@ -595,15 +596,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             </Suspense>
          );
          case 'subscriptions': return (
-            <div className="space-y-6">
-               <h2 className="text-2xl font-bold text-primary">{t('features.subscriptions.title')}</h2>
-               <SubscriptionTable
-                  subscriptions={subscriptions}
-                  onSelectSubscription={setSelectedSub}
-                  onDeleteSubscription={handleSubDelete}
-                  previewCurrency={previewCurrency}
-               />
-            </div>
+            <SubscriptionsPage
+               subscriptions={subscriptions}
+               onSelectSubscription={setSelectedSub}
+               onDeleteSubscription={handleSubDelete}
+               previewCurrency={previewCurrency}
+               onAdd={() => setIsAddModalOpen(true)}
+            />
          );
          default: return null;
       }

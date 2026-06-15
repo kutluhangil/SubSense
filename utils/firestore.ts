@@ -45,6 +45,7 @@ export interface UserProfileData {
     baseCurrency: string;
     region: string;
     analyticsOptOut?: boolean;
+    privacy?: { showSpending: boolean; showSubscriptions: boolean };
   };
   stats: {
     totalSubscriptions: number;
@@ -107,7 +108,8 @@ export const initializeUserDocument = async (
       language: (typeof window !== 'undefined' ? localStorage.getItem('userLanguagePreference') : null) || 'en',
       theme: (typeof window !== 'undefined' ? localStorage.getItem('userThemePreference') : null) || 'system',
       region: additionalData?.region || 'US',
-      analyticsOptOut: false
+      analyticsOptOut: false,
+      privacy: { showSpending: true, showSubscriptions: true }
     },
     stats: {
       totalSubscriptions: 0,

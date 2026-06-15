@@ -10,7 +10,7 @@ interface AnalyticsChartProps {
 const COLORS = ['#6366f1', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
 
 export default function AnalyticsChart({ subscriptions }: AnalyticsChartProps) {
-    const { formatPrice, convert } = useLanguage();
+    const { formatPrice, convert, t } = useLanguage();
 
     const data = useMemo(() => {
         const categoryTotals: Record<string, number> = {};
@@ -48,7 +48,7 @@ export default function AnalyticsChart({ subscriptions }: AnalyticsChartProps) {
     if (data.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-64 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">No active subscriptions to analyze.</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{t('dashboard.add_stats_hint')}</p>
             </div>
         );
     }

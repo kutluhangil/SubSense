@@ -11,6 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from './UpgradeModal';
 import { createPortalSession } from '../utils/stripe';
 import { requestNotificationPermission, getNotificationStatus } from '../utils/notificationService';
+import { SlidersHorizontal } from 'lucide-react';
+import { PageHeader } from './ui';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebase';
 import { db } from '../firebase/firebase';
@@ -81,6 +83,14 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
         if (currentUser) {
             updateUserSettings(currentUser.uid, { analyticsOptOut: optOut });
         }
+    };
+
+    // Friend-facing privacy (persisted to Firestore so the friends Cloud
+    // Function can honor it server-side). Defaults to fully visible.
+    const privacy = userProfile?.preferences?.privacy ?? { showSpending: true, showSubscriptions: true };
+    const updatePrivacy = (patch: Partial<{ showSpending: boolean; showSubscriptions: boolean }>) => {
+        if (!currentUser) return;
+        updateUserSettings(currentUser.uid, { privacy: { ...privacy, ...patch } });
     };
 
     const handleManageSubscription = async () => {
@@ -188,12 +198,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-12 relative">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t('settings.desc')}</p>
-                </div>
-            </div>
+            <PageHeader icon={SlidersHorizontal} title={t('settings.title')} subtitle={t('settings.desc')} />
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
 
@@ -233,7 +238,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <Monitor className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('profile.appearance')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('profile.appearance')}</h3>
                         </div>
                         <div className="p-6">
                             <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">{t('profile.theme')}</p>
@@ -270,7 +275,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <DollarSign className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.currency_section')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.currency_section')}</h3>
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="flex flex-col gap-4">
@@ -320,7 +325,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <Bell className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.notifications')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.notifications')}</h3>
                         </div>
                         <div className="p-6 space-y-5">
                             <div className="flex items-center justify-between">
@@ -367,7 +372,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <Calendar className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">Takvim Senkronizasyonu</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">Takvim Senkronizasyonu</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -427,17 +432,17 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <Eye className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.privacy_visibility')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.privacy_visibility')}</h3>
                         </div>
                         <div className="p-6 space-y-6">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-6">{t('settings.show_stats')}</span>
-                                    <Toggle id="priv_stats" defaultChecked />
+                                    <Toggle id="priv_stats" defaultChecked={privacy.showSpending} onChange={(v) => updatePrivacy({ showSpending: v })} />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-6">{t('settings.show_subs')}</span>
-                                    <Toggle id="priv_subs" defaultChecked />
+                                    <Toggle id="priv_subs" defaultChecked={privacy.showSubscriptions} onChange={(v) => updatePrivacy({ showSubscriptions: v })} />
                                 </div>
                             </div>
                         </div>
@@ -447,7 +452,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <BarChart className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.analytics_section')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.analytics_section')}</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-center justify-between">
@@ -469,7 +474,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <FileText className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.data_export_section')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.data_export_section')}</h3>
                         </div>
                         <div className="p-6 space-y-3">
                             <button
@@ -490,7 +495,7 @@ export default function Settings({ subscriptions = [], onUpdateSubscriptions, us
                     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
                             <Shield className="text-gray-400" size={20} />
-                            <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('settings.security')}</h3>
+                            <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{t('settings.security')}</h3>
                         </div>
                         <div className="p-6 space-y-4">
                             <button

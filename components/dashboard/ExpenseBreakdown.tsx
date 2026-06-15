@@ -26,7 +26,7 @@ export default function ExpenseBreakdown({ metrics, subscriptionsLoading, setCur
 
    return (
       <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6 relative overflow-hidden">
-         <h3 className="font-bold text-primary text-sm mb-4 flex items-center gap-2">
+         <h3 className="font-display font-bold text-primary text-sm mb-4 flex items-center gap-2">
             <PieChart size={16} className="text-muted" /> {t('dashboard.expense_breakdown')}
          </h3>
 
@@ -41,41 +41,24 @@ export default function ExpenseBreakdown({ metrics, subscriptionsLoading, setCur
          ) : breakdown.length === 0 ? (
             <div className="text-center py-4 text-xs text-muted">{t('dashboard.add_stats_hint')}</div>
          ) : (
-            <div className="flex items-center gap-6">
-               <div className="relative w-24 h-24 flex-shrink-0">
-                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                     <circle cx="50" cy="50" r="40" fill="none" stroke="var(--border-subtle)" strokeWidth="20" />
-                     {breakdown.map((item, i) => {
-                        const dash = item.percentage;
-                        const color = ['#3B82F6', '#8B5CF6', '#10B981'][i] || '#9CA3AF';
-                        return (
-                           <circle
-                              key={i} cx="50" cy="50" r="40" fill="none"
-                              stroke={color} strokeWidth="20"
-                              strokeDasharray={`${dash} 1000`}
-                              strokeDashoffset={-20 * i}
-                              className="opacity-90"
-                           />
-                        );
-                     })}
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                     <span className="text-[10px] font-bold text-muted">
-                        {new Date().toLocaleString('default', { month: 'short' })}
-                     </span>
-                  </div>
-               </div>
-               <div className="flex-1 space-y-2">
-                  {breakdown.map((item, i) => {
-                     const color = ['bg-blue-500', 'bg-purple-500', 'bg-green-500'][i] || 'bg-gray-400';
-                     return (
-                        <div key={i} className="flex items-center justify-between text-xs">
-                           <div className="flex items-center gap-2 text-primary"><div className={`w-2 h-2 rounded-full ${color}`}></div>{item.name}</div>
-                           <span className="font-bold text-primary">{item.percentage.toFixed(0)}%</span>
+            <div className="space-y-3.5">
+               {breakdown.map((item, i) => {
+                  const color = ['#6366f1', '#8b5cf6', '#22c55e'][i] || '#9ca3af';
+                  return (
+                     <div key={i}>
+                        <div className="mb-1 flex items-center justify-between text-xs">
+                           <span className="flex items-center gap-2 font-medium text-primary">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
+                              {item.name}
+                           </span>
+                           <span className="font-bold tabular-nums text-primary">{item.percentage.toFixed(0)}%</span>
                         </div>
-                     );
-                  })}
-               </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                           <div className="h-full rounded-full transition-all duration-700" style={{ width: `${item.percentage}%`, background: color }} />
+                        </div>
+                     </div>
+                  );
+               })}
             </div>
          )}
          <button onClick={() => setCurrentView('analytics')} className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">

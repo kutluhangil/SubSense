@@ -6,6 +6,7 @@ import { BRAND_COLORS, SUBSCRIPTION_CATALOG } from '../utils/data';
 import { CURRENCY_DATA } from '../utils/currency';
 import { Subscription } from './SubscriptionModal';
 import { debugLog } from '../utils/debug';
+import { TrendArea, CostDonut } from './AnalyticsCharts';
 
 // --- Types ---
 interface DataPoint {
@@ -862,7 +863,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.trend_desc')}</p>
                   </div>
                 </div>
-                <SpendingTrendChart data={trendData} color={trendColor} currentCurrency={currentCurrency} />
+                <TrendArea data={trendData} />
             </div>
 
             {/* Subscription Lifetime */}
@@ -879,7 +880,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                   <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDistributionChart categoryTotals={categoryTotals} formatPrice={formatPrice} />
+               <CostDonut categoryTotals={categoryTotals} />
             </div>
 
             {/* Budget Monitor */}

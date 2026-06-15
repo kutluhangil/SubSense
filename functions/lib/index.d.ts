@@ -11,3 +11,4 @@ export declare const geminiChatProxy: functions.HttpsFunction & functions.Runnab
 export * from './calendar';
 export * from './emails';
 export * from './priceSync';
+export * from './friends';

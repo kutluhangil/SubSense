@@ -5,6 +5,7 @@ import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../
 import { useLanguage } from '../contexts/LanguageContext';
 import { EXCHANGE_RATES, CURRENCY_DATA, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
+import { RegionLineChart } from './AnalyticsCharts';
 
 // --- Types & Constants ---
 
@@ -485,7 +486,15 @@ export default function Comparison() {
                      </div>
                   </div>
 
-                  <GlobalPricingChart data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
+                  <RegionLineChart
+                     labels={MONTHS}
+                     symbol={baseCurrencySymbol}
+                     series={currentData.slice(0, 5).map((d) => ({
+                        name: d.country,
+                        color: COUNTRY_CONFIG[d.country]?.color || '#6366f1',
+                        values: d.history,
+                     }))}
+                  />
                </div>
 
                {/* AI Insights */}
