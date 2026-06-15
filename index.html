@@ -56,7 +56,11 @@
 
     <script>
       (function () {
-        const cleanupVersion = "2026-06-13-sw-reset";
+        // Bump this when shipping changes that a stale service worker could
+        // hide. On a version change we unregister all SWs, wipe all caches,
+        // then reload ONCE (the flag is set first, so the reloaded page skips
+        // cleanup — no loop) so users always get the freshest bundle.
+        const cleanupVersion = "2026-06-15-redesign-v2";
         try {
           if (
             localStorage.getItem("subsense.sw.cleanupVersion") !==
@@ -64,25 +68,28 @@
           ) {
             localStorage.setItem("subsense.sw.cleanupVersion", cleanupVersion);
 
+            const tasks = [];
             if ("serviceWorker" in navigator) {
-              navigator.serviceWorker
-                .getRegistrations()
-                .then((registrations) =>
-                  Promise.all(
-                    registrations.map((registration) =>
-                      registration.unregister(),
-                    ),
-                  ),
-                )
-                .catch(() => {});
+              tasks.push(
+                navigator.serviceWorker
+                  .getRegistrations()
+                  .then((registrations) =>
+                    Promise.all(registrations.map((r) => r.unregister())),
+                  )
+                  .catch(() => {}),
+              );
             }
-
             if ("caches" in window) {
-              caches
-                .keys()
-                .then((keys) =>
-                  Promise.all(keys.map((key) => caches.delete(key))),
-                )
+              tasks.push(
+                caches
+                  .keys()
+                  .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+                  .catch(() => {}),
+              );
+            }
+            if (tasks.length) {
+              Promise.all(tasks)
+                .then(() => window.location.reload())
                 .catch(() => {});
             }
           }
