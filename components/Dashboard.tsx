@@ -1,732 +1,963 @@
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
-import UpcomingTimeline from './dashboard/UpcomingTimeline';
-import ExpenseBreakdown from './dashboard/ExpenseBreakdown';
-import AnalyticsChart from './AnalyticsChart';
-import Sidebar from './Sidebar';
-import StatsCards from './StatsCards';
-import SubscriptionTable from './SubscriptionTable';
-import SubscriptionsPage from './SubscriptionsPage';
-import SubscriptionModal, { Subscription } from './SubscriptionModal';
-import SubscriptionSearchPanel from './SubscriptionSearchPanel';
-import CalendarModal from './CalendarModal';
-import { BrandIcon } from './BrandIcon';
-import OnboardingTour from './OnboardingTour';
-import AIAssistant from './AIAssistant';
-import AIInsightsCard from './AIInsightsCard';
-import CurrencySelector from './CurrencySelector';
-import BudgetAlert from './BudgetAlert';
-import Wrapped from './Wrapped';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { User } from '../App';
-import { debugLog } from '../utils/debug';
-import { convertAmount, CURRENCY_DATA } from '../utils/currency';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import UpcomingTimeline from "./dashboard/UpcomingTimeline";
+import ExpenseBreakdown from "./dashboard/ExpenseBreakdown";
+import AnalyticsChart from "./AnalyticsChart";
+import Sidebar from "./Sidebar";
+import StatsCards from "./StatsCards";
+import SubscriptionTable from "./SubscriptionTable";
+import SubscriptionsPage from "./SubscriptionsPage";
+import SubscriptionModal, { Subscription } from "./SubscriptionModal";
+import SubscriptionSearchPanel from "./SubscriptionSearchPanel";
+import CalendarModal from "./CalendarModal";
+import { BrandIcon } from "./BrandIcon";
+import OnboardingTour from "./OnboardingTour";
+import AIAssistant from "./AIAssistant";
+import AIInsightsCard from "./AIInsightsCard";
+import CurrencySelector from "./CurrencySelector";
+import BudgetAlert from "./BudgetAlert";
+import Wrapped from "./Wrapped";
 import {
-   addSubscription,
-   updateSubscription,
-   deleteSubscription
-} from '../utils/firestore';
-import { calculateDerivedStats } from '../utils/aggregation';
-import { trackEvent } from '../utils/analytics';
-import { sendRenewalNotifications, generateRenewalNotifications, getUpcomingRenewals, sendBudgetAlertNotifications } from '../utils/notificationService';
+  Plus,
+  Bell,
+  Calendar,
+  PieChart,
+  ArrowRight,
+  Menu,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
+import { useLanguage } from "../contexts/LanguageContext";
+import { User } from "../App";
+import { debugLog } from "../utils/debug";
+import { convertAmount, CURRENCY_DATA } from "../utils/currency";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  addSubscription,
+  updateSubscription,
+  deleteSubscription,
+} from "../utils/firestore";
+import { calculateDerivedStats } from "../utils/aggregation";
+import { trackEvent } from "../utils/analytics";
+import {
+  sendRenewalNotifications,
+  generateRenewalNotifications,
+  getUpcomingRenewals,
+  sendBudgetAlertNotifications,
+} from "../utils/notificationService";
 
 // Lazy Load Heavy Components
-const Analytics = React.lazy(() => import('./Analytics'));
-const Friends = React.lazy(() => import('./Friends'));
-const SettingsPage = React.lazy(() => import('./Settings'));
-const Comparison = React.lazy(() => import('./Comparison'));
-const HelpCenter = React.lazy(() => import('./HelpCenter'));
-const Profile = React.lazy(() => import('./Profile'));
-const Discover = React.lazy(() => import('./Discover'));
+const Analytics = React.lazy(() => import("./Analytics"));
+const Friends = React.lazy(() => import("./Friends"));
+const SettingsPage = React.lazy(() => import("./Settings"));
+const Comparison = React.lazy(() => import("./Comparison"));
+const HelpCenter = React.lazy(() => import("./HelpCenter"));
+const Profile = React.lazy(() => import("./Profile"));
+const Discover = React.lazy(() => import("./Discover"));
 
 interface DashboardProps {
-   onLogout: () => void;
-   user: User;
+  onLogout: () => void;
+  user: User;
 }
 
 const DEFAULT_BUDGET_LIMITS = {
-   'Entertainment': 50,
-   'Productivity': 100,
-   'Shopping': 200,
-   'Tools': 50
+  Entertainment: 50,
+  Productivity: 100,
+  Shopping: 200,
+  Tools: 50,
 };
 
 const LoadingFallback = () => (
-   <div className="flex h-full w-full items-center justify-center min-h-[400px]">
-      <Loader2 className="animate-spin text-gray-400" size={32} />
-   </div>
+  <div className="flex h-full w-full items-center justify-center min-h-[400px]">
+    <Loader2 className="animate-spin text-gray-400" size={32} />
+  </div>
 );
 
 const PAGE_TITLES: Record<string, string> = {
-   dashboard: 'Dashboard — SubSense',
-   subscriptions: 'Subscriptions — SubSense',
-   analytics: 'Analytics — SubSense',
-   compare: 'Compare — SubSense',
-   discover: 'Discover — SubSense',
-   settings: 'Settings — SubSense',
-   help: 'Help — SubSense',
-   profile: 'Profile — SubSense',
-   friends: 'Friends — SubSense',
+  dashboard: "Dashboard — SubSense",
+  subscriptions: "Subscriptions — SubSense",
+  analytics: "Analytics — SubSense",
+  compare: "Compare — SubSense",
+  discover: "Discover — SubSense",
+  settings: "Settings — SubSense",
+  help: "Help — SubSense",
+  profile: "Profile — SubSense",
+  friends: "Friends — SubSense",
 };
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
-   const { currentUser, subscriptions, derivedStats, subscriptionsLoading } = useAuth();
-   const [currentView, setCurrentView] = useState('dashboard');
+  const { currentUser, subscriptions, derivedStats, subscriptionsLoading } =
+    useAuth();
+  const [currentView, setCurrentView] = useState("dashboard");
 
-   // Local state only for simpler preferences not critically synced yet
-   const userKey = user?.email || 'guest';
-   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(() => {
+  // Local state only for simpler preferences not critically synced yet
+  const userKey = user?.email || "guest";
+  const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(
+    () => {
       try {
-         const saved = localStorage.getItem(`subscriptionhub.${userKey}.budgetLimits`);
-         return saved ? JSON.parse(saved) : DEFAULT_BUDGET_LIMITS;
+        const saved = localStorage.getItem(
+          `subscriptionhub.${userKey}.budgetLimits`,
+        );
+        return saved ? JSON.parse(saved) : DEFAULT_BUDGET_LIMITS;
       } catch (e) {
-         return DEFAULT_BUDGET_LIMITS;
+        return DEFAULT_BUDGET_LIMITS;
       }
-   });
+    },
+  );
 
-   const [savingsGoal, setSavingsGoal] = useState<number>(() => {
+  const [savingsGoal, setSavingsGoal] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(
+        `subscriptionhub.${userKey}.savingsGoal`,
+      );
+      return saved ? parseFloat(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [totalSaved, setTotalSaved] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem(
+        `subscriptionhub.${userKey}.totalSaved`,
+      );
+      return saved ? parseFloat(saved) : 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    const hasSeen = localStorage.getItem(
+      `subscriptionhub.${userKey}.hasSeenOnboarding`,
+    );
+    return !hasSeen;
+  });
+
+  const { t, formatPrice, currentCurrency, setCurrency } = useLanguage();
+
+  const [previewCurrency, setPreviewCurrency] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = PAGE_TITLES[currentView] || "SubSense";
+  }, [currentView]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    localStorage.setItem(
+      `subscriptionhub.${userKey}.hasSeenOnboarding`,
+      "true",
+    );
+  };
+
+  useEffect(() => {
+    localStorage.setItem(
+      `subscriptionhub.${userKey}.budgetLimits`,
+      JSON.stringify(budgetLimits),
+    );
+  }, [budgetLimits, userKey]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      `subscriptionhub.${userKey}.savingsGoal`,
+      savingsGoal.toString(),
+    );
+  }, [savingsGoal, userKey]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      `subscriptionhub.${userKey}.totalSaved`,
+      totalSaved.toString(),
+    );
+  }, [totalSaved, userKey]);
+
+  // Recalculate metrics: Use Derived Stats (Context) or Recalculate if Previewing
+  const metrics = useMemo(() => {
+    if (previewCurrency) {
+      // If previewing a different currency, recalculate using aggregation utility
+      // This ensures the preview is mathematically consistent with the base logic
+      return calculateDerivedStats(subscriptions, previewCurrency);
+    }
+    // Default: Use the globally managed derived stats
+    return derivedStats;
+  }, [derivedStats, subscriptions, previewCurrency]);
+
+  const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isAIOpen, setIsAIOpen] = useState(false);
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
+  const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
+  const [isBudgetEditorOpen, setIsBudgetEditorOpen] = useState(false);
+  const [isWrappedOpen, setIsWrappedOpen] = useState(false);
+  // E-06: Guard against rapid double-click / double-tap triggering duplicate deletes
+  const isDeletingRef = React.useRef(false);
+
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      text: `Welcome to SubSense, ${user.name}!`,
+      time: "Just now",
+      read: false,
+      type: "info",
+    },
+  ]);
+
+  // Generate renewal notifications when subscriptions change
+  useEffect(() => {
+    if (!subscriptions.length || subscriptionsLoading) return;
+
+    // In-app notifications
+    const renewalAlerts = generateRenewalNotifications(subscriptions);
+    if (renewalAlerts.length > 0) {
+      setNotifications((prev) => {
+        const existingIds = new Set(prev.map((n) => n.id));
+        const newAlerts = renewalAlerts.filter((a) => !existingIds.has(a.id));
+        return [...newAlerts, ...prev];
+      });
+    }
+
+    // Browser push notifications (only if permission granted)
+    sendRenewalNotifications(subscriptions);
+    sendBudgetAlertNotifications(metrics.categoryBreakdown, budgetLimits);
+  }, [
+    subscriptions,
+    subscriptionsLoading,
+    metrics.categoryBreakdown,
+    budgetLimits,
+  ]);
+
+  const filteredSubscriptions = useMemo(() => {
+    if (activeCategory === "All") return subscriptions;
+
+    // Map simple UI filters to actual data categories
+    const categoryMap: Record<string, string[]> = {
+      Entertainment: ["Entertainment & Streaming", "Music & Audio", "Gaming"],
+      Productivity: ["Business & SaaS", "Design & Creativity"],
+      Tools: ["AI & Dev Tools"],
+      Shopping: ["Shopping & Local"],
+    };
+
+    const targetCategories = categoryMap[activeCategory] || [activeCategory];
+
+    return subscriptions.filter((sub) =>
+      targetCategories.includes(sub.category),
+    );
+  }, [subscriptions, activeCategory]);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // --- CRUD Handlers utilizing Firestore ---
+
+  const handleSubUpdate = async (updatedSub: Subscription) => {
+    if (currentUser) {
+      debugLog(
+        "SUBSCRIPTION_UPDATE",
+        "Updating subscription in Firestore",
+        updatedSub,
+      );
+      await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
+      trackEvent("subscription_edited", {
+        category: updatedSub.category,
+        currency: updatedSub.currency,
+      });
+    }
+  };
+
+  const handleSubDelete = async (id: string | number) => {
+    // E-06: Prevent rapid double-click / double-tap triggering two deletes
+    if (isDeletingRef.current) return;
+    isDeletingRef.current = true;
+
+    if (currentUser) {
+      debugLog("REMOVE_ACTION", `Attempting to delete subscription ID: ${id}`);
+      // Optimistic Calc
+      const subToDelete = subscriptions.find((s) => s.id === id);
+      if (subToDelete) {
+        const monthlyValueBase =
+          subToDelete.cycle === "Yearly"
+            ? convertAmount(
+                subToDelete.price / 12,
+                subToDelete.currency,
+                currentCurrency,
+              )
+            : convertAmount(
+                subToDelete.price,
+                subToDelete.currency,
+                currentCurrency,
+              );
+        setTotalSaved((prev) => prev + monthlyValueBase);
+        trackEvent("subscription_removed", { category: subToDelete.category });
+      }
       try {
-         const saved = localStorage.getItem(`subscriptionhub.${userKey}.savingsGoal`);
-         return saved ? parseFloat(saved) : 0;
-      } catch (e) {
-         return 0;
+        await deleteSubscription(currentUser.uid, id);
+        showToast(t("dashboard.sub_removed"));
+        setSelectedSub(null);
+      } finally {
+        isDeletingRef.current = false;
       }
-   });
+    } else {
+      isDeletingRef.current = false;
+    }
+  };
 
-   const [totalSaved, setTotalSaved] = useState<number>(() => {
-      try {
-         const saved = localStorage.getItem(`subscriptionhub.${userKey}.totalSaved`);
-         return saved ? parseFloat(saved) : 0;
-      } catch (e) {
-         return 0;
-      }
-   });
+  const handleAddSubscription = async (newSub: Subscription) => {
+    if (currentUser) {
+      debugLog(
+        "SUBSCRIPTION_CREATE",
+        "Adding new subscription to Firestore",
+        newSub,
+      );
+      // Await the creation. If it fails, it will throw, and the caller (modal) will handle the error.
+      const created = await addSubscription(currentUser.uid, newSub);
 
-   const [showOnboarding, setShowOnboarding] = useState(() => {
-      const hasSeen = localStorage.getItem(`subscriptionhub.${userKey}.hasSeenOnboarding`);
-      return !hasSeen;
-   });
-
-   const { t, formatPrice, currentCurrency, setCurrency } = useLanguage();
-
-   const [previewCurrency, setPreviewCurrency] = useState<string | null>(null);
-
-   useEffect(() => {
-      document.title = PAGE_TITLES[currentView] || 'SubSense';
-   }, [currentView]);
-
-   const handleOnboardingComplete = () => {
-      setShowOnboarding(false);
-      localStorage.setItem(`subscriptionhub.${userKey}.hasSeenOnboarding`, 'true');
-   };
-
-   useEffect(() => {
-      localStorage.setItem(`subscriptionhub.${userKey}.budgetLimits`, JSON.stringify(budgetLimits));
-   }, [budgetLimits, userKey]);
-
-   useEffect(() => {
-      localStorage.setItem(`subscriptionhub.${userKey}.savingsGoal`, savingsGoal.toString());
-   }, [savingsGoal, userKey]);
-
-   useEffect(() => {
-      localStorage.setItem(`subscriptionhub.${userKey}.totalSaved`, totalSaved.toString());
-   }, [totalSaved, userKey]);
-
-   // Recalculate metrics: Use Derived Stats (Context) or Recalculate if Previewing
-   const metrics = useMemo(() => {
-      if (previewCurrency) {
-         // If previewing a different currency, recalculate using aggregation utility
-         // This ensures the preview is mathematically consistent with the base logic
-         return calculateDerivedStats(subscriptions, previewCurrency);
-      }
-      // Default: Use the globally managed derived stats
-      return derivedStats;
-   }, [derivedStats, subscriptions, previewCurrency]);
-
-   const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
-   const [notificationsOpen, setNotificationsOpen] = useState(false);
-   const [activeCategory, setActiveCategory] = useState('All');
-   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-   const [toastMsg, setToastMsg] = useState<string | null>(null);
-   const [isAIOpen, setIsAIOpen] = useState(false);
-   const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
-   const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
-   const [isBudgetEditorOpen, setIsBudgetEditorOpen] = useState(false);
-   const [isWrappedOpen, setIsWrappedOpen] = useState(false);
-   // E-06: Guard against rapid double-click / double-tap triggering duplicate deletes
-   const isDeletingRef = React.useRef(false);
-
-   const [notifications, setNotifications] = useState([
-      { id: 1, text: `Welcome to SubSense, ${user.name}!`, time: "Just now", read: false, type: 'info' },
-   ]);
-
-   // Generate renewal notifications when subscriptions change
-   useEffect(() => {
-      if (!subscriptions.length || subscriptionsLoading) return;
-
-      // In-app notifications
-      const renewalAlerts = generateRenewalNotifications(subscriptions);
-      if (renewalAlerts.length > 0) {
-         setNotifications(prev => {
-            const existingIds = new Set(prev.map(n => n.id));
-            const newAlerts = renewalAlerts.filter(a => !existingIds.has(a.id));
-            return [...newAlerts, ...prev];
-         });
+      if (created) {
+        showToast(t("add.success"));
       }
 
-      // Browser push notifications (only if permission granted)
-      sendRenewalNotifications(subscriptions);
-      sendBudgetAlertNotifications(metrics.categoryBreakdown, budgetLimits);
-   }, [subscriptions, subscriptionsLoading, metrics.categoryBreakdown, budgetLimits]);
+      trackEvent("subscription_added", {
+        category: newSub.category,
+        cycle: newSub.cycle,
+        currency: newSub.currency,
+      });
+      // Activation funnel — count is pre-add here, so 0 means this is their FIRST.
+      if (subscriptions.length === 0)
+        trackEvent("funnel_first_sub", { category: newSub.category });
+      else if (subscriptions.length === 1) trackEvent("funnel_second_sub", {});
+      setIsAddModalOpen(false);
+      setCurrentView("dashboard");
+    }
+  };
 
-   const filteredSubscriptions = useMemo(() => {
-      if (activeCategory === 'All') return subscriptions;
-
-      // Map simple UI filters to actual data categories
-      const categoryMap: Record<string, string[]> = {
-         'Entertainment': ['Entertainment & Streaming', 'Music & Audio', 'Gaming'],
-         'Productivity': ['Business & SaaS', 'Design & Creativity'],
-         'Tools': ['AI & Dev Tools'],
-         'Shopping': ['Shopping & Local']
-      };
-
-      const targetCategories = categoryMap[activeCategory] || [activeCategory];
-
-      return subscriptions.filter(sub => targetCategories.includes(sub.category));
-   }, [subscriptions, activeCategory]);
-
-   const showToast = (msg: string) => {
-      setToastMsg(msg);
-      setTimeout(() => setToastMsg(null), 3000);
-   };
-
-   // --- CRUD Handlers utilizing Firestore ---
-
-   const handleSubUpdate = async (updatedSub: Subscription) => {
-      if (currentUser) {
-         debugLog('SUBSCRIPTION_UPDATE', 'Updating subscription in Firestore', updatedSub);
-         await updateSubscription(currentUser.uid, updatedSub.id, updatedSub);
-         trackEvent('subscription_edited', { category: updatedSub.category, currency: updatedSub.currency });
-      }
-   };
-
-   const handleSubDelete = async (id: string | number) => {
-      // E-06: Prevent rapid double-click / double-tap triggering two deletes
-      if (isDeletingRef.current) return;
-      isDeletingRef.current = true;
-
-      if (currentUser) {
-         debugLog('REMOVE_ACTION', `Attempting to delete subscription ID: ${id}`);
-         // Optimistic Calc
-         const subToDelete = subscriptions.find(s => s.id === id);
-         if (subToDelete) {
-            const monthlyValueBase = subToDelete.cycle === 'Yearly'
-               ? convertAmount(subToDelete.price / 12, subToDelete.currency, currentCurrency)
-               : convertAmount(subToDelete.price, subToDelete.currency, currentCurrency);
-            setTotalSaved(prev => prev + monthlyValueBase);
-            trackEvent('subscription_removed', { category: subToDelete.category });
-         }
-         try {
-            await deleteSubscription(currentUser.uid, id);
-            showToast(t('dashboard.sub_removed'));
-            setSelectedSub(null);
-         } finally {
-            isDeletingRef.current = false;
-         }
+  const handleMarkAsPaid = async (id: string | number) => {
+    const sub = subscriptions.find((s) => s.id === id);
+    if (sub && currentUser) {
+      const current = new Date(sub.nextDate);
+      if (sub.cycle === "Monthly") {
+        current.setMonth(current.getMonth() + 1);
       } else {
-         isDeletingRef.current = false;
+        current.setFullYear(current.getFullYear() + 1);
       }
-   };
+      const newHistory = [...(sub.history || []), sub.price];
+      const nextDate = current.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 
-   const handleAddSubscription = async (newSub: Subscription) => {
-      if (currentUser) {
-         debugLog('SUBSCRIPTION_CREATE', 'Adding new subscription to Firestore', newSub);
-         // Await the creation. If it fails, it will throw, and the caller (modal) will handle the error.
-         const created = await addSubscription(currentUser.uid, newSub);
+      await updateSubscription(currentUser.uid, id, {
+        nextDate,
+        history: newHistory,
+      });
+      trackEvent("mark_as_paid", { cycle: sub.cycle });
+      showToast(t("dashboard.sub_paid").replace("{name}", sub.name));
+    }
+  };
 
-         if (created) {
-            showToast(t('add.success'));
-         }
+  const handleMarkAllRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
-         trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
-         // Activation funnel — count is pre-add here, so 0 means this is their FIRST.
-         if (subscriptions.length === 0) trackEvent('funnel_first_sub', { category: newSub.category });
-         else if (subscriptions.length === 1) trackEvent('funnel_second_sub', {});
-         setIsAddModalOpen(false);
-         setCurrentView('dashboard');
-      }
-   };
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
-   const handleMarkAsPaid = async (id: string | number) => {
-      const sub = subscriptions.find(s => s.id === id);
-      if (sub && currentUser) {
-         const current = new Date(sub.nextDate);
-         if (sub.cycle === 'Monthly') {
-            current.setMonth(current.getMonth() + 1);
-         } else {
-            current.setFullYear(current.getFullYear() + 1);
-         }
-         const newHistory = [...(sub.history || []), sub.price];
-         const nextDate = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-         await updateSubscription(currentUser.uid, id, { nextDate, history: newHistory });
-         trackEvent('mark_as_paid', { cycle: sub.cycle });
-         showToast(t('dashboard.sub_paid').replace('{name}', sub.name));
-      }
-   };
-
-   const handleMarkAllRead = () => {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-   };
-
-   const unreadCount = notifications.filter(n => !n.read).length;
-
-   const NotificationDropdown = () => (
-      <div className="absolute right-0 top-12 w-80 bg-card rounded-2xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-         <div className="p-4 border-b border-subtle flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 className="font-bold text-primary text-sm">{t('dashboard.notifications')}</h3>
-            <button
-               onClick={handleMarkAllRead}
-               className="text-[10px] text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
-            >
-               {t('dashboard.mark_read')}
-            </button>
-         </div>
-         <div className="max-h-64 overflow-y-auto">
-            {notifications.map(n => (
-               <div
-                  key={n.id}
-                  className={`p-4 border-b border-subtle hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${!n.read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
-               >
-                  <div className="flex justify-between items-start">
-                     <p className={`text-xs text-primary mb-1 ${!n.read ? 'font-semibold' : ''}`}>{n.text}</p>
-                     {!n.read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>}
-                  </div>
-                  <p className="text-[10px] text-muted">{n.time}</p>
-               </div>
-            ))}
-            {notifications.length === 0 && (
-               <div className="p-8 text-center text-muted text-xs">{t('dashboard.no_notifications')}</div>
-            )}
-         </div>
+  const NotificationDropdown = () => (
+    <div className="absolute right-0 top-12 w-80 bg-card rounded-2xl shadow-xl border border-subtle z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+      <div className="p-4 border-b border-subtle flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+        <h3 className="font-bold text-primary text-sm">
+          {t("dashboard.notifications")}
+        </h3>
+        <button
+          onClick={handleMarkAllRead}
+          className="text-[10px] text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
+        >
+          {t("dashboard.mark_read")}
+        </button>
       </div>
-   );
-
-   const CategoryFilters = () => (
-      <div className="flex flex-wrap gap-2 mb-6">
-         {['All', 'Entertainment', 'Productivity', 'Tools', 'Shopping'].map(cat => (
-            <button
-               key={cat}
-               onClick={() => setActiveCategory(cat)}
-               className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${activeCategory === cat
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
-                  : 'bg-card text-secondary border border-subtle hover:bg-gray-50 dark:hover:bg-gray-800'
-                  }`}
-            >
-               {cat === 'All' ? t('dashboard.filter.all') : t(`dashboard.filter.${cat.toLowerCase()}`)}
-            </button>
-         ))}
-      </div>
-   );
-
-   
-
-   const renderContent = () => {
-      if (isAddModalOpen) {
-         return (
-            <div className="h-full flex flex-col">
-               <div className="flex items-center justify-between mb-6">
-                  <button
-                     onClick={() => setIsAddModalOpen(false)}
-                     className="text-sm font-medium text-secondary hover:text-primary flex items-center gap-2"
-                  >
-                     <ArrowRight size={16} className="rotate-180" /> {t('dashboard.back')}
-                  </button>
-               </div>
-               <SubscriptionSearchPanel
-                  onAddSubscription={handleAddSubscription}
-                  existingSubscriptions={subscriptions}
-                  onGoToDashboard={() => { setIsAddModalOpen(false); setCurrentView('dashboard'); }}
-               />
+      <div className="max-h-64 overflow-y-auto">
+        {notifications.map((n) => (
+          <div
+            key={n.id}
+            className={`p-4 border-b border-subtle hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${!n.read ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}`}
+          >
+            <div className="flex justify-between items-start">
+              <p
+                className={`text-xs text-primary mb-1 ${!n.read ? "font-semibold" : ""}`}
+              >
+                {n.text}
+              </p>
+              {!n.read && (
+                <div className="w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
+              )}
             </div>
-         );
-      }
+            <p className="text-[10px] text-muted">{n.time}</p>
+          </div>
+        ))}
+        {notifications.length === 0 && (
+          <div className="p-8 text-center text-muted text-xs">
+            {t("dashboard.no_notifications")}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-      switch (currentView) {
-         case 'dashboard':
-            return (
-               <div className="animate-in fade-in duration-500">
+  const CategoryFilters = () => (
+    <div className="flex flex-wrap gap-2 mb-6">
+      {["All", "Entertainment", "Productivity", "Tools", "Shopping"].map(
+        (cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+              activeCategory === cat
+                ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md"
+                : "bg-card text-secondary border border-subtle hover:bg-gray-50 dark:hover:bg-gray-800"
+            }`}
+          >
+            {cat === "All"
+              ? t("dashboard.filter.all")
+              : t(`dashboard.filter.${cat.toLowerCase()}`)}
+          </button>
+        ),
+      )}
+    </div>
+  );
 
-                  {/* AI Insights Card */}
-                  <AIInsightsCard subscriptions={subscriptions} />
+  const renderContent = () => {
+    if (isAddModalOpen) {
+      return (
+        <div className="h-full flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => setIsAddModalOpen(false)}
+              className="text-sm font-medium text-secondary hover:text-primary flex items-center gap-2"
+            >
+              <ArrowRight size={16} className="rotate-180" />{" "}
+              {t("dashboard.back")}
+            </button>
+          </div>
+          <SubscriptionSearchPanel
+            onAddSubscription={handleAddSubscription}
+            existingSubscriptions={subscriptions}
+            onGoToDashboard={() => {
+              setIsAddModalOpen(false);
+              setCurrentView("dashboard");
+            }}
+          />
+        </div>
+      );
+    }
 
-                  <div className="mb-8 flex items-center justify-between relative">
-                     <div>
-                        <h1 className="text-2xl font-bold text-primary tracking-tight">{t('dashboard.title')}</h1>
-                        <p className="text-secondary text-sm mt-1">
-                           {subscriptionsLoading
-                              ? <span className="flex items-center gap-1"><Loader2 size={12} className="animate-spin" /> {t('dashboard.syncing')}</span>
-                              : t('dashboard.welcome').replace('{name}', user.name)}
-                        </p>
-                     </div>
+    switch (currentView) {
+      case "dashboard":
+        return (
+          <div className="animate-in fade-in duration-500">
+            {/* AI Insights Card */}
+            <AIInsightsCard subscriptions={subscriptions} />
 
-                     <div className="flex items-center gap-3">
-                        {/* Notifications */}
-                        <div className="relative">
-                           <button
-                              onClick={() => setNotificationsOpen(!notificationsOpen)}
-                              className="w-10 h-10 bg-card border border-subtle rounded-xl flex items-center justify-center text-muted hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative shadow-sm"
-                           >
-                              <Bell size={20} />
-                              {unreadCount > 0 && (
-                                 <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
-                              )}
-                           </button>
-                           {notificationsOpen && (
-                              <>
-                                 <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)}></div>
-                                 <NotificationDropdown />
-                              </>
-                           )}
-                        </div>
-
-                        <button
-                           data-tour="add-btn"
-                           onClick={() => setIsAddModalOpen(true)}
-                           className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-95"
-                        >
-                           <Plus size={18} />
-                           <span>{t('dashboard.add_sub')}</span>
-                        </button>
-                     </div>
-                  </div>
-
-                  <div data-tour="stats-cards">
-                     <StatsCards
-                        monthly={metrics.monthlySpend}
-                        active={metrics.totalSubscriptions}
-                        forecast={metrics.annualSpend}
-                        currencyCode={previewCurrency || currentCurrency}
-                     />
-                  </div>
-
-                  {/* Budget Alerts */}
-                  <div className="mt-4">
-                     <BudgetAlert
-                        categoryBreakdown={metrics.categoryBreakdown}
-                        budgetLimits={budgetLimits}
-                        onEditBudgets={() => setIsBudgetEditorOpen(!isBudgetEditorOpen)}
-                     />
-                  </div>
-
-                  {/* Inline Budget Editor */}
-                  {isBudgetEditorOpen && (
-                     <div className="bg-card rounded-2xl border border-subtle shadow-sm p-5 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                        <h3 className="text-sm font-bold text-primary mb-4">{t('dashboard.budget_limits')}</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                           {Object.entries(budgetLimits).map(([category, limit]) => (
-                              <div key={category}>
-                                 <label className="text-[10px] font-medium text-muted block mb-1">{category}</label>
-                                 <input
-                                    type="number"
-                                    value={limit}
-                                    onChange={(e) => setBudgetLimits(prev => ({
-                                       ...prev,
-                                       [category]: Math.max(0, Number(e.target.value))
-                                    }))}
-                                    className="w-full bg-gray-50 dark:bg-gray-700 border border-subtle text-primary text-sm rounded-lg px-3 py-1.5 font-medium"
-                                    min="0"
-                                    step="10"
-                                 />
-                              </div>
-                           ))}
-                        </div>
-                        <button
-                           onClick={() => setIsBudgetEditorOpen(false)}
-                           className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                           {t('dashboard.done')}
-                        </button>
-                     </div>
+            <div className="mb-8 flex items-center justify-between relative">
+              <div>
+                <h1 className="text-2xl font-bold text-primary tracking-tight">
+                  {t("dashboard.title")}
+                </h1>
+                <p className="text-secondary text-sm mt-1">
+                  {subscriptionsLoading ? (
+                    <span className="flex items-center gap-1">
+                      <Loader2 size={12} className="animate-spin" />{" "}
+                      {t("dashboard.syncing")}
+                    </span>
+                  ) : (
+                    t("dashboard.welcome").replace("{name}", user.name)
                   )}
+                </p>
+              </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-                     <div className="lg:col-span-2 space-y-6">
-                        <div>
-                           <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-4">
-                                 <h2 className="text-lg font-bold text-primary">{t('dashboard.active_subs')}</h2>
+              <div className="flex items-center gap-3">
+                {/* Notifications */}
+                <div className="relative">
+                  <button
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    className="w-10 h-10 bg-card border border-subtle rounded-xl flex items-center justify-center text-muted hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors relative shadow-sm"
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+                    )}
+                  </button>
+                  {notificationsOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setNotificationsOpen(false)}
+                      ></div>
+                      <NotificationDropdown />
+                    </>
+                  )}
+                </div>
 
-                                 {/* Global Currency Preview Toggle */}
-                                 <div className="relative">
-                                    <button
-                                       onClick={() => setIsPreviewSelectorOpen(!isPreviewSelectorOpen)}
-                                       className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${previewCurrency
-                                          ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
-                                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300'
-                                          }`}
-                                    >
-                                       {previewCurrency ? (
-                                          <>
-                                             <Eye size={12} /> {t('dashboard.preview_mode')}: {previewCurrency}
-                                          </>
-                                       ) : (
-                                          <>
-                                             <EyeOff size={12} /> {t('dashboard.preview_currency')}
-                                          </>
-                                       )}
-                                    </button>
+                <button
+                  data-tour="add-btn"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="hidden sm:flex items-center justify-center space-x-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-all shadow-sm hover:shadow-md active:scale-95"
+                >
+                  <Plus size={18} />
+                  <span>{t("dashboard.add_sub")}</span>
+                </button>
+              </div>
+            </div>
 
-                                    {/* Tooltip */}
-                                    <div className="absolute left-0 bottom-full mb-2 w-56 p-3 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                       {t('dashboard.preview_tooltip')}
-                                       <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900"></div>
-                                    </div>
+            <div data-tour="stats-cards">
+              <StatsCards
+                monthly={metrics.monthlySpend}
+                active={metrics.totalSubscriptions}
+                forecast={metrics.annualSpend}
+                currencyCode={previewCurrency || currentCurrency}
+              />
+            </div>
 
-                                    {/* Dropdown */}
-                                    {isPreviewSelectorOpen && (
-                                       <>
-                                          <div className="fixed inset-0 z-30" onClick={() => setIsPreviewSelectorOpen(false)}></div>
-                                          <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                                             <button
-                                                onClick={() => { setPreviewCurrency(null); setIsPreviewSelectorOpen(false); }}
-                                                className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? 'text-green-600' : 'text-gray-600 dark:text-gray-300'} `}
-                                             >
-                                                {t('dashboard.off_original')}
-                                                {!previewCurrency && <CheckCircle2 size={12} />}
-                                             </button>
-                                             <div className="h-px bg-gray-100 dark:bg-gray-700"></div>
-                                             {Object.values(CURRENCY_DATA).map(curr => (
-                                                <button
-                                                   key={curr.code}
-                                                   onClick={() => { setPreviewCurrency(curr.code); setIsPreviewSelectorOpen(false); }}
-                                                   className={`w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${previewCurrency === curr.code ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-600 dark:text-gray-300'}`}
-                                                >
-                                                   {curr.code} ({curr.symbol})
-                                                   {previewCurrency === curr.code && <CheckCircle2 size={12} />}
-                                                </button>
-                                             ))}
-                                          </div>
-                                       </>
-                                    )}
-                                 </div>
-                              </div>
+            {/* Budget Alerts */}
+            <div className="mt-4">
+              <BudgetAlert
+                categoryBreakdown={metrics.categoryBreakdown}
+                budgetLimits={budgetLimits}
+                onEditBudgets={() => setIsBudgetEditorOpen(!isBudgetEditorOpen)}
+              />
+            </div>
 
-                              <button onClick={() => setCurrentView('subscriptions')} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">{t('dashboard.view_all')}</button>
-                           </div>
+            {/* Inline Budget Editor */}
+            {isBudgetEditorOpen && (
+              <div className="bg-card rounded-2xl border border-subtle shadow-sm p-5 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <h3 className="text-sm font-bold text-primary mb-4">
+                  {t("dashboard.budget_limits")}
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {Object.entries(budgetLimits).map(([category, limit]) => (
+                    <div key={category}>
+                      <label className="text-[10px] font-medium text-muted block mb-1">
+                        {category}
+                      </label>
+                      <input
+                        type="number"
+                        value={limit}
+                        onChange={(e) =>
+                          setBudgetLimits((prev) => ({
+                            ...prev,
+                            [category]: Math.max(0, Number(e.target.value)),
+                          }))
+                        }
+                        className="w-full bg-gray-50 dark:bg-gray-700 border border-subtle text-primary text-sm rounded-lg px-3 py-1.5 font-medium"
+                        min="0"
+                        step="10"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setIsBudgetEditorOpen(false)}
+                  className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {t("dashboard.done")}
+                </button>
+              </div>
+            )}
 
-                           <CategoryFilters />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-lg font-bold text-primary">
+                        {t("dashboard.active_subs")}
+                      </h2>
 
-                           <div className="bg-card rounded-2xl border border-subtle shadow-sm overflow-hidden min-h-[400px]">
-                              {subscriptionsLoading ? (
-                                 <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center h-96">
-                                    <Loader2 size={32} className="animate-spin mb-3 text-indigo-500" />
-                                    <p className="text-sm font-medium">{t('dashboard.syncing')}</p>
-                                 </div>
-                              ) : filteredSubscriptions.length === 0 ? (
-                                 <div className="p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
-                                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
-                                       <Plus size={32} className="text-gray-400" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{t('dashboard.empty_title')}</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
-                                       {t('dashboard.empty_desc')}
-                                    </p>
-                                    <button
-                                       onClick={() => setIsAddModalOpen(true)}
-                                       className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 animate-pulse hover:animate-none"
-                                    >
-                                       <Plus size={16} /> {t('dashboard.add_first')}
-                                    </button>
-                                 </div>
-                              ) : (
-                                 <SubscriptionTable
-                                    subscriptions={filteredSubscriptions}
-                                    onSelectSubscription={setSelectedSub}
-                                    onDeleteSubscription={handleSubDelete}
-                                    previewCurrency={previewCurrency}
-                                 />
-                              )}
-                           </div>
-                        </div>
-                     </div>
-
-                     <div className="space-y-6">
-                        {/* SubSense Wrapped entry point */}
+                      {/* Global Currency Preview Toggle */}
+                      <div className="relative">
                         <button
-                           onClick={() => { setIsWrappedOpen(true); trackEvent('wrapped_opened', { source: 'dashboard' }); }}
-                           className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-left text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                          onClick={() =>
+                            setIsPreviewSelectorOpen(!isPreviewSelectorOpen)
+                          }
+                          className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                            previewCurrency
+                              ? "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300"
+                          }`}
                         >
-                           <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/15 blur-2xl transition-opacity group-hover:opacity-80" />
-                           <div className="relative flex items-center gap-4">
-                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                                 <Sparkles size={22} />
-                              </span>
-                              <div className="min-w-0">
-                                 <h3 className="font-display text-base font-extrabold leading-tight">
-                                    {t('wrapped.entry_title').replace('{year}', String(new Date().getFullYear()))}
-                                 </h3>
-                                 <p className="mt-0.5 text-xs text-white/80">{t('wrapped.entry_desc')}</p>
-                              </div>
-                              <ArrowRight size={18} className="ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
-                           </div>
+                          {previewCurrency ? (
+                            <>
+                              <Eye size={12} /> {t("dashboard.preview_mode")}:{" "}
+                              {previewCurrency}
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff size={12} />{" "}
+                              {t("dashboard.preview_currency")}
+                            </>
+                          )}
                         </button>
 
-                        <UpcomingTimeline subscriptions={subscriptions} subscriptionsLoading={subscriptionsLoading} setIsCalendarOpen={setIsCalendarOpen} setSelectedSub={setSelectedSub} handleMarkAsPaid={handleMarkAsPaid} />
-                        <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
-                           <h3 className="font-display text-lg font-bold text-primary mb-4">{t('analytics.cost_dist')}</h3>
-                           <AnalyticsChart subscriptions={subscriptions} />
+                        {/* Tooltip */}
+                        <div className="absolute left-0 bottom-full mb-2 w-56 p-3 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                          {t("dashboard.preview_tooltip")}
+                          <div className="absolute top-full left-4 border-4 border-transparent border-t-gray-900"></div>
                         </div>
-                        <ExpenseBreakdown metrics={derivedStats} subscriptionsLoading={subscriptionsLoading} setCurrentView={setCurrentView} />
-                     </div>
+
+                        {/* Dropdown */}
+                        {isPreviewSelectorOpen && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-30"
+                              onClick={() => setIsPreviewSelectorOpen(false)}
+                            ></div>
+                            <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 z-40 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                              <button
+                                onClick={() => {
+                                  setPreviewCurrency(null);
+                                  setIsPreviewSelectorOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-xs font-bold hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${!previewCurrency ? "text-green-600" : "text-gray-600 dark:text-gray-300"} `}
+                              >
+                                {t("dashboard.off_original")}
+                                {!previewCurrency && <CheckCircle2 size={12} />}
+                              </button>
+                              <div className="h-px bg-gray-100 dark:bg-gray-700"></div>
+                              {Object.values(CURRENCY_DATA).map((curr) => (
+                                <button
+                                  key={curr.code}
+                                  onClick={() => {
+                                    setPreviewCurrency(curr.code);
+                                    setIsPreviewSelectorOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2.5 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between ${previewCurrency === curr.code ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20" : "text-gray-600 dark:text-gray-300"}`}
+                                >
+                                  {curr.code} ({curr.symbol})
+                                  {previewCurrency === curr.code && (
+                                    <CheckCircle2 size={12} />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentView("subscriptions")}
+                      className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      {t("dashboard.view_all")}
+                    </button>
                   </div>
-               </div>
-            );
-         case 'friends': return <Suspense fallback={<LoadingFallback />}><Friends /></Suspense>;
-         case 'analytics': return (
-            <Suspense fallback={<LoadingFallback />}>
-               <Analytics
+
+                  <CategoryFilters />
+
+                  <div className="bg-card rounded-2xl border border-subtle shadow-sm overflow-hidden min-h-[400px]">
+                    {subscriptionsLoading ? (
+                      <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center h-96">
+                        <Loader2
+                          size={32}
+                          className="animate-spin mb-3 text-indigo-500"
+                        />
+                        <p className="text-sm font-medium">
+                          {t("dashboard.syncing")}
+                        </p>
+                      </div>
+                    ) : filteredSubscriptions.length === 0 ? (
+                      <div className="p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
+                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
+                          <Plus size={32} className="text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                          {t("dashboard.empty_title")}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
+                          {t("dashboard.empty_desc")}
+                        </p>
+                        <button
+                          onClick={() => setIsAddModalOpen(true)}
+                          className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2 animate-pulse hover:animate-none"
+                        >
+                          <Plus size={16} /> {t("dashboard.add_first")}
+                        </button>
+                      </div>
+                    ) : (
+                      <SubscriptionTable
+                        subscriptions={filteredSubscriptions}
+                        onSelectSubscription={setSelectedSub}
+                        onDeleteSubscription={handleSubDelete}
+                        previewCurrency={previewCurrency}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* SubSense Wrapped entry point */}
+                <button
+                  onClick={() => {
+                    setIsWrappedOpen(true);
+                    trackEvent("wrapped_opened", { source: "dashboard" });
+                  }}
+                  className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-left text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                >
+                  <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/15 blur-2xl transition-opacity group-hover:opacity-80" />
+                  <div className="relative flex items-center gap-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                      <Sparkles size={22} />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="font-display text-base font-extrabold leading-tight">
+                        {t("wrapped.entry_title").replace(
+                          "{year}",
+                          String(new Date().getFullYear()),
+                        )}
+                      </h3>
+                      <p className="mt-0.5 text-xs text-white/80">
+                        {t("wrapped.entry_desc")}
+                      </p>
+                    </div>
+                    <ArrowRight
+                      size={18}
+                      className="ml-auto shrink-0 transition-transform group-hover:translate-x-0.5"
+                    />
+                  </div>
+                </button>
+
+                <UpcomingTimeline
                   subscriptions={subscriptions}
-                  budgetLimits={budgetLimits}
-                  setBudgetLimits={setBudgetLimits}
-                  savingsGoal={savingsGoal}
-                  setSavingsGoal={setSavingsGoal}
-                  totalSaved={totalSaved}
-                  lifetimeSpend={metrics.lifetimeSpend}
-               />
-            </Suspense>
-         );
-         case 'compare': return <Suspense fallback={<LoadingFallback />}><Comparison /></Suspense>;
-         case 'discover': return <Suspense fallback={<LoadingFallback />}><Discover /></Suspense>;
-         case 'settings': return (
-            <Suspense fallback={<LoadingFallback />}>
-               <SettingsPage
-                  subscriptions={subscriptions}
-                  onUpdateSubscriptions={undefined}
-                  user={user}
-               />
-            </Suspense>
-         );
-         case 'help': return <Suspense fallback={<LoadingFallback />}><HelpCenter /></Suspense>;
-         case 'profile': return (
-            <Suspense fallback={<LoadingFallback />}>
-               <Profile
-                  user={user}
-                  subscriptions={subscriptions}
-                  userKey={userKey}
-               />
-            </Suspense>
-         );
-         case 'subscriptions': return (
-            <SubscriptionsPage
-               subscriptions={subscriptions}
-               onSelectSubscription={setSelectedSub}
-               onDeleteSubscription={handleSubDelete}
-               previewCurrency={previewCurrency}
-               onAdd={() => setIsAddModalOpen(true)}
-            />
-         );
-         default: return null;
-      }
-   };
-
-   return (
-      <div className="flex h-screen bg-app font-sans text-primary transition-colors duration-300">
-
-         {/* Sidebar - Hidden on mobile, controlled via state */}
-         <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0 h-full`}>
-            <Sidebar
-               onLogout={onLogout}
-               currentView={currentView}
-               onNavigate={(view) => { setCurrentView(view); setIsMobileMenuOpen(false); setIsAddModalOpen(false); }}
-               onOpenAI={() => setIsAIOpen(!isAIOpen)}
-            />
-         </div>
-
-         {/* Mobile Overlay */}
-         {isMobileMenuOpen && (
-            <div className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-         )}
-
-         <div className="flex-1 flex flex-col h-screen overflow-hidden">
-            {/* Mobile Header */}
-            <header className="md:hidden bg-card border-b border-subtle p-4 flex items-center justify-between sticky top-0 z-20">
-               <button onClick={() => setIsMobileMenuOpen(true)} className="text-secondary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                  <Menu size={24} />
-               </button>
-               <span className="font-bold text-primary text-lg">SubSense</span>
-               <div className="flex items-center gap-2">
-                  {/* Mobile Currency Switch */}
-                  <button onClick={() => setIsCurrencyModalOpen(true)} className="text-primary p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                     <span className="text-xs font-bold">{currentCurrency}</span>
-                  </button>
-                  {/* Mobile AI Trigger */}
-                  <button onClick={() => setIsAIOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                     <span className="sr-only">AI Assistant</span>
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500"><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"></path></svg>
-                  </button>
-                  <button onClick={() => setIsAddModalOpen(true)} className="text-primary p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                     <Plus size={24} />
-                  </button>
-               </div>
-            </header>
-
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-app p-4 md:p-8 relative transition-colors duration-300">
-               {renderContent()}
-            </main>
-         </div>
-
-         {/* Global Modals */}
-         <SubscriptionModal
-            isOpen={!!selectedSub}
-            onClose={() => setSelectedSub(null)}
-            subscription={selectedSub}
-            onSave={handleSubUpdate}
-            onDelete={handleSubDelete}
-         />
-
-         <CalendarModal
-            isOpen={isCalendarOpen}
-            onClose={() => setIsCalendarOpen(false)}
-            subscriptions={subscriptions}
-         />
-
-         {/* AI Assistant */}
-         <AIAssistant
-            isOpen={isAIOpen}
-            onClose={() => setIsAIOpen(false)}
-            subscriptions={subscriptions}
-            currentPage={currentView}
-         />
-
-         {/* Currency Switcher (Base) */}
-         <CurrencySelector
-            isOpen={isCurrencyModalOpen}
-            onClose={() => setIsCurrencyModalOpen(false)}
-            selectedCurrency={currentCurrency}
-            onSelect={setCurrency}
-         />
-
-         {/* SubSense Wrapped — annual recap overlay */}
-         <Wrapped
-            isOpen={isWrappedOpen}
-            onClose={() => setIsWrappedOpen(false)}
-            subscriptions={subscriptions}
-         />
-
-         {/* Onboarding Tour */}
-         {showOnboarding && <OnboardingTour onComplete={handleOnboardingComplete} />}
-
-         {/* Global Toast */}
-         {toastMsg && (
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-[100] animate-in slide-in-from-bottom-2 fade-in">
-               <span className="font-medium text-sm">{toastMsg}</span>
+                  subscriptionsLoading={subscriptionsLoading}
+                  setIsCalendarOpen={setIsCalendarOpen}
+                  setSelectedSub={setSelectedSub}
+                  handleMarkAsPaid={handleMarkAsPaid}
+                />
+                <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
+                  <h3 className="font-display text-lg font-bold text-primary mb-4">
+                    {t("analytics.cost_dist")}
+                  </h3>
+                  <AnalyticsChart subscriptions={subscriptions} />
+                </div>
+                <ExpenseBreakdown
+                  metrics={derivedStats}
+                  subscriptionsLoading={subscriptionsLoading}
+                  setCurrentView={setCurrentView}
+                />
+              </div>
             </div>
-         )}
+          </div>
+        );
+      case "friends":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Friends />
+          </Suspense>
+        );
+      case "analytics":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Analytics
+              subscriptions={subscriptions}
+              budgetLimits={budgetLimits}
+              setBudgetLimits={setBudgetLimits}
+              savingsGoal={savingsGoal}
+              setSavingsGoal={setSavingsGoal}
+              totalSaved={totalSaved}
+              lifetimeSpend={metrics.lifetimeSpend}
+            />
+          </Suspense>
+        );
+      case "compare":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Comparison />
+          </Suspense>
+        );
+      case "discover":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Discover />
+          </Suspense>
+        );
+      case "settings":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsPage
+              subscriptions={subscriptions}
+              onUpdateSubscriptions={undefined}
+              user={user}
+            />
+          </Suspense>
+        );
+      case "help":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <HelpCenter />
+          </Suspense>
+        );
+      case "profile":
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <Profile
+              user={user}
+              subscriptions={subscriptions}
+              userKey={userKey}
+            />
+          </Suspense>
+        );
+      case "subscriptions":
+        return (
+          <SubscriptionsPage
+            subscriptions={subscriptions}
+            onSelectSubscription={setSelectedSub}
+            onDeleteSubscription={handleSubDelete}
+            previewCurrency={previewCurrency}
+            onAdd={() => setIsAddModalOpen(true)}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-app font-sans text-primary transition-colors duration-300">
+      {/* Sidebar - Hidden on mobile, controlled via state */}
+      <div
+        className={`fixed inset-y-0 left-0 z-30 h-[100dvh] w-[min(88vw,20rem)] transform overflow-hidden bg-sidebar shadow-2xl transition duration-200 ease-in-out md:relative md:z-0 md:h-full md:w-64 md:translate-x-0 md:shadow-none ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <Sidebar
+          onLogout={onLogout}
+          currentView={currentView}
+          onNavigate={(view) => {
+            setCurrentView(view);
+            setIsMobileMenuOpen(false);
+            setIsAddModalOpen(false);
+          }}
+          onOpenAI={() => setIsAIOpen(!isAIOpen)}
+        />
       </div>
-   );
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Mobile Header */}
+        <header className="md:hidden bg-card border-b border-subtle px-3 py-3 flex items-center justify-between sticky top-0 z-20">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="text-secondary p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <Menu size={24} />
+          </button>
+          <span className="font-bold text-primary text-base sm:text-lg">
+            SubSense
+          </span>
+          <div className="flex items-center gap-2">
+            {/* Mobile Currency Switch */}
+            <button
+              onClick={() => setIsCurrencyModalOpen(true)}
+              className="text-primary p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <span className="text-xs font-bold">{currentCurrency}</span>
+            </button>
+            {/* Mobile AI Trigger */}
+            <button
+              onClick={() => setIsAIOpen(true)}
+              className="text-primary p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <span className="sr-only">AI Assistant</span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-indigo-500"
+              >
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"></path>
+              </svg>
+            </button>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="text-primary p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <Plus size={24} />
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-app p-3 sm:p-4 md:p-8 relative transition-colors duration-300">
+          {renderContent()}
+        </main>
+      </div>
+
+      {/* Global Modals */}
+      <SubscriptionModal
+        isOpen={!!selectedSub}
+        onClose={() => setSelectedSub(null)}
+        subscription={selectedSub}
+        onSave={handleSubUpdate}
+        onDelete={handleSubDelete}
+      />
+
+      <CalendarModal
+        isOpen={isCalendarOpen}
+        onClose={() => setIsCalendarOpen(false)}
+        subscriptions={subscriptions}
+      />
+
+      {/* AI Assistant */}
+      <AIAssistant
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+        subscriptions={subscriptions}
+        currentPage={currentView}
+      />
+
+      {/* Currency Switcher (Base) */}
+      <CurrencySelector
+        isOpen={isCurrencyModalOpen}
+        onClose={() => setIsCurrencyModalOpen(false)}
+        selectedCurrency={currentCurrency}
+        onSelect={setCurrency}
+      />
+
+      {/* SubSense Wrapped — annual recap overlay */}
+      <Wrapped
+        isOpen={isWrappedOpen}
+        onClose={() => setIsWrappedOpen(false)}
+        subscriptions={subscriptions}
+      />
+
+      {/* Onboarding Tour */}
+      {showOnboarding && (
+        <OnboardingTour onComplete={handleOnboardingComplete} />
+      )}
+
+      {/* Global Toast */}
+      {toastMsg && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-[100] animate-in slide-in-from-bottom-2 fade-in">
+          <span className="font-medium text-sm">{toastMsg}</span>
+        </div>
+      )}
+    </div>
+  );
 }

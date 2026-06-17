@@ -1,6 +1,6 @@
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import React from "react";
+import { ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 /**
  * Shared UI primitives — the single source of design truth for every panel
@@ -28,10 +28,16 @@ export const PageHeader: React.FC<{
         <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
           {title}
         </h1>
-        {subtitle && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
+        {subtitle && (
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {subtitle}
+          </p>
+        )}
       </div>
     </div>
-    {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    {actions && (
+      <div className="flex flex-wrap items-center gap-2">{actions}</div>
+    )}
   </div>
 );
 
@@ -43,10 +49,19 @@ export const Card: React.FC<
     hover?: boolean;
     padding?: string;
   }
-> = ({ glow, hover = false, padding = 'p-6', className = '', children, ...rest }) => (
+> = ({
+  glow,
+  hover = false,
+  padding = "p-4 sm:p-6",
+  className = "",
+  children,
+  ...rest
+}) => (
   <div
     className={`group relative overflow-hidden rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-gray-800/60 shadow-sm ${padding} ${
-      hover ? 'transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl' : ''
+      hover
+        ? "transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+        : ""
     } ${className}`}
     {...rest}
   >
@@ -70,9 +85,17 @@ export const SectionCard: React.FC<{
   className?: string;
   bodyClassName?: string;
   children: React.ReactNode;
-}> = ({ title, icon: Icon, iconColor = '#6366f1', action, className = '', bodyClassName = '', children }) => (
+}> = ({
+  title,
+  icon: Icon,
+  iconColor = "#6366f1",
+  action,
+  className = "",
+  bodyClassName = "",
+  children,
+}) => (
   <Card padding="p-0" className={className}>
-    <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 px-5 py-4">
+    <div className="flex items-center justify-between gap-3 border-b border-gray-100 dark:border-white/5 px-4 py-4 sm:px-5">
       <div className="flex items-center gap-2.5">
         {Icon && (
           <span
@@ -82,11 +105,15 @@ export const SectionCard: React.FC<{
             <Icon size={16} />
           </span>
         )}
-        <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">{title}</h3>
+        <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">
+          {title}
+        </h3>
       </div>
       {action}
     </div>
-    <div className={`px-5 py-5 ${bodyClassName}`}>{children}</div>
+    <div className={`px-4 py-4 sm:px-5 sm:py-5 ${bodyClassName}`}>
+      {children}
+    </div>
   </Card>
 );
 
@@ -99,7 +126,7 @@ export const StatTile: React.FC<{
   accent?: string;
   trend?: { value: string; up?: boolean };
   hint?: string;
-}> = ({ label, value, icon: Icon, accent = '#6366f1', trend, hint }) => (
+}> = ({ label, value, icon: Icon, accent = "#6366f1", trend, hint }) => (
   <Card hover glow={accent} className="flex flex-col">
     <div className="mb-4 flex items-start justify-between">
       {Icon && (
@@ -114,17 +141,23 @@ export const StatTile: React.FC<{
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
             trend.up
-              ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300'
+              ? "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300"
           }`}
         >
           {trend.value}
         </span>
       )}
     </div>
-    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{label}</p>
-    <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-gray-900 dark:text-white">{value}</p>
-    {hint && <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
+    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+      {label}
+    </p>
+    <p className="mt-1 font-display text-2xl font-extrabold tabular-nums text-gray-900 dark:text-white">
+      {value}
+    </p>
+    {hint && (
+      <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">{hint}</p>
+    )}
   </Card>
 );
 
@@ -134,14 +167,14 @@ export const Segmented = <T extends string>({
   options,
   value,
   onChange,
-  size = 'md',
+  size = "md",
 }: {
   options: { value: T; label: string; icon?: LucideIcon }[];
   value: T;
   onChange: (v: T) => void;
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
 }) => (
-  <div className="inline-flex items-center gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+  <div className="flex w-full flex-wrap items-center gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800 sm:inline-flex sm:w-auto sm:flex-nowrap">
     {options.map((opt) => {
       const active = opt.value === value;
       const Icon = opt.icon;
@@ -150,15 +183,15 @@ export const Segmented = <T extends string>({
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`inline-flex items-center gap-1.5 rounded-lg font-semibold transition-all ${
-            size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm'
+          className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-semibold transition-all ${
+            size === "sm" ? "px-2.5 py-1 text-xs" : "px-3.5 py-1.5 text-sm"
           } ${
             active
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
           }`}
         >
-          {Icon && <Icon size={size === 'sm' ? 13 : 15} />}
+          {Icon && <Icon size={size === "sm" ? 13 : 15} />}
           {opt.label}
         </button>
       );
@@ -168,11 +201,11 @@ export const Segmented = <T extends string>({
 
 /* -------------------------------- Pill --------------------------------- */
 
-export const Pill: React.FC<{ children: React.ReactNode; color?: string; className?: string }> = ({
-  children,
-  color = '#6366f1',
-  className = '',
-}) => (
+export const Pill: React.FC<{
+  children: React.ReactNode;
+  color?: string;
+  className?: string;
+}> = ({ children, color = "#6366f1", className = "" }) => (
   <span
     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${className}`}
     style={{ backgroundColor: `${color}1a`, color }}
@@ -183,11 +216,9 @@ export const Pill: React.FC<{ children: React.ReactNode; color?: string; classNa
 
 /* ----------------------------- Buttons --------------------------------- */
 
-export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
-  className = '',
-  children,
-  ...rest
-}) => (
+export const PrimaryButton: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+> = ({ className = "", children, ...rest }) => (
   <button
     className={`inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 dark:bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-gray-800 dark:hover:bg-blue-700 hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${className}`}
     {...rest}
@@ -196,11 +227,9 @@ export const PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElemen
   </button>
 );
 
-export const GhostButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({
-  className = '',
-  children,
-  ...rest
-}) => (
+export const GhostButton: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+> = ({ className = "", children, ...rest }) => (
   <button
     className={`inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 transition-all hover:bg-gray-50 dark:hover:bg-gray-700 ${className}`}
     {...rest}
@@ -221,15 +250,24 @@ export const EmptyState: React.FC<{
     <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40">
       <Icon size={28} className="text-indigo-500 dark:text-indigo-300" />
     </span>
-    <h3 className="font-display text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
-    {desc && <p className="mt-1.5 max-w-xs text-sm text-gray-500 dark:text-gray-400">{desc}</p>}
+    <h3 className="font-display text-lg font-bold text-gray-900 dark:text-white">
+      {title}
+    </h3>
+    {desc && (
+      <p className="mt-1.5 max-w-xs text-sm text-gray-500 dark:text-gray-400">
+        {desc}
+      </p>
+    )}
     {action && <div className="mt-6">{action}</div>}
   </div>
 );
 
 /* ----------------------- Link-style "see all" -------------------------- */
 
-export const SeeAllLink: React.FC<{ label: string; onClick?: () => void }> = ({ label, onClick }) => (
+export const SeeAllLink: React.FC<{ label: string; onClick?: () => void }> = ({
+  label,
+  onClick,
+}) => (
   <button
     onClick={onClick}
     className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:gap-2 transition-all"
