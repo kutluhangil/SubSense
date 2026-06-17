@@ -43,6 +43,9 @@ export default defineConfig({
       workbox: {
         // Cache Firebase SDK & app chunks for offline use
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Static SEO price pages (/fiyatlar/*) and sitemap must NOT be served
+        // the SPA shell by the service worker — let them hit the network.
+        navigateFallbackDenylist: [/^\/fiyatlar/, /^\/sitemap/, /^\/robots/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/open\.er-api\.com\/.*/i,

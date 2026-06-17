@@ -31,6 +31,15 @@ export interface SubscriptionPlan {
   cancelAtPeriodEnd?: boolean;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  // Referral-granted Pro window. Epoch millis (or Firestore Timestamp). Pro is
+  // active while this is in the future — additive to the Stripe plan above.
+  proUntil?: number | any;
+}
+
+export interface ReferralData {
+  code?: string;
+  redeemedFrom?: string;
+  referredCount?: number;
 }
 
 export interface UserProfileData {
@@ -61,6 +70,7 @@ export interface UserProfileData {
   };
   achievements?: string[];
   plan: SubscriptionPlan;
+  referral?: ReferralData;
 }
 
 // --- Local Fallback Logic ---

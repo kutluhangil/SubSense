@@ -16,6 +16,7 @@ export type AnalyticsEvent =
   | 'password_reset_request'
   | 'email_verification_sent'
   | 'email_verification_resent'
+  | 'referral_redeemed' // New user redeemed an invite code at signup
 
   // Funnel
   | 'funnel_first_sub' // First subscription added
@@ -33,6 +34,7 @@ export type AnalyticsEvent =
   | 'export_data'
   | 'theme_changed'
   | 'currency_changed'
+  | 'wrapped_opened' // SubSense Wrapped annual recap opened
 
   // AI Events
   | 'ai_opened'

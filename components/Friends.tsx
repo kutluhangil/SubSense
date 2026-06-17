@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserPlus, X, Check, Users, MapPin, Loader2, CreditCard, Mail, Inbox } from 'lucide-react';
+import { UserPlus, X, Check, Users, MapPin, Loader2, CreditCard, Mail, Inbox, Gift, Copy, Share2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { convertAmount } from '../utils/currency';
@@ -13,7 +13,8 @@ import {
   type FriendRequestPreview,
   type PersonResult,
 } from '../utils/friends';
-import { PageHeader, Card, SectionCard, EmptyState, PrimaryButton, Pill } from './ui';
+import { getReferralCode, type ReferralInfo } from '../utils/referrals';
+import { PageHeader, Card, SectionCard, EmptyState, PrimaryButton, Pill, StatTile } from './ui';
 
 const initial = (s: string | null | undefined) => (s || '?')[0].toUpperCase();
 
@@ -26,6 +27,105 @@ const Avatar = ({ name, size = 'md' }: { name: string | null | undefined; size?:
     {initial(name)}
   </span>
 );
+
+function ReferralCard() {
+  const { t } = useLanguage();
+  const [info, setInfo] = useState<ReferralInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getReferralCode()
+      .then((data) => {
+        if (active) setInfo(data);
+      })
+      .catch(() => {
+        if (active) setInfo(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const link =
+    info?.code && typeof window !== 'undefined'
+      ? `${window.location.origin}/?ref=${info.code}`
+      : '';
+
+  const handleCopy = async () => {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable — ignore.
+    }
+  };
+
+  const handleShare = async () => {
+    if (!link) return;
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title: 'SubSense', text: t('referral.share_text'), url: link });
+        return;
+      } catch {
+        // User cancelled or share failed — fall back to copy.
+      }
+    }
+    handleCopy();
+  };
+
+  return (
+    <SectionCard title={t('referral.title')} icon={Gift} iconColor="#a855f7">
+      <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">{t('referral.desc')}</p>
+
+      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+        {t('referral.link_label')}
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          readOnly
+          value={loading ? t('referral.loading') : link || t('referral.unavailable')}
+          onFocus={(e) => e.currentTarget.select()}
+          className="min-w-0 flex-1 truncate rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+        />
+        <div className="flex gap-2">
+          <PrimaryButton onClick={handleCopy} disabled={!link} className="flex-1 sm:flex-none">
+            <Copy size={15} /> {copied ? t('referral.copied') : t('referral.copy')}
+          </PrimaryButton>
+          <button
+            onClick={handleShare}
+            disabled={!link}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            aria-label={t('referral.share')}
+          >
+            <Share2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4">
+        <StatTile
+          label={t('referral.invited')}
+          value={loading ? '—' : String(info?.referredCount ?? 0)}
+          icon={Users}
+          accent="#a855f7"
+        />
+        <StatTile
+          label={t('referral.days_earned')}
+          value={loading ? '—' : String(info?.proDaysEarned ?? 0)}
+          icon={Gift}
+          accent="#6366f1"
+        />
+      </div>
+    </SectionCard>
+  );
+}
 
 export default function Friends() {
   const { currentUser } = useAuth();
@@ -116,6 +216,9 @@ export default function Friends() {
           </PrimaryButton>
         }
       />
+
+      {/* Referral program — viral growth loop */}
+      <ReferralCard />
 
       {/* Incoming requests */}
       {requests.length > 0 && (

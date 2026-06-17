@@ -19,6 +19,9 @@ import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, Use
 import { Subscription } from '../components/SubscriptionModal';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
+import { redeemReferral } from '../utils/referrals';
+
+export const PENDING_REFERRAL_KEY = 'subsense.pendingReferral';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -65,7 +68,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
   const isPro = useMemo(() => {
-    return userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
+    // Existing Stripe / plan path — unchanged.
+    const stripePro = userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
+
+    // Additive referral path: Pro is active while plan.proUntil is in the future.
+    // proUntil may be epoch millis or a Firestore Timestamp ({ toMillis() } / { seconds }).
+    const rawProUntil: any = userProfile?.plan?.proUntil;
+    let proUntilMs: number | null = null;
+    if (typeof rawProUntil === 'number') {
+      proUntilMs = rawProUntil;
+    } else if (rawProUntil && typeof rawProUntil.toMillis === 'function') {
+      proUntilMs = rawProUntil.toMillis();
+    } else if (rawProUntil && typeof rawProUntil.seconds === 'number') {
+      proUntilMs = rawProUntil.seconds * 1000;
+    }
+    const referralPro = proUntilMs !== null && proUntilMs > Date.now();
+
+    return stripePro || referralPro;
   }, [userProfile]);
 
   const unsubscribeSubsRef = useRef<(() => void) | null>(null);
@@ -92,6 +111,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setPendingVerificationEmail(email);
         setNeedsEmailVerification(true);
+
+        // Referral redemption: if the user arrived via an invite link, redeem
+        // the stored code now (NEW user only — never on login). Best-effort:
+        // failures must not block signup. The CF guards against self/duplicate.
+        try {
+          const pendingCode = typeof window !== 'undefined'
+            ? localStorage.getItem(PENDING_REFERRAL_KEY)
+            : null;
+          if (pendingCode) {
+            const result = await redeemReferral(pendingCode);
+            if (result.status === 'success') {
+              trackEvent('referral_redeemed', { days: result.proDaysGranted });
+            }
+            localStorage.removeItem(PENDING_REFERRAL_KEY);
+          }
+        } catch (referralError) {
+          console.error('Referral redemption failed', referralError);
+        }
 
         trackEvent('signup_success', { method: 'email', currency: currency });
       }

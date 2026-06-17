@@ -15,7 +15,8 @@ import AIAssistant from './AIAssistant';
 import AIInsightsCard from './AIInsightsCard';
 import CurrencySelector from './CurrencySelector';
 import BudgetAlert from './BudgetAlert';
-import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import Wrapped from './Wrapped';
+import { Plus, Bell, Calendar, PieChart, ArrowRight, Menu, CheckCircle2, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { User } from '../App';
 import { debugLog } from '../utils/debug';
@@ -154,6 +155,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
    const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false);
    const [isPreviewSelectorOpen, setIsPreviewSelectorOpen] = useState(false);
    const [isBudgetEditorOpen, setIsBudgetEditorOpen] = useState(false);
+   const [isWrappedOpen, setIsWrappedOpen] = useState(false);
    // E-06: Guard against rapid double-click / double-tap triggering duplicate deletes
    const isDeletingRef = React.useRef(false);
 
@@ -250,6 +252,9 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
          }
 
          trackEvent('subscription_added', { category: newSub.category, cycle: newSub.cycle, currency: newSub.currency });
+         // Activation funnel — count is pre-add here, so 0 means this is their FIRST.
+         if (subscriptions.length === 0) trackEvent('funnel_first_sub', { category: newSub.category });
+         else if (subscriptions.length === 1) trackEvent('funnel_second_sub', {});
          setIsAddModalOpen(false);
          setCurrentView('dashboard');
       }
@@ -550,6 +555,26 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                      </div>
 
                      <div className="space-y-6">
+                        {/* SubSense Wrapped entry point */}
+                        <button
+                           onClick={() => { setIsWrappedOpen(true); trackEvent('wrapped_opened', { source: 'dashboard' }); }}
+                           className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-left text-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl"
+                        >
+                           <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/15 blur-2xl transition-opacity group-hover:opacity-80" />
+                           <div className="relative flex items-center gap-4">
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                                 <Sparkles size={22} />
+                              </span>
+                              <div className="min-w-0">
+                                 <h3 className="font-display text-base font-extrabold leading-tight">
+                                    {t('wrapped.entry_title').replace('{year}', String(new Date().getFullYear()))}
+                                 </h3>
+                                 <p className="mt-0.5 text-xs text-white/80">{t('wrapped.entry_desc')}</p>
+                              </div>
+                              <ArrowRight size={18} className="ml-auto shrink-0 transition-transform group-hover:translate-x-0.5" />
+                           </div>
+                        </button>
+
                         <UpcomingTimeline subscriptions={subscriptions} subscriptionsLoading={subscriptionsLoading} setIsCalendarOpen={setIsCalendarOpen} setSelectedSub={setSelectedSub} handleMarkAsPaid={handleMarkAsPaid} />
                         <div className="bg-card rounded-2xl border border-subtle shadow-sm p-6">
                            <h3 className="font-display text-lg font-bold text-primary mb-4">{t('analytics.cost_dist')}</h3>
@@ -684,6 +709,13 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             onClose={() => setIsCurrencyModalOpen(false)}
             selectedCurrency={currentCurrency}
             onSelect={setCurrency}
+         />
+
+         {/* SubSense Wrapped — annual recap overlay */}
+         <Wrapped
+            isOpen={isWrappedOpen}
+            onClose={() => setIsWrappedOpen(false)}
+            subscriptions={subscriptions}
          />
 
          {/* Onboarding Tour */}

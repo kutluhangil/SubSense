@@ -519,9 +519,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 74.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 109.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 39.99, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 59.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 99.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 32.99, cycle: "Monthly" }
         ]
       }
     }
@@ -602,7 +602,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         tiers: [
           { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 279.99, cycle: "Monthly" },
           { name: "Single App", nameLocalized: "Tek Uygulama", price: 649.99, cycle: "Monthly" },
-          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 1599.99, cycle: "Monthly" }
+          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 925.20, cycle: "Monthly" }
         ]
       }
     }
@@ -1035,8 +1035,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 44.99, cycle: "Monthly" },
-          { name: "Nitro", nameLocalized: "Nitro", price: 149.99, cycle: "Monthly" }
+          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 37.99, cycle: "Monthly" },
+          { name: "Nitro", nameLocalized: "Nitro", price: 104.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1074,7 +1074,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Super", nameLocalized: "Super", price: 209.99, cycle: "Monthly" },
+          { name: "Super", nameLocalized: "Super", price: 52.99, cycle: "Monthly" },
           { name: "Family", nameLocalized: "Aile", price: 299.99, cycle: "Monthly" }
         ]
       }
@@ -1310,7 +1310,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Monthly", nameLocalized: "Aylık", price: 39.90, cycle: "Monthly" },
+          { name: "Monthly", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" },
           { name: "Annual", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
         ]
       }
@@ -1342,9 +1342,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Reklamlı", nameLocalized: "Reklamlı", price: 99.99, cycle: "Monthly" },
-          { name: "Reklamsız", nameLocalized: "Reklamsız", price: 169.99, cycle: "Monthly" },
-          { name: "Spor Paketi", nameLocalized: "Spor Paketi", price: 299.99, cycle: "Monthly" }
+          { name: "Reklamlı", nameLocalized: "Reklamlı", price: 219.00, cycle: "Monthly" },
+          { name: "Reklamsız", nameLocalized: "Reklamsız", price: 309.00, cycle: "Monthly" },
+          { name: "Spor Reklamsız", nameLocalized: "Spor Reklamsız", price: 499.00, cycle: "Monthly" }
         ]
       }
     }
@@ -1373,7 +1373,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 89.90, cycle: "Monthly" },
+          { name: "Aylık", nameLocalized: "Aylık", price: 199.90, cycle: "Monthly" },
           { name: "3 Aylık", nameLocalized: "3 Aylık", price: 239.90, cycle: "Monthly" },
           { name: "Yıllık", nameLocalized: "Yıllık", price: 799.90, cycle: "Yearly" }
         ]
@@ -1466,8 +1466,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 59.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 479, cycle: "Yearly" }
+          { name: "Aylık", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" },
+          { name: "Yıllık", nameLocalized: "Yıllık", price: 538, cycle: "Yearly" }
         ]
       }
     }
@@ -1547,8 +1547,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Fan", nameLocalized: "Fan", price: 169.99, cycle: "Monthly" },
-          { name: "Mega Fan", nameLocalized: "Mega Fan", price: 249.99, cycle: "Monthly" }
+          { name: "Fan", nameLocalized: "Fan", price: 49.99, cycle: "Monthly" },
+          { name: "Mega Fan", nameLocalized: "Mega Fan", price: 69.99, cycle: "Monthly" }
         ]
       }
     }

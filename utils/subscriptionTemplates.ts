@@ -18,23 +18,23 @@ export const subscriptionTemplates: SubscriptionTemplate[] = [
   // --- Streaming (TR) ---
   { name: 'Netflix', type: 'Entertainment', price: 289.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'netflix' },
   { name: 'Disney+', type: 'Entertainment', price: 449.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'disney' },
-  { name: 'Amazon Prime', type: 'Shopping', price: 39.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'amazonprime' },
-  { name: 'Exxen', type: 'Entertainment', price: 169.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'exxen' },
-  { name: 'BluTV', type: 'Entertainment', price: 89.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'blutv' },
-  { name: 'Crunchyroll', type: 'Entertainment', price: 169.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'crunchyroll' },
+  { name: 'Amazon Prime', type: 'Shopping', price: 69.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'amazonprime' },
+  { name: 'Exxen', type: 'Entertainment', price: 309.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'exxen' },
+  { name: 'BluTV', type: 'Entertainment', price: 199.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'blutv' },
+  { name: 'Crunchyroll', type: 'Entertainment', price: 49.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'crunchyroll' },
   // --- Music (TR) ---
   { name: 'Spotify', type: 'Music', price: 99.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'spotify' },
   { name: 'YouTube Premium', type: 'Entertainment', price: 119.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'youtube' },
-  { name: 'Apple Music', type: 'Music', price: 74.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'applemusic' },
+  { name: 'Apple Music', type: 'Music', price: 59.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'applemusic' },
   // --- Gaming (TR) ---
   { name: 'Xbox Game Pass', type: 'Gaming', price: 529.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'xboxgamepass' },
   { name: 'PlayStation Plus', type: 'Gaming', price: 600.00, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'playstationplus' },
-  { name: 'Discord Nitro', type: 'Gaming', price: 149.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'discord' },
+  { name: 'Discord Nitro', type: 'Gaming', price: 104.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Gaming', logo: 'discord' },
   { name: 'Twitch Turbo', type: 'Gaming', price: 164.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'twitch' },
   // --- Productivity / SaaS ---
   { name: 'Microsoft 365', type: 'Software', price: 179.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Productivity', logo: 'microsoft365' },
-  { name: 'Adobe Creative Cloud', type: 'Software', price: 1599.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Productivity', logo: 'adobe' },
-  { name: 'Duolingo Super', type: 'Software', price: 209.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Productivity', logo: 'duolingo' },
+  { name: 'Adobe Creative Cloud', type: 'Software', price: 925.20, currency: 'TRY', billingCycle: 'Monthly', category: 'Productivity', logo: 'adobe' },
+  { name: 'Duolingo Super', type: 'Software', price: 52.99, currency: 'TRY', billingCycle: 'Monthly', category: 'Productivity', logo: 'duolingo' },
   { name: 'ChatGPT Plus', type: 'Software', price: 20.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'chatgpt' },
   { name: 'Claude Pro', type: 'Software', price: 20.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'claude' },
   { name: 'GitHub Copilot', type: 'Software', price: 10.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'githubcopilot' },
@@ -42,9 +42,9 @@ export const subscriptionTemplates: SubscriptionTemplate[] = [
   { name: 'Notion', type: 'Software', price: 10.00, currency: 'USD', billingCycle: 'Monthly', category: 'Productivity', logo: 'notion' },
   // --- Shopping (TR) ---
   { name: 'Trendyol Elite', type: 'Shopping', price: 49.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'trendyol' },
-  { name: 'Hepsiburada Premium', type: 'Shopping', price: 59.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'hepsiburada' },
+  { name: 'Hepsiburada Premium', type: 'Shopping', price: 69.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Shopping', logo: 'hepsiburada' },
   // --- Global streaming (USD) ---
-  { name: 'HBO Max', type: 'Entertainment', price: 16.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'hbomax' },
+  { name: 'HBO Max', type: 'Entertainment', price: 229.90, currency: 'TRY', billingCycle: 'Monthly', category: 'Entertainment', logo: 'hbomax' },
   { name: 'Hulu', type: 'Entertainment', price: 9.99, currency: 'USD', billingCycle: 'Monthly', category: 'Entertainment', logo: 'hulu' },
 ];
 

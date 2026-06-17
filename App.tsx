@@ -65,6 +65,19 @@ function AppContent() {
     }
   }, [currentPage, currentUser]);
 
+  // Capture ?ref=CODE from the invite link on load and stash it until signup.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref && ref.trim()) {
+      try {
+        localStorage.setItem('subsense.pendingReferral', ref.trim().toUpperCase());
+      } catch {
+        // Ignore storage failures (private mode, etc.)
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const handleEmailActions = async () => {
       const params = new URLSearchParams(window.location.search);
