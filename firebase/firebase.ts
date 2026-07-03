@@ -16,45 +16,24 @@ import { getAnalytics, Analytics, isSupported as isAnalyticsSupported } from "fi
 import { getPerformance, FirebasePerformance } from "firebase/performance";
 
 // --- Configuration ---
-// Use direct static import.meta.env accesses so Vite can statically replace them
-// at build time. Dynamic wrapper functions prevent Vite's static analysis.
-const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            as string || "",
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        as string || "",
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         as string || "",
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     as string || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string || "",
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID             as string || "",
+// Safe fallback mechanism for environment variables
+const getEnv = (key: string, fallback: string): string => {
+  // Cast to any to avoid TS errors
+  const meta = import.meta as any;
+  if (typeof meta !== 'undefined' && meta.env) {
+      return (meta.env[key] as string) || fallback;
+  }
+  return fallback;
 };
 
-// Guard: if critical Firebase config is missing, surface a clear error instead of
-// crashing the module silently and producing a blank white screen.
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  const msg =
-    "SubSense: Firebase environment variables are missing.\n" +
-    "Make sure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set in your " +
-    "Vercel project settings (Settings → Environment Variables) and redeploy.";
-  console.error(msg);
-  // Show a visible error overlay so users/developers see the issue immediately.
-  if (typeof document !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
-      const root = document.getElementById("root");
-      if (root && !root.children.length) {
-        root.innerHTML = `<div style="font-family:monospace;padding:32px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
-          <h2 style="color:#ff4444">⚙️ Configuration Error</h2>
-          <p style="color:#ffa">Firebase environment variables are not set.</p>
-          <p style="font-size:13px;color:#ccc">Add these to your Vercel project → Settings → Environment Variables and redeploy:</p>
-          <ul style="font-size:12px;color:#7df">
-            <li>VITE_FIREBASE_API_KEY</li><li>VITE_FIREBASE_AUTH_DOMAIN</li>
-            <li>VITE_FIREBASE_PROJECT_ID</li><li>VITE_FIREBASE_STORAGE_BUCKET</li>
-            <li>VITE_FIREBASE_MESSAGING_SENDER_ID</li><li>VITE_FIREBASE_APP_ID</li>
-            <li>VITE_GEMINI_API_KEY</li>
-          </ul>
-        </div>`;
-      }
-    });
-  }
-}
+const firebaseConfig = {
+  apiKey: getEnv("VITE_FIREBASE_API_KEY", "AIzaSyArupQpxKTcA1PUoqmUFLf2K31CT4KG_R4"),
+  authDomain: getEnv("VITE_FIREBASE_AUTH_DOMAIN", "subscriptionhub-85b02.firebaseapp.com"),
+  projectId: getEnv("VITE_FIREBASE_PROJECT_ID", "subscriptionhub-85b02"),
+  storageBucket: getEnv("VITE_FIREBASE_STORAGE_BUCKET", "subscriptionhub-85b02.firebasestorage.app"),
+  messagingSenderId: getEnv("VITE_FIREBASE_MESSAGING_SENDER_ID", "86302718224"),
+  appId: getEnv("VITE_FIREBASE_APP_ID", "1:86302718224:web:f9f646d77fa9fb92050d95")
+};
 
 // --- Initialization ---
 
@@ -84,15 +63,8 @@ try {
   });
 } catch (e) {
   // Fallback to existing instance if HMR re-initializes
-  // or if persistent cache fails (e.g. missing projectId, IndexedDB unavailable)
-  try {
-    db = getFirestore(app);
-  } catch (e2) {
-    // Last resort: if both fail (e.g. completely invalid config), assign a dummy
-    // so the module exports don't blow up. Auth will surface a proper error.
-    console.error("Firestore initialization failed completely:", e2);
-    db = {} as Firestore;
-  }
+  // or if persistent cache fails
+  db = getFirestore(app);
 }
 
 // 5. Initialize Analytics & Performance (Browser Only)

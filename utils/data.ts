@@ -70,7 +70,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "twitch": "#9146FF",
   "twitchturbo": "#9146FF",
   "peacock": "#000000",
-
+  
   // Music
   "applemusic": "#FC3C44",
   "soundcloud": "#FF5500",
@@ -92,7 +92,7 @@ export const BRAND_COLORS: Record<string, string> = {
   "slack": "#4A154B",
   "zoom": "#2D8CFF",
   "dropbox": "#0061FF",
-
+  
   // Gaming
   "gamepass": "#107C10",
   "xboxgamepass": "#107C10",
@@ -101,52 +101,24 @@ export const BRAND_COLORS: Record<string, string> = {
   "eaplay": "#FF4747",
   "ubisoft+": "#0091F2",
   "geforcenow": "#76B900",
-
-  // AI Services
+  
+  // AI
   "chatgpt": "#10A37F",
   "chatgptplus": "#10A37F",
   "githubcopilot": "#181717",
   "midjourney": "#FFFFFF", // Often depicted white on black
   "grammarly": "#15C39A",
   "perplexity": "#22B8CF",
-
+  
   // Local / E-com
   "hepsiburada": "#F68B1E",
   "hepsiburadapremium": "#F68B1E",
   "trendyol": "#FF6600",
   "trendyolelite": "#FF6600",
   "getir": "#5D3EBC",
-
-  // Added requested brands
-  "discord": "#5865F2",
-  "discordnitro": "#5865F2",
-  "duolingo": "#58CC02",
-  "masterclass": "#181818",
-
-  // Turkish & New Additions
-  "exxen": "#FFD500",
-  "blutv": "#FF5C00",
-  "tabii": "#E30613",
-  "claude": "#D97757",
-  "claudepro": "#D97757",
-  "crunchyroll": "#F47521",
-  "nintendo": "#E60012",
-  "nintendoswitchonline": "#E60012",
-
+  
   "default": "#4F46E5" // Indigo-600
 };
-
-export interface PlanTier {
-  name: string;           // English name: "Standard with Ads"
-  nameLocalized?: string; // Localized: "Reklamlı"
-  price: number;
-  cycle: 'Monthly' | 'Yearly';
-}
-
-export interface RegionPricing {
-  currency: string;
-  tiers: PlanTier[];
-}
 
 export interface SubscriptionDetail {
   id: string;
@@ -166,10 +138,6 @@ export interface SubscriptionDetail {
   parentCompany?: string;
   milestones?: string[];
   subsidiaries?: string;
-  regions?: {
-    US?: RegionPricing;
-    TR?: RegionPricing;
-  };
 }
 
 // THE CENTRAL DATASET
@@ -184,39 +152,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Reed Hastings, Marc Randolph",
     ceo: "Ted Sarandos, Greg Peters",
     headquarters: "Los Gatos, California",
-    price: "17.99",
+    price: "15.49",
     currency: "USD",
     type: "netflix",
     netWorth: "$260 Billion",
-    globalUserCount: "283M+",
-    website: "https://www.netflix.com/signup",
+    globalUserCount: "260M+",
+    website: "netflix.com",
     milestones: [
-      "1997: Founded as a DVD-by-mail service",
-      "2007: Launched streaming video service",
-      "2013: Released first original series 'House of Cards'",
-      "2016: Expanded globally to 130 new countries simultaneously",
-      "2021: Squid Game becomes most-watched show ever",
-      "2022: Launched ad-supported tier",
-      "2025: Surpassed 280 million subscribers"
+        "1997: Founded as a DVD-by-mail service", 
+        "2007: Launched streaming video service", 
+        "2013: Released first original series 'House of Cards'", 
+        "2016: Expanded globally to 130 new countries simultaneously",
+        "2021: Squid Game becomes most-watched show ever",
+        "2022: Launched ad-supported tier"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Standard with Ads", price: 7.99, cycle: "Monthly" },
-          { name: "Standard", price: 17.99, cycle: "Monthly" },
-          { name: "Premium (4K)", price: 24.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Basic", nameLocalized: "Temel", price: 189.99, cycle: "Monthly" },
-          { name: "Standard", nameLocalized: "Standart", price: 289.99, cycle: "Monthly" },
-          { name: "Premium (4K)", nameLocalized: "Premium (4K)", price: 379.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "spotify": {
     id: "spotify",
@@ -226,41 +175,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Daniel Ek, Martin Lorentzon",
     ceo: "Daniel Ek",
     headquarters: "Stockholm, Sweden",
-    price: "11.99",
+    price: "10.99",
     currency: "USD",
     type: "spotify",
-    netWorth: "$90 Billion",
-    globalUserCount: "675M+ (Total)",
-    website: "https://www.spotify.com/premium/",
+    netWorth: "$65 Billion",
+    globalUserCount: "602M+ (Total)",
+    website: "spotify.com",
     milestones: [
-      "2006: Founded in Stockholm",
-      "2008: Service launched in Europe",
-      "2011: Launched in the United States",
-      "2015: Discover Weekly playlist launched",
-      "2019: Acquired Gimlet Media (Podcast pivot)",
-      "2023: Surpassed 500 million active users",
-      "2025: Surpassed 670 million total users"
+        "2006: Founded in Stockholm", 
+        "2008: Service launched in Europe", 
+        "2011: Launched in the United States", 
+        "2015: Discover Weekly playlist launched",
+        "2019: Acquired Gimlet Media (Podcast pivot)",
+        "2023: Surpassed 500 million active users"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 11.99, cycle: "Monthly" },
-          { name: "Duo", price: 16.99, cycle: "Monthly" },
-          { name: "Family", price: 19.99, cycle: "Monthly" },
-          { name: "Student", price: 5.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 99.99, cycle: "Monthly" },
-          { name: "Duo", nameLocalized: "Duo", price: 129.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 159.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 54.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "youtubepremium": {
     id: "youtubepremium",
@@ -276,32 +204,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Alphabet)",
     globalUserCount: "100M+",
     parentCompany: "Alphabet Inc.",
-    website: "https://www.youtube.com/premium",
+    website: "youtube.com",
     milestones: [
-      "2005: YouTube founded",
-      "2006: Acquired by Google for $1.65B",
-      "2015: Launched YouTube Red",
-      "2018: Rebranded to YouTube Premium",
-      "2024: Surpassed 100 million subscribers"
+        "2005: YouTube founded", 
+        "2006: Acquired by Google for $1.65B", 
+        "2015: Launched YouTube Red", 
+        "2018: Rebranded to YouTube Premium",
+        "2024: Surpassed 100 million subscribers"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 13.99, cycle: "Monthly" },
-          { name: "Family", price: 22.99, cycle: "Monthly" },
-          { name: "Student", price: 7.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 119.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 79.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "amazonprimevideo": {
     id: "amazonprimevideo",
@@ -317,29 +227,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Amazon)",
     globalUserCount: "200M+ (Prime)",
     parentCompany: "Amazon",
-    website: "https://www.primevideo.com",
+    website: "primevideo.com",
     milestones: [
-      "2006: Amazon Unbox launched",
-      "2011: Included in Prime membership",
-      "2013: Amazon Studios launches first original series",
-      "2022: 'The Rings of Power' premieres",
-      "2024: Introduced ads to base tier"
+        "2006: Amazon Unbox launched", 
+        "2011: Included in Prime membership", 
+        "2013: Amazon Studios launches first original series", 
+        "2022: 'The Rings of Power' premieres",
+        "2024: Introduced ads to base tier"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Prime Video (Standalone)", price: 8.99, cycle: "Monthly" },
-          { name: "Amazon Prime (Bundle)", price: 14.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Prime Video", nameLocalized: "Prime Video", price: 39.90, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "disney+": {
     id: "disney+",
@@ -355,30 +250,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$200 Billion",
     globalUserCount: "150M+",
     parentCompany: "Disney",
-    website: "https://www.disneyplus.com",
+    website: "disneyplus.com",
     milestones: [
-      "2019: Launch with 'The Mandalorian'",
-      "2020: Reached 50 million subscribers in 5 months",
-      "2020: Released 'Hamilton' and 'Soul' directly to streaming",
-      "2022: Launched ad-supported tier",
-      "2024: Integrated Hulu content into main app"
+        "2019: Launch with 'The Mandalorian'", 
+        "2020: Reached 50 million subscribers in 5 months", 
+        "2020: Released 'Hamilton' and 'Soul' directly to streaming",
+        "2022: Launched ad-supported tier",
+        "2024: Integrated Hulu content into main app"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Basic (with Ads)", price: 9.99, cycle: "Monthly" },
-          { name: "Premium (No Ads)", price: 15.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Standard", nameLocalized: "Reklamlı", price: 249.90, cycle: "Monthly" },
-          { name: "Premium", nameLocalized: "Reklamsız", price: 449.90, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "hulu": {
     id: "hulu",
@@ -394,23 +273,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "N/A (Disney Owned)",
     globalUserCount: "48M+",
     parentCompany: "Disney",
-    website: "https://www.hulu.com/welcome",
+    website: "hulu.com",
     milestones: [
-      "2008: Public launch",
-      "2011: Launched original programming",
-      "2017: Launched Hulu with Live TV",
-      "2017: 'The Handmaid’s Tale' wins Best Drama Emmy",
-      "2019: Disney assumes full operational control"
+        "2008: Public launch", 
+        "2011: Launched original programming", 
+        "2017: Launched Hulu with Live TV", 
+        "2017: 'The Handmaid’s Tale' wins Best Drama Emmy",
+        "2019: Disney assumes full operational control"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Hulu (with Ads)", price: 9.99, cycle: "Monthly" },
-          { name: "Hulu (No Ads)", price: 18.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "hbomax": {
     id: "hbomax",
@@ -420,30 +290,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "WarnerMedia",
     ceo: "David Zaslav",
     headquarters: "New York City, New York",
-    price: "16.99",
+    price: "15.99",
     currency: "USD",
     type: "hbomax",
     netWorth: "$25 Billion (Warner Bros. Discovery)",
     globalUserCount: "97M+",
     parentCompany: "Warner Bros. Discovery",
-    website: "https://www.max.com/plans",
+    website: "max.com",
     milestones: [
-      "2020: HBO Max launch",
-      "2021: Same-day theatrical releases (Matrix 4, Dune)",
-      "2022: Warner Bros. Discovery merger completed",
-      "2023: Rebranded to 'Max'",
-      "2024: House of the Dragon Season 2"
+        "2020: HBO Max launch", 
+        "2021: Same-day theatrical releases (Matrix 4, Dune)", 
+        "2022: Warner Bros. Discovery merger completed",
+        "2023: Rebranded to 'Max'",
+        "2024: House of the Dragon Season 2"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "With Ads", price: 9.99, cycle: "Monthly" },
-          { name: "Ad-Free", price: 16.99, cycle: "Monthly" },
-          { name: "Ultimate (4K)", price: 20.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "appletv+": {
     id: "appletv+",
@@ -453,35 +313,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Apple Inc.",
     ceo: "Tim Cook",
     headquarters: "Cupertino, California",
-    price: "12.99",
+    price: "9.99",
     currency: "USD",
     type: "apple",
     netWorth: "$3 Trillion (Apple)",
     globalUserCount: "25M+ (Est)",
     parentCompany: "Apple Inc.",
-    website: "https://tv.apple.com",
+    website: "tv.apple.com",
     milestones: [
-      "2019: Launched in over 100 countries",
-      "2020: 'Ted Lasso' premieres",
-      "2022: 'CODA' wins Best Picture Oscar",
-      "2023: Launched MLS Season Pass",
-      "2025: Price increased to $12.99/mo"
+        "2019: Launched in over 100 countries", 
+        "2020: 'Ted Lasso' premieres", 
+        "2022: 'CODA' wins Best Picture Oscar", 
+        "2023: Launched MLS Season Pass",
+        "2023: Released 'Killers of the Flower Moon'"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Apple TV+", price: 12.99, cycle: "Monthly" },
-          { name: "Apple TV+ (Annual)", price: 129.00, cycle: "Yearly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Apple TV+", nameLocalized: "Apple TV+", price: 89.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
 
   // --- MUSIC ---
@@ -499,32 +344,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Apple)",
     globalUserCount: "88M+",
     parentCompany: "Apple Inc.",
-    website: "https://music.apple.com",
+    website: "music.apple.com",
     milestones: [
-      "2014: Apple acquires Beats Electronics",
-      "2015: Apple Music launched at WWDC",
-      "2018: Surpassed 50 million subscribers",
-      "2021: Added Lossless and Spatial Audio",
-      "2023: Apple Music Classical app launched"
+        "2014: Apple acquires Beats Electronics",
+        "2015: Apple Music launched at WWDC", 
+        "2018: Surpassed 50 million subscribers",
+        "2021: Added Lossless and Spatial Audio", 
+        "2023: Apple Music Classical app launched"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 10.99, cycle: "Monthly" },
-          { name: "Family", price: 16.99, cycle: "Monthly" },
-          { name: "Student", price: 5.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 59.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 99.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 32.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
 
   // --- PRODUCTIVITY ---
@@ -536,36 +363,20 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Microsoft",
     ceo: "Satya Nadella",
     headquarters: "Redmond, Washington",
-    price: "9.99",
+    price: "6.99",
     currency: "USD",
     type: "microsoft365",
     netWorth: "$3 Trillion (Microsoft)",
     globalUserCount: "345M (Paid Seats)",
     parentCompany: "Microsoft",
-    website: "https://www.microsoft.com/microsoft-365/personal-family-office",
+    website: "microsoft.com",
     milestones: [
-      "2011: Office 365 for Enterprise launched",
-      "2013: Office 365 for Home launched",
-      "2017: Microsoft Teams launched",
-      "2020: Rebranded to Microsoft 365",
-      "2023: Copilot AI integration announced"
+        "2011: Office 365 for Enterprise launched", 
+        "2013: Office 365 for Home launched", 
+        "2017: Microsoft Teams launched", 
+        "2020: Rebranded to Microsoft 365",
+        "2023: Copilot AI integration announced"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Personal", price: 9.99, cycle: "Monthly" },
-          { name: "Family", price: 12.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Personal", nameLocalized: "Kişisel", price: 179.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "adobecreativecloud": {
     id: "adobecreativecloud",
@@ -575,37 +386,19 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "John Warnock, Charles Geschke",
     ceo: "Shantanu Narayen",
     headquarters: "San Jose, California",
-    price: "59.99",
+    price: "54.99",
     currency: "USD",
     type: "adobe",
     netWorth: "$220 Billion",
     globalUserCount: "30M+",
-    website: "https://www.adobe.com/creativecloud/plans.html",
+    website: "adobe.com",
     milestones: [
-      "1982: Adobe founded",
-      "1990: Photoshop 1.0 released",
-      "2013: Shifted entirely to Creative Cloud subscription",
-      "2021: Acquired Frame.io for cloud collaboration",
-      "2023: Launched Firefly Generative AI"
+        "1982: Adobe founded", 
+        "1990: Photoshop 1.0 released", 
+        "2013: Shifted entirely to Creative Cloud subscription",
+        "2021: Acquired Frame.io for cloud collaboration",
+        "2023: Launched Firefly Generative AI"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Photography Plan", price: 9.99, cycle: "Monthly" },
-          { name: "Single App", price: 22.99, cycle: "Monthly" },
-          { name: "All Apps", price: 59.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 279.99, cycle: "Monthly" },
-          { name: "Single App", nameLocalized: "Tek Uygulama", price: 649.99, cycle: "Monthly" },
-          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 925.20, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "canvapro": {
     id: "canvapro",
@@ -620,30 +413,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "canva",
     netWorth: "$26 Billion",
     globalUserCount: "135M+ (MAU)",
-    website: "https://www.canva.com/pro/",
+    website: "canva.com",
     milestones: [
-      "2013: Launched in Sydney",
-      "2015: Reached 4 million users",
-      "2019: Acquired Pexels and Pixabay",
-      "2021: Valued at $40 billion",
-      "2023: Launched Magic Studio AI"
+        "2013: Launched in Sydney", 
+        "2015: Reached 4 million users", 
+        "2019: Acquired Pexels and Pixabay", 
+        "2021: Valued at $40 billion",
+        "2023: Launched Magic Studio AI"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Pro", price: 14.99, cycle: "Monthly" },
-          { name: "Teams", price: 10.00, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Pro", nameLocalized: "Pro", price: 179.99, cycle: "Monthly" },
-          { name: "Teams", nameLocalized: "Ekip", price: 119.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "googleworkspace": {
     id: "googleworkspace",
@@ -659,31 +436,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Alphabet)",
     globalUserCount: "3 Billion+",
     parentCompany: "Alphabet Inc.",
-    website: "https://workspace.google.com/pricing",
+    website: "workspace.google.com",
     milestones: [
-      "2006: Launched as Google Apps",
-      "2012: Google Drive released",
-      "2016: Rebranded to G Suite",
-      "2020: Rebranded to Google Workspace",
-      "2023: Gemini AI integration"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Business Starter", price: 6.00, cycle: "Monthly" },
-          { name: "Business Standard", price: 12.00, cycle: "Monthly" },
-          { name: "Business Plus", price: 18.00, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Business Starter", nameLocalized: "İşletme Başlangıç", price: 119.99, cycle: "Monthly" },
-          { name: "Business Standard", nameLocalized: "İşletme Standart", price: 239.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2006: Launched as Google Apps",
+        "2012: Google Drive released",
+        "2016: Rebranded to G Suite",
+        "2020: Rebranded to Google Workspace",
+        "2023: Gemini AI integration"
+    ]
   },
   "slack": {
     id: "slack",
@@ -699,23 +459,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$27 Billion (Acquisition)",
     globalUserCount: "35M+ DAU",
     parentCompany: "Salesforce",
-    website: "https://slack.com/pricing",
+    website: "slack.com",
     milestones: [
-      "2013: Public launch",
-      "2019: Direct listing on NYSE",
-      "2020: IBM chooses Slack for 350k employees",
-      "2021: Acquired by Salesforce",
-      "2023: Launched Slack Canvas"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Pro", price: 7.25, cycle: "Monthly" },
-          { name: "Business+", price: 12.50, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2013: Public launch",
+        "2019: Direct listing on NYSE",
+        "2020: IBM chooses Slack for 350k employees",
+        "2021: Acquired by Salesforce",
+        "2023: Launched Slack Canvas"
+    ]
   },
   "notionplus": {
     id: "notionplus",
@@ -730,23 +481,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "notion",
     netWorth: "$10 Billion",
     globalUserCount: "30M+",
-    website: "https://www.notion.so/pricing",
+    website: "notion.so",
     milestones: [
-      "2016: Notion 1.0 released",
-      "2018: Notion 2.0 (Databases) released",
-      "2020: Personal plan made free",
-      "2021: Valued at $10 Billion",
-      "2023: Notion AI launched"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Plus", price: 8.00, cycle: "Monthly" },
-          { name: "Business", price: 15.00, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2016: Notion 1.0 released",
+        "2018: Notion 2.0 (Databases) released",
+        "2020: Personal plan made free",
+        "2021: Valued at $10 Billion",
+        "2023: Notion AI launched"
+    ]
   },
   "figma": {
     id: "figma",
@@ -761,23 +503,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "figma",
     netWorth: "$10 Billion+",
     globalUserCount: "4M+",
-    website: "https://www.figma.com/pricing/",
+    website: "figma.com",
     milestones: [
-      "2015: Closed beta launch",
-      "2016: Public launch",
-      "2021: Launched FigJam",
-      "2022: Failed Adobe acquisition attempt",
-      "2023: Dev Mode for developers"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Professional", price: 12.00, cycle: "Monthly" },
-          { name: "Organization", price: 45.00, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2015: Closed beta launch",
+        "2016: Public launch",
+        "2021: Launched FigJam",
+        "2022: Failed Adobe acquisition attempt",
+        "2023: Dev Mode for developers"
+    ]
   },
 
   // --- AI & DEV ---
@@ -795,29 +528,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$80 Billion (OpenAI Valuation)",
     globalUserCount: "180M+ (MAU)",
     parentCompany: "OpenAI",
-    website: "https://openai.com/chatgpt/pricing/",
+    website: "openai.com",
     milestones: [
-      "2015: OpenAI founded",
-      "2020: GPT-3 released",
-      "2022: ChatGPT launched (Nov)",
-      "2023: ChatGPT Plus & GPT-4 released",
-      "2024: Sora video model announced"
+        "2015: OpenAI founded", 
+        "2020: GPT-3 released", 
+        "2022: ChatGPT launched (Nov)", 
+        "2023: ChatGPT Plus & GPT-4 released",
+        "2024: Sora video model announced"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Plus", price: 20.00, cycle: "Monthly" },
-          { name: "Pro", price: 200.00, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Plus", nameLocalized: "Plus", price: 649.99, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "githubcopilot": {
     id: "githubcopilot",
@@ -833,23 +551,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$7.5 Billion (GitHub Acq.)",
     globalUserCount: "1.3M+ Paid Users",
     parentCompany: "Microsoft",
-    website: "https://github.com/features/copilot",
+    website: "github.com",
     milestones: [
-      "2018: Microsoft acquires GitHub",
-      "2021: Copilot Technical Preview launched",
-      "2022: General Availability",
-      "2023: Copilot X announced",
-      "2023: Copilot Chat integrated into VS Code"
+        "2018: Microsoft acquires GitHub",
+        "2021: Copilot Technical Preview launched", 
+        "2022: General Availability", 
+        "2023: Copilot X announced",
+        "2023: Copilot Chat integrated into VS Code"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 10.00, cycle: "Monthly" },
-          { name: "Business", price: 19.00, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "midjourney": {
     id: "midjourney",
@@ -864,23 +573,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "midjourney",
     netWorth: "Private (Est. $10B+)",
     globalUserCount: "16M+ Discord Members",
-    website: "https://www.midjourney.com/pricing",
+    website: "midjourney.com",
     milestones: [
-      "2022: Open Beta launch via Discord",
-      "2023: V5 Model released (Photo-realism)",
-      "2023: Ended free trials due to high demand",
-      "2024: Alpha web interface testing"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Basic", price: 10.00, cycle: "Monthly" },
-          { name: "Standard", price: 30.00, cycle: "Monthly" },
-          { name: "Pro", price: 60.00, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2022: Open Beta launch via Discord",
+        "2023: V5 Model released (Photo-realism)",
+        "2023: Ended free trials due to high demand",
+        "2024: Alpha web interface testing"
+    ]
   },
 
   // --- GAMING ---
@@ -898,32 +597,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$3 Trillion (Microsoft)",
     globalUserCount: "34M+",
     parentCompany: "Microsoft",
-    website: "https://www.xbox.com/xbox-game-pass",
+    website: "xbox.com",
     milestones: [
-      "2017: Service launched",
-      "2019: Game Pass for PC launched",
-      "2020: xCloud streaming added to Ultimate",
-      "2021: Bethesda games added",
-      "2023: Activision Blizzard acquisition completed"
+        "2017: Service launched", 
+        "2019: Game Pass for PC launched", 
+        "2020: xCloud streaming added to Ultimate", 
+        "2021: Bethesda games added",
+        "2023: Activision Blizzard acquisition completed"
     ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Core", price: 9.99, cycle: "Monthly" },
-          { name: "Standard", price: 14.99, cycle: "Monthly" },
-          { name: "Ultimate", price: 19.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Core", nameLocalized: "Temel", price: 179, cycle: "Monthly" },
-          { name: "Standard", nameLocalized: "Standart", price: 279, cycle: "Monthly" },
-          { name: "Ultimate", nameLocalized: "Ultimate", price: 529, cycle: "Monthly" }
-        ]
-      }
-    }
   },
   "playstationplus": {
     id: "playstationplus",
@@ -939,32 +620,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$100 Billion (Sony)",
     globalUserCount: "47M+",
     parentCompany: "Sony",
-    website: "https://www.playstation.com/ps-plus/",
+    website: "playstation.com",
     milestones: [
-      "2010: Launched on PS3",
-      "2013: Required for PS4 online multiplayer",
-      "2020: PS Plus Collection for PS5",
-      "2022: Relaunch with Extra/Premium tiers",
-      "2023: Cloud streaming for PS5 games"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Essential", price: 9.99, cycle: "Monthly" },
-          { name: "Extra", price: 14.99, cycle: "Monthly" },
-          { name: "Premium", price: 17.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Essential", nameLocalized: "Temel", price: 400, cycle: "Monthly" },
-          { name: "Extra", nameLocalized: "Ekstra", price: 600, cycle: "Monthly" },
-          { name: "Deluxe", nameLocalized: "Deluxe", price: 710, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2010: Launched on PS3",
+        "2013: Required for PS4 online multiplayer",
+        "2020: PS Plus Collection for PS5",
+        "2022: Relaunch with Extra/Premium tiers",
+        "2023: Cloud streaming for PS5 games"
+    ]
   },
   "twitchturbo": {
     id: "twitchturbo",
@@ -980,28 +643,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$15 Billion (Est)",
     globalUserCount: "140M MAU",
     parentCompany: "Amazon",
-    website: "https://www.twitch.tv/turbo",
+    website: "twitch.tv",
     milestones: [
-      "2011: Launched as Justin.tv spin-off",
-      "2013: Twitch Turbo launched",
-      "2014: Acquired by Amazon",
-      "2016: Twitch Prime (now Prime Gaming) launched",
-      "2023: Turbo price increased in some regions"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Turbo", price: 11.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Turbo", nameLocalized: "Turbo", price: 164.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2011: Launched as Justin.tv spin-off",
+        "2013: Twitch Turbo launched",
+        "2014: Acquired by Amazon",
+        "2016: Twitch Prime (now Prime Gaming) launched",
+        "2023: Turbo price increased in some regions"
+    ]
   },
   "discordnitro": {
     id: "discordnitro",
@@ -1016,30 +665,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "discord",
     netWorth: "$15 Billion",
     globalUserCount: "196M MAU",
-    website: "https://discord.com/nitro",
+    website: "discord.com",
     milestones: [
-      "2015: Discord launch",
-      "2017: Nitro subscription launched",
-      "2020: Rebranding to 'Your Place to Talk'",
-      "2021: Rejected $12B Microsoft acquisition offer",
-      "2022: Nitro Basic tier introduced"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Nitro Basic", price: 2.99, cycle: "Monthly" },
-          { name: "Nitro", price: 9.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 37.99, cycle: "Monthly" },
-          { name: "Nitro", nameLocalized: "Nitro", price: 104.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2015: Discord launch",
+        "2017: Nitro subscription launched",
+        "2020: Rebranding to 'Your Place to Talk'",
+        "2021: Rejected $12B Microsoft acquisition offer",
+        "2022: Nitro Basic tier introduced"
+    ]
   },
   "duolingo": {
     id: "duolingo",
@@ -1054,31 +687,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "duolingo",
     netWorth: "$9 Billion",
     globalUserCount: "83M MAU",
-    website: "https://www.duolingo.com/plus",
+    website: "duolingo.com",
     milestones: [
-      "2011: Public beta launch",
-      "2013: Apple App of the Year",
-      "2017: Duolingo Plus launched",
-      "2021: IPO on NASDAQ",
-      "2023: Rebranded Plus to Super Duolingo"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Super", price: 6.99, cycle: "Monthly" },
-          { name: "Max", price: 13.99, cycle: "Monthly" },
-          { name: "Family", price: 9.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Super", nameLocalized: "Super", price: 52.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 299.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2011: Public beta launch",
+        "2013: Apple App of the Year",
+        "2017: Duolingo Plus launched",
+        "2021: IPO on NASDAQ",
+        "2023: Rebranded Plus to Super Duolingo"
+    ]
   },
   "masterclass": {
     id: "masterclass",
@@ -1093,24 +709,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "masterclass",
     netWorth: "$2.75 Billion",
     globalUserCount: "2M+ (Est)",
-    website: "https://www.masterclass.com/subscribe",
+    website: "masterclass.com",
     milestones: [
-      "2015: Launched with 3 instructors",
-      "2018: Raised $80M Series D",
-      "2020: Usage surged during pandemic",
-      "2021: Valuation tripled to $2.75B",
-      "2023: Launched 'Sessions' for hands-on learning"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 15.00, cycle: "Monthly" },
-          { name: "Duo", price: 20.00, cycle: "Monthly" },
-          { name: "Family", price: 23.00, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2015: Launched with 3 instructors",
+        "2018: Raised $80M Series D",
+        "2020: Usage surged during pandemic",
+        "2021: Valuation tripled to $2.75B",
+        "2023: Launched 'Sessions' for hands-on learning"
+    ]
   },
   "dropbox": {
     id: "dropbox",
@@ -1125,23 +731,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "dropbox",
     netWorth: "$9 Billion",
     globalUserCount: "700M+ Users",
-    website: "https://www.dropbox.com/plans",
+    website: "dropbox.com",
     milestones: [
-      "2007: Y Combinator launch",
-      "2011: Reached 50M users",
-      "2018: IPO on NASDAQ",
-      "2019: Acquired HelloSign",
-      "2023: Dropbox Dash AI launched"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Plus", price: 11.99, cycle: "Monthly" },
-          { name: "Professional", price: 24.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2007: Y Combinator launch",
+        "2011: Reached 50M users",
+        "2018: IPO on NASDAQ",
+        "2019: Acquired HelloSign",
+        "2023: Dropbox Dash AI launched"
+    ]
   },
   "zoom": {
     id: "zoom",
@@ -1156,23 +753,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     type: "zoom",
     netWorth: "$20 Billion",
     globalUserCount: "300M+ DAU (Peak)",
-    website: "https://zoom.us/pricing",
+    website: "zoom.us",
     milestones: [
-      "2011: Founded",
-      "2013: Public launch",
-      "2019: IPO",
-      "2020: 30x growth during pandemic",
-      "2023: Zoom AI Companion launched"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Pro", price: 13.33, cycle: "Monthly" },
-          { name: "Business", price: 21.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2011: Founded",
+        "2013: Public launch",
+        "2019: IPO",
+        "2020: 30x growth during pandemic",
+        "2023: Zoom AI Companion launched"
+    ]
   },
   "peacock": {
     id: "peacock",
@@ -1188,23 +776,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "Comcast Owned",
     globalUserCount: "31M+ Paid",
     parentCompany: "Comcast",
-    website: "https://www.peacocktv.com/plans",
+    website: "peacocktv.com",
     milestones: [
-      "2020: National launch",
-      "2021: The Office moves to Peacock",
-      "2021: WWE Network integration",
-      "2023: First exclusive NFL playoff game stream",
-      "2023: Prices increased for the first time"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Premium (with Ads)", price: 7.99, cycle: "Monthly" },
-          { name: "Premium Plus (No Ads)", price: 13.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2020: National launch",
+        "2021: The Office moves to Peacock",
+        "2021: WWE Network integration",
+        "2023: First exclusive NFL playoff game stream",
+        "2023: Prices increased for the first time"
+    ]
   },
   "paramount+": {
     id: "paramount+",
@@ -1220,23 +799,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$8 Billion (Est. Valuation)",
     globalUserCount: "67M+",
     parentCompany: "Paramount Global",
-    website: "https://www.paramountplus.com/plans/",
+    website: "paramountplus.com",
     milestones: [
-      "2014: CBS All Access launch",
-      "2017: First Star Trek original series",
-      "2021: Rebranded to Paramount+",
-      "2022: Halo series premiere",
-      "2023: Integration with Showtime"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Essential (with Ads)", price: 5.99, cycle: "Monthly" },
-          { name: "Showtime Bundle (No Ads)", price: 11.99, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2014: CBS All Access launch",
+        "2017: First Star Trek original series",
+        "2021: Rebranded to Paramount+",
+        "2022: Halo series premiere",
+        "2023: Integration with Showtime"
+    ]
   },
   "audible": {
     id: "audible",
@@ -1252,30 +822,14 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$1 Billion+ (Amazon Subsid.)",
     globalUserCount: "Millions (Undisclosed)",
     parentCompany: "Amazon",
-    website: "https://www.audible.com/ep/membership",
+    website: "audible.com",
     milestones: [
-      "1995: Company founded",
-      "1997: Released first portable digital audio player",
-      "2008: Acquired by Amazon",
-      "2020: Audible Plus catalog launched",
-      "2023: Exclusive deal with Obama's Higher Ground"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Plus (1 Credit/mo)", price: 7.95, cycle: "Monthly" },
-          { name: "Premium (2 Credits/mo)", price: 14.95, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Plus (1 Credit/mo)", nameLocalized: "Plus (Aylık 1 Kredi)", price: 54.90, cycle: "Monthly" },
-          { name: "Premium (2 Credits/mo)", nameLocalized: "Premium (Aylık 2 Kredi)", price: 89.90, cycle: "Monthly" }
-        ]
-      }
-    }
+        "1995: Company founded",
+        "1997: Released first portable digital audio player",
+        "2008: Acquired by Amazon",
+        "2020: Audible Plus catalog launched",
+        "2023: Exclusive deal with Obama's Higher Ground"
+    ]
   },
   "amazonprime": {
     id: "amazonprime",
@@ -1291,339 +845,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     netWorth: "$2 Trillion (Amazon)",
     globalUserCount: "200M+",
     parentCompany: "Amazon",
-    website: "https://www.amazon.com/prime",
+    website: "amazon.com",
     milestones: [
-      "2005: Prime launched ($79/year)",
-      "2011: Prime Video added",
-      "2014: Price increased to $99",
-      "2015: First Prime Day",
-      "2021: Reached 200 million members"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Monthly", price: 14.99, cycle: "Monthly" },
-          { name: "Annual", price: 139.00, cycle: "Yearly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Monthly", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" },
-          { name: "Annual", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
-        ]
-      }
-    }
-  },
-
-  // --- TURKISH STREAMING ---
-  "exxen": {
-    id: "exxen",
-    name: "Exxen",
-    description: "Exxen, Acun Ilıcalı tarafından 2021 yılında kurulan Türkiye'nin popüler dijital yayın platformudur. Özel diziler, futbol maçları (Premier Lig, Avrupa kupaları), eğlence programları ve film içerikleri sunar. Kuruluş günü 33 bin abone ile rekor kırarak hızlı bir başlangıç yaptı.\n\nPlatform 'Survivor', 'O Ses Türkiye' gibi popüler programlarla Türk izleyici kitlesine güçlü bir alternatif olarak konumlandı. Yerli dizi yatırımlarıyla orijinal içerik üretiminde de Netflix Türkiye'ye rakip.",
-    foundedYear: "2021",
-    founders: "Acun Ilıcalı",
-    ceo: "Acun Ilıcalı",
-    headquarters: "İstanbul, Türkiye",
-    price: "99.99",
-    currency: "TRY",
-    type: "exxen",
-    globalUserCount: "2M+ (Türkiye)",
-    website: "https://www.exxen.com/uyelik",
-    milestones: [
-      "2021: Platform lansmanı",
-      "2021: İlk gün 33 bin abone",
-      "2022: Premier Lig yayın hakları",
-      "2023: Orijinal dizilerle büyüme",
-      "2025: 2 milyon aktif abone"
-    ],
-    regions: {
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Reklamlı", nameLocalized: "Reklamlı", price: 219.00, cycle: "Monthly" },
-          { name: "Reklamsız", nameLocalized: "Reklamsız", price: 309.00, cycle: "Monthly" },
-          { name: "Spor Reklamsız", nameLocalized: "Spor Reklamsız", price: 499.00, cycle: "Monthly" }
-        ]
-      }
-    }
-  },
-  "blutv": {
-    id: "blutv",
-    name: "BluTV",
-    description: "BluTV, 2016 yılında Doğan Holding tarafından kurulan Türkiye'nin ilk yerli dijital yayın platformudur. Yerli ve yabancı diziler, filmler, belgeseller ve çocuk içerikleri sunan kapsamlı bir kütüphaneye sahiptir.\n\nPlatform 'Masum', 'Yeşilçam', 'Saygı' gibi başarılı orijinal yapımlarla bilinir. 2021 yılında Discovery Inc. tarafından satın alındı ve uluslararası içerik kütüphanesine de erişim sağladı.",
-    foundedYear: "2016",
-    founders: "Doğan Holding",
-    ceo: "Aydın Doğan Yalçındağ",
-    headquarters: "İstanbul, Türkiye",
-    price: "89.90",
-    currency: "TRY",
-    type: "blutv",
-    globalUserCount: "1.5M+ (Türkiye)",
-    website: "https://www.blutv.com/uyelik",
-    milestones: [
-      "2016: Platform lansmanı",
-      "2017: 'Masum' dizisi yayını",
-      "2019: HBO işbirliği",
-      "2021: Discovery tarafından satın alındı",
-      "2024: 1.5 milyon abone"
-    ],
-    regions: {
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 199.90, cycle: "Monthly" },
-          { name: "3 Aylık", nameLocalized: "3 Aylık", price: 239.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 799.90, cycle: "Yearly" }
-        ]
-      }
-    }
-  },
-  "tabii": {
-    id: "tabii",
-    name: "Tabii",
-    description: "Tabii, TRT'nin 2023 yılında küresel pazarı hedefleyerek başlattığı dijital yayın platformudur. Türk yapımı diziler, filmler, belgeseller ve haber içeriklerini dünya çapında 27 dilde sunar.\n\nPlatform 'Kuruluş Osman', 'Diriliş Ertuğrul' gibi büyük TRT yapımlarına yer veriyor. Devlet destekli olması nedeniyle uygun fiyatlı bir alternatif sunmaya odaklanır.",
-    foundedYear: "2023",
-    founders: "TRT",
-    ceo: "Mehmet Zahid Sobacı (TRT)",
-    headquarters: "Ankara, Türkiye",
-    price: "0",
-    currency: "TRY",
-    type: "tabii",
-    globalUserCount: "Küresel",
-    website: "https://www.tabii.com",
-    milestones: [
-      "2023: Küresel lansman",
-      "2024: 27 dil desteği",
-      "2025: 100+ orijinal yapım"
-    ],
-    regions: {
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Ücretsiz", nameLocalized: "Ücretsiz", price: 0, cycle: "Monthly" }
-        ]
-      },
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Free", price: 0, cycle: "Monthly" }
-        ]
-      }
-    }
-  },
-  "trendyolelite": {
-    id: "trendyolelite",
-    name: "Trendyol Elite",
-    description: "Trendyol Elite, Türkiye'nin en büyük e-ticaret platformu Trendyol'un premium üyelik programıdır. Üyeler için ücretsiz hızlı teslimat, özel kampanyalar, Trendyol GO içeren bir abonelik servisidir.\n\n2010 yılında Demet Mutlu tarafından kurulan Trendyol, Alibaba'nın stratejik ortaklığıyla büyüdü ve Türkiye'nin tek decacorn (10+ milyar $ değerli) şirketi oldu. Elite üyelik, sadık müşterilere ek avantajlar sunar.",
-    foundedYear: "2021 (Elite)",
-    founders: "Demet Mutlu (Trendyol)",
-    ceo: "Çağlayan Çetin (Trendyol)",
-    headquarters: "İstanbul, Türkiye",
-    price: "49.90",
-    currency: "TRY",
-    type: "trendyol",
-    globalUserCount: "30M+ (Trendyol)",
-    website: "https://elite.trendyol.com",
-    milestones: [
-      "2010: Trendyol kuruluşu",
-      "2018: Alibaba yatırımı",
-      "2021: Trendyol Elite lansmanı",
-      "2022: Trendyol GO entegrasyonu",
-      "2024: 30 milyon aktif kullanıcı"
-    ],
-    regions: {
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 49.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
-        ]
-      }
-    }
-  },
-  "hepsiburadapremium": {
-    id: "hepsiburadapremium",
-    name: "Hepsiburada Premium",
-    description: "Hepsiburada Premium, Türkiye'nin önde gelen e-ticaret platformu Hepsiburada'nın sadakat programıdır. Üyeler için ücretsiz kargo, hızlı teslimat ve özel indirimler sunan abonelik tabanlı bir hizmettir.\n\n2000 yılında Hanzade Doğan Boyner tarafından kurulan Hepsiburada, 2021'de NASDAQ'ta halka arz edilen ilk Türk teknoloji şirketi oldu. Premium, sadık müşteri tabanını güçlendirmek için tasarlandı.",
-    foundedYear: "2000 (HB), 2020 (Premium)",
-    founders: "Hanzade Doğan Boyner",
-    ceo: "Nilhan Onal Gökçetekin (Hepsiburada)",
-    headquarters: "İstanbul, Türkiye",
-    price: "59.90",
-    currency: "TRY",
-    type: "hepsiburada",
-    globalUserCount: "12M+ (HB)",
-    website: "https://www.hepsiburada.com/premium",
-    milestones: [
-      "2000: Hepsiburada kuruluşu",
-      "2020: Premium programının lansmanı",
-      "2021: NASDAQ halka arzı",
-      "2023: HepsiJet ile entegrasyon"
-    ],
-    regions: {
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 538, cycle: "Yearly" }
-        ]
-      }
-    }
-  },
-
-  // --- AI ADDITIONS ---
-  "claudepro": {
-    id: "claudepro",
-    name: "Claude Pro",
-    description: "Claude Pro is the premium subscription for Anthropic's Claude AI assistant. Launched in late 2023, it offers higher message limits, priority access during peak times, and access to the latest Claude models including Claude Opus 4 and Sonnet 4.\n\nAnthropic was founded in 2021 by former OpenAI executives Dario and Daniela Amodei, with a focus on AI safety research. Claude is positioned as a thoughtful, principled AI assistant emphasizing helpfulness, harmlessness, and honesty.\n\nPro subscribers benefit from extended context windows (up to 200K tokens), file uploads, and the ability to use Claude's coding capabilities through Projects. It directly competes with ChatGPT Plus while emphasizing its constitutional AI approach.",
-    foundedYear: "2021 (Anthropic)",
-    founders: "Dario Amodei, Daniela Amodei",
-    ceo: "Dario Amodei",
-    headquarters: "San Francisco, California",
-    price: "20.00",
-    currency: "USD",
-    type: "claude",
-    netWorth: "$60 Billion (Anthropic)",
-    globalUserCount: "20M+ (Est)",
-    parentCompany: "Anthropic",
-    website: "https://claude.ai/upgrade",
-    milestones: [
-      "2021: Anthropic founded",
-      "2023: Claude 2 released",
-      "2024: Claude 3 family released",
-      "2024: Claude Pro & Team plans launched",
-      "2025: Claude 4 Opus released"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Pro", price: 20.00, cycle: "Monthly" },
-          { name: "Max (5x usage)", price: 100.00, cycle: "Monthly" },
-          { name: "Team", price: 30.00, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Pro", nameLocalized: "Pro", price: 699.99, cycle: "Monthly" }
-        ]
-      }
-    }
-  },
-  "crunchyroll": {
-    id: "crunchyroll",
-    name: "Crunchyroll",
-    description: "Crunchyroll is the world's largest anime streaming service, offering thousands of anime titles, manga, and Asian dramas. Founded in 2006 as a video sharing site, it pivoted to legally licensed anime streaming in 2009.\n\nFollowing Sony's acquisition of Funimation in 2021 and the merger of Funimation and Crunchyroll, Crunchyroll became the dominant anime streaming platform globally, available in over 200 countries. It offers simulcasts of new anime episodes hours after their Japanese broadcast.\n\nThe service has expanded into anime film distribution, manga publishing, and exclusive original anime productions, becoming an essential platform for anime fans worldwide.",
-    foundedYear: "2006",
-    founders: "Kun Gao, James Lin",
-    ceo: "Rahul Purini",
-    headquarters: "San Francisco, California",
-    price: "7.99",
-    currency: "USD",
-    type: "crunchyroll",
-    netWorth: "$1.18 Billion (Acquisition)",
-    globalUserCount: "15M+ Paid",
-    parentCompany: "Sony",
-    website: "https://www.crunchyroll.com/welcome",
-    milestones: [
-      "2006: Founded as video site",
-      "2009: Licensed streaming launch",
-      "2018: Reached 1M subscribers",
-      "2021: Sony acquired for $1.18B",
-      "2022: Merged with Funimation"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Fan", price: 7.99, cycle: "Monthly" },
-          { name: "Mega Fan", price: 11.99, cycle: "Monthly" },
-          { name: "Ultimate Fan", price: 15.99, cycle: "Monthly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Fan", nameLocalized: "Fan", price: 49.99, cycle: "Monthly" },
-          { name: "Mega Fan", nameLocalized: "Mega Fan", price: 69.99, cycle: "Monthly" }
-        ]
-      }
-    }
-  },
-  "nintendoswitchonline": {
-    id: "nintendoswitchonline",
-    name: "Nintendo Switch Online",
-    description: "Nintendo Switch Online is Nintendo's subscription service for the Switch console, launched in 2018. It enables online multiplayer for Nintendo games, provides a library of classic NES, SNES, N64, and Game Boy titles, and offers cloud save functionality.\n\nThe Expansion Pack tier adds Nintendo 64, Sega Genesis, and Game Boy Advance classics, plus DLC for select first-party games like Mario Kart 8 Deluxe and Splatoon. It's positioned as essential for the full Switch online experience.\n\nWith over 38 million subscribers, it's one of the most popular gaming subscriptions globally, capitalizing on Nintendo's massive library of beloved franchises like Mario, Zelda, and Pokémon.",
-    foundedYear: "2018",
-    founders: "Nintendo",
-    ceo: "Shuntaro Furukawa",
-    headquarters: "Kyoto, Japan",
-    price: "3.99",
-    currency: "USD",
-    type: "nintendo",
-    netWorth: "$80 Billion (Nintendo)",
-    globalUserCount: "38M+",
-    parentCompany: "Nintendo",
-    website: "https://www.nintendo.com/switch/online",
-    milestones: [
-      "2018: Service launched",
-      "2019: SNES library added",
-      "2021: Expansion Pack launched",
-      "2022: Game Boy & GBA added",
-      "2024: 38M subscribers"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 3.99, cycle: "Monthly" },
-          { name: "Family", price: 34.99, cycle: "Yearly" },
-          { name: "Expansion Pack", price: 49.99, cycle: "Yearly" }
-        ]
-      },
-      TR: {
-        currency: "TRY",
-        tiers: [
-          { name: "Bireysel", nameLocalized: "Bireysel", price: 109.99, cycle: "Monthly" },
-          { name: "Aile (Yıllık)", nameLocalized: "Aile (Yıllık)", price: 999, cycle: "Yearly" }
-        ]
-      }
-    }
-  },
-  "tidal": {
-    id: "tidal",
-    name: "Tidal",
-    description: "Tidal is a music streaming service launched in 2014, acquired by Jay-Z in 2015 and partially acquired by Block (formerly Square) in 2021. It positions itself as the premium audiophile alternative to Spotify and Apple Music.\n\nThe service is known for its HiFi tier offering CD-quality audio, and its HiFi Plus tier providing high-resolution lossless audio, Dolby Atmos, and 360 Reality Audio. Tidal also distinguishes itself by offering higher royalty rates to artists.\n\nWith Jay-Z's involvement, Tidal secured exclusive releases from artists like Beyoncé, Kanye West, and Rihanna, building a reputation as an artist-friendly platform with curated content.",
-    foundedYear: "2014",
-    founders: "Aspiro AB",
-    ceo: "Jesse Dorogusker",
-    headquarters: "New York City, New York",
-    price: "10.99",
-    currency: "USD",
-    type: "tidal",
-    netWorth: "$300M (Block Acquisition)",
-    globalUserCount: "5M+",
-    parentCompany: "Block, Inc.",
-    website: "https://tidal.com/pricing",
-    milestones: [
-      "2014: Launched by Aspiro",
-      "2015: Acquired by Jay-Z",
-      "2021: Block (Square) acquisition",
-      "2024: Removed free tier",
-      "2025: Lossless for all subscribers"
-    ],
-    regions: {
-      US: {
-        currency: "USD",
-        tiers: [
-          { name: "Individual", price: 10.99, cycle: "Monthly" },
-          { name: "Family", price: 16.99, cycle: "Monthly" },
-          { name: "Student", price: 5.49, cycle: "Monthly" }
-        ]
-      }
-    }
+        "2005: Prime launched ($79/year)",
+        "2011: Prime Video added",
+        "2014: Price increased to $99",
+        "2015: First Prime Day",
+        "2021: Reached 200 million members"
+    ]
   }
 };

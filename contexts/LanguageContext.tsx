@@ -1,8 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { translations, LanguageCode } from '../utils/translations';
-import { CURRENCY_LOCALES, convertAmount, initializeRates } from '../utils/currency';
-import { loadPriceCatalog } from '../utils/priceCatalog';
+import { CURRENCY_LOCALES, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 import { useAuth } from './AuthContext';
 import { updateUserSettings } from '../utils/firestore';
@@ -43,9 +42,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   });
 
   const [currentTheme, setCurrentTheme] = useState<ThemeOption>(() => {
-    if (typeof window === 'undefined') return 'light';
+    if (typeof window === 'undefined') return 'system';
     const saved = localStorage.getItem('userThemePreference');
-    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'light';
+    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
   });
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -55,7 +54,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     if (userProfile && userProfile.preferences) {
       const { language, theme, baseCurrency } = userProfile.preferences;
-
+      
       // Firestore is the source of truth when logged in
       if (language && language !== currentLanguage) setCurrentLanguage(language as LanguageCode);
       if (baseCurrency && baseCurrency !== currentCurrency) setCurrentCurrency(baseCurrency);
@@ -64,10 +63,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [userProfile]);
 
   // --- Persist Changes ---
-
+  
   const persistSettings = (updates: any) => {
     if (typeof window === 'undefined') return;
-
+    
     // Local persistence for fallback/guest
     if (updates.language) localStorage.setItem('userLanguagePreference', updates.language);
     if (updates.baseCurrency) localStorage.setItem('userCurrencyPreference', updates.baseCurrency);
@@ -93,18 +92,12 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     debugLog('CURRENCY_CONVERSION', `Base currency set to ${currentCurrency}`);
   }, [currentCurrency]);
 
-  // Warm exchange rate cache + weekly-synced price catalog on startup (non-blocking)
-  useEffect(() => {
-    initializeRates();
-    loadPriceCatalog();
-  }, []);
-
   // Apply Theme
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const applyTheme = () => {
-      const isDark =
-        currentTheme === 'dark' ||
+      const isDark = 
+        currentTheme === 'dark' || 
         (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
       const root = document.documentElement;
@@ -156,7 +149,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const t = (key: string): string => {
     const langDict = translations[currentLanguage];
-    if (!langDict) return key;
+    if (!langDict) return key; 
     return langDict[key] || translations['en'][key] || key;
   };
 
@@ -189,23 +182,24 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <LanguageContext.Provider value={{
-      currentLanguage,
-      setLanguage: handleSetLanguage,
+    <LanguageContext.Provider value={{ 
+      currentLanguage, 
+      setLanguage: handleSetLanguage, 
       currentCurrency,
       setCurrency: handleSetCurrency,
       currentTheme,
       setTheme: handleSetTheme,
-      t,
+      t, 
       dir,
       formatPrice,
       convert,
       formatDate
     }}>
       {children}
-      <div
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all duration-300 pointer-events-none z-[100] ${toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-          }`}
+      <div 
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all duration-300 pointer-events-none z-[100] ${
+          toastMessage ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}
       >
         {toastMessage}
       </div>

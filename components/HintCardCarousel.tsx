@@ -51,7 +51,7 @@ export default function HintCardCarousel() {
       {/* Card Container with Gradient Border Effect */}
       <div className="absolute -inset-0.5 bg-gradient-to-r from-[#1B3A6D] via-[#3ABEFF] to-[#1B3A6D] rounded-2xl opacity-20 group-hover/card:opacity-40 transition duration-500 blur-[1px]"></div>
       
-      <div className="relative overflow-hidden p-6 rounded-2xl bg-white dark:bg-gray-800 backdrop-blur-sm border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 flex flex-col justify-center">
+      <div className="relative overflow-hidden p-6 rounded-2xl bg-white backdrop-blur-sm border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-32 flex flex-col justify-center">
         
         {/* Decorative Side Bar */}
         <div className="absolute top-0 left-0 rtl:left-auto rtl:right-0 w-1.5 h-full bg-gradient-to-b from-[#1B3A6D] to-[#3ABEFF] transition-all duration-300"></div>
@@ -69,7 +69,7 @@ export default function HintCardCarousel() {
           <div className="flex-1 relative h-full overflow-hidden">
              <p 
                key={currentIndex}
-               className={`text-gray-700 dark:text-gray-200 text-lg font-medium leading-relaxed transition-all duration-500 ease-in-out transform
+               className={`text-gray-700 text-lg font-medium leading-relaxed transition-all duration-500 ease-in-out transform
                  ${isAnimating ? '-translate-y-4 opacity-0' : 'translate-y-0 opacity-100'}
                  animate-in fade-in slide-in-from-bottom-2
                `}
@@ -84,7 +84,7 @@ export default function HintCardCarousel() {
         </div>
 
         {/* Progress Indicator */}
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-50 dark:bg-gray-700">
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-50">
            <div 
              className="h-full bg-gradient-to-r from-[#1B3A6D] to-[#3ABEFF] transition-all duration-[5000ms] ease-linear"
              style={{ width: isPaused ? `${((currentIndex + 1) / hints.length) * 100}%` : '100%', opacity: isPaused ? 0.5 : 0.2, transitionDuration: isPaused ? '0ms' : '5000ms' }}

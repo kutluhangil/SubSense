@@ -3,10 +3,21 @@ import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase/firebase';
 import { trackEvent } from './analytics';
 
+/**
+ * STRIPE PRODUCTION SERVICE
+ * 
+ * Interacts with Firebase Cloud Functions to handle Stripe logic securely.
+ * No sensitive keys are stored on the client.
+ */
+
+// Helper to get current window URL for redirects
 const getAppUrl = () => window.location.origin;
 
 export const createCheckoutSession = async (uid: string, interval: 'month' | 'year') => {
+  console.log(`[Stripe] Initializing Checkout for ${uid} (${interval})...`);
+  
   try {
+    // Modular SDK syntax
     const createSession = httpsCallable(functions, 'createCheckoutSession');
     const { data } = await createSession({
       interval,
@@ -15,7 +26,8 @@ export const createCheckoutSession = async (uid: string, interval: 'month' | 'ye
     }) as { data: { url: string } };
 
     trackEvent('checkout_started', { interval });
-
+    
+    // Redirect to Stripe
     if (data.url) {
       window.location.href = data.url;
     } else {
@@ -29,10 +41,15 @@ export const createCheckoutSession = async (uid: string, interval: 'month' | 'ye
 };
 
 export const startFreeTrial = async (uid: string) => {
-  return createCheckoutSession(uid, 'month');
+  // For MVP: Trial flow simply redirects to Monthly checkout.
+  // Real trial logic can be handled by passing a specific priceId configured with a trial in Stripe Dashboard.
+  console.log(`[Stripe] Starting Trial flow for ${uid}...`);
+  return createCheckoutSession(uid, 'month'); 
 };
 
 export const createPortalSession = async () => {
+  console.log(`[Stripe] Creating Customer Portal Session...`);
+  
   try {
     const createPortal = httpsCallable(functions, 'createPortalSession');
     const { data } = await createPortal({
@@ -51,5 +68,6 @@ export const createPortalSession = async () => {
 };
 
 export const cancelSubscription = async (uid: string) => {
+  // With Stripe integration, cancellation must happen via the Portal
   return createPortalSession();
 };

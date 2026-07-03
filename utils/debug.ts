@@ -33,30 +33,3 @@ export const debugLog = (category: LogCategory, message: string, data?: any) => 
   }
   console.groupEnd();
 };
-
-/**
- * S-04 / EH-06: Production-safe error logger.
- * - In development: logs full error to console.error
- * - In production: silently forwards to analytics (no stack trace exposed)
- * Use this instead of bare console.error() throughout the codebase.
- */
-export const safeError = (source: string, error: unknown) => {
-  const message = error instanceof Error ? error.message : String(error);
-
-  if (DEBUG_MODE) {
-    // Full detail in dev
-    console.error(`[${source}]`, error);
-  }
-  // In production: do NOT log — analytics.trackError is called separately where needed
-  // This prevents stack traces and internal messages from appearing in DevTools.
-};
-
-/**
- * Production-safe warning logger.
- * Use this instead of bare console.warn() throughout the codebase.
- */
-export const safeWarn = (message: string, ...args: any[]) => {
-  if (DEBUG_MODE) {
-    console.warn(message, ...args);
-  }
-};

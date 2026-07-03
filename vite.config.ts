@@ -1,67 +1,19 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { VitePWA } from "vite-plugin-pwa";
 
-const isVercel = process.env.VERCEL === "1";
-const basePath = isVercel ? "/" : "/subsense/";
-const appUrl = isVercel
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`
-  : "https://subsense.app/";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  base: basePath,
-  plugins: [
-    {
-      name: "html-transform",
-      transformIndexHtml(html) {
-        return html.replace(/%APP_URL%/g, appUrl);
+  plugins: [react()],
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'firebase/app', 'firebase/auth', 'firebase/firestore'],
+        },
       },
     },
-    react(),
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "SubSense",
-        short_name: "SubSense",
-        description: "Track and manage all your subscriptions in one place.",
-        theme_color: "#111827",
-        background_color: "#ffffff",
-        display: "standalone",
-        orientation: "portrait",
-        scope: basePath,
-        start_url: basePath,
-        icons: [
-          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-          {
-            src: "/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "any maskable",
-          },
-        ],
-      },
-      workbox: {
-        // Cache Firebase SDK & app chunks for offline use
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        // Static SEO price pages (/fiyatlar/*) and sitemap must NOT be served
-        // the SPA shell by the service worker — let them hit the network.
-        navigateFallbackDenylist: [/^\/fiyatlar/, /^\/sitemap/, /^\/robots/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/open\.er-api\.com\/.*/i,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "fx-rates-cache",
-              expiration: { maxAgeSeconds: 86400 }, // 24h
-            },
-          },
-        ],
-      },
-    }),
-  ],
-  build: {
-    outDir: "dist",
-    sourcemap: true,
-    chunkSizeWarningLimit: 1000,
   },
 });

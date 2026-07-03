@@ -64,93 +64,93 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
         onClick={onClose}
       ></div>
       
-      <div className="relative w-full max-w-6xl h-[85vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 dark:border-gray-800">
-
+      <div className="relative w-full max-w-6xl h-[85vh] bg-white rounded-2xl shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100">
+        
         {/* Sidebar Mockup */}
-        <div className="w-64 bg-gray-50 dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 hidden md:flex flex-col">
-           <div className="h-16 flex items-center px-6 border-b border-gray-100/50 dark:border-gray-700/50">
+        <div className="w-64 bg-gray-50 border-r border-gray-100 hidden md:flex flex-col">
+           <div className="h-16 flex items-center px-6 border-b border-gray-100/50">
               <Logo className="h-8" />
            </div>
            <div className="p-4 space-y-1">
-              <button
-                onClick={() => setCurrentView('dashboard')}
-                className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentView === 'dashboard' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'}`}
+              <button 
+                onClick={() => setCurrentView('dashboard')} 
+                className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentView === 'dashboard' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
               >
                  <LayoutGrid size={18} /> <span>{t('sidebar.dashboard')}</span>
               </button>
-              <button
-                onClick={() => setCurrentView('subs')}
-                className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentView === 'subs' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/60'}`}
+              <button 
+                onClick={() => setCurrentView('subs')} 
+                className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentView === 'subs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
               >
                  <CreditCard size={18} /> <span>{t('sidebar.subscriptions')}</span>
               </button>
               {/* Disabled Items */}
-              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors group cursor-not-allowed">
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
                  <div className="flex items-center space-x-3"><PieChart size={18} /> <span>{t('sidebar.analytics')}</span></div>
                  <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
-              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors group cursor-not-allowed">
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
                  <div className="flex items-center space-x-3"><Users size={18} /> <span>{t('sidebar.friends')}</span></div>
                  <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
-              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700/60 transition-colors group cursor-not-allowed">
+              <button onClick={showLockedToast} className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-gray-100 transition-colors group cursor-not-allowed">
                  <div className="flex items-center space-x-3"><ArrowRightLeft size={18} /> <span>{t('sidebar.compare')}</span></div>
                  <Lock size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
            </div>
-           <div className="mt-auto p-4 border-t border-gray-100 dark:border-gray-700">
-              <button onClick={onClose} className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+           <div className="mt-auto p-4 border-t border-gray-100">
+              <button onClick={onClose} className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
                  <LogOut size={18} /> <span>{t('demo.close')}</span>
               </button>
            </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900 relative">
-
+        <div className="flex-1 flex flex-col min-w-0 bg-white relative">
+           
            {/* Top Bar */}
-           <div className="h-16 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between px-6 bg-white dark:bg-gray-900 shrink-0">
-              <h2 className="font-bold text-gray-900 dark:text-white text-lg">{t('demo.title')}</h2>
+           <div className="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
+              <h2 className="font-bold text-gray-900 text-lg">{t('demo.title')}</h2>
               <div className="flex items-center gap-3">
-                 <button onClick={onSignup} className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm">
+                 <button onClick={onSignup} className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors shadow-sm">
                     {t('nav.signup')}
                  </button>
-                 <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors">
+                 <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors">
                     <X size={20} />
                  </button>
               </div>
            </div>
 
            {/* Scrollable Area */}
-           <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50 dark:bg-gray-800/50">
+           <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50">
               {currentView === 'dashboard' ? (
                  <div className="space-y-8 animate-in fade-in duration-300">
-                    <StatsCards
+                    <StatsCards 
                       monthly={metrics.monthlySpend}
                       active={metrics.activeCount}
                       forecast={metrics.yearlyForecast}
                     />
                     <div className="space-y-4">
-                       <h3 className="font-bold text-gray-900 dark:text-white text-lg">{t('dashboard.active_subs')}</h3>
-                       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+                       <h3 className="font-bold text-gray-900 text-lg">{t('dashboard.active_subs')}</h3>
+                       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                           <SubscriptionTable subscriptions={DEMO_SUBSCRIPTIONS} />
                        </div>
                     </div>
                  </div>
               ) : (
                  <div className="flex flex-col items-center justify-center h-full text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center shadow-sm">
+                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shadow-sm">
                        <CreditCard size={40} />
                     </div>
                     <div className="max-w-md space-y-2">
-                       <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{t('demo.unlock_all')}</h3>
-                       <p className="text-gray-500 dark:text-gray-400">
+                       <h3 className="text-2xl font-bold text-gray-900">{t('demo.unlock_all')}</h3>
+                       <p className="text-gray-500">
                           {t('hero.take_control_desc')}
                        </p>
                     </div>
-                    <button
-                      onClick={onSignup}
-                      className="px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold text-sm hover:bg-gray-800 dark:hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                    <button 
+                      onClick={onSignup} 
+                      className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
                     >
                        {t('hero.start_tracking_free')} &rarr;
                     </button>
@@ -159,8 +159,8 @@ export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps)
            </div>
 
            {/* Floating CTA Overlay */}
-           <div
-             className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur text-white pl-5 pr-2 py-2 rounded-full shadow-2xl flex items-center gap-4 z-20 hover:scale-105 transition-transform cursor-pointer border border-gray-700/50"
+           <div 
+             className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur text-white pl-5 pr-2 py-2 rounded-full shadow-2xl flex items-center gap-4 z-20 hover:scale-105 transition-transform cursor-pointer border border-gray-700/50" 
              onClick={onSignup}
            >
               <span className="text-xs font-bold hidden sm:inline">{t('demo.tip')}</span>

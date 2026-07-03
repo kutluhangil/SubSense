@@ -1,5 +1,6 @@
 {
   "name": "SubSense",
   "description": "A minimalist global subscription tracking platform landing page.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }

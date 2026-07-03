@@ -164,13 +164,13 @@ export default function HeroTextRotator() {
         <DisintegratingText 
           text={msg.headline} 
           phase={phase}
-          className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter text-gray-900 dark:text-white mb-6 text-center leading-[1.05]"
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 mb-6 text-center leading-[1.1]"
         />
         
         <DisintegratingText 
           text={msg.subtext} 
           phase={phase}
-          className="mt-4 text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed text-center"
+          className="mt-4 text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed text-center"
         />
       </div>
     </div>

@@ -3,10 +3,8 @@ import { Download, Calendar, Filter, ArrowUpRight, ArrowDownRight, MoreHorizonta
 import { BrandIcon } from './BrandIcon';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BRAND_COLORS, SUBSCRIPTION_CATALOG } from '../utils/data';
-import { CURRENCY_DATA } from '../utils/currency';
 import { Subscription } from './SubscriptionModal';
 import { debugLog } from '../utils/debug';
-import { TrendArea, CostDonut } from './AnalyticsCharts';
 
 // --- Types ---
 interface DataPoint {
@@ -308,7 +306,7 @@ const TopExpensesList = ({
     return (
         <div className="flex flex-col h-full justify-center space-y-4">
             <div className="flex justify-between items-center mb-1">
-               <p className="text-gray-900 dark:text-white font-bold text-sm">{t('analytics.top_expenses')}</p>
+               <p className="text-gray-900 dark:text-white font-bold text-sm">Top Expenses</p>
                <span className="text-[10px] text-gray-400 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-full">{t(`analytics.range.${periodLabel}`)}</span>
             </div>
             {sorted.map((sub) => (
@@ -333,7 +331,6 @@ const TopExpensesList = ({
 };
 
 const CostDistributionChart = ({ categoryTotals, formatPrice }: { categoryTotals: Record<string, number>, formatPrice: (v: number) => string }) => {
-   const { t } = useLanguage();
    const data = useMemo(() => {
       return Object.entries(categoryTotals)
         .map(([name, value]) => {
@@ -347,7 +344,7 @@ const CostDistributionChart = ({ categoryTotals, formatPrice }: { categoryTotals
    const total = data.reduce((a, b) => a + b.value, 0);
    let cumulativePercent = 0;
 
-   if (total === 0) return <div className="flex items-center justify-center h-full text-xs text-gray-400">{t('analytics.no_spending')}</div>;
+   if (total === 0) return <div className="flex items-center justify-center h-full text-xs text-gray-400">No spending data</div>;
 
    return (
     <div className="flex items-start gap-6 h-full">
@@ -431,21 +428,19 @@ const ComparisonWidget = ({ formatPrice, monthlySpend, convert, currentCurrency 
 };
 
 const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
-  const { t } = useLanguage();
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden h-fit">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Clock size={18} className="text-gray-400" /> {t('analytics.lifetime')}
+            <Clock size={18} className="text-gray-400" /> Subscription Lifetime
         </h3>
       </div>
       {subscriptions.length === 0 ? (
-          <div className="text-center text-xs text-gray-400 py-8">{t('analytics.lifetime_empty')}</div>
+          <div className="text-center text-xs text-gray-400 py-8">Add subscriptions to view lifetime timeline</div>
       ) : (
         <div className="space-y-6">
             {subscriptions.slice(0, 5).map((sub, i) => {
-                const idNum = typeof sub.id === 'number' ? sub.id : sub.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-                const width = Math.min(100, Math.max(20, (idNum % 60) + 20));
+                const width = Math.min(100, Math.max(20, Math.random() * 80 + 20)); 
                 const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
                 const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
                 const mockDuration = `${Math.floor(width / 8)}m`; 
@@ -458,7 +453,7 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-900 dark:text-white truncate" title={sub.name}>{sub.name}</p>
-                            <p className="text-[10px] text-gray-400">{t('analytics.status_active')}</p>
+                            <p className="text-[10px] text-gray-400">Active</p>
                         </div>
                     </div>
                     
@@ -484,23 +479,22 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
   );
 };
 
-const SmartBudgetMonitor = ({
+const SmartBudgetMonitor = ({ 
   categoryTotals,
-  budgetLimits = {},
-  setBudgetLimits,
+  budgetLimits = {}, 
+  setBudgetLimits, 
   formatPrice,
   monthsInPeriod
-}: {
-  categoryTotals: Record<string, number>,
-  budgetLimits: Record<string, number>,
-  setBudgetLimits: any,
+}: { 
+  categoryTotals: Record<string, number>, 
+  budgetLimits: Record<string, number>, 
+  setBudgetLimits: any, 
   formatPrice: (v: number) => string,
   monthsInPeriod: number
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [localLimits, setLocalLimits] = useState(budgetLimits);
-  const { t, currentCurrency } = useLanguage();
-  const currencySymbol = CURRENCY_DATA[currentCurrency]?.symbol || currentCurrency;
+  const { t } = useLanguage();
 
   const categories = Object.keys(budgetLimits);
   
@@ -513,7 +507,7 @@ const SmartBudgetMonitor = ({
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-6 relative">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Target size={18} className="text-gray-400" /> {t('analytics.smart_budget')}
+          <Target size={18} className="text-gray-400" /> Smart Budget
         </h3>
         <button 
           onClick={() => setIsEditing(true)}
@@ -558,7 +552,7 @@ const SmartBudgetMonitor = ({
       {isEditing && (
         <div className="absolute inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 flex flex-col p-6 rounded-2xl animate-in fade-in duration-200">
            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-gray-900 dark:text-white">{t('analytics.edit_limits')}</h4>
+              <h4 className="font-bold text-gray-900 dark:text-white">Edit Monthly Limits</h4>
               <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"><X size={18} /></button>
            </div>
            <div className="flex-1 space-y-4 overflow-y-auto pr-2">
@@ -566,9 +560,9 @@ const SmartBudgetMonitor = ({
                  <div key={cat} className="space-y-1">
                     <label className="text-xs font-bold text-gray-500 dark:text-gray-400">{cat}</label>
                     <div className="relative">
-                       <span className="absolute left-3 top-2.5 text-gray-400">{currencySymbol}</span>
-                       <input
-                         type="number"
+                       <span className="absolute left-3 top-2.5 text-gray-400">$</span>
+                       <input 
+                         type="number" 
                          value={localLimits[cat]}
                          onChange={(e) => setLocalLimits(prev => ({...prev, [cat]: parseFloat(e.target.value) || 0}))}
                          className="w-full pl-6 pr-3 py-2 border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg text-sm"
@@ -604,7 +598,7 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
        <div className="relative z-10">
           <div className="flex justify-between items-start mb-4">
              <div>
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{t('analytics.savings_goal')}</p>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Savings Goal</p>
                 {isEditing ? (
                    <div className="flex items-center gap-2">
                       <input 
@@ -630,7 +624,7 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
 
           <div className="space-y-2">
              <div className="flex justify-between text-xs font-medium">
-                <span className="text-gray-600 dark:text-gray-300">{t('analytics.saved').replace('{amount}', formatPrice(totalSaved))}</span>
+                <span className="text-gray-600 dark:text-gray-300">Saved: {formatPrice(totalSaved)}</span>
                 <span className="text-green-600 dark:text-green-400">{percentage.toFixed(0)}%</span>
              </div>
              <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -640,11 +634,11 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
                 ></div>
              </div>
              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                {goal > 0 && totalSaved >= goal
-                   ? t('analytics.goal_achieved')
-                   : goal > 0
-                   ? t('analytics.goal_need').replace('{amount}', formatPrice(remaining))
-                   : t('analytics.goal_set')}
+                {goal > 0 && totalSaved >= goal 
+                   ? "🎉 Goal achieved!" 
+                   : goal > 0 
+                   ? `Need ${formatPrice(remaining)} more.`
+                   : "Set a goal to start saving."}
              </p>
           </div>
        </div>
@@ -653,12 +647,11 @@ const SavingsGoalCard = ({ goal, setGoal, totalSaved, formatPrice }: { goal: num
 };
 
 const PotentialSavingsCard = ({ subscriptions, formatPrice }: { subscriptions: Subscription[], formatPrice: (v: number) => string }) => {
-    const { t } = useLanguage();
     return (
         <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm h-full flex flex-col justify-center items-center text-center">
             <CheckCircle2 size={24} className="text-green-500 mb-2" />
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{t('analytics.optimization_ready')}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.optimization_ready_desc')}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Optimization Ready</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Savings insights will appear once enough data is collected.</p>
         </div>
     );
 };
@@ -789,26 +782,24 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
             {/* Conditional Insights based on data */}
             {subscriptions.length > 0 ? (
                 <>
-                    <AIInsightCard
-                        icon={Globe}
-                        title={t('analytics.insight.regional_optimization')}
-                        desc={t('analytics.insight.regional_desc')}
-                        accentColor="#3B82F6"
+                    <AIInsightCard 
+                        icon={Globe} 
+                        title={t('analytics.insight.regional_optimization')} 
+                        desc="Optimization opportunities detected in your current plan." 
+                        accentColor="#3B82F6" 
                         tintColor="#EFF6FF"
                     />
-                    <AIInsightCard
-                        icon={Lightbulb}
-                        title={t('analytics.insight.spending_alert')}
-                        desc={t('analytics.insight.spending_alert_desc')
-                          .replace('{amount}', formatPrice(totalSpendInPeriod))
-                          .replace('{period}', t(`analytics.range.${dateRangeKey}`).toLowerCase())}
-                        accentColor="#F59E0B"
+                    <AIInsightCard 
+                        icon={Lightbulb} 
+                        title="Spending Alert" 
+                        desc={`You spent ${formatPrice(totalSpendInPeriod)} in the ${t(`analytics.range.${dateRangeKey}`).toLowerCase()}.`} 
+                        accentColor="#F59E0B" 
                         tintColor="#FFFBEB"
                     />
                 </>
             ) : (
                 <div className="col-span-2 bg-gray-50 dark:bg-gray-800 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 text-xs">
-                    {t('analytics.insight.unlock_more')}
+                    Add subscriptions to unlock more AI insights.
                 </div>
             )}
          </div>
@@ -819,7 +810,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group h-full flex flex-col justify-between">
             <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Trophy size={64} /></div>
             <div>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">{t('analytics.total_spend')} ({t(`analytics.range.${dateRangeKey}`)})</p>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Total Spend ({t(`analytics.range.${dateRangeKey}`)})</p>
                 <h3 className="text-3xl font-bold mb-1">{formatPrice(totalSpendInPeriod)}</h3>
             </div>
             {totalSpendInPeriod > 1000 && (
@@ -863,7 +854,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                     <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.trend_desc')}</p>
                   </div>
                 </div>
-                <TrendArea data={trendData} />
+                <SpendingTrendChart data={trendData} color={trendColor} currentCurrency={currentCurrency} />
             </div>
 
             {/* Subscription Lifetime */}
@@ -880,7 +871,7 @@ export default function Analytics({ subscriptions = [], budgetLimits = {}, setBu
                   <h3 className="text-base font-bold text-gray-900 dark:text-white">{t('analytics.cost_dist')}</h3>
                   <MoreHorizontal size={16} className="text-gray-400 cursor-pointer hover:text-gray-600" />
                </div>
-               <CostDonut categoryTotals={categoryTotals} />
+               <CostDistributionChart categoryTotals={categoryTotals} formatPrice={formatPrice} />
             </div>
 
             {/* Budget Monitor */}

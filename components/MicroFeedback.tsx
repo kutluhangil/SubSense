@@ -20,6 +20,8 @@ export default function MicroFeedback({ isVisible, context, onClose, onOpenFullF
 
   const handleRate = (type: 'up' | 'down') => {
     setRated(type);
+    // In a real app, send this signal immediately to analytics
+    console.log(`[MicroFeedback] ${context}: ${type}`);
     
     // Auto close after rating, unless down (then maybe suggest full feedback)
     if (type === 'up') {
