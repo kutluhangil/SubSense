@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { X, ZoomIn, ZoomOut, Check, RotateCw } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ImageCropperModalProps {
   isOpen: boolean;
@@ -17,8 +18,9 @@ export default function ImageCropperModal({
   onClose, 
   onCropComplete, 
   cropShape = 'circle',
-  aspectRatio = 1 
+  aspectRatio = 1
 }: ImageCropperModalProps) {
+  const { t } = useLanguage();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -168,20 +170,20 @@ export default function ImageCropperModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[80vh] max-h-[600px]">
-        
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col h-[80vh] max-h-[600px] border border-gray-100 dark:border-gray-800">
+
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
-          <h3 className="font-bold text-gray-900">Adjust Image</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={20} className="text-gray-500" />
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 z-10">
+          <h3 className="font-bold text-gray-900 dark:text-white">{t('cropper.title')}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         {/* Canvas Area */}
-        <div 
+        <div
           ref={containerRef}
-          className="flex-1 relative bg-gray-900 overflow-hidden cursor-move touch-none"
+          className="flex-1 relative bg-gray-900 dark:bg-black overflow-hidden cursor-move touch-none"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -191,33 +193,33 @@ export default function ImageCropperModal({
         </div>
 
         {/* Footer / Controls */}
-        <div className="p-6 bg-white border-t border-gray-100 space-y-4">
+        <div className="p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 space-y-4">
            <div className="flex items-center gap-4">
-              <ZoomOut size={18} className="text-gray-400" />
-              <input 
-                type="range" 
-                min="0.5" 
-                max="3" 
-                step="0.05" 
-                value={scale} 
+              <ZoomOut size={18} className="text-gray-400 dark:text-gray-500" />
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.05"
+                value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
+                className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-gray-900 dark:accent-white"
               />
-              <ZoomIn size={18} className="text-gray-400" />
+              <ZoomIn size={18} className="text-gray-400 dark:text-gray-500" />
            </div>
 
            <div className="flex gap-3 justify-end">
-              <button 
+              <button
                 onClick={onClose}
-                className="px-5 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                className="px-5 py-2.5 rounded-xl font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                Cancel
+                {t('cropper.cancel')}
               </button>
-              <button 
+              <button
                 onClick={handleSave}
-                className="px-5 py-2.5 rounded-xl font-bold bg-gray-900 text-white hover:bg-gray-800 transition-all flex items-center gap-2"
+                className="px-5 py-2.5 rounded-xl font-bold bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 transition-all flex items-center gap-2"
               >
-                <Check size={18} /> Apply
+                <Check size={18} /> {t('cropper.apply')}
               </button>
            </div>
         </div>

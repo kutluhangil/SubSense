@@ -2,7 +2,7 @@
 import { Subscription } from '../components/SubscriptionModal';
 import { CURRENCIES } from './data';
 
-const DEBUG = true; // Enable warnings in console
+const DEBUG = false;
 
 /**
  * Validates a subscription object against strict business rules.
@@ -13,12 +13,20 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
 
   try {
     // 1. Name Validation
-    // Prevent empty, too long, or non-string names
+    // Prevent empty, too long, non-string names, emojis, and control characters
     if (!sub.name || typeof sub.name !== 'string' || sub.name.trim().length === 0) {
       throw new Error(`Invalid name: "${sub.name}"`);
     }
     if (sub.name.length > 50) {
       throw new Error("Name too long (max 50 chars)");
+    }
+    // Reject emojis and control characters (FV-07)
+    const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u;
+    if (emojiRegex.test(sub.name)) {
+      throw new Error("Name must not contain emojis.");
+    }
+    if (/[\x00-\x1F\x7F]/.test(sub.name)) {
+      throw new Error("Name contains invalid control characters.");
     }
 
     // 2. Price Validation
@@ -27,7 +35,7 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
       throw new Error(`Invalid price: ${sub.price}`);
     }
     if (sub.price > 1000000) {
-       throw new Error("Price exceeds realistic limit.");
+      throw new Error("Price exceeds realistic limit.");
     }
 
     // 3. Currency Validation
@@ -38,20 +46,21 @@ export const validateSubscription = (sub: Partial<Subscription> | null | undefin
     }
 
     // 4. Billing Cycle Validation
-    if (sub.cycle !== 'Monthly' && sub.cycle !== 'Yearly') {
+    if (sub.cycle && sub.cycle !== 'Monthly' && sub.cycle !== 'Yearly') {
       throw new Error(`Invalid billing cycle: ${sub.cycle}`);
     }
 
-    // 5. Date Validation
-    // nextDate must be a parseable date string
-    const date = new Date(sub.nextDate || '');
-    if (isNaN(date.getTime())) {
-      throw new Error(`Invalid nextDate: ${sub.nextDate}`);
+    // 5. Date Validation (optional — backend may not always set it)
+    if (sub.nextDate) {
+      const date = new Date(sub.nextDate);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid nextDate: ${sub.nextDate}`);
+      }
     }
 
     // 6. Notes Validation
     if (sub.notes && sub.notes.length > 500) {
-        throw new Error("Notes too long (max 500 chars)");
+      throw new Error("Notes too long (max 500 chars)");
     }
 
     return true;

@@ -1,50 +1,17 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase/firebase';
 import { convertAmount } from "./currency";
 import { debugLog } from "./debug";
 import { Subscription } from "../components/SubscriptionModal";
 import { validateSubscription, sanitizeForAI } from "./validateSubscription";
-
-// Helper to safely get API Key in Vite environment
-const getApiKey = () => {
-  // 1. Try Vite standard (import.meta.env)
-  // Cast to any to safely access properties if types are missing
-  const meta = import.meta as any;
-  if (typeof meta !== 'undefined' && meta.env && meta.env.VITE_GEMINI_API_KEY) {
-    return meta.env.VITE_GEMINI_API_KEY;
-  }
-  // 2. Try process.env safely (for legacy/test envs)
-  try {
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      return process.env.API_KEY;
-    }
-  } catch (e) {
-    // Ignore ReferenceError
-  }
-  return '';
-};
-
-// Initialize lazily to prevent module-level crash if key is missing
-let aiInstance: GoogleGenAI | null = null;
-
-const getAI = () => {
-  if (!aiInstance) {
-    const key = getApiKey();
-    if (key) {
-      aiInstance = new GoogleGenAI({ apiKey: key });
-    } else {
-      console.warn("Gemini API Key missing. AI features will be disabled.");
-    }
-  }
-  return aiInstance;
-};
 
 // Type definition for the structured insight
 export interface AIInsight {
   type: 'redundancy' | 'optimization' | 'general';
   title: string;
   description: string;
-  estimatedSavings: string; // e.g. "$120/yr"
+  estimatedSavings: string;
 }
 
 // Simple in-memory cache for the session
@@ -52,13 +19,13 @@ let cachedInsights: { key: string; data: AIInsight[] } | null = null;
 
 /**
  * Prepares a strictly typed, validated, and sanitized payload for Gemini.
+ * No API key needed here — data is sent to the server-side proxy function.
  */
 const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: string) => {
   const validSubs = subscriptions.filter(validateSubscription);
 
   const convertedSubs = validSubs.map(s => {
     const safeSub = sanitizeForAI(s);
-    // Standardize to monthly for analysis
     const convertedCost = convertAmount(safeSub.price, safeSub.currency, baseCurrency);
     const monthlyCost = safeSub.cycle === 'Yearly' ? convertedCost / 12 : convertedCost;
 
@@ -76,31 +43,62 @@ const prepareGeminiPayload = (subscriptions: Subscription[], baseCurrency: strin
   };
 };
 
-export const generateDashboardInsights = async (subscriptions: Subscription[], baseCurrency: string = 'USD', languageCode: string = 'en'): Promise<AIInsight[]> => {
-  const ai = getAI();
-  if (!ai) return [];
+/**
+ * Calls the server-side Gemini proxy Firebase Function.
+ * The GEMINI API KEY never leaves the server — it is stored in Firebase Functions config.
+ * Set it via: firebase functions:config:set gemini.key="AIza..."
+ */
+const callGeminiProxy = async (prompt: string, systemInstruction?: string): Promise<string | null> => {
+  const proxyFn = httpsCallable<
+    { prompt: string; systemInstruction?: string },
+    { text: string | null }
+  >(functions, 'geminiProxy');
 
+  const result = await proxyFn({ prompt, systemInstruction });
+  return result.data.text;
+};
+
+/**
+ * Calls the server-side Gemini chat proxy Firebase Function.
+ * The GEMINI API KEY never leaves the server.
+ */
+const callGeminiChatProxy = async (
+  history: { role: string; parts: { text: string }[] }[],
+  userMessage: string,
+  systemInstruction?: string
+): Promise<string | null> => {
+  const proxyFn = httpsCallable<
+    { history: { role: string; parts: { text: string }[] }[]; userMessage: string; systemInstruction?: string },
+    { text: string | null }
+  >(functions, 'geminiChatProxy');
+
+  const result = await proxyFn({ history, userMessage, systemInstruction });
+  return result.data.text;
+};
+
+export const generateDashboardInsights = async (
+  subscriptions: Subscription[],
+  baseCurrency: string = 'USD',
+  languageCode: string = 'en'
+): Promise<AIInsight[]> => {
   try {
-    // 1. Cache Check
+    // Cache Check
     const totalValue = subscriptions.reduce((acc, s) => acc + (s.price || 0), 0);
-    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v2`;
+    const cacheKey = `${subscriptions.length}-${totalValue.toFixed(2)}-${baseCurrency}-${languageCode}-v3`;
 
     if (cachedInsights && cachedInsights.key === cacheKey) {
-        debugLog('AI_LANG', 'Returning cached insights');
-        return cachedInsights.data;
+      debugLog('AI_LANG', 'Returning cached insights');
+      return cachedInsights.data;
     }
 
     debugLog('AI_LANG', `Generating strict MVP insights in: ${languageCode}`);
     const payload = prepareGeminiPayload(subscriptions, baseCurrency);
-    
-    // Strict language instruction
-    const langInstruction = languageCode === 'tr' 
+
+    const langInstruction = languageCode === 'tr'
       ? "OUTPUT LANGUAGE: TURKISH (Türkçe). Output values must be in Turkish context."
       : "OUTPUT LANGUAGE: ENGLISH.";
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `
+    const prompt = `
       ROLE: You are a conservative Financial Optimization Engine.
       
       GOAL: Analyze subscriptions to find SPECIFIC savings based on 2 logic patterns only.
@@ -108,6 +106,8 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
       PATTERNS TO DETECT:
       1. REDUNDANCY: Multiple active subscriptions in the same narrow category (e.g., 2 Music apps, 2 Video Streaming apps).
       2. CYCLE OPTIMIZATION: Monthly subscriptions > 10 ${baseCurrency} where switching to Yearly typically saves ~15-20%.
+      3. ALTERNATIVES (Alternatif & Tasarruf): Suggest free or cheaper alternatives for expensive tools (e.g. Adobe CC -> Figma/Affinity, Netflix -> Stremio).
+      4. PRICE HIKE DETECTOR (Gizli Zam Dedektörü): If you know the recent price of a popular service and the user is paying more, warn them about a potential price hike or wrong plan.
       
       CONSTRAINTS:
       - DO NOT speculate on Foreign Exchange (FX) rates.
@@ -134,47 +134,41 @@ export const generateDashboardInsights = async (subscriptions: Subscription[], b
           }
         ]
       }
-      `,
-      config: {
-        responseMimeType: 'application/json',
-      }
-    });
+    `;
 
-    const text = response.text;
+    const text = await callGeminiProxy(prompt);
     if (!text) return [];
-    
+
     const resultObj = JSON.parse(text);
     const results: AIInsight[] = resultObj.insights || [];
-    
-    // Update cache
+
     cachedInsights = { key: cacheKey, data: results };
-    
     return results;
   } catch (error) {
     console.error("Gemini Insight Error:", error);
-    // Fallback static insights
     const fallback: AIInsight[] = languageCode === 'tr' ? [
-        { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
+      { type: 'optimization', title: 'Yıllık Plan Tasarrufu', description: 'Bazı abonelikleri yıllığa çevirmek %20 tasarruf sağlayabilir.', estimatedSavings: 'Tahmini %20' }
     ] : [
-        { type: 'optimization', title: 'Switch to Annual', description: 'Switching monthly plans to yearly often saves ~20%.', estimatedSavings: 'Est. 20%' }
+      { type: 'optimization', title: 'Switch to Annual', description: 'Switching monthly plans to yearly often saves ~20%.', estimatedSavings: 'Est. 20%' }
     ];
     return fallback;
   }
 };
 
-export const chatWithGemini = async (history: any[], userMessage: string, contextData: any, languageCode: string = 'en') => {
-  const ai = getAI();
-  if (!ai) return "I'm currently offline or misconfigured. Please try again later.";
-
-  // Existing chat logic remains, but leveraging the same conservative persona
+export const chatWithGemini = async (
+  history: any[],
+  userMessage: string,
+  contextData: any,
+  languageCode: string = 'en'
+) => {
   try {
     debugLog('AI_LANG', `Chat request in: ${languageCode}`);
     const payload = prepareGeminiPayload(contextData.subscriptions, contextData.baseCurrency);
 
-    let languageRules = languageCode === 'tr' ? "RESPOND IN TURKISH ONLY." : "RESPOND IN ENGLISH ONLY.";
+    const languageRules = languageCode === 'tr' ? "RESPOND IN TURKISH ONLY." : "RESPOND IN ENGLISH ONLY.";
 
     const systemInstruction = `
-    ROLE: SubscriptionHub AI Assistant.
+    ROLE: SubSense AI Assistant.
     ${languageRules}
     
     TONE: Professional, concise, data-driven.
@@ -186,17 +180,12 @@ export const chatWithGemini = async (history: any[], userMessage: string, contex
     CONTEXT:
     ${JSON.stringify(payload)}
     
-    GOAL: Help the user understand their spending patterns based ONLY on the provided context.
+    GOAL: Help the user understand their spending patterns based ONLY on the provided context. 
+    You are an expert at finding hidden price hikes (Gizli Zam Dedektörü) and suggesting cheaper alternatives (Alternatif ve Tasarruf). If the user asks about a service, suggest a cheaper/free alternative if one exists.
     `;
 
-    const chat = ai.chats.create({
-      model: 'gemini-3-pro-preview',
-      config: { systemInstruction },
-      history: history
-    });
-
-    const result = await chat.sendMessage({ message: userMessage });
-    return result.text;
+    const text = await callGeminiChatProxy(history, userMessage, systemInstruction);
+    return text || "I couldn't generate a response. Please try again.";
   } catch (error) {
     console.error("Gemini Chat Error:", error);
     return "I'm having trouble connecting to my intelligence layer right now.";

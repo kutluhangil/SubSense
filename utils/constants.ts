@@ -4,9 +4,9 @@ export const APP_VERSION = '1.0.0-beta';
 
 export const FEATURES = {
   AI_ASSISTANT: true,
-  SOCIAL_FRIENDS: false, // Disabled for Beta stability
+  SOCIAL_FRIENDS: true,
   COMPARE_SAVINGS: true,
-  REALTIME_FX: false, // Uses static rates for now
+  REALTIME_FX: true, // Fetch live rates from Open ER API with 24h cache
 };
 
 export const FEATURE_FLAGS = {

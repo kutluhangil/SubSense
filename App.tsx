@@ -6,22 +6,24 @@ import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { FeedbackProvider } from './contexts/FeedbackContext'; 
+import { FeedbackProvider } from './contexts/FeedbackContext';
 import { migrateLocalData } from './utils/firestore';
 import { WifiOff, Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
 
-// Lazy Load Pages & Heavy Components
+import { applyActionCode } from 'firebase/auth';
+import { auth } from './firebase/firebase';
+import FooterCredit from './components/FooterCredit';
+
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const Features = React.lazy(() => import('./components/Features'));
 const DemoModal = React.lazy(() => import('./components/DemoModal'));
 const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage'));
+const VerifyEmailPage = React.lazy(() => import('./components/VerifyEmailPage'));
 
-// Types for user interface consistency
 export interface User {
   email: string;
   name: string;
-  passwordHash: string; // Kept for interface compat, unused in Firebase
   currency?: string;
   uid?: string;
 }
@@ -33,15 +35,14 @@ const PageLoader = () => (
 );
 
 function AppContent() {
-  const { currentUser, login, signup, logout, authInitialized } = useAuth();
+  const { currentUser, login, signup, logout, authInitialized, resetPassword, needsEmailVerification, pendingVerificationEmail, clearVerificationState } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
-  const { setCurrency } = useLanguage();
+  const { setCurrency, t } = useLanguage();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // --- Network Status ---
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -53,11 +54,58 @@ function AppContent() {
     };
   }, []);
 
-  // --- Analytics: Track Route Changes ---
   useEffect(() => {
-    if (currentUser) {
-      // Dashboard internal navigation handles its own tracking
-    } else {
+    const titles: Record<string, string> = {
+      home: 'SubSense — Track Your Subscriptions',
+      features: 'Features — SubSense',
+      'reset-password': 'Reset Password — SubSense',
+    };
+    if (!currentUser) {
+      document.title = titles[currentPage] || 'SubSense';
+    }
+  }, [currentPage, currentUser]);
+
+  // Capture ?ref=CODE from the invite link on load and stash it until signup.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    if (ref && ref.trim()) {
+      try {
+        localStorage.setItem('subsense.pendingReferral', ref.trim().toUpperCase());
+      } catch {
+        // Ignore storage failures (private mode, etc.)
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleEmailActions = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get('mode');
+      const actionCode = params.get('oobCode');
+
+      if (!mode || !actionCode) return;
+
+      if (mode === 'resetPassword') {
+        setCurrentPage('reset-password');
+      } else if (mode === 'verifyEmail') {
+        try {
+          await applyActionCode(auth, actionCode);
+          if (auth.currentUser) {
+            await auth.currentUser.reload();
+          }
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+          console.error("Email verification failed:", error);
+        }
+      }
+    };
+
+    handleEmailActions();
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
       trackPageView(currentPage);
     }
   }, [currentPage, currentUser]);
@@ -66,20 +114,18 @@ function AppContent() {
   useEffect(() => {
     if (currentUser) {
       const hasMigrated = localStorage.getItem(`subscriptionhub.${currentUser.email}.migrated`);
-      
+
       if (!hasMigrated) {
         // Attempt to find legacy data for this email
         const legacyKey = `subscriptionhub.${currentUser.email}.subscriptions`;
         const localData = localStorage.getItem(legacyKey);
-        
+
         if (localData) {
           try {
             const parsedSubs = JSON.parse(localData);
             if (Array.isArray(parsedSubs) && parsedSubs.length > 0) {
-              console.log("Migrating local data to Firestore...");
               migrateLocalData(currentUser.uid, parsedSubs).then(() => {
                 localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
-                // Optional: Clear legacy data
                 localStorage.removeItem(legacyKey);
               });
             }
@@ -87,8 +133,7 @@ function AppContent() {
             console.error("Migration failed", e);
           }
         } else {
-           // Mark as migrated to skip check next time even if empty
-           localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
+          localStorage.setItem(`subscriptionhub.${currentUser.email}.migrated`, 'true');
         }
       }
     }
@@ -108,20 +153,24 @@ function AppContent() {
     setIsDemoOpen(false);
   };
 
-  // Wrapper for AuthContext login
   const handleLogin = async (email: string, password: string, rememberMe: boolean = false) => {
-    await login(email, password, rememberMe);
-    setIsAuthOpen(false);
-    setCurrentPage('home');
+    try {
+      await login(email, password, rememberMe);
+      setIsAuthOpen(false);
+      setCurrentPage('home');
+    } catch (err: any) {
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        setIsAuthOpen(false);
+        return;
+      }
+      throw err;
+    }
   };
 
-  // Wrapper for AuthContext signup
   const handleSignup = async (name: string, email: string, password: string, currency: string, region: string) => {
     await signup(email, password, name, currency, region);
-    // LanguageContext listens to profile changes via userProfile, but we can set local state too for instant feedback
     setCurrency(currency);
     setIsAuthOpen(false);
-    setCurrentPage('home');
   };
 
   const handleLogout = async () => {
@@ -129,22 +178,34 @@ function AppContent() {
     setCurrentPage('home');
   };
 
-  const handleSimulateReset = () => {
-    setIsAuthOpen(false);
-    setCurrentPage('reset-password');
-    window.scrollTo(0,0);
+  const handleResetPassword = async (email: string) => {
+    await resetPassword(email);
   };
 
-  // 4. App-Level Gating: Show loader until auth state is confirmed
   if (!authInitialized) {
     return <PageLoader />;
   }
 
-  // Map Firebase user to App User interface
+  const pathname = window.location.pathname;
+  if (pathname !== '/' && pathname !== '') {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-8xl font-black text-gray-900 mb-4">404</div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Page not found</h1>
+        <p className="text-gray-500 text-sm mb-8 max-w-xs">The page you're looking for doesn't exist or has been moved.</p>
+        <a
+          href="/"
+          className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
+        >
+          Go to SubSense
+        </a>
+      </div>
+    );
+  }
+
   const appUser: User | null = currentUser ? {
     email: currentUser.email || '',
     name: currentUser.displayName || 'User',
-    passwordHash: '',
     uid: currentUser.uid
   } : null;
 
@@ -153,25 +214,38 @@ function AppContent() {
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 bg-red-600 text-white text-xs font-bold text-center py-1 z-[100] flex items-center justify-center gap-2 animate-in slide-in-from-top-1">
           <WifiOff size={12} />
-          You are offline. Showing cached data.
+          {t('app.offline')}
         </div>
       )}
-      
+
       <Suspense fallback={<PageLoader />}>
-        {appUser ? (
+        {/* Email Verification Gate */}
+        {needsEmailVerification && pendingVerificationEmail ? (
+          <VerifyEmailPage
+            email={pendingVerificationEmail}
+            onBackToLogin={() => {
+              clearVerificationState();
+              openAuth('login');
+            }}
+            onResendAttempt={() => {
+              // Verification email is automatically re-sent when user tries to log in
+              // with an unverified account. We show a helpful message on the VerifyEmailPage.
+            }}
+          />
+        ) : appUser ? (
           <Dashboard user={appUser} onLogout={handleLogout} />
         ) : (
-          <div className="min-h-screen bg-white text-gray-900 flex flex-col selection:bg-gray-100 selection:text-gray-900">
+          <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col selection:bg-gray-100 selection:text-gray-900 dark:selection:bg-gray-800 dark:selection:text-gray-100">
             {currentPage === 'reset-password' ? (
-               <ResetPasswordPage onLoginClick={() => {
-                  setCurrentPage('home');
-                  openAuth('login');
-               }} />
+              <ResetPasswordPage onLoginClick={() => {
+                setCurrentPage('home');
+                openAuth('login');
+              }} />
             ) : (
               <>
-                <Navbar 
-                  onOpenAuth={openAuth} 
-                  onNavigate={(page) => setCurrentPage(page as any)} 
+                <Navbar
+                  onOpenAuth={openAuth}
+                  onNavigate={(page) => setCurrentPage(page as any)}
                   currentPage={currentPage as 'home' | 'features'}
                 />
                 <main className="flex-grow flex flex-col">
@@ -181,18 +255,21 @@ function AppContent() {
                     <Features onOpenAuth={openAuth} onOpenDemo={openDemo} />
                   )}
                 </main>
+
+
                 <Footer />
+                <FooterCredit />
               </>
             )}
-            <AuthModal 
-              isOpen={isAuthOpen} 
-              onClose={() => setIsAuthOpen(false)} 
+            <AuthModal
+              isOpen={isAuthOpen}
+              onClose={() => setIsAuthOpen(false)}
               initialMode={authMode}
               onLoginSubmit={handleLogin}
               onSignupSubmit={handleSignup}
-              onSimulateReset={handleSimulateReset}
+              onResetPassword={handleResetPassword}
             />
-            <DemoModal 
+            <DemoModal
               isOpen={isDemoOpen}
               onClose={closeDemo}
               onSignup={() => openAuth('signup')}

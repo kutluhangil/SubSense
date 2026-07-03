@@ -65,29 +65,8 @@ const MOCK_PROFILES: UserProfile[] = [
 export default function ProfileCarousel({ onProfileClick }: ProfileCarouselProps) {
   const [isPaused, setIsPaused] = useState(false);
   
-  // Sound effect
   const playHoverSound = () => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
-      
-      gain.gain.setValueAtTime(0.02, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-      
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
-      // Ignore audio errors
-    }
+    // Sound effect removed per user request
   };
 
   return (
@@ -108,38 +87,38 @@ export default function ProfileCarousel({ onProfileClick }: ProfileCarouselProps
             key={`${profile.username}-${idx}`}
             onClick={() => onProfileClick(profile)}
             onMouseEnter={playHoverSound}
-            className="w-72 bg-white/80 backdrop-blur-xl border border-white/50 p-5 rounded-[24px] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer flex-shrink-0 group"
+            className="w-72 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/50 dark:border-gray-700/50 p-5 rounded-[24px] shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer flex-shrink-0 group"
           >
              <div className="flex items-center gap-4 mb-4">
                <div className="relative">
-                 <img src={profile.avatar} alt={profile.name} className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md" />
-                 <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
+                 <img src={profile.avatar} alt={profile.name} className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md" />
+                 <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-700 ${
                    profile.status === 'online' ? 'bg-green-500' : profile.status === 'away' ? 'bg-yellow-500' : 'bg-gray-400'
                  }`}></div>
                </div>
                <div>
-                 <h4 className="font-bold text-gray-900 leading-tight">{profile.name}</h4>
-                 <p className="text-xs font-medium text-indigo-600">@{profile.username}</p>
+                 <h4 className="font-bold text-gray-900 dark:text-white leading-tight">{profile.name}</h4>
+                 <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">@{profile.username}</p>
                </div>
              </div>
-             
+
              <div className="space-y-2 mb-4">
                 <div className="flex justify-between items-center text-xs">
-                   <span className="text-gray-500 font-medium">Active Subs</span>
-                   <span className="font-bold text-gray-900">{profile.totalSubs}</span>
+                   <span className="text-gray-500 dark:text-gray-400 font-medium">Active Subs</span>
+                   <span className="font-bold text-gray-900 dark:text-white">{profile.totalSubs}</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full" style={{ width: `${Math.min((profile.totalSubs/20)*100, 100)}%` }}></div>
                 </div>
                 <div className="flex justify-between items-center text-xs">
-                   <span className="text-gray-500 font-medium">Monthly Spend</span>
-                   <span className="font-bold text-gray-900">
+                   <span className="text-gray-500 dark:text-gray-400 font-medium">Monthly Spend</span>
+                   <span className="font-bold text-gray-900 dark:text-white">
                      {profile.currency === 'USD' ? '$' : profile.currency === 'GBP' ? '£' : '€'}{profile.monthlySpend.toFixed(2)}
                    </span>
                 </div>
              </div>
 
-             <div className="flex items-center gap-1 text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded-lg w-fit">
+             <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50 px-2 py-1 rounded-lg w-fit">
                 <MapPin size={10} /> {profile.location}
              </div>
           </div>

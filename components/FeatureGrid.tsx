@@ -1,316 +1,174 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { LayoutGrid, Users, CreditCard, PieChart, ArrowRightLeft, Settings, ArrowRight, ToggleLeft, ToggleRight } from 'lucide-react';
+import React from 'react';
+import { LayoutGrid, Users, CreditCard, PieChart, ArrowRightLeft, Settings, ArrowRight, Check } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { LogoRenderer } from './LogoRenderer';
+import { getBrandLogo } from '../utils/logoUtils';
 
-// --- Mini Animation Components ---
+/* ---------------- Embedded mini visuals (always-on, subtle) ---------------- */
 
-const DashboardPreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex flex-col justify-center items-center gap-2 p-2">
-    <div className="flex items-end gap-1 h-12 w-full px-2 justify-center">
-       {[30, 50, 40, 70, 55, 80].map((h, i) => (
-         <div 
-           key={i} 
-           className="w-2 rounded-t-sm animate-pulse" 
-           style={{ 
-             height: `${h}%`, 
-             backgroundColor: color, 
-             opacity: 0.3 + (i/10),
-             animationDelay: `${i * 0.1}s` 
-           }}
-         ></div>
-       ))}
+const DashboardVisual = ({ color }: { color: string }) => (
+  <div className="w-full">
+    <div className="flex items-baseline justify-between mb-3">
+      <span className="text-2xl font-display font-extrabold text-gray-900 dark:text-white tabular-nums">₺4.788</span>
+      <span className="text-[10px] font-bold text-green-600 dark:text-green-400">/yr</span>
     </div>
-    <div className="w-24 h-24 absolute opacity-10">
-       <svg viewBox="0 0 100 100" className="animate-[spin_10s_linear_infinite]">
-          <circle cx="50" cy="50" r="40" stroke={color} strokeWidth="2" fill="none" strokeDasharray="40 10" />
-       </svg>
+    <div className="flex items-end gap-1.5 h-16">
+      {[42, 58, 35, 72, 50, 84, 64, 90].map((h, i) => (
+        <div key={i} className="flex-1 rounded-t-md transition-all" style={{ height: `${h}%`, background: `linear-gradient(to top, ${color}, ${color}55)`, opacity: 0.55 + i / 20 }} />
+      ))}
     </div>
   </div>
 );
 
-const FriendsPreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex items-center justify-center relative">
-     <div className="absolute w-8 h-8 rounded-full bg-white border-2 flex items-center justify-center z-10 animate-[bounce_2s_infinite]" style={{ borderColor: color }}>
-        <Users size={14} style={{ color }} />
-     </div>
-     <div className="absolute w-8 h-8 rounded-full bg-gray-200 border-2 border-white opacity-60 transform -translate-x-6 animate-[pulse_2s_infinite]"></div>
-     <div className="absolute w-8 h-8 rounded-full bg-gray-200 border-2 border-white opacity-60 transform translate-x-6 animate-[pulse_2s_infinite] animation-delay-500"></div>
+const AnalyticsVisual = ({ color }: { color: string }) => (
+  <div className="w-full flex items-center justify-center py-1">
+    <div className="relative w-24 h-24">
+      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" className="text-gray-100 dark:text-gray-700" strokeWidth="3.5" />
+        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round" strokeDasharray="75, 100" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-display font-extrabold" style={{ color }}>75%</span>
+      </div>
+    </div>
   </div>
 );
 
-const SubscriptionsPreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
-     <div className="w-24 h-6 bg-white rounded-md shadow-sm border border-gray-100 flex items-center px-2 gap-2 animate-[translate-y_3s_ease-in-out_infinite]">
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></div>
-        <div className="h-1.5 w-12 bg-gray-100 rounded"></div>
-     </div>
-     <div className="w-24 h-6 bg-white rounded-md shadow-sm border border-gray-100 flex items-center px-2 gap-2 animate-[translate-y_3s_ease-in-out_infinite_0.5s]">
-        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-        <div className="h-1.5 w-10 bg-gray-100 rounded"></div>
-     </div>
-     <div className="w-24 h-6 bg-white rounded-md shadow-sm border border-gray-100 flex items-center px-2 gap-2 animate-[translate-y_3s_ease-in-out_infinite_1s]">
-        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-        <div className="h-1.5 w-8 bg-gray-100 rounded"></div>
-     </div>
+const CompareVisual = ({ color }: { color: string }) => (
+  <div className="w-full space-y-2.5">
+    <div className="flex items-center justify-between text-xs">
+      <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="text-sm">🇺🇸</span> US</span>
+      <span className="font-bold text-gray-900 dark:text-white tabular-nums">$15.99</span>
+    </div>
+    <div className="flex items-center justify-between text-xs">
+      <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="text-sm">🇹🇷</span> TR</span>
+      <span className="font-bold text-green-600 dark:text-green-400 tabular-nums">$4.50</span>
+    </div>
+    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="h-full rounded-full" style={{ width: '72%', background: `linear-gradient(to right, ${color}, #22c55e)` }} />
+    </div>
+    <span className="inline-block text-[10px] font-bold text-green-600 dark:text-green-400">-71% cheaper</span>
   </div>
 );
 
-const AnalyticsPreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex items-center justify-center p-3">
-     <div className="relative w-20 h-20">
-        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-           <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="4" />
-           <path 
-             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-             fill="none" 
-             stroke={color} 
-             strokeWidth="4" 
-             strokeDasharray="70, 100" 
-             className="animate-[dash_3s_ease-in-out_infinite]"
-           />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold" style={{ color }}>70%</div>
-     </div>
+const FriendsVisual = () => (
+  <div className="w-full flex flex-col items-center justify-center gap-2 py-2">
+    <div className="flex -space-x-3">
+      {['from-rose-400 to-pink-500', 'from-sky-400 to-blue-500', 'from-amber-400 to-orange-500'].map((g, i) => (
+        <div key={i} className={`w-10 h-10 rounded-full bg-gradient-to-br ${g} border-2 border-white dark:border-gray-800 shadow-sm`} style={{ zIndex: i }} />
+      ))}
+      <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-gray-800 flex items-center justify-center text-[11px] font-bold text-gray-500 dark:text-gray-300">+5</div>
+    </div>
+    <span className="text-[10px] font-bold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-0.5 rounded-full">+2 new</span>
   </div>
 );
 
-const ComparePreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex items-center justify-center px-4">
-     <div className="w-full h-16 relative flex items-end justify-between">
-        {/* Line 1 */}
-        <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
-           <path d="M0,40 C10,35 20,45 30,20 C40,10 50,50 60,30" fill="none" stroke={color} strokeWidth="2" className="animate-pulse" />
-        </svg>
-        {/* Line 2 */}
-        <svg className="absolute inset-0 w-full h-full overflow-visible opacity-40" preserveAspectRatio="none">
-           <path d="M0,50 C15,45 25,55 35,30 C45,20 55,60 60,40" fill="none" stroke="currentColor" strokeWidth="2" />
-        </svg>
-        <div className="absolute -top-2 right-0 bg-white shadow-sm border px-1.5 py-0.5 rounded text-[8px] font-bold" style={{ color }}>-20%</div>
-     </div>
-  </div>
-);
-
-const SettingsPreview = ({ color }: { color: string }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-     <div className="flex items-center gap-2">
-        <div className="text-[10px] text-gray-400 font-bold uppercase">Dark Mode</div>
-        <div className="relative w-8 h-4 bg-gray-200 rounded-full">
-           <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm animate-[toggle_2s_infinite]" style={{ backgroundColor: color }}></div>
-        </div>
-     </div>
-     <div className="flex items-center gap-2">
-        <div className="text-[10px] text-gray-400 font-bold uppercase">Alerts</div>
-        <div className="relative w-8 h-4 bg-gray-200 rounded-full">
-           <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full shadow-sm animate-[toggle_2s_infinite_1s]"></div>
-        </div>
-     </div>
-  </div>
-);
-
-const FeaturePreviewPopup = ({ feature }: { feature: any }) => {
+const SubscriptionsVisual = () => {
+  const rows = [
+    { name: 'Netflix', price: '₺399', accent: '#E50914' },
+    { name: 'Spotify', price: '₺59', accent: '#1DB954' },
+  ];
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 w-48 h-32 bg-white/40 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 z-50 transform origin-bottom">
-       <div className="h-1 w-full" style={{ backgroundColor: feature.color }}></div>
-       <div className="flex-1 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-50 bg-gradient-to-b from-white to-transparent"></div>
-          {feature.id === 'dashboard' && <DashboardPreview color={feature.color} />}
-          {feature.id === 'friends' && <FriendsPreview color={feature.color} />}
-          {feature.id === 'subscriptions' && <SubscriptionsPreview color={feature.color} />}
-          {feature.id === 'analytics' && <AnalyticsPreview color={feature.color} />}
-          {feature.id === 'compare' && <ComparePreview color={feature.color} />}
-          {feature.id === 'settings' && <SettingsPreview color={feature.color} />}
-       </div>
-       <div className="bg-white/50 p-2 text-center border-t border-white/20 backdrop-blur-md">
-          <p className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">{feature.title} Preview</p>
-       </div>
-       {/* Arrow */}
-       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/40 backdrop-blur-xl border-r border-b border-white/60 transform rotate-45"></div>
+    <div className="w-full space-y-2">
+      {rows.map((r) => {
+        const logo = getBrandLogo(r.name);
+        return (
+          <div key={r.name} className="flex items-center gap-2.5 rounded-xl bg-white dark:bg-gray-900/50 border border-gray-100 dark:border-white/5 px-2.5 py-1.5 shadow-sm">
+            <span className="w-6 h-6 rounded-md flex items-center justify-center bg-white dark:bg-gray-900 border border-gray-100 dark:border-white/10 overflow-hidden">
+              {logo ? <LogoRenderer logoUrl={logo} name={r.name} className="w-4 h-4 object-contain" variant="auto" /> : <span style={{ color: r.accent }} className="text-xs font-bold">{r.name[0]}</span>}
+            </span>
+            <span className="flex-1 text-xs font-bold text-gray-800 dark:text-gray-100">{r.name}</span>
+            <span className="text-xs font-bold text-gray-900 dark:text-white tabular-nums">{r.price}</span>
+          </div>
+        );
+      })}
     </div>
   );
 };
 
+const SettingsVisual = ({ color }: { color: string }) => (
+  <div className="flex flex-col sm:flex-row gap-3 w-full">
+    {[{ label: 'Dark Mode', on: true }, { label: 'Alerts', on: true }].map((s) => (
+      <div key={s.label} className="flex items-center justify-between gap-4 rounded-xl bg-white dark:bg-gray-900/50 border border-gray-100 dark:border-white/5 px-3 py-2 flex-1 shadow-sm">
+        <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">{s.label}</span>
+        <span className="relative w-9 h-5 rounded-full transition-colors" style={{ backgroundColor: s.on ? color : '#d1d5db' }}>
+          <span className="absolute top-1/2 -translate-y-1/2 left-[19px] w-3.5 h-3.5 rounded-full bg-white shadow flex items-center justify-center">
+            <Check size={9} className="text-gray-600" strokeWidth={3} />
+          </span>
+        </span>
+      </div>
+    ))}
+  </div>
+);
+
+/* ---------------- Card ---------------- */
+
+interface Feature {
+  id: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  desc: string;
+  color: string;
+  span: string;
+  minH: string;
+  visual: React.ReactNode;
+}
+
+const renderFeatureCard = (f: Feature) => (
+  <div
+    key={f.id}
+    className={`group relative ${f.span} ${f.minH} flex flex-col rounded-3xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-gray-800/50 backdrop-blur-xl p-6 shadow-sm overflow-hidden transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:border-transparent`}
+  >
+    {/* hover accent glow */}
+    <div
+      className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+      style={{ background: f.color }}
+    />
+    {/* top edge accent */}
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `linear-gradient(to right, transparent, ${f.color}, transparent)` }} />
+
+    <div className="relative z-10 flex items-start justify-between mb-4">
+      <span
+        className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm transition-transform duration-500 group-hover:scale-110"
+        style={{ background: `linear-gradient(135deg, ${f.color}, ${f.color}cc)` }}
+      >
+        <f.icon size={20} className="text-white" />
+      </span>
+      <ArrowRight size={18} className="text-gray-300 dark:text-gray-600 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500" style={{ color: f.color }} />
+    </div>
+
+    <div className="relative z-10">
+      <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white tracking-tight">{f.title}</h3>
+      <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
+    </div>
+
+    {/* embedded visual */}
+    <div className="relative z-10 mt-auto pt-5">{f.visual}</div>
+  </div>
+);
+
 export default function FeatureGrid() {
   const { t } = useLanguage();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [autoCycleIndex, setAutoCycleIndex] = useState<number | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const idleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const features = [
-    {
-      id: 'dashboard',
-      icon: LayoutGrid,
-      title: t('features.dashboard.title'),
-      desc: t('features.dashboard.desc'),
-      color: "#3B82F6", // blue-500
-      bg: "bg-blue-50",
-      hoverBorder: "group-hover:border-blue-500/50"
-    },
-    {
-      id: 'friends',
-      icon: Users,
-      title: t('features.friends.title'),
-      desc: t('features.friends.desc'),
-      color: "#0D9488", // teal-600
-      bg: "bg-teal-50",
-      hoverBorder: "group-hover:border-teal-500/50"
-    },
-    {
-      id: 'subscriptions',
-      icon: CreditCard,
-      title: t('features.subscriptions.title'),
-      desc: t('features.subscriptions.desc'),
-      color: "#9333EA", // purple-600
-      bg: "bg-purple-50",
-      hoverBorder: "group-hover:border-purple-500/50"
-    },
-    {
-      id: 'analytics',
-      icon: PieChart,
-      title: t('features.analytics.title'),
-      desc: t('features.analytics.desc'),
-      color: "#7C3AED", // violet-600
-      bg: "bg-violet-50",
-      hoverBorder: "group-hover:border-violet-500/50"
-    },
-    {
-      id: 'compare',
-      icon: ArrowRightLeft,
-      title: t('features.compare.title'),
-      desc: t('features.compare.desc'),
-      color: "#EA580C", // orange-600
-      bg: "bg-orange-50",
-      hoverBorder: "group-hover:border-orange-500/50"
-    },
-    {
-      id: 'settings',
-      icon: Settings,
-      title: t('features.settings.title'),
-      desc: t('features.settings.desc'),
-      color: "#4B5563", // gray-600
-      bg: "bg-gray-50",
-      hoverBorder: "group-hover:border-gray-500/50"
-    }
+  const features: Feature[] = [
+    { id: 'dashboard', icon: LayoutGrid, title: t('features.dashboard.title'), desc: t('features.dashboard.desc'), color: '#3B82F6', span: 'lg:col-span-3', minH: 'min-h-[280px]', visual: <DashboardVisual color="#3B82F6" /> },
+    { id: 'analytics', icon: PieChart, title: t('features.analytics.title'), desc: t('features.analytics.desc'), color: '#7C3AED', span: 'lg:col-span-3', minH: 'min-h-[280px]', visual: <AnalyticsVisual color="#7C3AED" /> },
+    { id: 'subscriptions', icon: CreditCard, title: t('features.subscriptions.title'), desc: t('features.subscriptions.desc'), color: '#9333EA', span: 'lg:col-span-2', minH: 'min-h-[240px]', visual: <SubscriptionsVisual /> },
+    { id: 'compare', icon: ArrowRightLeft, title: t('features.compare.title'), desc: t('features.compare.desc'), color: '#EA580C', span: 'lg:col-span-2', minH: 'min-h-[240px]', visual: <CompareVisual color="#EA580C" /> },
+    { id: 'friends', icon: Users, title: t('features.friends.title'), desc: t('features.friends.desc'), color: '#0D9488', span: 'lg:col-span-2', minH: 'min-h-[240px]', visual: <FriendsVisual /> },
+    { id: 'settings', icon: Settings, title: t('features.settings.title'), desc: t('features.settings.desc'), color: '#6366F1', span: 'lg:col-span-6', minH: 'min-h-[140px]', visual: <SettingsVisual color="#6366F1" /> },
   ];
 
-  // Auto-cycle logic when idle
-  useEffect(() => {
-    const startCycle = () => {
-      idleTimerRef.current = setInterval(() => {
-        setAutoCycleIndex(prev => {
-          if (prev === null) return 0;
-          return (prev + 1) % features.length;
-        });
-      }, 3000);
-    };
-
-    // Start immediately on mount
-    startCycle();
-
-    return () => {
-      if (idleTimerRef.current) clearInterval(idleTimerRef.current);
-    };
-  }, [features.length]);
-
-  const handleMouseEnter = (index: number) => {
-    if (idleTimerRef.current) clearInterval(idleTimerRef.current);
-    setAutoCycleIndex(null);
-    setHoveredIndex(index);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredIndex(null);
-    // Restart cycle after delay
-    idleTimerRef.current = setInterval(() => {
-      setAutoCycleIndex(prev => (prev === null ? 0 : (prev + 1) % features.length));
-    }, 3000);
-  };
-
-  const activeIndex = hoveredIndex !== null ? hoveredIndex : autoCycleIndex;
-
   return (
-    <div className="py-16 relative" ref={containerRef}>
-      <div className="text-center mb-12">
-         <span className="inline-block py-1 px-3 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider mb-3">{t('features.tag')}</span>
-         <h2 className="text-3xl font-bold text-gray-900">{t('features.explore')}</h2>
-      </div>
-      
-      {/* Grid Container with Blur Effect on Siblings */}
-      <div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto px-4 relative z-10 group/grid"
-        onMouseLeave={handleMouseLeave}
-      >
-        {features.map((f, i) => {
-          const isActive = activeIndex === i;
-          
-          return (
-            <div 
-              key={i}
-              onMouseEnter={() => handleMouseEnter(i)}
-              className={`
-                relative bg-white p-6 rounded-2xl border border-gray-100 shadow-sm 
-                transition-all duration-500 ease-out cursor-pointer group
-                ${isActive ? 'scale-105 shadow-xl z-20 ring-1 ring-black/5' : 'hover:border-gray-200'}
-                ${activeIndex !== null && !isActive ? 'opacity-50 blur-[2px] scale-95' : 'opacity-100 blur-0'}
-              `}
-            >
-               {/* Animated Tracing Border (SVG Rect) */}
-               {isActive && (
-                 <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-                    <svg className="absolute inset-0 w-full h-full">
-                       <rect 
-                         x="1" y="1" width="99%" height="99%" rx="15" ry="15"
-                         fill="none" 
-                         stroke={f.color} 
-                         strokeWidth="2" 
-                         strokeDasharray="400"
-                         strokeDashoffset="400"
-                         className="animate-[trace_2s_linear_infinite]"
-                       />
-                    </svg>
-                 </div>
-               )}
-
-               {/* Hover Popup */}
-               {isActive && <FeaturePreviewPopup feature={f} />}
-
-               {/* Standard Card Content */}
-               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors duration-300 ${isActive ? 'bg-gray-900 text-white' : f.bg}`}>
-                  <f.icon size={24} className={`transition-colors duration-300 ${isActive ? 'text-white' : f.color}`} />
-               </div>
-               
-               <div className="flex justify-between items-start relative z-10">
-                  <div>
-                     <h3 className={`text-lg font-bold mb-2 transition-colors ${isActive ? 'text-gray-900' : 'text-gray-900'}`}>{f.title}</h3>
-                     <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
-                  </div>
-                  <ArrowRight 
-                    size={16} 
-                    className={`transition-all duration-300 transform ${isActive ? 'opacity-100 translate-x-1 text-gray-900' : 'opacity-0 -translate-x-2 text-gray-300'}`} 
-                  />
-               </div>
-            </div>
-          );
-        })}
+    <div className="py-20 relative">
+      <div className="text-center mb-14 px-4">
+        <span className="inline-block py-1 px-3 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider mb-4 ring-1 ring-indigo-100 dark:ring-indigo-800/50">{t('features.tag')}</span>
+        <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-gray-900 dark:text-white tracking-tighter">{t('features.explore')}</h2>
       </div>
 
-      <style>{`
-        @keyframes trace {
-          0% { stroke-dashoffset: 400; }
-          100% { stroke-dashoffset: 0; }
-        }
-        @keyframes dash {
-          0% { stroke-dasharray: 0, 100; }
-          50% { stroke-dasharray: 75, 100; }
-          100% { stroke-dasharray: 0, 100; }
-        }
-        @keyframes toggle {
-          0% { transform: translateX(0); }
-          50% { transform: translateX(100%); background-color: currentColor; }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5 max-w-6xl mx-auto px-4">
+        {features.map(renderFeatureCard)}
+      </div>
     </div>
   );
 }
