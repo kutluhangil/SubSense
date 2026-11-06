@@ -3,10 +3,10 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 const isVercel = process.env.VERCEL === "1";
-const basePath = isVercel ? "/" : "/subsense/";
+const basePath = process.env.VITE_BASE_PATH || "/";
 const appUrl = isVercel
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`
-  : "https://subsense.app/";
+  : process.env.VITE_APP_URL || "https://subsense.app/";
 
 export default defineConfig({
   base: basePath,

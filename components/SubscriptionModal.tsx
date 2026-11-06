@@ -17,30 +17,9 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { BRAND_COLORS, CURRENCIES } from "../utils/data";
 import { EXCHANGE_RATES } from "../utils/currency";
 import { debugLog } from "../utils/debug";
+import type { Subscription } from "../types/subscription";
 
-export interface Subscription {
-  id: string | number;
-  name: string;
-  plan: string;
-  price: number;
-  originalPrice?: number;
-  currency: string;
-  cycle: "Monthly" | "Yearly";
-  nextDate: string;
-  startDate?: string;
-  type: string;
-  status: "Active" | "Trial" | "Expiring" | "Inactive";
-  trialEndDate?: string;
-  nickname?: string;
-  notes?: string;
-  billingDay?: number;
-  history?: number[];
-  category?: string;
-  reminderEnabled?: boolean;
-  logo?: string;
-  isShared?: boolean;
-  myShare?: number;
-}
+export type { Subscription } from "../types/subscription";
 
 interface SubscriptionModalProps {
   isOpen: boolean;

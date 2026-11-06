@@ -1,5 +1,5 @@
 
-import { Subscription } from '../components/SubscriptionModal';
+import { Subscription } from '../types/subscription';
 import { CURRENCIES } from './data';
 
 const DEBUG = false;

@@ -1,4 +1,3 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -25,8 +24,10 @@ service cloud.firestore {
       allow update: if isOwner(userId) && isVerified()
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
         
-      // Allow create (initial signup) - verification obviously not required yet
-      allow create: if isOwner(userId);
+      // Allow create (initial signup) - verification obviously not required yet.
+      // Prevent privilege escalation: plan must be omitted or initialized as free.
+      allow create: if isOwner(userId)
+        && (!('plan' in request.resource.data) || request.resource.data.plan.type == 'free');
       
       // SUBSCRIPTIONS SUB-COLLECTION (User's tracked items)
       // CRITICAL: Only verified users can manage subscriptions
@@ -36,12 +37,18 @@ service cloud.firestore {
     }
 
     match /feedback/{feedbackId} {
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 3000;
       allow read, update, delete: if false; 
     }
     
     match /beta_feedback/{feedbackId} {
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 3000;
       allow read, update, delete: if false;
     }
 

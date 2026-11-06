@@ -15,7 +15,8 @@ import AIAssistant from "./AIAssistant";
 import AIInsightsCard from "./AIInsightsCard";
 import CurrencySelector from "./CurrencySelector";
 import BudgetAlert from "./BudgetAlert";
-import Wrapped from "./Wrapped";
+
+const Wrapped = React.lazy(() => import("./Wrapped"));
 import {
   Plus,
   Bell,
@@ -336,6 +337,27 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       setIsAddModalOpen(false);
       setCurrentView("dashboard");
     }
+  };
+
+  const handleImportSubscriptions = async (importedSubs: Subscription[]) => {
+    if (!currentUser) return 0;
+    let addedCount = 0;
+    for (const sub of importedSubs) {
+      try {
+        const { id, ...subData } = sub;
+        const created = await addSubscription(currentUser.uid, subData);
+        if (created) {
+          addedCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to import subscription ${sub.name}:`, error);
+      }
+    }
+    if (addedCount > 0) {
+      trackEvent("subscriptions_imported", { count: addedCount });
+      showToast(`${addedCount} abonelik başarıyla içe aktarıldı.`);
+    }
+    return addedCount;
   };
 
   const handleMarkAsPaid = async (id: string | number) => {
@@ -792,7 +814,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
           <Suspense fallback={<LoadingFallback />}>
             <SettingsPage
               subscriptions={subscriptions}
-              onUpdateSubscriptions={undefined}
+              onImportSubscriptions={handleImportSubscriptions}
               user={user}
             />
           </Suspense>
@@ -928,6 +950,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       <AIAssistant
         isOpen={isAIOpen}
         onClose={() => setIsAIOpen(false)}
+        onOpen={() => setIsAIOpen(true)}
         subscriptions={subscriptions}
         currentPage={currentView}
       />
@@ -941,11 +964,15 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       />
 
       {/* SubSense Wrapped — annual recap overlay */}
-      <Wrapped
-        isOpen={isWrappedOpen}
-        onClose={() => setIsWrappedOpen(false)}
-        subscriptions={subscriptions}
-      />
+      <Suspense fallback={null}>
+        {isWrappedOpen && (
+          <Wrapped
+            isOpen={isWrappedOpen}
+            onClose={() => setIsWrappedOpen(false)}
+            subscriptions={subscriptions}
+          />
+        )}
+      </Suspense>
 
       {/* Onboarding Tour */}
       {showOnboarding && (

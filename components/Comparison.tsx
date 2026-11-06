@@ -3,6 +3,8 @@ import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, S
 import { BrandIcon } from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Subscription } from './SubscriptionModal';
 import { EXCHANGE_RATES, CURRENCY_DATA, convertAmount } from '../utils/currency';
 import { debugLog } from '../utils/debug';
 import { RegionLineChart } from './AnalyticsCharts';
@@ -318,6 +320,77 @@ const AIInsightsPanel = ({ data, serviceName, baseCurrencySymbol }: { data: Pric
    );
 };
 
+interface MyPriceCardProps {
+   sub: Subscription;
+   cheapest: PricingData | null;
+   baseCurrency: string;
+   baseCurrencySymbol: string;
+}
+
+const MyPriceComparisonCard = ({ sub, cheapest, baseCurrency, baseCurrencySymbol }: MyPriceCardProps) => {
+   const { t } = useLanguage();
+   const myPriceInBase = convertAmount(sub.price, sub.currency, baseCurrency);
+   const diff = cheapest ? myPriceInBase - cheapest.displayPrice : 0;
+   const diffPercent = cheapest && cheapest.displayPrice > 0 ? Math.round((diff / cheapest.displayPrice) * 100) : 0;
+   const isPayingMore = diff > 0.05;
+
+   return (
+      <div className="bg-gradient-to-br from-indigo-50/90 via-blue-50/40 to-white dark:from-indigo-950/40 dark:via-gray-800 dark:to-gray-800 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 p-4 shadow-sm">
+         <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+               <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm">
+                  <Sparkles size={14} />
+               </div>
+               <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
+                     {t('compare.my_price_title')}
+                  </h4>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                     {sub.name} ({sub.plan || sub.cycle})
+                  </p>
+               </div>
+            </div>
+            {cheapest && (
+               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPayingMore ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'}`}>
+                  {isPayingMore ? `+%${diffPercent}` : t('compare.best_price')}
+               </span>
+            )}
+         </div>
+
+         <div className="grid grid-cols-2 gap-3 pt-2 border-t border-indigo-100/60 dark:border-gray-700/60">
+            <div>
+               <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">
+                  {t('compare.your_price')}
+               </span>
+               <div className="text-sm font-extrabold text-gray-900 dark:text-white">
+                  {sub.currency} {sub.price.toFixed(2)}
+               </div>
+               {sub.currency !== baseCurrency && (
+                  <span className="text-[10px] text-gray-400">
+                     ≈ {baseCurrencySymbol}{myPriceInBase.toFixed(2)}
+                  </span>
+               )}
+            </div>
+
+            {cheapest && (
+               <div>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">
+                     {t('compare.cheapest_country')}
+                  </span>
+                  <div className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                     <span>{COUNTRY_CONFIG[cheapest.country]?.flag}</span>
+                     <span>{baseCurrencySymbol}{cheapest.displayPrice.toFixed(2)}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 truncate block">
+                     {cheapest.country} ({cheapest.currency} {cheapest.price.toLocaleString()})
+                  </span>
+               </div>
+            )}
+         </div>
+      </div>
+   );
+};
+
 const SavingsComparisonBox = ({ data, baseCountry = 'United States', baseCurrencySymbol }: { data: PricingData[], baseCountry?: string, baseCurrencySymbol: string }) => {
    // TEMP: Disabled until robust currency logic is verified.
    // Returning null hides this misleading section.
@@ -386,6 +459,7 @@ const RegionalPriceTable = ({ data, baseCurrencySymbol }: { data: PricingData[],
 
 export default function Comparison() {
    const { t, currentCurrency } = useLanguage(); // Use context currency as default
+   const { subscriptions } = useAuth();
    const [selectedService, setSelectedService] = useState('Netflix');
    const [baseCurrency, setBaseCurrency] = useState(currentCurrency);
 
@@ -399,19 +473,23 @@ export default function Comparison() {
 
    // Real-time calculation based on exchange rates and selected base currency
    const currentData = useMemo(() => {
-      // debugLog('COMPARE_CALC', `Recalculating comparison for ${selectedService}`, { baseCurrency }); // Reduced verbosity
-      const marketData = generateLivePricing(selectedService, baseCurrency);
-
-      // Inject User's Actual Price if they have this subscription
-      // Note: We need access to subscriptions here. For now, we assume standard market rates are the focus.
-      // If we wanted to compare "My Netlfix" vs "Global Netflix", we'd pass subs as props.
-      // Leaving as Market Analysis tool for now per design.
-      return marketData;
+      return generateLivePricing(selectedService, baseCurrency);
    }, [selectedService, baseCurrency]);
 
-   // TODO: Future feature - "Compare with my price"
-   // const mySub = subscriptions.find(s => s.name === selectedService);
+   // Find user's active subscription matching the selected service
+   const mySub = useMemo(() => {
+      if (!subscriptions || subscriptions.length === 0) return null;
+      const target = selectedService.toLowerCase().trim();
+      return subscriptions.find(s => {
+         const name = s.name.toLowerCase().trim();
+         return name === target || name.replace(/[^a-z0-9]/g, '') === target.replace(/[^a-z0-9]/g, '');
+      }) || null;
+   }, [subscriptions, selectedService]);
 
+   const cheapestCountry = useMemo(() => {
+      if (!currentData || currentData.length === 0) return null;
+      return [...currentData].sort((a, b) => a.displayPrice - b.displayPrice)[0];
+   }, [currentData]);
 
    return (
       <div className="space-y-6 pb-12 animate-in fade-in duration-500">
@@ -434,7 +512,7 @@ export default function Comparison() {
                      value={selectedService}
                      onChange={(e) => setSelectedService(e.target.value)}
                   >
-                     {ALL_SUBSCRIPTIONS.slice(0, 20).map(s => <option key={s} value={s}>{s}</option>)}
+                     {ALL_SUBSCRIPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                   <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
                </div>
@@ -454,9 +532,45 @@ export default function Comparison() {
                   <ChevronDown size={16} className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
                </div>
             </div>
-            {/* Savings Box takes up remaining space */}
+            {/* Quick Price Status Box */}
             <div className="md:col-span-2">
-               <SavingsComparisonBox data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
+               {mySub ? (
+                  <div className="h-full flex items-center justify-between p-3.5 bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-white dark:from-indigo-950/40 dark:via-gray-800 dark:to-gray-800 rounded-xl border border-indigo-100 dark:border-indigo-900/50 shadow-sm text-xs">
+                     <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm shrink-0">
+                           <Sparkles size={14} />
+                        </div>
+                        <div>
+                           <span className="font-bold text-gray-900 dark:text-white block">
+                              {t('compare.your_price')}: {mySub.currency} {mySub.price.toFixed(2)}
+                           </span>
+                           <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                              {mySub.name} ({mySub.plan || mySub.cycle})
+                           </span>
+                        </div>
+                     </div>
+                     {cheapestCountry && (
+                        <div className="text-right shrink-0 ml-2">
+                           <span className="text-[10px] uppercase font-bold text-gray-400 block">{t('compare.cheapest_country')}</span>
+                           <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                              {COUNTRY_CONFIG[cheapestCountry.country]?.flag} {cheapestCountry.country} ({baseCurrencySymbol}{cheapestCountry.displayPrice.toFixed(2)})
+                           </span>
+                        </div>
+                     )}
+                  </div>
+               ) : (
+                  <div className="h-full flex items-center justify-between p-3.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm text-xs text-gray-400">
+                     <div className="flex items-center gap-2">
+                        <Globe size={16} className="text-gray-400 shrink-0" />
+                        <span>{t('compare.not_subscribed')}</span>
+                     </div>
+                     {cheapestCountry && (
+                        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 shrink-0 ml-2">
+                           {COUNTRY_CONFIG[cheapestCountry.country]?.flag} {t('compare.cheapest_country')}: {baseCurrencySymbol}{cheapestCountry.displayPrice.toFixed(2)}
+                        </span>
+                     )}
+                  </div>
+               )}
             </div>
          </div>
 
@@ -501,8 +615,16 @@ export default function Comparison() {
                <AIInsightsPanel data={currentData} serviceName={selectedService} baseCurrencySymbol={baseCurrencySymbol} />
             </div>
 
-            {/* Right Column: Comparison Table */}
-            <div className="lg:col-span-1 h-full">
+            {/* Right Column: Comparison Table & User Price Comparison */}
+            <div className="lg:col-span-1 h-full flex flex-col gap-4">
+               {mySub && (
+                  <MyPriceComparisonCard
+                     sub={mySub}
+                     cheapest={cheapestCountry}
+                     baseCurrency={baseCurrency}
+                     baseCurrencySymbol={baseCurrencySymbol}
+                  />
+               )}
                <RegionalPriceTable data={currentData} baseCurrencySymbol={baseCurrencySymbol} />
             </div>
          </div>

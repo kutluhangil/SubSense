@@ -1,4 +1,16 @@
 
+/**
+ * REST API Yardımcı İstemcisi (HTTP Client)
+ *
+ * NOT: Mevcut SubSense frontend mimarisi doğrudan Firestore Client SDK ve
+ * Firebase Cloud Functions (httpsCallable) kullandığından, bu modül şu anda
+ * frontend bileşenleri tarafından doğrudan import edilmemektedir.
+ *
+ * İleride bir REST API / proxy uç noktası eklenmek istenirse başvurulabilecek,
+ * Firebase Auth token yönetimi ve standart hata yakalama mekanizmasını içeren
+ * yardımcı bir modüldür.
+ */
+
 import { auth } from '../firebase/firebase';
 
 const API_BASE_URL = '/api';

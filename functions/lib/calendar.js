@@ -45,8 +45,11 @@ exports.generateCalendarFeed = functions.https.onRequest(async (req, res) => {
     }
     const db = getDb();
     try {
-        // Find user by calendarToken
-        const usersSnapshot = await db.collection("users").where("calendarToken", "==", token).limit(1).get();
+        // Find user by calendarToken (check preferences.calendarToken first, then fallback to root calendarToken)
+        let usersSnapshot = await db.collection("users").where("preferences.calendarToken", "==", token).limit(1).get();
+        if (usersSnapshot.empty) {
+            usersSnapshot = await db.collection("users").where("calendarToken", "==", token).limit(1).get();
+        }
         if (usersSnapshot.empty) {
             res.status(404).send("Invalid token or user not found");
             return;

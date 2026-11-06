@@ -8,6 +8,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FeedbackProvider } from './contexts/FeedbackContext';
 import { migrateLocalData } from './utils/firestore';
+import { loadPriceCatalog } from './utils/priceCatalog';
 import { WifiOff, Loader2 } from 'lucide-react';
 import { trackPageView } from './utils/analytics';
 
@@ -42,6 +43,10 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<'home' | 'features' | 'reset-password'>('home');
   const { setCurrency, t } = useLanguage();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    loadPriceCatalog();
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

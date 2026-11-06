@@ -1,5 +1,5 @@
 
-import { Subscription } from '../components/SubscriptionModal';
+import { Subscription } from '../types/subscription';
 import { convertAmount } from './currency';
 import { validateSubscription } from './validateSubscription';
 

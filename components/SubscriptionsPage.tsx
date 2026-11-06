@@ -28,15 +28,15 @@ export default function SubscriptionsPage({
 
   const toMonthlyBase = (s: Subscription) => convert(s.cycle === 'Monthly' ? s.price : s.price / 12, s.currency);
 
-  const activeSubs = subscriptions.filter((s) => s.status === 'Active');
+  const activeSubs = subscriptions.filter((s) => s.status === 'Active' || s.status === 'Trial');
   const monthlyTotal = activeSubs.reduce((a, s) => a + toMonthlyBase(s), 0);
   const yearlyTotal = monthlyTotal * 12;
   const avgPerSub = activeSubs.length ? monthlyTotal / activeSubs.length : 0;
 
   const filtered = useMemo(() => {
     return subscriptions.filter((s) => {
-      if (status === 'active' && s.status !== 'Active') return false;
-      if (status === 'cancelled' && s.status === 'Active') return false;
+      if (status === 'active' && !(s.status === 'Active' || s.status === 'Trial')) return false;
+      if (status === 'cancelled' && !(s.status === 'Inactive' || s.status === 'Expiring')) return false;
       if (query.trim() && !s.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
       return true;
     });

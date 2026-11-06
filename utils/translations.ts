@@ -529,6 +529,11 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "compare.regional_pricing": "Regional Pricing",
     "compare.live": "Live",
     "compare.ai_insights": "AI Price Insights",
+    "compare.my_price_title": "Your Plan vs Market",
+    "compare.your_price": "Your Price",
+    "compare.cheapest_country": "Cheapest Country",
+    "compare.not_subscribed": "You don't have an active subscription for this service.",
+    "compare.best_price": "Best Price",
 
     // Help Center
     "help.title": "Help Center",
@@ -1373,6 +1378,11 @@ export const translations: Record<LanguageCode, Record<string, string>> = {
     "compare.regional_pricing": "Bölgesel Fiyatlandırma",
     "compare.live": "Canlı",
     "compare.ai_insights": "Yapay Zeka Fiyat İçgörüleri",
+    "compare.my_price_title": "Senin Fiyatın vs Pazar",
+    "compare.your_price": "Senin Fiyatın",
+    "compare.cheapest_country": "En Ucuz Ülke",
+    "compare.not_subscribed": "Bu servis için kayıtlı aktif bir aboneliğin yok.",
+    "compare.best_price": "En İyi Fiyat",
 
     // Help Center
     "help.title": "Yardım Merkezi",

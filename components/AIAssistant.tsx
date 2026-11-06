@@ -9,6 +9,7 @@ import { trackEvent } from '../utils/analytics';
 interface AIAssistantProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpen?: () => void;
   subscriptions: Subscription[];
   currentPage: string;
 }
@@ -18,7 +19,7 @@ interface Message {
   text: string;
 }
 
-export default function AIAssistant({ isOpen, onClose, subscriptions, currentPage }: AIAssistantProps) {
+export default function AIAssistant({ isOpen, onClose, onOpen, subscriptions, currentPage }: AIAssistantProps) {
   const { currentCurrency, currentLanguage, t } = useLanguage();
 
   // Initialize messages with localized welcome
@@ -92,7 +93,7 @@ export default function AIAssistant({ isOpen, onClose, subscriptions, currentPag
       {/* Floating Trigger (Mobile / Global fallback) */}
       {!isOpen && (
         <button
-          onClick={onClose} // Toggles open in parent
+          onClick={() => (onOpen ? onOpen() : onClose())}
           className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform duration-300 group"
         >
           <Sparkles className="w-6 h-6 animate-pulse" />

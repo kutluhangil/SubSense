@@ -56,7 +56,11 @@ const symbolFor = (code) => CURRENCY_SYMBOLS[code] || code || "";
 // Normalize a subscription's price to a monthly amount.
 // Yearly subs are divided by 12; Monthly (and anything else) are taken as-is.
 const monthlyAmount = (price, cycle) => cycle === "Yearly" ? price / 12 : price;
-exports.sendRenewalReminders = functions.pubsub.schedule("every day 09:00").timeZone("Europe/Istanbul").onRun(async (context) => {
+exports.sendRenewalReminders = functions
+    .runWith({ timeoutSeconds: 300, memory: "512MB" })
+    .pubsub.schedule("every day 09:00")
+    .timeZone("Europe/Istanbul")
+    .onRun(async (context) => {
     const db = getDb();
     const resend = getResend();
     if (!resend)
@@ -70,35 +74,40 @@ exports.sendRenewalReminders = functions.pubsub.schedule("every day 09:00").time
     try {
         const usersSnap = await db.collection("users").get();
         for (const userDoc of usersSnap.docs) {
-            const userData = userDoc.data();
-            const email = userData.email;
-            if (!email)
-                continue;
-            const subsSnap = await db.collection(`users/${userDoc.id}/subscriptions`).where("status", "==", "Active").get();
-            for (const subDoc of subsSnap.docs) {
-                const sub = subDoc.data();
-                if (!sub.nextDate || sub.reminderEnabled === false)
+            try {
+                const userData = userDoc.data();
+                const email = userData.email;
+                if (!email)
                     continue;
-                const subDate = new Date(sub.nextDate);
-                const timeDiff = subDate.getTime() - new Date().getTime();
-                const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                if (daysUntil === 3) {
-                    // Send reminder 3 days before
-                    await resend.emails.send({
-                        from: "SubSense <noreply@subsense.app>",
-                        to: [email],
-                        subject: `Yaklaşan Ödeme: ${sub.name} (3 Gün Kaldı)`,
-                        html: `
-              <h2>Abonelik Yenileme Hatırlatıcısı</h2>
-              <p>Merhaba,</p>
-              <p><strong>${sub.name}</strong> aboneliğiniz 3 gün sonra yenilenecek.</p>
-              <p>Tutar: <strong>${sub.price} ${sub.currency}</strong></p>
-              <p>Eğer kullanmıyorsanız iptal etmeyi unutmayın!</p>
-              <br/>
-              <p>SubSense Ekibi</p>
-            `
-                    });
+                const subsSnap = await db.collection(`users/${userDoc.id}/subscriptions`).where("status", "==", "Active").get();
+                for (const subDoc of subsSnap.docs) {
+                    const sub = subDoc.data();
+                    if (!sub.nextDate || sub.reminderEnabled === false)
+                        continue;
+                    const subDate = new Date(sub.nextDate);
+                    const timeDiff = subDate.getTime() - new Date().getTime();
+                    const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (daysUntil === 3) {
+                        // Send reminder 3 days before
+                        await resend.emails.send({
+                            from: "SubSense <noreply@subsense.app>",
+                            to: [email],
+                            subject: `Yaklaşan Ödeme: ${sub.name} (3 Gün Kaldı)`,
+                            html: `
+                  <h2>Abonelik Yenileme Hatırlatıcısı</h2>
+                  <p>Merhaba,</p>
+                  <p><strong>${sub.name}</strong> aboneliğiniz 3 gün sonra yenilenecek.</p>
+                  <p>Tutar: <strong>${sub.price} ${sub.currency}</strong></p>
+                  <p>Eğer kullanmıyorsanız iptal etmeyi unutmayın!</p>
+                  <br/>
+                  <p>SubSense Ekibi</p>
+                `
+                        });
+                    }
                 }
+            }
+            catch (userErr) {
+                console.error(`Renewal reminder failed for user ${userDoc.id}:`, userErr);
             }
         }
     }

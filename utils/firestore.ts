@@ -12,12 +12,11 @@ import {
   getDocs,
   serverTimestamp,
   increment,
-  Timestamp,
-  where
+  Timestamp
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../firebase/firebase';
-import { Subscription } from '../components/SubscriptionModal';
+import { Subscription } from '../types/subscription';
 import { validateSubscription } from './validateSubscription';
 import { trackEvent } from './analytics';
 
@@ -55,6 +54,7 @@ export interface UserProfileData {
     region: string;
     analyticsOptOut?: boolean;
     privacy?: { showSpending: boolean; showSubscriptions: boolean };
+    profile?: any;
   };
   stats: {
     totalSubscriptions: number;
@@ -221,21 +221,15 @@ export const updateUserSettings = async (uid: string, settings: any) => {
   }
 };
 
-export const updateUserPlan = async (uid: string, planData: Partial<UserProfileData['plan']>) => {
-  try {
-    const userRef = doc(db, 'users', uid);
-    await updateDoc(userRef, { plan: planData });
-  } catch (error) {
-    console.error("Error updating plan:", error);
-    // Fallback for demo/local environment without write permissions to 'plan' specifically
-    const localKey = `${FALLBACK_KEY_PREFIX}profile_${uid}`;
-    const current = getLocalData<UserProfileData>(localKey);
-    if (current) {
-      current.plan = { ...current.plan, ...planData };
-      setLocalData(localKey, current);
-    }
-    throw error;
-  }
+/**
+ * @deprecated Direct client-side user plan updates are disabled for security.
+ * Plan upgrades are managed exclusively via Stripe Checkout and verified by backend webhooks.
+ */
+export const updateUserPlan = async (_uid: string, _planData: Partial<UserProfileData['plan']>) => {
+  console.warn(
+    "[Security] Client-side updateUserPlan is disabled. Upgrades must be initiated via Stripe Checkout."
+  );
+  // Safe no-op to prevent unauthorized plan privilege escalation
 };
 
 export const updateUserActivity = async (uid: string) => {
@@ -437,91 +431,6 @@ export const migrateLocalData = async (uid: string, localSubs: Subscription[]) =
   });
 
   await Promise.all(promises);
-};
-
-// --- Friends System ---
-
-export const searchUsers = async (searchTerm: string, currentUserId: string): Promise<UserProfileData[]> => {
-  const term = searchTerm.trim().toLowerCase();
-  if (!term) return [];
-
-  try {
-    // Query by exact email match (most reliable without full-text search)
-    const snapshot = await getDocs(
-      query(
-        collection(db, 'users'),
-        where('email', '==', term)
-      )
-    );
-
-    const results: UserProfileData[] = [];
-    snapshot.forEach((d) => {
-      const data = d.data() as UserProfileData;
-      // Exclude the current user from results
-      if (data.uid !== currentUserId) {
-        results.push(data);
-      }
-    });
-
-    return results;
-  } catch (e: any) {
-    console.error("Error searching users:", e);
-    return [];
-  }
-};
-
-export const sendFriendRequest = async (fromUid: string, toUid: string) => {
-  try {
-    await setDoc(doc(db, 'users', toUid, 'friendRequests', fromUid), {
-      fromUid,
-      status: 'pending',
-      timestamp: serverTimestamp()
-    });
-    await setDoc(doc(db, 'users', fromUid, 'sentRequests', toUid), {
-      toUid,
-      status: 'pending',
-      timestamp: serverTimestamp()
-    });
-  } catch (e) {
-    console.error("Error sending friend request:", e);
-  }
-};
-
-export const acceptFriendRequest = async (currentUid: string, senderUid: string) => {
-  try {
-    await setDoc(doc(db, 'users', currentUid, 'friends', senderUid), {
-      uid: senderUid,
-      since: serverTimestamp()
-    });
-    await setDoc(doc(db, 'users', senderUid, 'friends', currentUid), {
-      uid: currentUid,
-      since: serverTimestamp()
-    });
-
-    await deleteDoc(doc(db, 'users', currentUid, 'friendRequests', senderUid));
-    await deleteDoc(doc(db, 'users', senderUid, 'sentRequests', currentUid));
-  } catch (e) {
-    console.error("Friend acceptance failed:", e);
-    throw e;
-  }
-};
-
-export const getFriendsList = async (uid: string): Promise<string[]> => {
-  try {
-    const snap = await getDocs(collection(db, 'users', uid, 'friends'));
-    return snap.docs.map(d => d.id);
-  } catch (e) {
-    return [];
-  }
-};
-
-export const getIncomingRequests = async (uid: string) => {
-  try {
-    const snap = await getDocs(collection(db, 'users', uid, 'friendRequests'));
-    return snap.docs.map(d => d.id);
-  } catch (e) {
-    return [];
-  }
 };
 
 // --- System ---

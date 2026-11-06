@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { updateUserSettings } from '../utils/firestore';
 import { User as AuthUser } from '../App';
 import { Subscription } from './SubscriptionModal';
 import { BrandIcon } from './BrandIcon';
@@ -26,9 +27,24 @@ const monthly = (s: Subscription) => (s.cycle === 'Monthly' ? s.price : s.price 
 
 export default function Profile({ user, subscriptions, userKey }: ProfileProps) {
   const { t, formatPrice, convert } = useLanguage();
-  const { isPro, currentUser } = useAuth();
+  const { isPro, currentUser, userProfile } = useAuth();
 
   const [profileData, setProfileData] = useState(() => {
+    // 1. First check cloud profile from Firestore
+    const cloudProfile = userProfile?.preferences?.profile;
+    if (cloudProfile) {
+      return {
+        bio: '',
+        location: '',
+        website: '',
+        phone: '',
+        avatar: DEFAULT_AVATAR,
+        coverImage: null,
+        joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        ...cloudProfile,
+      };
+    }
+    // 2. Fallback to localStorage
     try {
       const saved = localStorage.getItem(`subscriptionhub.${userKey}.profile`);
       if (saved) return JSON.parse(saved);
@@ -45,6 +61,17 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
       joinedDate: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
     };
   });
+
+  // Sync profile when loaded from Firestore asynchronously
+  useEffect(() => {
+    const cloudProfile = userProfile?.preferences?.profile;
+    if (cloudProfile) {
+      setProfileData((prev) => ({
+        ...prev,
+        ...cloudProfile,
+      }));
+    }
+  }, [userProfile?.preferences?.profile]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -103,10 +130,18 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
   }, [profileData, userKey]);
 
   const handleInputChange = (field: string, value: string) => setProfileData((p) => ({ ...p, [field]: value }));
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsEditing(false);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+
+    if (currentUser?.uid) {
+      try {
+        await updateUserSettings(currentUser.uid, { profile: profileData });
+      } catch (err) {
+        console.error('Failed to sync profile to Firestore:', err);
+      }
+    }
   };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     const file = e.target.files?.[0];
@@ -121,8 +156,18 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
     }
     e.target.value = '';
   };
-  const handleCropComplete = (cropped: string) =>
-    setProfileData((p) => ({ ...p, [cropperType === 'avatar' ? 'avatar' : 'coverImage']: cropped }));
+  const handleCropComplete = (cropped: string) => {
+    const updated = {
+      ...profileData,
+      [cropperType === 'avatar' ? 'avatar' : 'coverImage']: cropped,
+    };
+    setProfileData(updated);
+    if (currentUser?.uid) {
+      updateUserSettings(currentUser.uid, { profile: updated }).catch((err) =>
+        console.error('Failed to sync image to Firestore profile:', err)
+      );
+    }
+  };
 
   const inputCls =
     'w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-sm text-gray-900 dark:text-white transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-gray-50/50 disabled:text-gray-500 dark:disabled:bg-gray-800';

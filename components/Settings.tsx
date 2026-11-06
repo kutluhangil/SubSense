@@ -47,18 +47,21 @@ import { doc, updateDoc } from "firebase/firestore";
 interface SettingsProps {
   subscriptions?: Subscription[];
   onUpdateSubscriptions?: React.Dispatch<React.SetStateAction<Subscription[]>>;
+  onImportSubscriptions?: (subs: Subscription[]) => Promise<number | void>;
   user?: User;
 }
 
 export default function Settings({
   subscriptions = [],
   onUpdateSubscriptions,
+  onImportSubscriptions,
   user,
 }: SettingsProps) {
-  const { t, currentCurrency, setCurrency, currentTheme, setTheme } =
+  const { t, currentCurrency, setCurrency, currentTheme, setTheme, currentLanguage } =
     useLanguage();
   const { currentUser, userProfile, isPro, logout } = useAuth();
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -173,10 +176,10 @@ export default function Settings({
 
   const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !onUpdateSubscriptions) return;
+    if (!file || (!onImportSubscriptions && !onUpdateSubscriptions)) return;
     setIsImporting(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
         const lines = text.split("\n").filter((l) => l.trim());
@@ -224,9 +227,25 @@ export default function Settings({
           return;
         }
 
-        onUpdateSubscriptions((prev) => [...prev, ...imported]);
+        let count = imported.length;
+        if (onImportSubscriptions) {
+          const res = await onImportSubscriptions(imported);
+          if (typeof res === "number") {
+            count = res;
+          }
+        } else if (onUpdateSubscriptions) {
+          onUpdateSubscriptions((prev) => [...prev, ...imported]);
+        }
+
+        const msg = currentLanguage === "tr"
+          ? `${count} abonelik başarıyla içe aktarıldı.`
+          : `${count} subscription(s) successfully imported.`;
+        setToastMessage(msg);
         setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+        setTimeout(() => {
+          setShowToast(false);
+          setToastMessage(null);
+        }, 3000);
       } catch {
         alert(t("settings.import_error"));
       } finally {
@@ -748,14 +767,14 @@ export default function Settings({
       </div>
 
       {/* Confirmation Toast */}
-      {showToast && (
+      {(showToast || !!toastMessage) && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 transition-all duration-300 z-[100] animate-in slide-in-from-bottom-4 fade-in">
           <CheckCircle2
             size={18}
             className="text-green-400 dark:text-green-600"
           />
           <span className="font-medium text-sm">
-            {t("settings.saved_toast")}
+            {toastMessage || t("settings.saved_toast")}
           </span>
         </div>
       )}

@@ -126,7 +126,7 @@ exports.createPortalSession = functions.https.onCall(async (data, context) => {
 });
 // 3. Webhook Handler
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-    var _a, _b;
+    var _a, _b, _c, _d, _e;
     const signature = req.headers["stripe-signature"];
     const webhookSecret = (_a = functions.config().stripe) === null || _a === void 0 ? void 0 : _a.webhook_secret;
     if (!stripe || !webhookSecret) {
@@ -152,6 +152,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 if (uid) {
                     // Retrieve the subscription details to get the period end
                     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                    const interval = ((_e = (_d = (_c = subscription.items.data[0]) === null || _c === void 0 ? void 0 : _c.price) === null || _d === void 0 ? void 0 : _d.recurring) === null || _e === void 0 ? void 0 : _e.interval) || "month";
                     await db.collection("users").doc(uid).set({
                         plan: {
                             type: "pro",
@@ -159,7 +160,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                             stripeCustomerId: customerId,
                             stripeSubscriptionId: subscriptionId,
                             currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-                            interval: "month" // Simplified, ideally fetch from price object
+                            interval
                         }
                     }, { merge: true });
                 }
@@ -225,13 +226,22 @@ exports.searchUsers = functions.https.onCall(async (data, context) => {
         snap.forEach((doc) => {
             if (doc.id !== callerUid) {
                 const userData = doc.data();
+                const preferences = userData.preferences || { region: 'Unknown', baseCurrency: 'USD' };
+                const privacy = preferences.privacy;
+                const stats = Object.assign({}, (userData.stats || { totalSubscriptions: 0, monthlySpend: 0 }));
+                if ((privacy === null || privacy === void 0 ? void 0 : privacy.showSubscriptions) === false) {
+                    stats.totalSubscriptions = 0;
+                }
+                if ((privacy === null || privacy === void 0 ? void 0 : privacy.showSpending) === false) {
+                    stats.monthlySpend = 0;
+                }
                 // Return only safe public info to avoids leaking sensitive data like 'plan' details if unnecessary
                 results.push({
                     uid: doc.id,
                     email: userData.email,
                     displayName: userData.displayName,
-                    stats: userData.stats || { totalSubscriptions: 0, monthlySpend: 0 },
-                    preferences: userData.preferences || { region: 'Unknown', baseCurrency: 'USD' }
+                    stats,
+                    preferences
                 });
             }
         });
@@ -325,11 +335,23 @@ async function sendEmail(to, subject, html) {
 }
 // 7. Delete User Account (wipes Auth + Firestore)
 exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
+    var _a, _b;
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
     const uid = context.auth.uid;
     try {
+        // If user has an active Stripe subscription, cancel it in Stripe
+        const userDoc = await db.collection("users").doc(uid).get();
+        const subscriptionId = (_b = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan) === null || _b === void 0 ? void 0 : _b.stripeSubscriptionId;
+        if (subscriptionId && stripe) {
+            try {
+                await stripe.subscriptions.cancel(subscriptionId);
+            }
+            catch (stripeErr) {
+                console.error("Failed to cancel Stripe subscription during account deletion:", stripeErr);
+            }
+        }
         // Delete all sub-collections in a batch
         const batch = db.batch();
         const collectionsToDelete = ['subscriptions', 'friends', 'friendRequests', 'sentRequests'];
@@ -383,11 +405,32 @@ async function callGeminiRaw(contents, systemInstruction, responseMimeType) {
     const data = await res.json();
     return ((_f = (_e = (_d = (_c = (_b = data === null || data === void 0 ? void 0 : data.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e[0]) === null || _f === void 0 ? void 0 : _f.text) || null;
 }
+async function verifyProAccess(uid) {
+    var _a;
+    const userDoc = await db.collection("users").doc(uid).get();
+    const plan = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan;
+    let isProUntilActive = false;
+    const rawProUntil = plan === null || plan === void 0 ? void 0 : plan.proUntil;
+    if (typeof rawProUntil === "number") {
+        isProUntilActive = rawProUntil > Date.now();
+    }
+    else if (rawProUntil && typeof rawProUntil.toMillis === "function") {
+        isProUntilActive = rawProUntil.toMillis() > Date.now();
+    }
+    else if (rawProUntil && typeof rawProUntil.seconds === "number") {
+        isProUntilActive = rawProUntil.seconds * 1000 > Date.now();
+    }
+    const isPro = ((plan === null || plan === void 0 ? void 0 : plan.type) === "pro" && (plan === null || plan === void 0 ? void 0 : plan.status) === "active") || isProUntilActive;
+    if (!isPro) {
+        throw new functions.https.HttpsError("permission-denied", "AI features require an active Pro subscription or referral trial.");
+    }
+}
 // 8. Gemini Insights Proxy (single-turn, JSON response)
 exports.geminiProxy = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
     }
+    await verifyProAccess(context.auth.uid);
     const { prompt, systemInstruction } = data;
     if (!prompt || typeof prompt !== "string") {
         throw new functions.https.HttpsError("invalid-argument", "prompt is required.");
@@ -400,6 +443,7 @@ exports.geminiChatProxy = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
     }
+    await verifyProAccess(context.auth.uid);
     const { history, userMessage, systemInstruction } = data;
     if (!userMessage || typeof userMessage !== "string") {
         throw new functions.https.HttpsError("invalid-argument", "userMessage is required.");

@@ -26,6 +26,24 @@ interface ProfileCardModalProps {
   user: UserProfile | null;
 }
 
+const getSafeWebsiteUrl = (url?: string): string | null => {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith('javascript:') ||
+    lower.startsWith('data:') ||
+    lower.startsWith('vbscript:')
+  ) {
+    return null;
+  }
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+};
+
 export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardModalProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const { t } = useLanguage();
@@ -40,6 +58,8 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
   }, [isOpen]);
 
   if (!isOpen || !user) return null;
+
+  const safeWebsite = getSafeWebsiteUrl(user.website);
 
   const formatMessage = (template: string, ...args: string[]) => {
     return template.replace(/{(\d+)}/g, (match, number) => {
@@ -114,8 +134,8 @@ export default function ProfileCardModal({ isOpen, onClose, user }: ProfileCardM
                     <Calendar size={12} /> {formatMessage(t('profile.joined'), user.joinedDate)}
                   </span>
               )}
-              {user.website && (
-                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs font-medium text-blue-600 dark:text-blue-400 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+              {safeWebsite && (
+                  <a href={safeWebsite} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-xs font-medium text-blue-600 dark:text-blue-400 shadow-sm hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
                     <LinkIcon size={12} /> {t('profile.website')}
                   </a>
               )}

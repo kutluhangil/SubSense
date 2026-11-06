@@ -17,6 +17,7 @@ import * as admin from "firebase-admin";
  */
 
 const REWARD_DAYS = 30;
+const MAX_REFERRALS = 12; // Maximum 12 referrals (360 days of Pro cap)
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const getDb = () => {
@@ -107,11 +108,12 @@ export const getReferralCode = functions.https.onCall(async (_data, context) => 
         ? (proUntil as admin.firestore.Timestamp).toMillis()
         : null;
 
+    const referredCount = (referral.referredCount as number) || 0;
     return {
       status: "ok",
       code,
-      referredCount: (referral.referredCount as number) || 0,
-      proDaysEarned: ((referral.referredCount as number) || 0) * REWARD_DAYS,
+      referredCount,
+      proDaysEarned: Math.min(referredCount, MAX_REFERRALS) * REWARD_DAYS,
       proUntil: proUntilMs,
     };
   } catch (error) {
@@ -160,10 +162,12 @@ export const redeemReferral = functions.https.onCall(async (data, context) => {
     }
 
     const referrerData = referrerDoc.data() || {};
+    const referrerReferral = (referrerData.referral as Record<string, unknown>) || {};
+    const referrerReferredCount = (referrerReferral.referredCount as number) || 0;
 
     // Grant both users 30 days of Pro by extending plan.proUntil.
+    // Cap referrer reward at MAX_REFERRALS to prevent bot/spam attacks from gaining infinite Pro.
     const newUserProUntil = extendProUntil((newUserData.plan as Record<string, unknown>)?.proUntil);
-    const referrerProUntil = extendProUntil((referrerData.plan as Record<string, unknown>)?.proUntil);
 
     const batch = db.batch();
 
@@ -176,12 +180,18 @@ export const redeemReferral = functions.https.onCall(async (data, context) => {
       { merge: true }
     );
 
+    const referrerUpdates: Record<string, unknown> = {
+      referral: { referredCount: admin.firestore.FieldValue.increment(1) },
+    };
+
+    if (referrerReferredCount < MAX_REFERRALS) {
+      const referrerProUntil = extendProUntil((referrerData.plan as Record<string, unknown>)?.proUntil);
+      referrerUpdates.plan = { proUntil: referrerProUntil };
+    }
+
     batch.set(
       db.collection("users").doc(referrerUid),
-      {
-        referral: { referredCount: admin.firestore.FieldValue.increment(1) },
-        plan: { proUntil: referrerProUntil },
-      },
+      referrerUpdates,
       { merge: true }
     );
 

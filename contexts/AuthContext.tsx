@@ -15,8 +15,8 @@ import {
 } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../firebase/firebase';
-import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserPlan, updateUserSettings } from '../utils/firestore';
-import { Subscription } from '../components/SubscriptionModal';
+import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserSettings } from '../utils/firestore';
+import { Subscription } from '../types/subscription';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
 import { trackEvent } from '../utils/analytics';
 import { redeemReferral } from '../utils/referrals';
@@ -197,24 +197,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await signOut(auth);
   }
 
+  /**
+   * @deprecated Client-side direct plan updates are disabled for security.
+   * Plan upgrades are handled via Stripe Checkout flow and verified through backend webhooks.
+   */
   async function upgradeToPro() {
-    if (!currentUser || !userProfile) return;
-
-    try {
-      const newPlan = {
-        type: 'pro' as const,
-        status: 'active' as const,
-        since: new Date().toISOString()
-      };
-
-      await updateUserPlan(currentUser.uid, newPlan);
-
-      setUserProfile({ ...userProfile, plan: newPlan });
-      trackEvent('subscription_upgrade', { plan: 'pro' });
-    } catch (e) {
-      console.error("Upgrade failed:", e);
-      throw e;
-    }
+    console.warn(
+      "[AuthContext] upgradeToPro is deprecated. Plan upgrades must be performed via the Pro upgrade modal or Stripe Checkout flow."
+    );
   }
 
   async function resetPassword(email: string) {

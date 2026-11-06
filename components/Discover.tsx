@@ -267,7 +267,7 @@ export default function Discover() {
           }
 
           // --- PRIME / BRANDED ---
-          if (card.style === 'prime' || card.style === 'max' || card.style === 'slac' || card.style === 'hulu') {
+          if (card.style === 'prime' || card.style === 'max' || card.style === 'slack' || card.style === 'hulu') {
             return (
               <CardContainer {...commonProps} className={`group ${card.customBg || 'bg-gray-800'}`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/30"></div>

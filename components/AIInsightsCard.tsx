@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Sparkles, Lightbulb, Lock, ArrowRight, AlertTriangle, TrendingUp } from 'lucide-react';
 import { generateDashboardInsights, AIInsight } from '../utils/gemini';
+import { getChangedBrands } from '../utils/priceCatalog';
 import { Subscription } from './SubscriptionModal';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,9 +50,38 @@ const AIInsightsCard = ({ subscriptions }: AIInsightsCardProps) => {
       }
 
       setLoading(true);
+
+      // Check for catalog price changes / price hikes for user's subscriptions
+      const changedBrands = getChangedBrands();
+      const priceChangeInsights: AIInsight[] = [];
+
+      changedBrands.forEach(brand => {
+        const matchingSub = subscriptions.find(s => {
+          const sNorm = s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const bNorm = brand.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return sNorm === bNorm || sNorm.includes(bNorm) || bNorm.includes(sNorm);
+        });
+
+        if (matchingSub) {
+          const regionPrice = currentCurrency === 'TRY' ? (brand.tr || brand.us) : (brand.us || brand.tr);
+          const priceInfo = regionPrice?.price != null ? ` (${regionPrice.price} ${regionPrice.currency})` : '';
+
+          priceChangeInsights.push({
+            type: 'redundancy',
+            title: currentLanguage === 'tr'
+              ? `Fiyat Değişimi Uyarısı: ${matchingSub.name}`
+              : `Price Change Alert: ${matchingSub.name}`,
+            description: currentLanguage === 'tr'
+              ? `${matchingSub.name} servisinin katalog fiyatında yakın zamanda bir değişiklik tespit edildi${priceInfo}. Güncel planınızı kontrol etmeniz önerilir.`
+              : `A price change was recently detected for ${matchingSub.name}${priceInfo}. We recommend reviewing your current plan.`,
+            estimatedSavings: ''
+          });
+        }
+      });
+
       const results = await generateDashboardInsights(subscriptions, currentCurrency, currentLanguage);
       if (mounted) {
-        setInsights(results);
+        setInsights([...priceChangeInsights, ...results]);
         setLoading(false);
       }
     };

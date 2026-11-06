@@ -430,8 +430,33 @@ const ComparisonWidget = ({ formatPrice, monthlySpend, convert, currentCurrency 
   );
 };
 
+const calculateLifetimeMonths = (sub: Subscription): number => {
+  // 1. If explicit startDate is provided, compute elapsed months to now
+  if (sub.startDate) {
+    const start = new Date(sub.startDate);
+    if (!isNaN(start.getTime())) {
+      const now = new Date();
+      const diffMonths = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+      if (diffMonths >= 1) return diffMonths;
+    }
+  }
+
+  // 2. If history is recorded, each entry represents a billing cycle payment
+  if (sub.history && sub.history.length > 0) {
+    const multiplier = sub.cycle === 'Yearly' ? 12 : 1;
+    return Math.max(1, sub.history.length * multiplier);
+  }
+
+  // 3. Fallback: at least 1 month
+  return 1;
+};
+
 const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: Subscription[] }) => {
   const { t } = useLanguage();
+  const displaySubs = subscriptions.slice(0, 5);
+  const durations = displaySubs.map(calculateLifetimeMonths);
+  const maxDuration = Math.max(6, ...durations); // minimum scale of 6 months
+
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden h-fit">
       <div className="flex items-center justify-between mb-6">
@@ -439,16 +464,18 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
             <Clock size={18} className="text-gray-400" /> {t('analytics.lifetime')}
         </h3>
       </div>
-      {subscriptions.length === 0 ? (
+      {displaySubs.length === 0 ? (
           <div className="text-center text-xs text-gray-400 py-8">{t('analytics.lifetime_empty')}</div>
       ) : (
         <div className="space-y-6">
-            {subscriptions.slice(0, 5).map((sub, i) => {
-                const idNum = typeof sub.id === 'number' ? sub.id : sub.name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-                const width = Math.min(100, Math.max(20, (idNum % 60) + 20));
+            {displaySubs.map((sub, i) => {
+                const durationMonths = durations[i];
+                const width = Math.min(100, Math.max(15, Math.round((durationMonths / maxDuration) * 100)));
                 const brandKey = (sub.type || sub.name).toLowerCase().replace(/\s+/g, '');
                 const color = BRAND_COLORS[brandKey] || BRAND_COLORS['default'];
-                const mockDuration = `${Math.floor(width / 8)}m`; 
+                const durationText = durationMonths >= 12
+                  ? `${Math.floor(durationMonths / 12)}y${durationMonths % 12 > 0 ? ` ${durationMonths % 12}m` : ''}`
+                  : `${durationMonths}m`;
                 
                 return (
                     <div key={i} className="flex items-center gap-4 group">
@@ -458,7 +485,7 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
                         </div>
                         <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-900 dark:text-white truncate" title={sub.name}>{sub.name}</p>
-                            <p className="text-[10px] text-gray-400">{t('analytics.status_active')}</p>
+                            <p className="text-[10px] text-gray-400">{t('analytics.status_active')} • {durationText}</p>
                         </div>
                     </div>
                     
@@ -469,10 +496,10 @@ const SubscriptionLifetimeTimeline = ({ subscriptions = [] }: { subscriptions?: 
                             style={{ width: `${width}%`, backgroundColor: color }}
                         ></div>
                         <div 
-                            className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1/2 -translate-y-1/2 ml-2 text-[9px] font-bold text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
                             style={{ left: `${width}%` }}
                         >
-                            {mockDuration}
+                            {durationText}
                         </div>
                     </div>
                     </div>
