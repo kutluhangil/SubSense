@@ -1,5 +1,4 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase/firebase';
+import { functions, httpsCallable } from '../firebase/firebase';
 
 /**
  * Thin client wrappers around the friend Cloud Functions. All cross-user
@@ -60,4 +59,10 @@ export const listFriends = async (): Promise<FriendProfile[]> => {
   const fn = httpsCallable<unknown, { friends: FriendProfile[] }>(functions, 'listFriendsFn');
   const res = await fn({});
   return res.data.friends || [];
+};
+
+export const removeFriend = async (friendUid: string): Promise<string> => {
+  const fn = httpsCallable<{ friendUid: string }, { status: string }>(functions, 'removeFriendFn');
+  const res = await fn({ friendUid });
+  return res.data.status;
 };

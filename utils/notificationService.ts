@@ -119,13 +119,32 @@ interface RenewalAlert {
 export const getUpcomingRenewals = (
   subscriptions: Subscription[],
 ): RenewalAlert[] => {
+  if (
+    typeof window !== "undefined" &&
+    localStorage.getItem("subsense_notify_payment") === "false"
+  ) {
+    return [];
+  }
+
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
   return subscriptions
-    .filter((sub) => sub.status === "Active" || !sub.status)
+    .filter((sub) => {
+      if (sub.reminderEnabled === false) return false;
+      return (
+        sub.status === "Active" || sub.status === "Trial" || !sub.status
+      );
+    })
     .map((sub) => {
-      const nextDate = new Date(sub.nextDate);
+      const rawDate =
+        sub.status === "Trial" && sub.trialEndDate
+          ? sub.trialEndDate
+          : sub.nextDate;
+      const nextDate =
+        typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate)
+          ? new Date(`${rawDate}T00:00:00`)
+          : new Date(rawDate);
       if (isNaN(nextDate.getTime())) return null;
 
       nextDate.setHours(0, 0, 0, 0);
@@ -187,19 +206,20 @@ export const sendRenewalNotifications = (
   const alerts = getUpcomingRenewals(subscriptions);
   const notified = getNotifiedToday();
 
-  alerts.forEach(({ subscription, daysUntil }) => {
-    if (notified.has(String(subscription.id))) return; // Already notified today
+  alerts.forEach(({ subscription: sub, daysUntil }) => {
+    if (notified.has(String(sub.id))) return; // Already notified today
 
-    const priceText = `${subscription.currency} ${subscription.price.toFixed(2)}`;
+    const effectivePrice = sub.isShared && sub.myShare ? sub.myShare : sub.price;
+    const priceText = `${sub.currency} ${effectivePrice.toFixed(2)}`;
 
     try {
-      new Notification(renewsTitleText(subscription.name, daysUntil), {
-        body: `${priceText} • ${cycleText(subscription.cycle)}`,
+      new Notification(renewsTitleText(sub.name, daysUntil), {
+        body: `${priceText} • ${cycleText(sub.cycle)}`,
         icon: "/icon-192.png",
-        tag: `renewal-${subscription.id}`, // Prevents duplicate browser notifications
+        tag: `renewal-${sub.id}`, // Prevents duplicate browser notifications
         silent: false,
       });
-      markAsNotified(String(subscription.id));
+      markAsNotified(String(sub.id));
     } catch (e) {
       console.warn("Failed to show notification", e);
     }
@@ -277,14 +297,15 @@ export const generateRenewalNotifications = (
 }> => {
   const alerts = getUpcomingRenewals(subscriptions);
 
-  return alerts.map(({ subscription, daysUntil }) => {
+  return alerts.map(({ subscription: sub, daysUntil }) => {
     const timeLabel = dayDistanceText(daysUntil);
+    const effectivePrice = sub.isShared && sub.myShare ? sub.myShare : sub.price;
     return {
-      id: `renewal-${subscription.id}`,
+      id: `renewal-${sub.id}`,
       text: renewsInAppText(
-        subscription.name,
-        subscription.currency,
-        subscription.price,
+        sub.name,
+        sub.currency,
+        effectivePrice,
         daysUntil,
       ),
       time: timeLabel,

@@ -114,7 +114,7 @@ export default function AddSubscriptionModal({
       const dateObj = new Date(startDate);
       const shareVal = isShared && myShare ? parseFloat(myShare) : undefined;
       if (isShared && (!shareVal || shareVal <= 0)) {
-        setError("Lütfen geçerli bir pay tutarı girin.");
+        setError(t("split.invalid_share"));
         setShake(true);
         setTimeout(() => setShake(false), 500);
         return;
@@ -139,7 +139,7 @@ export default function AddSubscriptionModal({
         logo: logo || generatePlaceholderLogo(name),
         history: [priceVal],
         isShared: isShared,
-        myShare: shareVal,
+        ...(shareVal !== undefined ? { myShare: shareVal } : {}),
       };
 
       await onAdd(newSub);
@@ -333,8 +333,7 @@ export default function AddSubscriptionModal({
                         className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 bg-white border-gray-300"
                       />
                       <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300 font-semibold text-sm">
-                        <Users size={16} /> Bu ortak bir abonelik (Masrafı
-                        bölüşüyoruz)
+                        <Users size={16} /> {t("split.is_shared")}
                       </div>
                     </label>
 
@@ -345,14 +344,14 @@ export default function AddSubscriptionModal({
                         className="mt-4"
                       >
                         <label className="block text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-2">
-                          Benim Payım
+                          {t("split.my_share")}
                         </label>
                         <div className="relative">
                           <input
                             type="number"
                             value={myShare}
                             onChange={(e) => setMyShare(e.target.value)}
-                            placeholder="Örn: 50"
+                            placeholder="0.00"
                             className="w-full bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-3 text-lg font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                           />
                           <div className="absolute right-4 top-3 text-gray-400 font-bold">
@@ -360,8 +359,9 @@ export default function AddSubscriptionModal({
                           </div>
                         </div>
                         <p className="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-2 font-medium">
-                          Bütçenize toplam fiyat ({price || 0} {currency})
-                          yerine sizin payınız eklenecektir.
+                          {t("split.hint")
+                            .replace("{price}", String(price || 0))
+                            .replace("{currency}", currency)}
                         </p>
                       </motion.div>
                     )}

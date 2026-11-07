@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.redeemReferral = exports.getReferralCode = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const initAdmin_1 = require("./initAdmin");
 /**
  * Referral program — a viral growth loop. Each user gets a shareable invite
  * code. When a NEW user signs up via that link and redeems it, BOTH the
@@ -44,8 +45,7 @@ const REWARD_DAYS = 30;
 const MAX_REFERRALS = 12; // Maximum 12 referrals (360 days of Pro cap)
 const DAY_MS = 24 * 60 * 60 * 1000;
 const getDb = () => {
-    if (!admin.apps.length)
-        admin.initializeApp();
+    (0, initAdmin_1.initFirebaseAdmin)();
     return admin.firestore();
 };
 const requireAuth = (context) => {

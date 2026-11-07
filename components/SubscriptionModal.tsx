@@ -1,25 +1,92 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
   Calendar,
   Edit2,
   TrendingUp,
-  TrendingDown,
   Bell,
-  Lightbulb,
   Trash2,
-  Check,
-  ExternalLink,
   AlertCircle,
+  Users,
 } from "lucide-react";
 import { BrandIcon } from "./BrandIcon";
 import { useLanguage } from "../contexts/LanguageContext";
 import { BRAND_COLORS, CURRENCIES } from "../utils/data";
-import { EXCHANGE_RATES } from "../utils/currency";
+import { convertAmount } from "../utils/currency";
 import { debugLog } from "../utils/debug";
 import type { Subscription } from "../types/subscription";
 
 export type { Subscription } from "../types/subscription";
+
+const CATEGORY_OPTIONS = [
+  "Entertainment",
+  "Music",
+  "Productivity",
+  "Cloud",
+  "Gaming",
+  "Software",
+  "Fitness",
+  "Education",
+  "Uncategorized",
+];
+
+const calculateNextBillingDate = (
+  billingDay: number,
+  cycle: "Monthly" | "Yearly",
+  existingNextDate?: string,
+): string => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const buildClampedDate = (year: number, month: number, day: number) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const clampedDay = Math.min(Math.max(1, day), daysInMonth);
+    return new Date(year, month, clampedDay);
+  };
+
+  let targetDate: Date;
+
+  if (cycle === "Yearly") {
+    const parsedExisting = existingNextDate ? new Date(existingNextDate) : null;
+    const targetMonth =
+      parsedExisting && !isNaN(parsedExisting.getTime())
+        ? parsedExisting.getMonth()
+        : today.getMonth();
+
+    targetDate = buildClampedDate(today.getFullYear(), targetMonth, billingDay);
+    if (targetDate < today) {
+      targetDate = buildClampedDate(
+        today.getFullYear() + 1,
+        targetMonth,
+        billingDay,
+      );
+    }
+  } else {
+    targetDate = buildClampedDate(
+      today.getFullYear(),
+      today.getMonth(),
+      billingDay,
+    );
+    if (targetDate < today) {
+      const nextMonthStart = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        1,
+      );
+      targetDate = buildClampedDate(
+        nextMonthStart.getFullYear(),
+        nextMonthStart.getMonth(),
+        billingDay,
+      );
+    }
+  }
+
+  return targetDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -52,6 +119,7 @@ export default function SubscriptionModal({
 }: SubscriptionModalProps) {
   const { t } = useLanguage();
   const [formData, setFormData] = useState<Partial<Subscription>>({});
+  const [myShareInput, setMyShareInput] = useState<string>("");
   const [isSaveHovered, setIsSaveHovered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +130,7 @@ export default function SubscriptionModal({
         ...subscription,
         nickname: subscription.nickname || "",
         notes: subscription.notes || "",
+        category: subscription.category || "Uncategorized",
         billingDay:
           subscription.billingDay ||
           new Date(subscription.nextDate).getDate() ||
@@ -72,7 +141,14 @@ export default function SubscriptionModal({
         currency: subscription.currency || "USD",
         // Make sure we have a float for price editing
         price: subscription.price,
+        isShared: subscription.isShared ?? false,
+        myShare: subscription.myShare,
       });
+      setMyShareInput(
+        subscription.myShare !== undefined && subscription.myShare !== null
+          ? String(subscription.myShare)
+          : "",
+      );
       setError(null);
       setLoading(false);
     }
@@ -95,11 +171,7 @@ export default function SubscriptionModal({
     const currentCurrency = formData.currency || "USD";
 
     if (currentPrice !== undefined && !isNaN(currentPrice)) {
-      const currentRate = EXCHANGE_RATES[currentCurrency] || 1;
-      const newRate = EXCHANGE_RATES[newCurrency] || 1;
-
-      const valInUSD = currentPrice / currentRate;
-      const valInNew = valInUSD * newRate;
+      const valInNew = convertAmount(currentPrice, currentCurrency, newCurrency);
 
       setFormData((prev) => ({
         ...prev,
@@ -109,18 +181,65 @@ export default function SubscriptionModal({
     } else {
       setFormData((prev) => ({ ...prev, currency: newCurrency }));
     }
+
+    if (formData.isShared && myShareInput) {
+      const currentShare = parseFloat(myShareInput);
+      if (!isNaN(currentShare) && currentShare > 0) {
+        const convertedShare = convertAmount(
+          currentShare,
+          currentCurrency,
+          newCurrency,
+        );
+        setMyShareInput(convertedShare.toFixed(2));
+      }
+    }
   };
 
   const handleSave = async () => {
     if (formData) {
+      const isShared = Boolean(formData.isShared);
+      const parsedShare =
+        isShared && myShareInput ? parseFloat(myShareInput) : undefined;
+      if (isShared && (!parsedShare || isNaN(parsedShare) || parsedShare <= 0)) {
+        setError(t("split.invalid_share"));
+        return;
+      }
+
       setLoading(true);
       setError(null);
+
+      const initialBillingDay =
+        subscription.billingDay ||
+        new Date(subscription.nextDate).getDate() ||
+        1;
+      const updatedBillingDay = formData.billingDay ?? initialBillingDay;
+      const updatedCycle = formData.cycle || subscription.cycle;
+      const shouldRecalculateNextDate =
+        updatedBillingDay !== initialBillingDay ||
+        updatedCycle !== subscription.cycle;
+
+      const updatedNextDate = shouldRecalculateNextDate
+        ? calculateNextBillingDate(
+            updatedBillingDay,
+            updatedCycle,
+            subscription.nextDate,
+          )
+        : formData.nextDate || subscription.nextDate;
+
+      const resolvedPrice =
+        formData.originalPrice !== undefined && !isNaN(formData.originalPrice)
+          ? formData.originalPrice
+          : formData.price || 0;
 
       const finalData: Subscription = {
         ...subscription,
         ...formData,
-        price: formData.originalPrice || formData.price || 0,
-        originalPrice: formData.originalPrice || formData.price || 0,
+        nextDate: updatedNextDate,
+        category: formData.category || subscription.category || "Uncategorized",
+        price: resolvedPrice,
+        originalPrice: resolvedPrice,
+        isShared,
+        myShare: isShared ? parsedShare : undefined,
       } as Subscription;
 
       try {
@@ -359,6 +478,87 @@ export default function SubscriptionModal({
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">
+                      {t("modal.category")}
+                    </label>
+                    <select
+                      value={formData.category || "Uncategorized"}
+                      onChange={(e) => handleChange("category", e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50 cursor-pointer"
+                      style={
+                        {
+                          "--tw-ring-color": accentColor,
+                        } as React.CSSProperties
+                      }
+                    >
+                      {formData.category &&
+                        !CATEGORY_OPTIONS.includes(formData.category) && (
+                          <option value={formData.category}>
+                            {formData.category}
+                          </option>
+                        )}
+                      {CATEGORY_OPTIONS.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Split the Bill / Shared Subscription */}
+                  <div className="bg-indigo-50 dark:bg-indigo-900/10 rounded-xl p-4 border border-indigo-100 dark:border-indigo-900/20">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(formData.isShared)}
+                        onChange={(e) =>
+                          handleChange("isShared", e.target.checked)
+                        }
+                        className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 bg-white border-gray-300"
+                      />
+                      <div className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300 font-semibold text-sm">
+                        <Users size={16} /> {t("split.is_shared")}
+                      </div>
+                    </label>
+
+                    {formData.isShared && (
+                      <div className="mt-4 animate-in fade-in duration-200">
+                        <label className="block text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-2">
+                          {t("split.my_share")}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={myShareInput}
+                            onChange={(e) => {
+                              setMyShareInput(e.target.value);
+                              setError(null);
+                            }}
+                            placeholder="0.00"
+                            className="w-full bg-white dark:bg-gray-800 border border-indigo-200 dark:border-indigo-800 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                          />
+                          <div className="absolute right-4 top-2.5 text-gray-400 font-bold text-sm">
+                            {formData.currency || "USD"}
+                          </div>
+                        </div>
+                        <p className="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-2 font-medium">
+                          {t("split.hint")
+                            .replace(
+                              "{price}",
+                              String(formData.originalPrice || 0),
+                            )
+                            .replace(
+                              "{currency}",
+                              formData.currency || "USD",
+                            )}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Status */}

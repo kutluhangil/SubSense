@@ -21,9 +21,9 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "SubSense",
-        short_name: "SubSense",
-        description: "Track and manage all your subscriptions in one place.",
+        name: "Aboneyim",
+        short_name: "Aboneyim",
+        description: "Tüm aboneliklerini tek yerden ücretsiz takip et ve yönet.",
         theme_color: "#111827",
         background_color: "#ffffff",
         display: "standalone",
@@ -43,9 +43,9 @@ export default defineConfig({
       workbox: {
         // Cache Firebase SDK & app chunks for offline use
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        // Static SEO price pages (/fiyatlar/*) and sitemap must NOT be served
+        // Static SEO price pages (/fiyatlar/*), /api/*, and sitemap must NOT be served
         // the SPA shell by the service worker — let them hit the network.
-        navigateFallbackDenylist: [/^\/fiyatlar/, /^\/sitemap/, /^\/robots/],
+        navigateFallbackDenylist: [/^\/api/, /^\/fiyatlar/, /^\/sitemap/, /^\/robots/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/open\.er-api\.com\/.*/i,
@@ -59,6 +59,14 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://macmini-server.taild883a6.ts.net",
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     outDir: "dist",
     sourcemap: true,

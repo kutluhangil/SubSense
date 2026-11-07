@@ -29,204 +29,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.geminiChatProxy = exports.geminiProxy = exports.api = exports.deleteUserAccount = exports.sendCustomVerificationEmail = exports.searchUsers = exports.stripeWebhook = exports.createPortalSession = exports.createCheckoutSession = void 0;
+exports.geminiChatProxy = exports.geminiProxy = exports.api = exports.deleteUserAccount = exports.revokeAllSessions = exports.sendCustomVerificationEmail = exports.searchUsers = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
-const stripe_1 = __importDefault(require("stripe"));
+const resend_1 = require("resend");
 const verificationTemplate_1 = require("./email/verificationTemplate");
-admin.initializeApp();
+const initAdmin_1 = require("./initAdmin");
+(0, initAdmin_1.initFirebaseAdmin)();
 const db = admin.firestore();
-// Initialize Stripe conditionally — if not configured, payment features are disabled
-// Set via: firebase functions:config:set stripe.secret="sk_live_..." stripe.webhook_secret="whsec_..."
-const stripeConfig = functions.config().stripe;
-const stripe = (stripeConfig === null || stripeConfig === void 0 ? void 0 : stripeConfig.secret)
-    ? new stripe_1.default(stripeConfig.secret, { apiVersion: "2023-10-16" })
-    : null;
-// PRICE IDs (Replace these with your actual Stripe Price IDs)
-const PRICES = {
-    month: "price_1Pxxxxx",
-    year: "price_1Pyyyyy", // $29.99/yr
-};
-// 1. Create Checkout Session
-exports.createCheckoutSession = functions.https.onCall(async (data, context) => {
-    var _a, _b;
-    if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
-    }
-    if (!stripe) {
-        throw new functions.https.HttpsError("failed-precondition", "Stripe is not configured");
-    }
-    const userId = context.auth.uid;
-    const { interval, successUrl, cancelUrl } = data; // interval: 'month' | 'year'
-    const priceId = PRICES[interval] || PRICES.month;
-    try {
-        // Get or Create Stripe Customer
-        const userDoc = await db.collection("users").doc(userId).get();
-        let customerId = (_b = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan) === null || _b === void 0 ? void 0 : _b.stripeCustomerId;
-        if (!customerId) {
-            const customer = await stripe.customers.create({
-                email: context.auth.token.email,
-                metadata: { firebaseUID: userId },
-            });
-            customerId = customer.id;
-            // Save ID immediately
-            await db.collection("users").doc(userId).set({
-                plan: { stripeCustomerId: customerId }
-            }, { merge: true });
-        }
-        // Create Session
-        const session = await stripe.checkout.sessions.create({
-            mode: "subscription",
-            payment_method_types: ["card"],
-            customer: customerId,
-            line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
-            ],
-            allow_promotion_codes: true,
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-            metadata: { firebaseUID: userId },
-        });
-        return { url: session.url };
-    }
-    catch (error) {
-        console.error("Stripe Session Error:", error);
-        throw new functions.https.HttpsError("internal", error.message);
-    }
-});
-// 2. Create Portal Session (Manage Subscription)
-exports.createPortalSession = functions.https.onCall(async (data, context) => {
-    var _a, _b;
-    if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
-    }
-    if (!stripe) {
-        throw new functions.https.HttpsError("failed-precondition", "Stripe is not configured");
-    }
-    const userId = context.auth.uid;
-    const { returnUrl } = data;
-    try {
-        const userDoc = await db.collection("users").doc(userId).get();
-        const customerId = (_b = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan) === null || _b === void 0 ? void 0 : _b.stripeCustomerId;
-        if (!customerId) {
-            throw new functions.https.HttpsError("failed-precondition", "No subscription found");
-        }
-        const session = await stripe.billingPortal.sessions.create({
-            customer: customerId,
-            return_url: returnUrl,
-        });
-        return { url: session.url };
-    }
-    catch (error) {
-        throw new functions.https.HttpsError("internal", error.message);
-    }
-});
-// 3. Webhook Handler
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-    var _a, _b, _c, _d, _e;
-    const signature = req.headers["stripe-signature"];
-    const webhookSecret = (_a = functions.config().stripe) === null || _a === void 0 ? void 0 : _a.webhook_secret;
-    if (!stripe || !webhookSecret) {
-        res.status(500).send("Stripe is not configured");
-        return;
-    }
-    let event;
-    try {
-        event = stripe.webhooks.constructEvent(req.rawBody, signature, webhookSecret);
-    }
-    catch (err) {
-        console.error(`Webhook signature verification failed: ${err.message}`);
-        res.status(400).send(`Webhook Error: ${err.message}`);
-        return;
-    }
-    try {
-        switch (event.type) {
-            case "checkout.session.completed": {
-                const session = event.data.object;
-                const uid = (_b = session.metadata) === null || _b === void 0 ? void 0 : _b.firebaseUID;
-                const subscriptionId = session.subscription;
-                const customerId = session.customer;
-                if (uid) {
-                    // Retrieve the subscription details to get the period end
-                    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-                    const interval = ((_e = (_d = (_c = subscription.items.data[0]) === null || _c === void 0 ? void 0 : _c.price) === null || _d === void 0 ? void 0 : _d.recurring) === null || _e === void 0 ? void 0 : _e.interval) || "month";
-                    await db.collection("users").doc(uid).set({
-                        plan: {
-                            type: "pro",
-                            status: "active",
-                            stripeCustomerId: customerId,
-                            stripeSubscriptionId: subscriptionId,
-                            currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-                            interval
-                        }
-                    }, { merge: true });
-                }
-                break;
-            }
-            case "customer.subscription.updated": {
-                const subscription = event.data.object;
-                const uid = await getUserIdFromCustomerId(subscription.customer);
-                if (uid) {
-                    const status = subscription.status;
-                    const isActive = status === 'active' || status === 'trialing';
-                    await db.collection("users").doc(uid).set({
-                        plan: {
-                            type: isActive ? "pro" : "free",
-                            status: status,
-                            currentPeriodEnd: admin.firestore.Timestamp.fromMillis(subscription.current_period_end * 1000),
-                            cancelAtPeriodEnd: subscription.cancel_at_period_end
-                        }
-                    }, { merge: true });
-                }
-                break;
-            }
-            case "customer.subscription.deleted": {
-                const subscription = event.data.object;
-                const uid = await getUserIdFromCustomerId(subscription.customer);
-                if (uid) {
-                    await db.collection("users").doc(uid).set({
-                        plan: {
-                            type: "free",
-                            status: "canceled",
-                            stripeSubscriptionId: admin.firestore.FieldValue.delete(),
-                            currentPeriodEnd: admin.firestore.FieldValue.delete()
-                        }
-                    }, { merge: true });
-                }
-                break;
-            }
-        }
-        res.status(200).send({ received: true });
-    }
-    catch (err) {
-        console.error("Webhook processing failed:", err);
-        res.status(500).send("Internal Server Error");
-    }
-});
-// 5. User Search (Secure)
+// 1. User Search (Secure)
 exports.searchUsers = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
-    const { searchTerm } = data;
+    const { searchTerm } = data || {};
     const callerUid = context.auth.uid;
-    if (!searchTerm || typeof searchTerm !== 'string') {
+    if (!searchTerm || typeof searchTerm !== "string") {
         return [];
     }
     try {
-        const usersRef = db.collection('users');
-        // Simple email exact match for MVP. 
+        const usersRef = db.collection("users");
+        // Simple email exact match for MVP.
         // For production, use Algolia or Typesense for "contains" search.
-        const qEmail = usersRef.where('email', '==', searchTerm).limit(5);
+        const qEmail = usersRef.where("email", "==", searchTerm).limit(5);
         const snap = await qEmail.get();
         const results = [];
         snap.forEach((doc) => {
             if (doc.id !== callerUid) {
                 const userData = doc.data();
-                const preferences = userData.preferences || { region: 'Unknown', baseCurrency: 'USD' };
+                const preferences = userData.preferences || { region: "Unknown", baseCurrency: "USD" };
                 const privacy = preferences.privacy;
                 const stats = Object.assign({}, (userData.stats || { totalSubscriptions: 0, monthlySpend: 0 }));
                 if ((privacy === null || privacy === void 0 ? void 0 : privacy.showSubscriptions) === false) {
@@ -235,13 +66,13 @@ exports.searchUsers = functions.https.onCall(async (data, context) => {
                 if ((privacy === null || privacy === void 0 ? void 0 : privacy.showSpending) === false) {
                     stats.monthlySpend = 0;
                 }
-                // Return only safe public info to avoids leaking sensitive data like 'plan' details if unnecessary
+                // Return only safe public info to avoid leaking sensitive data
                 results.push({
                     uid: doc.id,
                     email: userData.email,
                     displayName: userData.displayName,
                     stats,
-                    preferences
+                    preferences,
                 });
             }
         });
@@ -252,115 +83,98 @@ exports.searchUsers = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", "Search failed");
     }
 });
-// Helper to find Firebase User ID by Stripe Customer ID
-async function getUserIdFromCustomerId(customerId) {
-    // Ideally, query a reverse mapping or index. 
-    // For MVP, we search. In production, store mapping in a separate collection 'customers'.
-    const snapshot = await db.collection("users")
-        .where("plan.stripeCustomerId", "==", customerId)
-        .limit(1)
-        .get();
-    if (snapshot.empty)
-        return null;
-    return snapshot.docs[0].id;
-}
 // --- EMAIL SYSTEM ---
-// 6. Send Custom Verification Email
+// Helper: Send Email via Resend
+// Set via: RESEND_API_KEY / RESEND_FROM_EMAIL env vars or firebase functions:config:set resend.key="re_..." resend.from="Aboneyim <noreply@aboneyim.app>"
+async function sendEmail(to, subject, html) {
+    var _a, _b;
+    const resendKey = process.env.RESEND_API_KEY || ((_a = functions.config().resend) === null || _a === void 0 ? void 0 : _a.key);
+    const fromEmail = process.env.RESEND_FROM_EMAIL ||
+        ((_b = functions.config().resend) === null || _b === void 0 ? void 0 : _b.from) ||
+        "Aboneyim <onboarding@resend.dev>";
+    if (!resendKey) {
+        console.warn("Resend API key is not configured (RESEND_API_KEY or resend.key missing). Throwing failed-precondition so client can fall back to standard Firebase verification.");
+        throw new functions.https.HttpsError("failed-precondition", "Email service (Resend) is not configured.");
+    }
+    const resend = new resend_1.Resend(resendKey);
+    const { error } = await resend.emails.send({
+        from: fromEmail,
+        to: [to],
+        subject,
+        html,
+    });
+    if (error) {
+        console.error("Resend Error:", error);
+        throw new functions.https.HttpsError("internal", error.message || "Failed to send email provider request");
+    }
+}
+// 2. Send Custom Verification Email
 exports.sendCustomVerificationEmail = functions.https.onCall(async (data, context) => {
-    var _a;
-    // Ensure we are authenticated (or we can secure purely by email if needed, but authenticating is safer for rate limits)
-    // Actually, for signup flow, user is signed in but unverified.
+    var _a, _b;
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
-    const email = data.email || context.auth.token.email;
-    const redirectUrl = data.redirectUrl || ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.url) || 'https://subsense.app';
-    if (!email) {
+    const email = (data === null || data === void 0 ? void 0 : data.email) || context.auth.token.email;
+    const redirectUrl = (data === null || data === void 0 ? void 0 : data.redirectUrl) ||
+        process.env.APP_URL ||
+        ((_a = functions.config().app) === null || _a === void 0 ? void 0 : _a.url) ||
+        "https://subsense.app";
+    if (!email || typeof email !== "string") {
         throw new functions.https.HttpsError("invalid-argument", "Email is required");
+    }
+    if (context.auth.token.email &&
+        email.toLowerCase() !== context.auth.token.email.toLowerCase()) {
+        throw new functions.https.HttpsError("permission-denied", "Cannot send verification email to a different address");
+    }
+    const resendKey = process.env.RESEND_API_KEY || ((_b = functions.config().resend) === null || _b === void 0 ? void 0 : _b.key);
+    if (!resendKey) {
+        console.warn("Resend API key is not configured (RESEND_API_KEY or resend.key missing). Falling back to client-side Firebase verification.");
+        throw new functions.https.HttpsError("failed-precondition", "Email service (Resend) is not configured.");
     }
     try {
         // 1. Generate the link using Admin SDK
-        // This bypasses the default template and gives us the raw link
         const link = await admin.auth().generateEmailVerificationLink(email, {
             url: redirectUrl,
-            handleCodeInApp: true
+            handleCodeInApp: true,
         });
         // 2. Generate the HTML
-        const html = (0, verificationTemplate_1.getVerificationEmailTemplate)(link, "SubSense");
-        // 3. Send via SendGrid (or log if no key)
-        await sendEmail(email, "Verify your email for SubSense", html);
+        const html = (0, verificationTemplate_1.getVerificationEmailTemplate)(link, "Aboneyim");
+        // 3. Send via Resend
+        await sendEmail(email, "Verify your email for Aboneyim", html);
         return { success: true };
     }
     catch (error) {
+        if (error instanceof functions.https.HttpsError) {
+            throw error;
+        }
         console.error("Error sending custom verification email:", error);
         throw new functions.https.HttpsError("internal", error.message);
     }
 });
-// Helper: Send Email (SendGrid / Log)
-// Requires: firebase functions:config:set sendgrid.key="SG.xxx"
-async function sendEmail(to, subject, html) {
-    var _a;
-    const sendgridKey = (_a = functions.config().sendgrid) === null || _a === void 0 ? void 0 : _a.key;
-    if (sendgridKey) {
-        // Production: Send via SendGrid API
-        // Using fetch (available in Node 18+)
-        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${sendgridKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                personalizations: [{ to: [{ email: to }] }],
-                from: { email: 'noreply@subsense.app', name: 'SubSense Team' },
-                subject: subject,
-                content: [{ type: 'text/html', value: html }]
-            })
-        });
-        if (!response.ok) {
-            const err = await response.text();
-            console.error("SendGrid Error:", err);
-            throw new Error("Failed to send email provider request");
-        }
+// 3. Revoke All Sessions (Sign out from all devices)
+exports.revokeAllSessions = functions.https.onCall(async (_data, context) => {
+    if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
-    else {
-        // Development / No Key: Log it
-        console.log(">>> [MOCK EMAIL SENT] >>>");
-        console.log(`To: ${to}`);
-        console.log(`Subject: ${subject}`);
-        console.log(`Link logic works. HTML content generated (${html.length} chars).`);
-        console.log("Check Firebase Functions logs to confirm trigger.");
-        console.log("<<< [MOCK EMAIL END] <<<");
-    }
-}
-// 7. Delete User Account (wipes Auth + Firestore)
-exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
-    var _a, _b;
+    await admin.auth().revokeRefreshTokens(context.auth.uid);
+    return { success: true };
+});
+// 4. Delete User Account (wipes Auth + Firestore)
+exports.deleteUserAccount = functions.https.onCall(async (_data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in");
     }
     const uid = context.auth.uid;
     try {
-        // If user has an active Stripe subscription, cancel it in Stripe
-        const userDoc = await db.collection("users").doc(uid).get();
-        const subscriptionId = (_b = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan) === null || _b === void 0 ? void 0 : _b.stripeSubscriptionId;
-        if (subscriptionId && stripe) {
-            try {
-                await stripe.subscriptions.cancel(subscriptionId);
-            }
-            catch (stripeErr) {
-                console.error("Failed to cancel Stripe subscription during account deletion:", stripeErr);
-            }
-        }
         // Delete all sub-collections in a batch
         const batch = db.batch();
-        const collectionsToDelete = ['subscriptions', 'friends', 'friendRequests', 'sentRequests'];
+        const collectionsToDelete = ["subscriptions", "friends", "friendRequests", "sentRequests"];
         for (const col of collectionsToDelete) {
-            const snap = await db.collection('users').doc(uid).collection(col).get();
-            snap.docs.forEach(d => batch.delete(d.ref));
+            const snap = await db.collection("users").doc(uid).collection(col).get();
+            snap.docs.forEach((d) => batch.delete(d.ref));
         }
         // Delete the user document
-        batch.delete(db.collection('users').doc(uid));
+        batch.delete(db.collection("users").doc(uid));
         await batch.commit();
         // Delete Firebase Auth user (must be last — invalidates token)
         await admin.auth().deleteUser(uid);
@@ -371,19 +185,18 @@ exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError("internal", error.message);
     }
 });
-// 4. API (Express App)
+// 5. API (Express App)
 const app_1 = __importDefault(require("./app"));
 exports.api = functions.https.onRequest(app_1.default);
 // ── GEMINI PROXY FUNCTIONS ────────────────────────────────────────────────
-// The Gemini API key is stored server-side in Firebase Functions config.
-// Set it via: firebase functions:config:set gemini.key="AIza..."
-// This ensures the key NEVER appears in the frontend bundle.
+// The Gemini API key is stored server-side in environment / Firebase Functions config.
+// Set via: GEMINI_API_KEY env var or firebase functions:config:set gemini.key="AIza..."
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 async function callGeminiRaw(contents, systemInstruction, responseMimeType) {
     var _a, _b, _c, _d, _e, _f;
-    const geminiKey = (_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key;
+    const geminiKey = process.env.GEMINI_API_KEY || ((_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key);
     if (!geminiKey) {
-        throw new functions.https.HttpsError("failed-precondition", "Gemini API key is not configured on the server. Run: firebase functions:config:set gemini.key=\"AIza...\"");
+        throw new functions.https.HttpsError("failed-precondition", "Gemini API key is not configured on the server. Set GEMINI_API_KEY or run: firebase functions:config:set gemini.key=\"AIza...\"");
     }
     const body = {
         contents,
@@ -405,48 +218,43 @@ async function callGeminiRaw(contents, systemInstruction, responseMimeType) {
     const data = await res.json();
     return ((_f = (_e = (_d = (_c = (_b = data === null || data === void 0 ? void 0 : data.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e[0]) === null || _f === void 0 ? void 0 : _f.text) || null;
 }
-async function verifyProAccess(uid) {
-    var _a;
-    const userDoc = await db.collection("users").doc(uid).get();
-    const plan = (_a = userDoc.data()) === null || _a === void 0 ? void 0 : _a.plan;
-    let isProUntilActive = false;
-    const rawProUntil = plan === null || plan === void 0 ? void 0 : plan.proUntil;
-    if (typeof rawProUntil === "number") {
-        isProUntilActive = rawProUntil > Date.now();
-    }
-    else if (rawProUntil && typeof rawProUntil.toMillis === "function") {
-        isProUntilActive = rawProUntil.toMillis() > Date.now();
-    }
-    else if (rawProUntil && typeof rawProUntil.seconds === "number") {
-        isProUntilActive = rawProUntil.seconds * 1000 > Date.now();
-    }
-    const isPro = ((plan === null || plan === void 0 ? void 0 : plan.type) === "pro" && (plan === null || plan === void 0 ? void 0 : plan.status) === "active") || isProUntilActive;
-    if (!isPro) {
-        throw new functions.https.HttpsError("permission-denied", "AI features require an active Pro subscription or referral trial.");
-    }
-}
-// 8. Gemini Insights Proxy (single-turn, JSON response)
+// 6. Gemini Insights Proxy (single-turn, JSON response — open to all authenticated users)
 exports.geminiProxy = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
     }
-    await verifyProAccess(context.auth.uid);
-    const { prompt, systemInstruction } = data;
+    const { prompt, systemInstruction } = data || {};
     if (!prompt || typeof prompt !== "string") {
         throw new functions.https.HttpsError("invalid-argument", "prompt is required.");
+    }
+    if (prompt.length > 20000) {
+        throw new functions.https.HttpsError("invalid-argument", "prompt exceeds maximum allowed length (20000 characters).");
+    }
+    if (systemInstruction !== undefined &&
+        (typeof systemInstruction !== "string" || systemInstruction.length > 20000)) {
+        throw new functions.https.HttpsError("invalid-argument", "systemInstruction exceeds maximum allowed length.");
     }
     const text = await callGeminiRaw([{ parts: [{ text: prompt }] }], systemInstruction, "application/json");
     return { text };
 });
-// 9. Gemini Chat Proxy (multi-turn conversation)
+// 7. Gemini Chat Proxy (multi-turn conversation — open to all authenticated users)
 exports.geminiChatProxy = functions.https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "User must be logged in to use AI features.");
     }
-    await verifyProAccess(context.auth.uid);
-    const { history, userMessage, systemInstruction } = data;
+    const { history, userMessage, systemInstruction } = data || {};
     if (!userMessage || typeof userMessage !== "string") {
         throw new functions.https.HttpsError("invalid-argument", "userMessage is required.");
+    }
+    if (userMessage.length > 8000) {
+        throw new functions.https.HttpsError("invalid-argument", "userMessage exceeds maximum allowed length (8000 characters).");
+    }
+    if (history !== undefined && (!Array.isArray(history) || history.length > 40)) {
+        throw new functions.https.HttpsError("invalid-argument", "history must be an array with at most 40 entries.");
+    }
+    if (systemInstruction !== undefined &&
+        (typeof systemInstruction !== "string" || systemInstruction.length > 20000)) {
+        throw new functions.https.HttpsError("invalid-argument", "systemInstruction exceeds maximum allowed length.");
     }
     const contents = [
         ...(Array.isArray(history) ? history : []),

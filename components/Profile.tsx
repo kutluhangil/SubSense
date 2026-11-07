@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   User, MapPin, Mail, Phone, Camera, Edit2, Link as LinkIcon, Calendar, Activity,
-  CheckCircle, Zap, Check, Trophy, Wallet, X, Crown, CreditCard, Globe, PieChart, BadgeCheck,
+  CheckCircle, Zap, Check, Trophy, Wallet, X, CreditCard, Globe, PieChart, BadgeCheck,
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ import { BrandIcon } from './BrandIcon';
 import ImageCropperModal from './ImageCropperModal';
 import { useAchievements } from '../hooks/useAchievements';
 import { CostDonut } from './AnalyticsCharts';
-import { Card, SectionCard, StatTile, Pill, PrimaryButton, GhostButton, SeeAllLink } from './ui';
+import { Card, SectionCard, StatTile, PrimaryButton, GhostButton, SeeAllLink } from './ui';
 
 interface ProfileProps {
   user: AuthUser;
@@ -27,7 +27,7 @@ const monthly = (s: Subscription) => (s.cycle === 'Monthly' ? s.price : s.price 
 
 export default function Profile({ user, subscriptions, userKey }: ProfileProps) {
   const { t, formatPrice, convert } = useLanguage();
-  const { isPro, currentUser, userProfile } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   const [profileData, setProfileData] = useState(() => {
     // 1. First check cloud profile from Firestore
@@ -221,7 +221,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                 <div className="mb-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="font-display text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">{user.name}</h1>
-                    {isPro ? <Pill color="#f59e0b"><Crown size={11} /> Pro</Pill> : <Pill color="#6b7280">Free</Pill>}
                     {currentUser?.emailVerified && <BadgeCheck size={18} className="text-blue-500" />}
                   </div>
                   <p className="mt-0.5 font-medium text-gray-500 dark:text-gray-400">{user.email}</p>
@@ -359,10 +358,6 @@ export default function Profile({ user, subscriptions, userKey }: ProfileProps) 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500 dark:text-gray-400">{t('profile.member_since')}</span>
                   <span className="font-semibold text-gray-900 dark:text-white">{profileData.joinedDate}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 dark:text-gray-400">{t('profile.plan_label')}</span>
-                  {isPro ? <Pill color="#f59e0b"><Crown size={11} /> Pro</Pill> : <Pill color="#6b7280">Free</Pill>}
                 </div>
                 <div className="border-t border-gray-100 pt-4 dark:border-white/5">
                   <div className="mb-1.5 flex items-center justify-between text-xs">

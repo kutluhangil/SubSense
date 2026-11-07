@@ -26,6 +26,7 @@ export type AnalyticsEvent =
   | 'subscription_added'
   | 'subscription_edited'
   | 'subscription_removed'
+  | 'subscriptions_imported'
   | 'mark_as_paid'
   | 'subscription_upgrade'
 

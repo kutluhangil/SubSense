@@ -23,9 +23,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listFriendsFn = exports.listFriendRequestsFn = exports.respondFriendRequestFn = exports.sendFriendRequestFn = void 0;
+exports.removeFriendFn = exports.listFriendsFn = exports.listFriendRequestsFn = exports.respondFriendRequestFn = exports.sendFriendRequestFn = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const initAdmin_1 = require("./initAdmin");
 /**
  * Friend system — all cross-user reads/writes go through these callable
  * functions (Admin SDK), so Firestore security rules stay fully locked and
@@ -39,8 +40,7 @@ const admin = __importStar(require("firebase-admin"));
  * (default true). listFriends only returns fields the friend allows.
  */
 const getDb = () => {
-    if (!admin.apps.length)
-        admin.initializeApp();
+    (0, initAdmin_1.initFirebaseAdmin)();
     return admin.firestore();
 };
 const requireAuth = (context) => {
@@ -144,5 +144,31 @@ exports.listFriendsFn = functions.https.onCall(async (_data, context) => {
         return out;
     });
     return { friends };
+});
+// Remove an accepted friend (mirrors deletion on both sides + cleans stale requests).
+exports.removeFriendFn = functions.https.onCall(async (data, context) => {
+    const uid = requireAuth(context);
+    const friendUid = typeof (data === null || data === void 0 ? void 0 : data.friendUid) === "string" ? data.friendUid.trim() : "";
+    if (!friendUid) {
+        throw new functions.https.HttpsError("invalid-argument", "friendUid required.");
+    }
+    if (uid === friendUid) {
+        throw new functions.https.HttpsError("invalid-argument", "Cannot remove yourself.");
+    }
+    if (friendUid.includes("/")) {
+        throw new functions.https.HttpsError("invalid-argument", "Invalid friendUid.");
+    }
+    const db = getDb();
+    const myRef = db.collection("users").doc(uid);
+    const friendRef = db.collection("users").doc(friendUid);
+    const batch = db.batch();
+    batch.delete(myRef.collection("friends").doc(friendUid));
+    batch.delete(friendRef.collection("friends").doc(uid));
+    batch.delete(myRef.collection("friendRequests").doc(friendUid));
+    batch.delete(friendRef.collection("friendRequests").doc(uid));
+    batch.delete(myRef.collection("sentRequests").doc(friendUid));
+    batch.delete(friendRef.collection("sentRequests").doc(uid));
+    await batch.commit();
+    return { status: "removed" };
 });
 //# sourceMappingURL=friends.js.map

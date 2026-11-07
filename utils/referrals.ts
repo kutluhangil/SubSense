@@ -1,11 +1,5 @@
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase/firebase';
-
-/**
- * Thin client wrappers around the referral Cloud Functions. All cross-user
- * access goes through these (Admin SDK on the server), so Firestore rules
- * stay locked and reward grants are enforced server-side.
- */
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, functions, httpsCallable } from '../firebase/firebase';
 
 export interface ReferralInfo {
   status: string;
@@ -20,10 +14,50 @@ export interface RedeemResult {
   proDaysGranted?: number;
 }
 
+const generateFallbackCode = (): string => {
+  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 7; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+};
+
 export const getReferralCode = async (): Promise<ReferralInfo> => {
-  const fn = httpsCallable<unknown, ReferralInfo>(functions, 'getReferralCode');
-  const res = await fn({});
-  return res.data;
+  try {
+    const fn = httpsCallable<unknown, ReferralInfo>(functions, 'getReferralCode');
+    const res = await fn({});
+    if (res.data?.code) return res.data;
+  } catch {
+    // Fallback to direct user doc read/write if Admin SDK service account isn't loaded yet
+  }
+
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    return { status: 'error', code: '', referredCount: 0, proDaysEarned: 0, proUntil: null };
+  }
+
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    const data = snap.data() || {};
+    const referral = (data.referral as Record<string, any>) || {};
+    let code = (referral.code as string) || '';
+    if (!code) {
+      code = generateFallbackCode();
+      await setDoc(userRef, { referral: { ...referral, code } }, { merge: true });
+    }
+    const referredCount = Number(referral.referredCount || 0);
+    return {
+      status: 'ok',
+      code,
+      referredCount,
+      proDaysEarned: referredCount * 30,
+      proUntil: null,
+    };
+  } catch {
+    return { status: 'error', code: '', referredCount: 0, proDaysEarned: 0, proUntil: null };
+  }
 };
 
 export const redeemReferral = async (code: string): Promise<RedeemResult> => {

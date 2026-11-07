@@ -56,7 +56,7 @@ export default function HeroDashboardMockup() {
             <span className="w-4 h-4 rounded-md bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
               <Sparkles size={9} className="text-white" />
             </span>
-            SubSense
+            Aboneyim
           </div>
           <span className="flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> live

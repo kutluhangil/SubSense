@@ -1,13 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Bell,
   Shield,
   Eye,
-  Globe,
   Zap,
   LogOut,
   Monitor,
-  Smartphone,
   Download,
   Upload,
   FileText,
@@ -15,15 +13,16 @@ import {
   CheckCircle2,
   MessageSquare,
   BarChart,
-  CreditCard,
-  Star,
   Calendar,
-  ExternalLink,
   Sun,
   Moon,
   Trash2,
   AlertTriangle,
   Loader2,
+  SlidersHorizontal,
+  RefreshCw,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Subscription } from "./SubscriptionModal";
@@ -32,18 +31,13 @@ import { User } from "../App";
 import { useFeedback } from "../contexts/FeedbackContext";
 import { updateUserSettings } from "../utils/firestore";
 import { useAuth } from "../contexts/AuthContext";
-import UpgradeModal from "./UpgradeModal";
-import { createPortalSession } from "../utils/stripe";
 import {
   requestNotificationPermission,
   getNotificationStatus,
 } from "../utils/notificationService";
-import { SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "./ui";
-import { httpsCallable } from "firebase/functions";
-import { functions } from "../firebase/firebase";
-import { db } from "../firebase/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { functions, httpsCallable } from "../firebase/firebase";
+
 interface SettingsProps {
   subscriptions?: Subscription[];
   onUpdateSubscriptions?: React.Dispatch<React.SetStateAction<Subscription[]>>;
@@ -55,17 +49,51 @@ export default function Settings({
   subscriptions = [],
   onUpdateSubscriptions,
   onImportSubscriptions,
-  user,
 }: SettingsProps) {
-  const { t, currentCurrency, setCurrency, currentTheme, setTheme, currentLanguage } =
+  const { t, currentCurrency, setCurrency, currentTheme, setTheme } =
     useLanguage();
-  const { currentUser, userProfile, isPro, logout } = useAuth();
+  const { currentUser, userProfile, logout, logoutAllDevices } =
+    useAuth() as ReturnType<typeof useAuth> & {
+      logoutAllDevices?: () => Promise<void>;
+    };
+  const prefs = userProfile?.preferences as Record<string, any> | undefined;
+
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
+  const [isGeneratingCalendar, setIsGeneratingCalendar] = useState(false);
+  const [calendarCopied, setCalendarCopied] = useState(false);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
+
+  const [emailNotifs, setEmailNotifs] = useState<boolean>(
+    () => prefs?.notifyEmail ?? true,
+  );
+  const [paymentReminders, setPaymentReminders] = useState<boolean>(() => {
+    if (prefs?.notifyPayment !== undefined) {
+      return Boolean(prefs.notifyPayment);
+    }
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("subsense_notify_payment") !== "false";
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (prefs?.notifyEmail !== undefined) {
+      setEmailNotifs(Boolean(prefs.notifyEmail));
+    }
+    if (prefs?.notifyPayment !== undefined) {
+      const nextVal = Boolean(prefs.notifyPayment);
+      setPaymentReminders(nextVal);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("subsense_notify_payment", String(nextVal));
+      }
+    }
+  }, [prefs?.notifyEmail, prefs?.notifyPayment]);
+
   const { openFeedback } = useFeedback();
 
   const handleExportCSV = () => {
@@ -97,28 +125,31 @@ export default function Settings({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", "subsense_export.csv");
+    link.setAttribute("download", "aboneyim_export.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const handleLogoutAll = () => {
-    if (window.confirm(t("settings.logout_confirm"))) {
-      alert(t("settings.sessions_cleared"));
+  const handleLogoutAll = async () => {
+    if (!window.confirm(t("settings.logout_all_confirm"))) return;
+    setIsLoggingOutAll(true);
+    try {
+      if (logoutAllDevices) {
+        await logoutAllDevices();
+      } else {
+        await logout();
+      }
+    } catch (e) {
+      console.error("Failed to log out all devices:", e);
+      alert(t("common.error"));
+    } finally {
+      setIsLoggingOutAll(false);
     }
   };
 
   const handleCurrencyChange = (newCurrency: string) => {
     setCurrency(newCurrency);
-    if (onUpdateSubscriptions) {
-      onUpdateSubscriptions((prev) =>
-        prev.map((sub) => ({
-          ...sub,
-          currency: newCurrency,
-        })),
-      );
-    }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -143,10 +174,6 @@ export default function Settings({
     updateUserSettings(currentUser.uid, { privacy: { ...privacy, ...patch } });
   };
 
-  const handleManageSubscription = async () => {
-    await createPortalSession();
-  };
-
   const handleDeleteAccount = async () => {
     if (!currentUser) return;
     setIsDeletingAccount(true);
@@ -162,17 +189,41 @@ export default function Settings({
   };
 
   const handleGenerateCalendarToken = async () => {
-    if (!currentUser) return;
-    const newToken =
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15);
-    await updateUserSettings(currentUser.uid, { calendarToken: newToken });
+    if (!currentUser) {
+      setCalendarError(t("settings.calendar_login_required"));
+      return;
+    }
+    setIsGeneratingCalendar(true);
+    setCalendarError(null);
+    try {
+      const newToken =
+        Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15);
+      await updateUserSettings(currentUser.uid, { calendarToken: newToken });
+    } catch (err) {
+      console.error("Failed to generate calendar token:", err);
+      setCalendarError(t("settings.calendar_error"));
+    } finally {
+      setIsGeneratingCalendar(false);
+    }
   };
 
   const calendarUrl =
-    currentUser && userProfile?.preferences?.calendarToken
-      ? `https://us-central1-${functions.app.options.projectId}.cloudfunctions.net/generateCalendarFeed?token=${userProfile.preferences.calendarToken}`
+    currentUser && prefs?.calendarToken
+      ? `${typeof window !== "undefined" ? window.location.origin : ""}/api/calendar.ics?token=${prefs.calendarToken}`
       : "";
+
+  const handleCopyCalendarUrl = async () => {
+    if (!calendarUrl) return;
+    setCalendarError(null);
+    try {
+      await navigator.clipboard.writeText(calendarUrl);
+      setCalendarCopied(true);
+      setTimeout(() => setCalendarCopied(false), 2000);
+    } catch {
+      setCalendarError(t("settings.calendar_error"));
+    }
+  };
 
   const handleCSVImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -237,9 +288,10 @@ export default function Settings({
           onUpdateSubscriptions((prev) => [...prev, ...imported]);
         }
 
-        const msg = currentLanguage === "tr"
-          ? `${count} abonelik başarıyla içe aktarıldı.`
-          : `${count} subscription(s) successfully imported.`;
+        const msg = t("settings.import_success").replace(
+          "{count}",
+          String(count),
+        );
         setToastMessage(msg);
         setShowToast(true);
         setTimeout(() => {
@@ -256,21 +308,6 @@ export default function Settings({
     reader.readAsText(file);
   };
 
-  // Helper to format subscription dates safely
-  const getRenewalDate = () => {
-    if (!userProfile?.plan?.currentPeriodEnd) return "Unknown";
-    try {
-      // Handle both Firestore Timestamp and ISO string
-      const date =
-        typeof userProfile.plan.currentPeriodEnd === "string"
-          ? new Date(userProfile.plan.currentPeriodEnd)
-          : userProfile.plan.currentPeriodEnd.toDate();
-      return date.toLocaleDateString();
-    } catch (e) {
-      return "Unknown";
-    }
-  };
-
   const handlePreferenceUpdate = async (key: string, value: boolean) => {
     if (!currentUser) return;
 
@@ -278,6 +315,35 @@ export default function Settings({
       await updateUserSettings(currentUser.uid, { [key]: value });
     } catch (e) {
       console.error("Failed to sync preference", e);
+    }
+  };
+
+  const handleEmailNotifsChange = async (nextVal: boolean) => {
+    setEmailNotifs(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("subsense_notify_email", String(nextVal));
+    }
+    if (currentUser) {
+      await updateUserSettings(currentUser.uid, {
+        notifyEmail: nextVal,
+        notifyPayment: paymentReminders,
+      });
+    }
+  };
+
+  const handlePaymentRemindersChange = async (nextVal: boolean) => {
+    if (nextVal) {
+      await requestNotificationPermission();
+    }
+    setPaymentReminders(nextVal);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("subsense_notify_payment", String(nextVal));
+    }
+    if (currentUser) {
+      await updateUserSettings(currentUser.uid, {
+        notifyEmail: emailNotifs,
+        notifyPayment: nextVal,
+      });
     }
   };
 
@@ -291,66 +357,6 @@ export default function Settings({
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-8">
-          {/* ... (Plan Card skipped for brevity in diff, assume unchanged) ... */}
-          {/* Re-rendering Plan Card logic to ensure context... actually I can skip replacing the whole block if I use strict targeting. */}
-          {/* But sticking to the block structure for safety. */}
-          {/* Subscription Plan Card */}
-          <div
-            className={`rounded-2xl border shadow-sm overflow-hidden ${isPro ? "bg-gradient-to-r from-indigo-900 to-purple-900 border-indigo-700" : "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700"}`}
-          >
-            {/* ... (Keeping inner content same) ... */}
-            <div
-              className={`px-6 py-4 border-b flex items-center gap-3 ${isPro ? "border-indigo-700/50 bg-black/20" : "border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30"}`}
-            >
-              <CreditCard
-                className={isPro ? "text-indigo-300" : "text-gray-400"}
-                size={20}
-              />
-              <h3
-                className={`text-base font-bold ${isPro ? "text-white" : "text-gray-900 dark:text-white"}`}
-              >
-                {t("settings.subscription_plan")}
-              </h3>
-            </div>
-            <div className="p-6">
-              {/* ... Content ... */}
-              <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h4
-                    className={`text-lg font-bold ${isPro ? "text-white" : "text-gray-900 dark:text-white"}`}
-                  >
-                    {isPro ? t("settings.pro_plan") : t("settings.free_plan")}
-                  </h4>
-                  <p
-                    className={`text-sm ${isPro ? "text-indigo-200" : "text-gray-500 dark:text-gray-400"}`}
-                  >
-                    {isPro
-                      ? t("settings.next_billing").replace(
-                          "{0}",
-                          getRenewalDate(),
-                        )
-                      : t("settings.upgrade_prompt")}
-                  </p>
-                </div>
-                {isPro ? (
-                  <button
-                    onClick={handleManageSubscription}
-                    className="w-full sm:w-auto text-sm font-bold text-white bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-colors"
-                  >
-                    {t("settings.manage")}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setIsUpgradeOpen(true)}
-                    className="w-full sm:w-auto text-sm font-bold text-white bg-gray-900 dark:bg-blue-600 px-5 py-2.5 rounded-xl"
-                  >
-                    {t("settings.upgrade")}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Appearance */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
@@ -406,27 +412,28 @@ export default function Settings({
                 {t("settings.currency_section")}
               </h3>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <label className="text-sm font-bold text-gray-900 dark:text-white">
-                    {t("settings.base_currency_label")}
-                  </label>
-                  <div className="relative w-full sm:min-w-[200px]">
-                    <select
-                      value={currentCurrency}
-                      onChange={(e) => handleCurrencyChange(e.target.value)}
-                      className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-2.5 font-medium cursor-pointer"
-                    >
-                      {Object.values(CURRENCY_DATA).map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.flag} {c.code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <div className="p-6 space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <label className="text-sm font-bold text-gray-900 dark:text-white">
+                  {t("settings.base_currency_label")}
+                </label>
+                <div className="relative w-full sm:min-w-[200px] sm:w-auto">
+                  <select
+                    value={currentCurrency}
+                    onChange={(e) => handleCurrencyChange(e.target.value)}
+                    className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-2.5 font-medium cursor-pointer"
+                  >
+                    {Object.values(CURRENCY_DATA).map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.flag} {c.code}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {t("settings.currency_note")}
+              </p>
             </div>
           </div>
 
@@ -454,9 +461,7 @@ export default function Settings({
                 </div>
                 <Toggle
                   id="smart_suggestions"
-                  defaultChecked={
-                    userProfile?.preferences?.smartSuggestions ?? true
-                  }
+                  defaultChecked={prefs?.smartSuggestions ?? true}
                   color="bg-indigo-600"
                   onChange={(val) =>
                     handlePreferenceUpdate("smartSuggestions", val)
@@ -475,6 +480,21 @@ export default function Settings({
               </h3>
             </div>
             <div className="p-6 space-y-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                    {t("settings.email_notifications")}
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {t("settings.notify_email_desc")}
+                  </p>
+                </div>
+                <Toggle
+                  id="notify_email"
+                  checked={emailNotifs}
+                  onChange={handleEmailNotifsChange}
+                />
+              </div>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white">
@@ -508,18 +528,8 @@ export default function Settings({
                 </div>
                 <Toggle
                   id="notify_payment"
-                  defaultChecked={
-                    userProfile?.preferences?.notifyPayment ?? true
-                  }
-                  onChange={async (val) => {
-                    if (val) {
-                      const granted = await requestNotificationPermission();
-                      if (!granted) {
-                        // Permission was denied — the status text above will update on next render
-                      }
-                    }
-                    handlePreferenceUpdate("notifyPayment", val);
-                  }}
+                  checked={paymentReminders}
+                  onChange={handlePaymentRemindersChange}
                 />
               </div>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -533,7 +543,7 @@ export default function Settings({
                 </div>
                 <Toggle
                   id="notify_price"
-                  defaultChecked={userProfile?.preferences?.notifyPrice ?? true}
+                  defaultChecked={prefs?.notifyPrice ?? true}
                   onChange={(val) => handlePreferenceUpdate("notifyPrice", val)}
                 />
               </div>
@@ -542,41 +552,81 @@ export default function Settings({
 
           {/* Calendar Sync */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3 bg-gray-50/50 dark:bg-gray-900/30">
-              <Calendar className="text-gray-400" size={20} />
-              <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">
-                Takvim Senkronizasyonu
-              </h3>
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-3 bg-gray-50/50 dark:bg-gray-900/30">
+              <div className="flex items-center gap-3">
+                <Calendar className="text-gray-400" size={20} />
+                <h3 className="font-display text-base font-bold text-gray-900 dark:text-white">
+                  {t("settings.calendar_title")}
+                </h3>
+              </div>
+              {prefs?.calendarToken && (
+                <button
+                  type="button"
+                  onClick={handleGenerateCalendarToken}
+                  disabled={isGeneratingCalendar}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 transition-colors"
+                >
+                  <RefreshCw
+                    size={13}
+                    className={isGeneratingCalendar ? "animate-spin" : ""}
+                  />
+                  {t("settings.calendar_regenerate")}
+                </button>
+              )}
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Abonelik ödeme günlerinizi Google veya Apple Takvim üzerinden
-                takip edin.
+                {t("settings.calendar_desc")}
               </p>
 
-              {userProfile?.preferences?.calendarToken ? (
+              {calendarError && (
+                <p className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg">
+                  {calendarError}
+                </p>
+              )}
+
+              {prefs?.calendarToken ? (
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 break-all text-xs font-mono text-gray-500">
                     {calendarUrl}
                   </div>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(calendarUrl);
-                      alert("Takvim linki kopyalandı!");
-                    }}
-                    className="w-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
+                    type="button"
+                    onClick={handleCopyCalendarUrl}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold py-2.5 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition"
                   >
-                    Linki Kopyala
+                    {calendarCopied ? (
+                      <>
+                        <Check size={15} /> {t("settings.calendar_copied")}
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={15} /> {t("settings.calendar_copy")}
+                      </>
+                    )}
                   </button>
                 </div>
               ) : (
                 <button
+                  type="button"
                   onClick={handleGenerateCalendarToken}
-                  className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-3 rounded-xl hover:shadow-lg transition active:scale-95"
+                  disabled={isGeneratingCalendar}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-3 rounded-xl hover:shadow-lg transition active:scale-95 disabled:opacity-60"
                 >
-                  Takvim Linki Oluştur
+                  {isGeneratingCalendar ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      {t("settings.calendar_generating")}
+                    </>
+                  ) : (
+                    t("settings.calendar_generate")
+                  )}
                 </button>
               )}
+
+              <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
+                {t("settings.calendar_hint")}
+              </p>
             </div>
           </div>
         </div>
@@ -714,9 +764,15 @@ export default function Settings({
             <div className="p-6 space-y-4">
               <button
                 onClick={handleLogoutAll}
-                className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 py-2.5 rounded-xl transition-colors"
+                disabled={isLoggingOutAll}
+                className="w-full flex items-center justify-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 py-2.5 rounded-xl transition-colors disabled:opacity-60"
               >
-                <LogOut size={16} /> {t("settings.logout_all")}
+                {isLoggingOutAll ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <LogOut size={16} />
+                )}{" "}
+                {t("settings.logout_all")}
               </button>
 
               {!showDeleteConfirm ? (
@@ -778,43 +834,44 @@ export default function Settings({
           </span>
         </div>
       )}
-
-      <UpgradeModal
-        isOpen={isUpgradeOpen}
-        onClose={() => setIsUpgradeOpen(false)}
-      />
     </div>
   );
 }
 
 const Toggle = ({
   id,
+  checked,
   defaultChecked = false,
   color = "bg-gray-900 dark:bg-blue-600",
   onChange,
 }: {
   id: string;
+  checked?: boolean;
   defaultChecked?: boolean;
   color?: string;
   onChange?: (val: boolean) => void;
 }) => {
-  const [enabled, setEnabled] = useState(() => {
-    // Priority: Prop (from DB) > LocalStorage > Default
-    // But since we pass defaultChecked from DB prop in parent, we trust that mostly.
+  const [internalEnabled, setInternalEnabled] = useState(() => {
+    if (checked !== undefined) return checked;
     const saved = localStorage.getItem(`setting_${id}`);
     if (saved !== null) return JSON.parse(saved);
     return defaultChecked;
   });
 
-  // Sync state if defaultChecked changes (e.g. loaded from DB)
-  React.useEffect(() => {
-    setEnabled(defaultChecked);
-  }, [defaultChecked]);
+  useEffect(() => {
+    if (checked === undefined) {
+      setInternalEnabled(defaultChecked);
+    }
+  }, [defaultChecked, checked]);
+
+  const enabled = checked !== undefined ? checked : internalEnabled;
 
   const toggle = () => {
     const newVal = !enabled;
-    setEnabled(newVal);
-    localStorage.setItem(`setting_${id}`, JSON.stringify(newVal));
+    if (checked === undefined) {
+      setInternalEnabled(newVal);
+      localStorage.setItem(`setting_${id}`, JSON.stringify(newVal));
+    }
     if (onChange) onChange(newVal);
   };
 

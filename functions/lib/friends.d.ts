@@ -3,3 +3,4 @@ export declare const sendFriendRequestFn: functions.HttpsFunction & functions.Ru
 export declare const respondFriendRequestFn: functions.HttpsFunction & functions.Runnable<any>;
 export declare const listFriendRequestsFn: functions.HttpsFunction & functions.Runnable<any>;
 export declare const listFriendsFn: functions.HttpsFunction & functions.Runnable<any>;
+export declare const removeFriendFn: functions.HttpsFunction & functions.Runnable<any>;

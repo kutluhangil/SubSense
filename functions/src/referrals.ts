@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { initFirebaseAdmin } from "./initAdmin";
 
 /**
  * Referral program — a viral growth loop. Each user gets a shareable invite
@@ -21,7 +22,7 @@ const MAX_REFERRALS = 12; // Maximum 12 referrals (360 days of Pro cap)
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const getDb = () => {
-  if (!admin.apps.length) admin.initializeApp();
+  initFirebaseAdmin();
   return admin.firestore();
 };
 

@@ -49,7 +49,7 @@ function pageHtml(svc: SubscriptionDetail, related: { slug: string; name: string
   const us = svc.regions?.US;
   const logo = getBrandLogo(svc.name);
   const desc1 = svc.description?.split('\n')[0] || `${svc.name} güncel Türkiye fiyatları, planları ve abonelik ücretleri.`;
-  const metaDesc = `${svc.name} Türkiye fiyatları 2026: güncel aylık planlar ve ücretler. ${tr?.tiers?.[0] ? `${tierName(tr.tiers[0])} ${sym(tr.currency)}${tr.tiers[0].price}.` : ''} SubSense ile tüm aboneliklerini tek yerden takip et.`;
+  const metaDesc = `${svc.name} Türkiye fiyatları 2026: güncel aylık planlar ve ücretler. ${tr?.tiers?.[0] ? `${tierName(tr.tiers[0])} ${sym(tr.currency)}${tr.tiers[0].price}.` : ''} Aboneyim ile tüm aboneliklerini tek yerden takip et.`;
   const slug = slugify(svc.name);
   const url = `${SITE}/fiyatlar/${slug}`;
 
@@ -73,7 +73,7 @@ function pageHtml(svc: SubscriptionDetail, related: { slug: string; name: string
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>${esc(svc.name)} Türkiye Fiyatları 2026 — Güncel Planlar | SubSense</title>
+<title>${esc(svc.name)} Türkiye Fiyatları 2026 — Güncel Planlar | Aboneyim</title>
 <meta name="description" content="${esc(metaDesc)}"/>
 <link rel="canonical" href="${url}"/>
 <meta property="og:type" content="website"/>
@@ -111,7 +111,7 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);color
 </head>
 <body>
 <div class="wrap">
-  <a class="top" href="/">🪙 SubSense</a>
+  <a class="top" href="/">🪙 Aboneyim</a>
   <div class="hero">
     ${logo ? `<div class="logo"><img src="${logo}" alt="${esc(svc.name)} logo" loading="lazy"/></div>` : ''}
     <div><h1>${esc(svc.name)} Fiyatları</h1></div>
@@ -136,7 +136,7 @@ footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);color
   <h2>Diğer abonelik fiyatları</h2>
   <div class="related">${related.map((r) => `<a href="/fiyatlar/${r.slug}">${esc(r.name)}</a>`).join('')}</div>
 
-  <footer>Fiyatlar güncel verilere dayanır, değişebilir. © SubSense — abonelik & harcama takip uygulaması.</footer>
+  <footer>Fiyatlar güncel verilere dayanır, değişebilir. © Aboneyim — abonelik & harcama takip uygulaması.</footer>
 </div>
 </body>
 </html>`;
@@ -159,12 +159,12 @@ function categoryHtml(title: string, services: SubscriptionDetail[]): string {
   return `<!doctype html>
 <html lang="tr"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>En İyi ${esc(title)} Abonelikleri ve Fiyatları (Türkiye 2026) | SubSense</title>
-<meta name="description" content="${esc(title)} kategorisindeki ${services.length}+ aboneliğin güncel Türkiye fiyatları. Karşılaştır, en uygununu seç, SubSense ile takip et."/>
+<title>En İyi ${esc(title)} Abonelikleri ve Fiyatları (Türkiye 2026) | Aboneyim</title>
+<meta name="description" content="${esc(title)} kategorisindeki ${services.length}+ aboneliğin güncel Türkiye fiyatları. Karşılaştır, en uygununu seç, Aboneyim ile takip et."/>
 <link rel="canonical" href="${SITE}/fiyatlar/kategori/${esc(CATEGORY_TR_BY_TITLE[title])}"/>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a;max-width:760px;margin:0 auto;padding:24px 20px 64px;line-height:1.6}a{color:#6366f1;text-decoration:none}.top{font-weight:800;font-size:18px}h1{letter-spacing:-.02em}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;margin-top:18px}td{padding:12px 16px;border-bottom:1px solid #e2e8f0;font-size:15px}td:first-child{font-weight:600}td.price{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.mo{font-weight:400;color:#94a3b8;font-size:12px;margin-left:4px}tr:last-child td{border-bottom:0}.cta{display:block;margin:32px 0;background:#6366f1;color:#fff;text-align:center;padding:16px;border-radius:14px;font-weight:800}</style>
 </head><body>
-<a class="top" href="/">🪙 SubSense</a>
+<a class="top" href="/">🪙 Aboneyim</a>
 <h1>En İyi ${esc(title)} Abonelikleri (2026)</h1>
 <p>${esc(title)} kategorisindeki popüler aboneliklerin güncel Türkiye fiyatları. Birine tıkla, tüm planları gör.</p>
 <table><tbody>${rows}</tbody></table>
@@ -209,14 +209,14 @@ for (const cat of SUBSCRIPTION_CATEGORIES) {
 // Hub page
 const hub = `<!doctype html><html lang="tr"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Abonelik Fiyatları 2026 — Türkiye Güncel Liste | SubSense</title>
-<meta name="description" content="Netflix, Spotify, Disney+, PlayStation Plus ve ${all.length}+ servisin güncel Türkiye abonelik fiyatları. SubSense ile hepsini takip et."/>
+<title>Abonelik Fiyatları 2026 — Türkiye Güncel Liste | Aboneyim</title>
+<meta name="description" content="Netflix, Spotify, Disney+, PlayStation Plus ve ${all.length}+ servisin güncel Türkiye abonelik fiyatları. Aboneyim ile hepsini takip et."/>
 <link rel="canonical" href="${SITE}/fiyatlar"/>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a;max-width:760px;margin:0 auto;padding:24px 20px 64px;line-height:1.6}a{color:#6366f1;text-decoration:none}.top{font-weight:800;font-size:18px}h1{letter-spacing:-.02em}.grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.grid a{background:#fff;border:1px solid #e2e8f0;padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;color:#0f172a}</style>
 </head><body>
-<a class="top" href="/">🪙 SubSense</a>
+<a class="top" href="/">🪙 Aboneyim</a>
 <h1>Abonelik Fiyatları (Türkiye, 2026)</h1>
-<p>${all.length}+ servisin güncel aylık abonelik fiyatları. Birine tıkla, planları gör — sonra <a href="/">SubSense</a> ile hepsini tek yerden takip et.</p>
+<p>${all.length}+ servisin güncel aylık abonelik fiyatları. Birine tıkla, planları gör — sonra <a href="/">Aboneyim</a> ile hepsini tek yerden takip et.</p>
 <h2 style="font-size:16px;margin-top:24px">Kategoriler</h2>
 <div class="grid">${categoryLinks.map((c) => `<a href="/fiyatlar/kategori/${c.slug}">${esc(c.title)}</a>`).join('')}</div>
 <h2 style="font-size:16px;margin-top:24px">Tüm servisler</h2>

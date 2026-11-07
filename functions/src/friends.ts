@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { initFirebaseAdmin } from "./initAdmin";
 
 /**
  * Friend system — all cross-user reads/writes go through these callable
@@ -15,7 +16,7 @@ import * as admin from "firebase-admin";
  */
 
 const getDb = () => {
-  if (!admin.apps.length) admin.initializeApp();
+  initFirebaseAdmin();
   return admin.firestore();
 };
 
@@ -126,4 +127,35 @@ export const listFriendsFn = functions.https.onCall(async (_data, context) => {
     });
 
   return { friends };
+});
+
+// Remove an accepted friend (mirrors deletion on both sides + cleans stale requests).
+export const removeFriendFn = functions.https.onCall(async (data, context) => {
+  const uid = requireAuth(context);
+  const friendUid = typeof data?.friendUid === "string" ? data.friendUid.trim() : "";
+
+  if (!friendUid) {
+    throw new functions.https.HttpsError("invalid-argument", "friendUid required.");
+  }
+  if (uid === friendUid) {
+    throw new functions.https.HttpsError("invalid-argument", "Cannot remove yourself.");
+  }
+  if (friendUid.includes("/")) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid friendUid.");
+  }
+
+  const db = getDb();
+  const myRef = db.collection("users").doc(uid);
+  const friendRef = db.collection("users").doc(friendUid);
+
+  const batch = db.batch();
+  batch.delete(myRef.collection("friends").doc(friendUid));
+  batch.delete(friendRef.collection("friends").doc(uid));
+  batch.delete(myRef.collection("friendRequests").doc(friendUid));
+  batch.delete(friendRef.collection("friendRequests").doc(uid));
+  batch.delete(myRef.collection("sentRequests").doc(friendUid));
+  batch.delete(friendRef.collection("sentRequests").doc(uid));
+
+  await batch.commit();
+  return { status: "removed" };
 });

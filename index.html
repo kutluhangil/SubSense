@@ -3,23 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SubSense</title>
+    <title>Aboneyim — Akıllı Abonelik Takipçisi</title>
     <meta
       name="description"
-      content="The local-first subscription tracker. Manage global expenses, compare prices worldwide, and optimize your spending with Gemini AI. Privacy-focused and free."
+      content="Tüm dijital aboneliklerini tek yerden ücretsiz takip et, kurları canlı karşılaştır ve yapay zeka destekli tasarruf içgörüleri al."
     />
     <meta
       name="keywords"
-      content="subscription tracker, expense manager, recurring payments, netflix price comparison, spotify stats, local-first app"
+      content="abonelik takip, harcama yönetimi, düzenli ödemeler, netflix fiyat karşılaştırma, spotify fiyat, aboneyim"
     />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="%APP_URL%" />
-    <meta property="og:title" content="SubSense" />
+    <meta property="og:title" content="Aboneyim" />
     <meta
       property="og:description"
-      content="Track, manage, and optimize your global subscriptions. Compare prices worldwide and save money with SubSense."
+      content="Tüm dijital aboneliklerini tek yerden ücretsiz takip et, karşılaştır ve bütçeni kontrol altına al."
     />
     <meta
       property="og:image"
@@ -29,10 +29,10 @@
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="%APP_URL%" />
-    <meta property="twitter:title" content="SubSense" />
+    <meta property="twitter:title" content="Aboneyim" />
     <meta
       property="twitter:description"
-      content="Track, manage, and optimize your global subscriptions. Privacy-focused and powered by Gemini AI."
+      content="Tüm dijital aboneliklerini tek yerden ücretsiz takip et. Gemini AI destekli gizlilik odaklı abonelik asistanı."
     />
     <meta
       property="twitter:image"
@@ -46,7 +46,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link
@@ -103,7 +103,7 @@
         if (root) {
           root.innerHTML = `
           <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
-            <h2 style="color:#ff4444">⛔ SubSense Load Error</h2>
+            <h2 style="color:#ff4444">⛔ Aboneyim Load Error</h2>
             <p><strong>${msg}</strong></p>
             <p>Source: ${src} | Line: ${line}:${col}</p>
             <pre style="white-space:pre-wrap;font-size:12px;color:#ffa">${err?.stack || "No stack trace"}</pre>
@@ -116,7 +116,7 @@
         if (root) {
           root.innerHTML = `
           <div style="font-family:monospace;padding:24px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
-            <h2 style="color:#ff4444">⛔ SubSense Unhandled Rejection</h2>
+            <h2 style="color:#ff4444">⛔ Aboneyim Unhandled Rejection</h2>
             <pre style="white-space:pre-wrap;font-size:12px;color:#ffa">${String(event.reason?.stack || event.reason)}</pre>
           </div>`;
         }

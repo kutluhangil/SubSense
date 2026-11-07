@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { initFirebaseAdmin } from "./initAdmin";
 
 /**
  * Weekly automated price + FX refresh.
@@ -17,7 +18,7 @@ import * as admin from "firebase-admin";
  */
 
 const getDb = () => {
-  if (!admin.apps.length) admin.initializeApp();
+  initFirebaseAdmin();
   return admin.firestore();
 };
 
@@ -67,7 +68,7 @@ interface GeminiPriceResult {
 }
 
 async function callGeminiGrounded(prompt: string): Promise<string | null> {
-  const key = functions.config().gemini?.key;
+  const key = process.env.GEMINI_API_KEY || functions.config().gemini?.key;
   if (!key) throw new Error("gemini.key not configured");
 
   const body = {
@@ -192,12 +193,28 @@ export const syncPricesWeekly = functions
     return null;
   });
 
-// Manual trigger for testing (authenticated users only).
+// Manual trigger for testing (admin users only).
 export const triggerPriceSync = functions
   .runWith({ timeoutSeconds: 540, memory: "512MB" })
   .https.onCall(async (_data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Login required.");
     }
+
+    const isAdminClaim = context.auth.token.admin === true;
+    const rawAdmins = process.env.ADMIN_EMAILS || functions.config().admin?.emails || "";
+    const adminList = rawAdmins
+      .split(",")
+      .map((s: string) => s.trim().toLowerCase())
+      .filter(Boolean);
+    const callerEmail = (context.auth.token.email || "").toLowerCase();
+
+    if (!isAdminClaim && !adminList.includes(callerEmail)) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Admin privileges required to trigger price sync."
+      );
+    }
+
     return await runPriceSync();
   });

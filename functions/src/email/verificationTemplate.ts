@@ -1,5 +1,5 @@
 
-export const getVerificationEmailTemplate = (link: string, appName: string = 'SubSense') => `
+export const getVerificationEmailTemplate = (link: string, appName: string = 'Aboneyim') => `
 <!DOCTYPE html>
 <html>
 <head>

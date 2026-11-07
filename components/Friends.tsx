@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserPlus, X, Check, Users, MapPin, Loader2, CreditCard, Mail, Inbox, Gift, Copy, Share2 } from 'lucide-react';
+import { UserPlus, UserMinus, X, Check, Users, MapPin, Loader2, CreditCard, Mail, Inbox, Gift, Copy, Share2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { convertAmount } from '../utils/currency';
@@ -9,6 +9,7 @@ import {
   respondFriendRequest,
   listFriendRequests,
   listFriends,
+  removeFriend,
   type FriendProfile,
   type FriendRequestPreview,
   type PersonResult,
@@ -71,7 +72,7 @@ function ReferralCard() {
     if (!link) return;
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: 'SubSense', text: t('referral.share_text'), url: link });
+        await navigator.share({ title: 'Aboneyim', text: t('referral.share_text'), url: link });
         return;
       } catch {
         // User cancelled or share failed — fall back to copy.
@@ -109,18 +110,13 @@ function ReferralCard() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4">
+      <div className="mt-6 max-w-sm">
         <StatTile
           label={t('referral.invited')}
           value={loading ? '—' : String(info?.referredCount ?? 0)}
           icon={Users}
           accent="#a855f7"
-        />
-        <StatTile
-          label={t('referral.days_earned')}
-          value={loading ? '—' : String(info?.proDaysEarned ?? 0)}
-          icon={Gift}
-          accent="#6366f1"
+          hint={t('referral.invited_hint')}
         />
       </div>
     </SectionCard>
@@ -184,6 +180,20 @@ export default function Friends() {
     try {
       await respondFriendRequest(senderUid, accept);
       await reload();
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleRemoveFriend = async (f: FriendProfile) => {
+    const name = f.displayName || f.email || 'User';
+    if (!window.confirm(t('friends.remove_confirm').replace('{name}', name))) return;
+    setBusyId(f.uid);
+    try {
+      await removeFriend(f.uid);
+      setFriends((prev) => prev.filter((item) => item.uid !== f.uid));
+    } catch (err) {
+      console.error('Failed to remove friend:', err);
     } finally {
       setBusyId(null);
     }
@@ -260,12 +270,24 @@ export default function Friends() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {friends.map((f) => (
             <Card key={f.uid} hover glow="#6366f1" className="flex flex-col">
-              <div className="mb-4 flex items-center gap-3">
-                <Avatar name={f.displayName || f.email} />
-                <div className="min-w-0">
-                  <h3 className="truncate font-display font-bold text-gray-900 dark:text-white">{f.displayName || 'User'}</h3>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{f.email}</p>
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar name={f.displayName || f.email} />
+                  <div className="min-w-0">
+                    <h3 className="truncate font-display font-bold text-gray-900 dark:text-white">{f.displayName || 'User'}</h3>
+                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">{f.email}</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFriend(f)}
+                  disabled={busyId === f.uid}
+                  title={t('friends.remove_btn')}
+                  aria-label={t('friends.remove_btn')}
+                  className="shrink-0 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                >
+                  {busyId === f.uid ? <Loader2 size={16} className="animate-spin" /> : <UserMinus size={16} />}
+                </button>
               </div>
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 {f.region && (

@@ -1,34 +1,22 @@
 #!/usr/bin/env bash
 # =============================================================================
-# SubSense — Deploy Script
-# Run this to pull latest code and rebuild/restart the app.
-# Usage: bash deploy.sh
+# Aboneyim — Uzak Sunucu (macmini-server) Dağıtım Betiği
+# ÇALIŞACAĞI MAKİNE: Mac (Ana Bilgisayar — kutluhangil@Kutluhans-Mac-Mini)
+# Kullanım (proje kök dizininden):
+#   bash server/scripts/deploy.sh
 # =============================================================================
 set -euo pipefail
 
-PROJECT_DIR="/opt/subsense/app"
-SERVER_DIR="${PROJECT_DIR}/server"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-echo "► Starting SubSense deployment..."
+cd "${PROJECT_ROOT}"
 
-# ── Pull latest code ──────────────────────────────────────────────────────────
-echo "[1/3] Pulling latest code from GitHub..."
-cd "${PROJECT_DIR}"
-git fetch --all
-git reset --hard origin/main
-echo "    ✓ Code updated to: $(git log --oneline -1)"
+echo "► Aboneyim macmini-server üzerinde derleniyor ve başlatılıyor (Intel amd64, 127.0.0.1:3002)..."
+docker --context macmini compose -f server/docker-compose.yml --env-file .env up -d --build --force-recreate
 
-# ── Rebuild & restart containers ──────────────────────────────────────────────
-echo "[2/3] Rebuilding Docker containers..."
-cd "${SERVER_DIR}"
-docker compose build --no-cache
-docker compose up -d --force-recreate
+echo "► Kullanılmayan eski imajlar temizleniyor..."
+docker --context macmini image prune -f
 
-# ── Cleanup old images ────────────────────────────────────────────────────────
-echo "[3/3] Cleaning up old Docker images..."
-docker image prune -f
-
-echo ""
-echo "✓ Deployment complete!"
-echo "  Container status:"
-docker compose ps
+echo "✓ Dağıtım tamamlandı! Konteyner durumu:"
+docker --context macmini ps --filter "name=aboneyim_web" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

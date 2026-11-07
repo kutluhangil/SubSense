@@ -1,6 +1,5 @@
 
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../firebase/firebase';
+import { functions, httpsCallable } from '../firebase/firebase';
 import { convertAmount } from "./currency";
 import { debugLog } from "./debug";
 import { Subscription } from "../components/SubscriptionModal";
@@ -168,7 +167,7 @@ export const chatWithGemini = async (
     const languageRules = languageCode === 'tr' ? "RESPOND IN TURKISH ONLY." : "RESPOND IN ENGLISH ONLY.";
 
     const systemInstruction = `
-    ROLE: SubSense AI Assistant.
+    ROLE: Aboneyim AI Assistant.
     ${languageRules}
     
     TONE: Professional, concise, data-driven.

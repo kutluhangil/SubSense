@@ -1,24 +1,28 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { Resend } from "resend";
+import { initFirebaseAdmin } from "./initAdmin";
 
 const getDb = () => {
-  if (!admin.apps.length) {
-    admin.initializeApp();
-  }
+  initFirebaseAdmin();
   return admin.firestore();
 };
 
-// Resend API key is read from Functions config — never hardcoded in source.
-// Set via: firebase functions:config:set resend.key="re_..."
+// Resend API key & sender are read from env or Functions config — never hardcoded in source.
+// Set via: RESEND_API_KEY / RESEND_FROM_EMAIL or firebase functions:config:set resend.key="re_..."
 const getResend = (): Resend | null => {
-  const key = functions.config().resend?.key;
+  const key = process.env.RESEND_API_KEY || functions.config().resend?.key;
   if (!key) {
-    console.error("resend.key is not configured — skipping email send.");
+    console.error("Resend API key (RESEND_API_KEY / resend.key) is not configured — skipping email send.");
     return null;
   }
   return new Resend(key);
 };
+
+const getFromAddress = (): string =>
+  process.env.RESEND_FROM_EMAIL ||
+  functions.config().resend?.from ||
+  "Aboneyim <onboarding@resend.dev>";
 
 // Minimal currency-symbol map (functions is self-contained — the frontend
 // utils/currency.ts is not importable here). Falls back to the raw code.
@@ -30,62 +34,152 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 const symbolFor = (code: string): string => CURRENCY_SYMBOLS[code] || code || "";
 
-// Normalize a subscription's price to a monthly amount.
-// Yearly subs are divided by 12; Monthly (and anything else) are taken as-is.
-const monthlyAmount = (price: number, cycle?: string): number =>
-  cycle === "Yearly" ? price / 12 : price;
+const FALLBACK_FX_RATES: Record<string, number> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  TRY: 38.5,
+  CAD: 1.38,
+  AUD: 1.54,
+  JPY: 154,
+};
 
 export const sendRenewalReminders = functions
   .runWith({ timeoutSeconds: 300, memory: "512MB" })
   .pubsub.schedule("every day 09:00")
   .timeZone("Europe/Istanbul")
-  .onRun(async (context) => {
+  .onRun(async (_context) => {
     const db = getDb();
     const resend = getResend();
     if (!resend) return null;
 
-    // Calculate target date (3 days from now)
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 3);
-    
-    // Formatting logic depends on how dates are stored in Firestore.
-    // In this app, nextDate is often stored as "MMM DD, YYYY" or similar depending on the locale.
-    // For simplicity, we'll fetch all users and their active subs, and filter manually to avoid complex date queries in Firestore.
-    
+    const fromAddress = getFromAddress();
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     try {
       const usersSnap = await db.collection("users").get();
-      
+
       for (const userDoc of usersSnap.docs) {
         try {
           const userData = userDoc.data();
           const email = userData.email;
           if (!email) continue;
-          
-          const subsSnap = await db.collection(`users/${userDoc.id}/subscriptions`).where("status", "==", "Active").get();
-          
+
+          if (
+            userData.preferences?.notifyPayment === false ||
+            userData.preferences?.notifyEmail === false
+          ) {
+            continue;
+          }
+
+          const lang = userData.preferences?.language === "tr" ? "tr" : "en";
+
+          const subsSnap = await db
+            .collection(`users/${userDoc.id}/subscriptions`)
+            .where("status", "in", ["Active", "Trial"])
+            .get();
+
           for (const subDoc of subsSnap.docs) {
             const sub = subDoc.data();
-            if (!sub.nextDate || sub.reminderEnabled === false) continue;
-            
-            const subDate = new Date(sub.nextDate);
-            const timeDiff = subDate.getTime() - new Date().getTime();
-            const daysUntil = Math.ceil(timeDiff / (1000 * 3600 * 24));
-            
+            if (sub.reminderEnabled === false) continue;
+
+            const isTrial = sub.status === "Trial";
+            const rawTargetDate = isTrial && sub.trialEndDate ? sub.trialEndDate : sub.nextDate;
+            if (!rawTargetDate) continue;
+
+            const subDate = new Date(rawTargetDate);
+            if (isNaN(subDate.getTime())) continue;
+
+            const subDayStart = new Date(
+              subDate.getFullYear(),
+              subDate.getMonth(),
+              subDate.getDate()
+            );
+            const daysUntil = Math.round(
+              (subDayStart.getTime() - todayStart.getTime()) / (1000 * 3600 * 24)
+            );
+
             if (daysUntil === 3) {
-              // Send reminder 3 days before
+              const amount =
+                sub.isShared && sub.myShare ? Number(sub.myShare) : Number(sub.price || 0);
+              const currency = (sub.currency || userData.preferences?.baseCurrency || "USD").toUpperCase();
+              const formattedAmount = `${symbolFor(currency)}${amount.toLocaleString(
+                lang === "tr" ? "tr-TR" : "en-US",
+                { minimumFractionDigits: 0, maximumFractionDigits: 2 }
+              )} (${currency})`;
+
+              const greeting = userData.displayName
+                ? lang === "tr"
+                  ? `Merhaba ${userData.displayName},`
+                  : `Hi ${userData.displayName},`
+                : lang === "tr"
+                ? "Merhaba,"
+                : "Hi,";
+
+              const subject =
+                lang === "tr"
+                  ? isTrial
+                    ? `Deneme Süresi Bitiyor: ${sub.name} (3 Gün Kaldı)`
+                    : `Yaklaşan Ödeme: ${sub.name} (3 Gün Kaldı)`
+                  : isTrial
+                  ? `Trial Ending Soon: ${sub.name} (3 Days Left)`
+                  : `Upcoming Payment: ${sub.name} (3 Days Left)`;
+
+              const html =
+                lang === "tr"
+                  ? isTrial
+                    ? `
+                      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:12px;color:#111827;">
+                        <h2>Deneme Süresi Hatırlatıcısı</h2>
+                        <p>${greeting}</p>
+                        <p><strong>${sub.name}</strong> aboneliğinizin ücretsiz deneme süresi <strong>3 gün sonra</strong> sona erecek.</p>
+                        <p>Yenileme Tutarı: <strong>${formattedAmount}</strong></p>
+                        <p>Ücretlendirilmek istemiyorsanız deneme süresi dolmadan iptal etmeyi unutmayın!</p>
+                        <br/>
+                        <p style="color:#6b7280;font-size:13px;">Aboneyim Ekibi</p>
+                      </div>
+                    `
+                    : `
+                      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:12px;color:#111827;">
+                        <h2>Abonelik Yenileme Hatırlatıcısı</h2>
+                        <p>${greeting}</p>
+                        <p><strong>${sub.name}</strong> aboneliğiniz <strong>3 gün sonra</strong> yenilenecek.</p>
+                        <p>Tutar: <strong>${formattedAmount}</strong></p>
+                        <p>Eğer kullanmıyorsanız iptal etmeyi unutmayın!</p>
+                        <br/>
+                        <p style="color:#6b7280;font-size:13px;">Aboneyim Ekibi</p>
+                      </div>
+                    `
+                  : isTrial
+                  ? `
+                    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:12px;color:#111827;">
+                      <h2>Free Trial Ending Reminder</h2>
+                      <p>${greeting}</p>
+                      <p>Your free trial for <strong>${sub.name}</strong> ends in <strong>3 days</strong>.</p>
+                      <p>Upcoming Charge: <strong>${formattedAmount}</strong></p>
+                      <p>Remember to cancel before the trial ends if you don't wish to continue!</p>
+                      <br/>
+                      <p style="color:#6b7280;font-size:13px;">The Aboneyim Team</p>
+                    </div>
+                  `
+                  : `
+                    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:12px;color:#111827;">
+                      <h2>Subscription Renewal Reminder</h2>
+                      <p>${greeting}</p>
+                      <p>Your <strong>${sub.name}</strong> subscription will renew in <strong>3 days</strong>.</p>
+                      <p>Amount: <strong>${formattedAmount}</strong></p>
+                      <p>Don't forget to cancel if you're no longer using it!</p>
+                      <br/>
+                      <p style="color:#6b7280;font-size:13px;">The Aboneyim Team</p>
+                    </div>
+                  `;
+
               await resend.emails.send({
-                from: "SubSense <noreply@subsense.app>", // Assumes domain is verified, otherwise Resend will use a default
+                from: fromAddress,
                 to: [email],
-                subject: `Yaklaşan Ödeme: ${sub.name} (3 Gün Kaldı)`,
-                html: `
-                  <h2>Abonelik Yenileme Hatırlatıcısı</h2>
-                  <p>Merhaba,</p>
-                  <p><strong>${sub.name}</strong> aboneliğiniz 3 gün sonra yenilenecek.</p>
-                  <p>Tutar: <strong>${sub.price} ${sub.currency}</strong></p>
-                  <p>Eğer kullanmıyorsanız iptal etmeyi unutmayın!</p>
-                  <br/>
-                  <p>SubSense Ekibi</p>
-                `
+                subject,
+                html,
               });
             }
           }
@@ -101,23 +195,35 @@ export const sendRenewalReminders = functions
 
 // ── MONTHLY SPENDING REPORT (retention / lifecycle email) ───────────────────
 // Runs at 09:00 on day 1 of each month. For every user with ≥1 active
-// subscription, emails a short "spending report": current monthly spend, the
-// change vs. last month, and their most expensive subscription, with a CTA.
-// After sending, persists the current spend to stats.lastMonthSpend so next
-// month can compute a comparison (the FIRST run has no "vs last month" value).
+// subscription, emails a short "spending report": current monthly spend (with
+// live FX conversion to their base currency), the change vs. last month, and
+// their most expensive subscription, with a CTA.
 export const sendMonthlyReports = functions
   .runWith({ timeoutSeconds: 300, memory: "512MB" })
   .pubsub.schedule("0 9 1 * *")
   .timeZone("Europe/Istanbul")
-  .onRun(async (context) => {
+  .onRun(async (_context) => {
     const db = getDb();
     const resend = getResend();
     if (!resend) return null;
 
+    const fromAddress = getFromAddress();
     const APP_URL = "https://sub-sense-ashy.vercel.app";
     let sent = 0;
     let skipped = 0;
     let failed = 0;
+
+    // Read USD-based FX rates once before iterating users.
+    let rates: Record<string, number> = { ...FALLBACK_FX_RATES };
+    try {
+      const fxSnap = await db.collection("priceConfig").doc("fxRates").get();
+      const docRates = fxSnap.exists ? fxSnap.data()?.rates : null;
+      if (docRates && typeof docRates === "object") {
+        rates = { ...FALLBACK_FX_RATES, ...docRates, USD: 1 };
+      }
+    } catch (fxErr) {
+      console.warn("Could not read priceConfig/fxRates, falling back to static FX rates:", fxErr);
+    }
 
     try {
       const usersSnap = await db.collection("users").get();
@@ -132,16 +238,23 @@ export const sendMonthlyReports = functions
           }
 
           const prefs = userData.preferences || {};
-          // Opt-out: explicit monthlyReport === false OR analyticsOptOut === true.
-          // Default (undefined) = send.
-          if (prefs.monthlyReport === false || prefs.analyticsOptOut === true) {
+          if (
+            prefs.notifyEmail === false ||
+            prefs.monthlyReport === false ||
+            prefs.analyticsOptOut === true
+          ) {
             skipped++;
             continue;
           }
 
-          const baseCurrency = prefs.baseCurrency || "USD";
-          const isEnglish = prefs.language === "en";
-          const symbol = symbolFor(baseCurrency);
+          const targetCurrency = (
+            prefs.baseCurrency ||
+            prefs.currency ||
+            "TRY"
+          ).toUpperCase();
+          const lang = prefs.language === "tr" ? "tr" : "en";
+          const isEnglish = lang === "en";
+          const symbol = symbolFor(targetCurrency);
 
           // Fetch active subscriptions.
           const subsSnap = await db
@@ -154,23 +267,24 @@ export const sendMonthlyReports = functions
             continue;
           }
 
-          // Compute current monthly spend in the user's base currency.
-          // LIMITATION: functions has no FX library. We sum monthly-normalized
-          // amounts and label everything with the user's baseCurrency symbol.
-          // If a sub's currency differs from baseCurrency we still count its raw
-          // value (no conversion) — acceptable since most subs match the base
-          // currency; cross-currency users may see a slightly approximate total.
           let currentMonthlySpend = 0;
           let topName = "";
           let topMonthly = -1;
 
           for (const subDoc of subsSnap.docs) {
             const sub = subDoc.data();
-            const price = typeof sub.price === "number" ? sub.price : 0;
-            const m = monthlyAmount(price, sub.cycle);
-            currentMonthlySpend += m;
-            if (m > topMonthly) {
-              topMonthly = m;
+            const raw =
+              sub.isShared && sub.myShare ? Number(sub.myShare) : Number(sub.price || 0);
+            const monthly = sub.cycle === "Yearly" ? raw / 12 : raw;
+            const fromCurr = (sub.currency || "USD").toUpperCase();
+            const converted =
+              fromCurr === targetCurrency
+                ? monthly
+                : (monthly / (rates[fromCurr] || 1)) * (rates[targetCurrency] || 1);
+
+            currentMonthlySpend += converted;
+            if (converted > topMonthly) {
+              topMonthly = converted;
               topName = sub.name || "";
             }
           }
@@ -197,40 +311,42 @@ export const sendMonthlyReports = functions
                 ? "No change vs. last month"
                 : `${sign}${rounded}% vs. last month`
               : flat
-                ? "Geçen aya göre değişim yok"
-                : `Geçen aya göre ${sign}${rounded}%`;
+              ? "Geçen aya göre değişim yok"
+              : `Geçen aya göre ${sign}${rounded}%`;
             changeHtml = `<p style="margin:4px 0 0;font-size:15px;font-weight:600;color:${color};">${arrow} ${label}</p>`;
           }
 
           const total = fmt(currentMonthlySpend);
           const greeting = userData.displayName
-            ? (isEnglish ? `Hi ${userData.displayName},` : `Merhaba ${userData.displayName},`)
-            : (isEnglish ? "Hi," : "Merhaba,");
+            ? isEnglish
+              ? `Hi ${userData.displayName},`
+              : `Merhaba ${userData.displayName},`
+            : isEnglish
+            ? "Hi,"
+            : "Merhaba,";
 
           const subject = isEnglish
-            ? "Your SubSense monthly report"
-            : `SubSense Aylık Karne — geçen ay ${total} harcadın`;
+            ? `Your Aboneyim monthly report — ${total}/mo`
+            : `Aboneyim Aylık Karne — aylık toplam ${total}`;
 
           const t = isEnglish
             ? {
                 heading: "Your monthly report",
-                intro: "Here's what your subscriptions cost you last month.",
-                totalLabel: "Total monthly spend",
+                intro: "Here's what your active subscriptions cost per month.",
+                totalLabel: `Total monthly spend (${targetCurrency})`,
                 topLabel: "Most expensive subscription",
-                cta: "Open SubSense",
-                unsub:
-                  "Don't want these emails? You can turn them off in your settings.",
-                team: "The SubSense Team",
+                cta: "Open Aboneyim",
+                unsub: "Don't want these emails? You can turn them off in your settings.",
+                team: "The Aboneyim Team",
               }
             : {
                 heading: "Aylık Karnen",
-                intro: "Geçen ay aboneliklerin sana ne kadara mal oldu, işte özeti.",
-                totalLabel: "Aylık toplam harcama",
+                intro: "Aktif aboneliklerinin aylık maliyeti aşağıda özetlendi.",
+                totalLabel: `Aylık toplam harcama (${targetCurrency})`,
                 topLabel: "En pahalı aboneliğin",
-                cta: "SubSense'i Aç",
-                unsub:
-                  "Bu e-postaları istemiyorsan ayarlardan kapatabilirsin.",
-                team: "SubSense Ekibi",
+                cta: "Aboneyim'i Aç",
+                unsub: "Bu e-postaları istemiyorsan ayarlardan kapatabilirsin.",
+                team: "Aboneyim Ekibi",
               };
 
           const topHtml = topName
@@ -255,7 +371,7 @@ export const sendMonthlyReports = functions
           `;
 
           await resend.emails.send({
-            from: "SubSense <noreply@subsense.app>",
+            from: fromAddress,
             to: [email],
             subject,
             html,

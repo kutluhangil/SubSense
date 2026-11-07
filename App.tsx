@@ -61,12 +61,12 @@ function AppContent() {
 
   useEffect(() => {
     const titles: Record<string, string> = {
-      home: 'SubSense — Track Your Subscriptions',
-      features: 'Features — SubSense',
-      'reset-password': 'Reset Password — SubSense',
+      home: 'Aboneyim — Akıllı Abonelik Takipçisi',
+      features: 'Özellikler — Aboneyim',
+      'reset-password': 'Şifre Sıfırlama — Aboneyim',
     };
     if (!currentUser) {
-      document.title = titles[currentPage] || 'SubSense';
+      document.title = titles[currentPage] || 'Aboneyim';
     }
   }, [currentPage, currentUser]);
 
@@ -202,7 +202,7 @@ function AppContent() {
           href="/"
           className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
         >
-          Go to SubSense
+          Go to Aboneyim
         </a>
       </div>
     );

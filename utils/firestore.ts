@@ -6,16 +6,15 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   onSnapshot,
   getDoc,
   getDocs,
   serverTimestamp,
   increment,
-  Timestamp
 } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '../firebase/firebase';
+import { db } from '../firebase/firebase';
 import { Subscription } from '../types/subscription';
 import { validateSubscription } from './validateSubscription';
 import { trackEvent } from './analytics';
@@ -55,6 +54,11 @@ export interface UserProfileData {
     analyticsOptOut?: boolean;
     privacy?: { showSpending: boolean; showSubscriptions: boolean };
     profile?: any;
+    notifyEmail?: boolean;
+    notifyPayment?: boolean;
+    budgetLimits?: Record<string, number>;
+    savingsGoal?: number;
+    totalSaved?: number;
   };
   stats: {
     totalSubscriptions: number;
@@ -221,17 +225,6 @@ export const updateUserSettings = async (uid: string, settings: any) => {
   }
 };
 
-/**
- * @deprecated Direct client-side user plan updates are disabled for security.
- * Plan upgrades are managed exclusively via Stripe Checkout and verified by backend webhooks.
- */
-export const updateUserPlan = async (_uid: string, _planData: Partial<UserProfileData['plan']>) => {
-  console.warn(
-    "[Security] Client-side updateUserPlan is disabled. Upgrades must be initiated via Stripe Checkout."
-  );
-  // Safe no-op to prevent unauthorized plan privilege escalation
-};
-
 export const updateUserActivity = async (uid: string) => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -303,8 +296,11 @@ export const addSubscription = async (uid: string, subscription: Omit<Subscripti
 
   try {
     const colRef = collection(db, 'users', uid, 'subscriptions');
+    const cleanSub = Object.fromEntries(
+      Object.entries(subscription).filter(([, v]) => v !== undefined)
+    );
     const docRef = await addDoc(colRef, {
-      ...subscription,
+      ...cleanSub,
       createdAt: serverTimestamp()
     });
     updateFeatureUsage(uid, 'subscription_added');
@@ -334,7 +330,13 @@ export const updateSubscription = async (uid: string, subId: number | string, da
 
   try {
     const subRef = doc(db, 'users', uid, 'subscriptions', id);
-    await updateDoc(subRef, { ...data, updatedAt: serverTimestamp() });
+    const cleanData: Record<string, any> = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== undefined)
+    );
+    if (data.isShared === false && data.myShare === undefined) {
+      cleanData.myShare = deleteField();
+    }
+    await updateDoc(subRef, { ...cleanData, updatedAt: serverTimestamp() });
   } catch (error: any) {
     console.error("Error updating subscription:", error);
     throw error;

@@ -13,8 +13,7 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification
 } from 'firebase/auth';
-import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '../firebase/firebase';
+import { auth, functions, httpsCallable } from '../firebase/firebase';
 import { initializeUserDocument, getUserDocument, listenToUserSubscriptions, UserProfileData, updateUserActivity, updateUserSettings } from '../utils/firestore';
 import { Subscription } from '../types/subscription';
 import { calculateDerivedStats, DerivedStats } from '../utils/aggregation';
@@ -34,6 +33,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string, currency: string, region: string) => Promise<void>;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  logoutAllDevices: () => Promise<void>;
   welcomeBackMessage: string | null;
   isPro: boolean;
   upgradeToPro: () => Promise<void>;
@@ -67,27 +67,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
-  const isPro = useMemo(() => {
-    // Existing Stripe / plan path — unchanged.
-    const stripePro = userProfile?.plan?.type === 'pro' && userProfile?.plan?.status === 'active';
-
-    // Additive referral path: Pro is active while plan.proUntil is in the future.
-    // proUntil may be epoch millis or a Firestore Timestamp ({ toMillis() } / { seconds }).
-    const rawProUntil: any = userProfile?.plan?.proUntil;
-    let proUntilMs: number | null = null;
-    if (typeof rawProUntil === 'number') {
-      proUntilMs = rawProUntil;
-    } else if (rawProUntil && typeof rawProUntil.toMillis === 'function') {
-      proUntilMs = rawProUntil.toMillis();
-    } else if (rawProUntil && typeof rawProUntil.seconds === 'number') {
-      proUntilMs = rawProUntil.seconds * 1000;
-    }
-    const referralPro = proUntilMs !== null && proUntilMs > Date.now();
-
-    return stripePro || referralPro;
-  }, [userProfile]);
+  const isPro = true;
 
   const unsubscribeSubsRef = useRef<(() => void) | null>(null);
+
+  async function sendVerificationWithFallback(user: User) {
+    try {
+      const customVerifyFn = httpsCallable(functions, 'sendCustomVerificationEmail');
+      await customVerifyFn({});
+    } catch (customError) {
+      console.warn('Custom verification email unavailable, falling back to Firebase default:', customError);
+      await sendEmailVerification(user);
+    }
+  }
 
   async function signup(email: string, password: string, name: string, currency: string, region: string) {
     try {
@@ -103,7 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
 
         try {
-          await sendEmailVerification(user);
+          await sendVerificationWithFallback(user);
           trackEvent('email_verification_sent');
         } catch (error) {
           console.error("Verification email delivery failed", error);
@@ -148,7 +140,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!user.emailVerified) {
         // Attempt to re-send verification email for convenience (with error logging)
         try {
-          await sendEmailVerification(user);
+          await sendVerificationWithFallback(user);
         } catch {
           // Best-effort resend; ignore failures silently
         }
@@ -197,6 +189,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await signOut(auth);
   }
 
+  async function logoutAllDevices() {
+    try {
+      const revokeFn = httpsCallable(functions, 'revokeAllSessions');
+      await revokeFn({});
+    } catch (error) {
+      console.error('Failed to revoke remote sessions:', error);
+    }
+    await logout();
+  }
+
   /**
    * @deprecated Client-side direct plan updates are disabled for security.
    * Plan upgrades are handled via Stripe Checkout flow and verified through backend webhooks.
@@ -220,7 +222,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentUser) return;
 
     try {
-      await sendEmailVerification(currentUser);
+      await sendVerificationWithFallback(currentUser);
       trackEvent('email_verification_resent');
     } catch (error: any) {
       throw error;
@@ -335,6 +337,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     signup,
     login,
     logout,
+    logoutAllDevices,
     upgradeToPro,
     resetPassword,
     // Email verification

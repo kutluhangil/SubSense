@@ -26,6 +26,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.triggerPriceSync = exports.syncPricesWeekly = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const initAdmin_1 = require("./initAdmin");
 /**
  * Weekly automated price + FX refresh.
  *
@@ -41,8 +42,7 @@ const admin = __importStar(require("firebase-admin"));
  * Requires: firebase functions:config:set gemini.key="AIza..."  (already set)
  */
 const getDb = () => {
-    if (!admin.apps.length)
-        admin.initializeApp();
+    (0, initAdmin_1.initFirebaseAdmin)();
     return admin.firestore();
 };
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
@@ -77,7 +77,7 @@ const BRANDS = [
 ];
 async function callGeminiGrounded(prompt) {
     var _a, _b, _c, _d, _e;
-    const key = (_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key;
+    const key = process.env.GEMINI_API_KEY || ((_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key);
     if (!key)
         throw new Error("gemini.key not configured");
     const body = {
@@ -196,12 +196,23 @@ exports.syncPricesWeekly = functions
     await runPriceSync();
     return null;
 });
-// Manual trigger for testing (authenticated users only).
+// Manual trigger for testing (admin users only).
 exports.triggerPriceSync = functions
     .runWith({ timeoutSeconds: 540, memory: "512MB" })
     .https.onCall(async (_data, context) => {
+    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Login required.");
+    }
+    const isAdminClaim = context.auth.token.admin === true;
+    const rawAdmins = process.env.ADMIN_EMAILS || ((_a = functions.config().admin) === null || _a === void 0 ? void 0 : _a.emails) || "";
+    const adminList = rawAdmins
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean);
+    const callerEmail = (context.auth.token.email || "").toLowerCase();
+    if (!isAdminClaim && !adminList.includes(callerEmail)) {
+        throw new functions.https.HttpsError("permission-denied", "Admin privileges required to trigger price sync.");
     }
     return await runPriceSync();
 });

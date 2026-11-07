@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getVerificationEmailTemplate = void 0;
-const getVerificationEmailTemplate = (link, appName = 'SubSense') => `
+const getVerificationEmailTemplate = (link, appName = 'Aboneyim') => `
 <!DOCTYPE html>
 <html>
 <head>

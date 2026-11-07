@@ -39,6 +39,7 @@ import {
   addSubscription,
   updateSubscription,
   deleteSubscription,
+  updateUserSettings,
 } from "../utils/firestore";
 import { calculateDerivedStats } from "../utils/aggregation";
 import { trackEvent } from "../utils/analytics";
@@ -77,24 +78,31 @@ const LoadingFallback = () => (
 );
 
 const PAGE_TITLES: Record<string, string> = {
-  dashboard: "Dashboard — SubSense",
-  subscriptions: "Subscriptions — SubSense",
-  analytics: "Analytics — SubSense",
-  compare: "Compare — SubSense",
-  discover: "Discover — SubSense",
-  settings: "Settings — SubSense",
-  help: "Help — SubSense",
-  profile: "Profile — SubSense",
-  friends: "Friends — SubSense",
+  dashboard: "Dashboard — Aboneyim",
+  subscriptions: "Subscriptions — Aboneyim",
+  analytics: "Analytics — Aboneyim",
+  compare: "Compare — Aboneyim",
+  discover: "Discover — Aboneyim",
+  settings: "Settings — Aboneyim",
+  help: "Help — Aboneyim",
+  profile: "Profile — Aboneyim",
+  friends: "Friends — Aboneyim",
 };
 
 export default function Dashboard({ onLogout, user }: DashboardProps) {
-  const { currentUser, subscriptions, derivedStats, subscriptionsLoading } =
-    useAuth();
+  const {
+    currentUser,
+    userProfile,
+    subscriptions,
+    derivedStats,
+    subscriptionsLoading,
+  } = useAuth();
   const [currentView, setCurrentView] = useState("dashboard");
 
-  // Local state only for simpler preferences not critically synced yet
+  // Local state with Firestore cloud sync for logged-in users
   const userKey = user?.email || "guest";
+  const hydratedPrefsUidRef = React.useRef<string | null>(null);
+  const lastSyncedPrefsRef = React.useRef<string | null>(null);
   const [budgetLimits, setBudgetLimits] = useState<Record<string, number>>(
     () => {
       try {
@@ -142,7 +150,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [previewCurrency, setPreviewCurrency] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = PAGE_TITLES[currentView] || "SubSense";
+    document.title = PAGE_TITLES[currentView] || "Aboneyim";
   }, [currentView]);
 
   const handleOnboardingComplete = () => {
@@ -152,6 +160,44 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       "true",
     );
   };
+
+  // Hydrate budgetLimits, savingsGoal, and totalSaved from Firestore preferences
+  useEffect(() => {
+    if (!user.uid || user.uid === "guest" || !userProfile?.preferences) return;
+    if (userProfile.uid && userProfile.uid !== user.uid) return;
+    if (hydratedPrefsUidRef.current === user.uid) return;
+
+    const prefs = userProfile.preferences;
+    const nextBudgetLimits = prefs.budgetLimits || budgetLimits;
+    const nextSavingsGoal =
+      typeof prefs.savingsGoal === "number" ? prefs.savingsGoal : savingsGoal;
+    const nextTotalSaved =
+      typeof prefs.totalSaved === "number" ? prefs.totalSaved : totalSaved;
+
+    if (prefs.budgetLimits) {
+      setBudgetLimits(prefs.budgetLimits);
+    }
+    if (typeof prefs.savingsGoal === "number") {
+      setSavingsGoal(prefs.savingsGoal);
+    }
+    if (typeof prefs.totalSaved === "number") {
+      setTotalSaved(prefs.totalSaved);
+    }
+
+    const allPresentInCloud =
+      Boolean(prefs.budgetLimits) &&
+      typeof prefs.savingsGoal === "number" &&
+      typeof prefs.totalSaved === "number";
+
+    lastSyncedPrefsRef.current = allPresentInCloud
+      ? JSON.stringify({
+          budgetLimits: nextBudgetLimits,
+          savingsGoal: nextSavingsGoal,
+          totalSaved: nextTotalSaved,
+        })
+      : null;
+    hydratedPrefsUidRef.current = user.uid;
+  }, [user.uid, userProfile]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -173,6 +219,23 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
       totalSaved.toString(),
     );
   }, [totalSaved, userKey]);
+
+  // Debounced Firestore sync after hydration when budget or savings preferences change
+  useEffect(() => {
+    if (!user.uid || user.uid === "guest") return;
+    if (hydratedPrefsUidRef.current !== user.uid) return;
+
+    const payload = { budgetLimits, savingsGoal, totalSaved };
+    const serialized = JSON.stringify(payload);
+    if (serialized === lastSyncedPrefsRef.current) return;
+
+    const timer = setTimeout(() => {
+      lastSyncedPrefsRef.current = serialized;
+      updateUserSettings(user.uid!, payload);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [budgetLimits, savingsGoal, totalSaved, user.uid]);
 
   // Recalculate metrics: Use Derived Stats (Context) or Recalculate if Previewing
   const metrics = useMemo(() => {
@@ -203,7 +266,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      text: `Welcome to SubSense, ${user.name}!`,
+      text: `Welcome to Aboneyim, ${user.name}!`,
       time: "Just now",
       read: false,
       type: "info",
@@ -886,7 +949,7 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
             <Menu size={24} />
           </button>
           <span className="font-bold text-primary text-base sm:text-lg">
-            SubSense
+            Aboneyim
           </span>
           <div className="flex items-center gap-2">
             {/* Mobile Currency Switch */}

@@ -1,0 +1,14 @@
+node_modules
+functions/node_modules
+functions/lib
+dist
+.git
+.github
+.env
+.env.*
+!.env.example
+cypress
+coverage
+*.log
+.DS_Store
+

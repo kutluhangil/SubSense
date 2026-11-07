@@ -109,7 +109,7 @@ export default function Logo({ className = "h-8", showText = true }: LogoProps) 
       {/* Brand Text */}
       {showText && (
         <span className="font-semibold text-xl tracking-tight text-inherit">
-          SubSense
+          Aboneyim
         </span>
       )}
     </div>

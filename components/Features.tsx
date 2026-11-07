@@ -162,7 +162,7 @@ export default function Features({ onOpenAuth, onOpenDemo }: FeaturesProps) {
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">{t('features.section.ai_boring')}</h2>
           <p className="text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
-            SubSense automatically updates subscription prices, tracks payment dates, and alerts you about global price changes — so you can focus on what matters.
+            Aboneyim automatically updates subscription prices, tracks payment dates, and alerts you about global price changes — so you can focus on what matters.
           </p>
         </div>
       </div>

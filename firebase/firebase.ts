@@ -16,24 +16,24 @@ import { getAnalytics, Analytics, isSupported as isAnalyticsSupported } from "fi
 import { getPerformance, FirebasePerformance } from "firebase/performance";
 
 // --- Configuration ---
-// Use direct static import.meta.env accesses so Vite can statically replace them
-// at build time. Dynamic wrapper functions prevent Vite's static analysis.
+// Use direct static import.meta.env accesses with fallbacks so Vite can statically replace them
+// at build time while ensuring local dev doesn't crash if .env is missing.
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            as string || "",
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        as string || "",
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         as string || "",
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     as string || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string || "",
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID             as string || "",
+  apiKey:            (import.meta.env.VITE_FIREBASE_API_KEY as string) || "AIzaSyArupQpxKTcA1PUoqmUFLf2K31CT4KG_R4",
+  authDomain:        (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string) || "subscriptionhub-85b02.firebaseapp.com",
+  projectId:         (import.meta.env.VITE_FIREBASE_PROJECT_ID as string) || "subscriptionhub-85b02",
+  storageBucket:     (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string) || "subscriptionhub-85b02.firebasestorage.app",
+  messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string) || "86302718224",
+  appId:             (import.meta.env.VITE_FIREBASE_APP_ID as string) || "1:86302718224:web:f9f646d77fa9fb92050d95",
 };
 
 // Guard: if critical Firebase config is missing, surface a clear error instead of
 // crashing the module silently and producing a blank white screen.
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   const msg =
-    "SubSense: Firebase environment variables are missing.\n" +
+    "Aboneyim: Firebase environment variables are missing.\n" +
     "Make sure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set in your " +
-    "Vercel project settings (Settings → Environment Variables) and redeploy.";
+    "environment variables and redeploy.";
   console.error(msg);
   // Show a visible error overlay so users/developers see the issue immediately.
   if (typeof document !== "undefined") {
@@ -43,12 +43,11 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
         root.innerHTML = `<div style="font-family:monospace;padding:32px;background:#1a1a1a;color:#ff6b6b;min-height:100vh">
           <h2 style="color:#ff4444">⚙️ Configuration Error</h2>
           <p style="color:#ffa">Firebase environment variables are not set.</p>
-          <p style="font-size:13px;color:#ccc">Add these to your Vercel project → Settings → Environment Variables and redeploy:</p>
+          <p style="font-size:13px;color:#ccc">Add these environment variables and rebuild:</p>
           <ul style="font-size:12px;color:#7df">
             <li>VITE_FIREBASE_API_KEY</li><li>VITE_FIREBASE_AUTH_DOMAIN</li>
             <li>VITE_FIREBASE_PROJECT_ID</li><li>VITE_FIREBASE_STORAGE_BUCKET</li>
             <li>VITE_FIREBASE_MESSAGING_SENDER_ID</li><li>VITE_FIREBASE_APP_ID</li>
-            <li>VITE_GEMINI_API_KEY</li>
           </ul>
         </div>`;
       }
@@ -69,8 +68,44 @@ if (!getApps().length) {
 // 2. Initialize Auth
 const auth: Auth = getAuth(app);
 
-// 3. Initialize Functions
+// 3. Initialize Functions + Self-Hosted API Callable Helper
 const functions: Functions = getFunctions(app);
+
+/**
+ * Self-hosted callable dispatcher that talks directly to `/api/fn/:name` on
+ * the `aboneyim_api` backend container (no Firebase Blaze / Cloud Functions required).
+ */
+export function httpsCallable<Req = any, Res = any>(
+  _functionsInstance: unknown,
+  name: string
+): (data?: Req) => Promise<{ data: Res }> {
+  return async (data?: Req) => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`/api/fn/${encodeURIComponent(name)}`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ data: data ?? {} }),
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json?.error) {
+      const err: any = new Error(
+        json?.error?.message || `Backend call '${name}' failed (${res.status})`
+      );
+      err.code = json?.error?.status || `functions/${res.status}`;
+      throw err;
+    }
+
+    return { data: json.result as Res };
+  };
+}
 
 // 4. Initialize Firestore (Crash-proof for HMR/Vercel)
 let db: Firestore;

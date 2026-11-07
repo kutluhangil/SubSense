@@ -19,7 +19,6 @@
     "firebase-functions": "^4.4.0",
     "ical-generator": "^11.0.0",
     "resend": "^6.12.4",
-    "stripe": "^14.5.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

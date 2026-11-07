@@ -125,7 +125,7 @@ export default function Wrapped({ isOpen, onClose, subscriptions }: WrappedProps
         skipFonts: false,
       });
       const link = document.createElement('a');
-      link.download = `subsense-wrapped-${year}.png`;
+      link.download = `aboneyim-wrapped-${year}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -429,7 +429,7 @@ export default function Wrapped({ isOpen, onClose, subscriptions }: WrappedProps
                             <Logo className="h-4" showText={false} />
                           </span>
                           <span className="font-display text-sm font-extrabold tracking-tight text-white">
-                            SubSense
+                            Aboneyim
                           </span>
                         </div>
                       </div>
