@@ -84,3 +84,4 @@ Firebase Blaze (ücretli) planına ihtiyaç duymamak için hem ön yüz (`aboney
 - `firebase/firebase.ts` içerisine Firebase SDK'nın ücretli Cloud Functions uçları yerine kendi sunucumuzdaki `/api/fn/:name` adresine Bearer ID token ile istek atan özel `httpsCallable` katmanı yazıldı.
 - `macmini-server` üzerinde `sudo tailscale serve --bg http://127.0.0.1:3002` ve `sudo tailscale set --operator=$USER` ayarlandı.
 - `macmini-server.taild883a6.ts.net` adresi **Firebase Console → Authentication → Settings → Authorized domains** listesine eklendi ve canlı ortamda (`https://macmini-server.taild883a6.ts.net/`) çalıştığı doğrulandı.
+

@@ -74,3 +74,4 @@ Bu komut yeni `.env` değişkenlerini `macmini-server` üzerindeki `aboneyim_api
   - `utils/firestore.ts` içinde artık backend (`aboneyim_api` / `utils/friends.ts`) üzerinden yürütülen eski istemci tarafı arkadaşlık yardımcı fonksiyonları ileride tamamen silinebilir.
 - [ ] **Sunucu Rutin Bakımı:**
   - `macmini-server` üzerinde Docker paketleri otomatik güncellenmediği için ayda bir kez `ssh kutluhan@macmini-server` ile bağlanıp `sudo apt update && sudo apt upgrade` çalıştırılması önerilir.
+
