@@ -33,34 +33,55 @@ const COUNTRY_CONFIG: Record<string, { color: string; flag: string; ppp: number;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
-const generateLivePricing = (serviceName: string, baseCurrency: string): PricingData[] => {
+const resolveCatalogService = (serviceName: string): SubscriptionDetail | undefined => {
    const key = serviceName.toLowerCase().replace(/\s+/g, '');
-   const service = SUBSCRIPTION_CATALOG[key];
+   if (SUBSCRIPTION_CATALOG[key]) return SUBSCRIPTION_CATALOG[key];
+   const altKey = serviceName.toLowerCase().replace(/[^a-z0-9+]/g, '');
+   if (SUBSCRIPTION_CATALOG[altKey]) return SUBSCRIPTION_CATALOG[altKey];
+   return Object.values(SUBSCRIPTION_CATALOG).find(
+      (item) => item.name.toLowerCase() === serviceName.toLowerCase()
+   );
+};
+
+const generateLivePricing = (serviceName: string, baseCurrency: string): PricingData[] => {
+   const service = resolveCatalogService(serviceName);
    const basePriceUSD = service ? parseFloat(service.price) : 10.00;
+   const seed = serviceName.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
 
-   return Object.entries(COUNTRY_CONFIG).map(([country, config]) => {
-      // Calculate local price based on PPP and Exchange Rate (simulated)
-      const localPriceRaw = basePriceUSD * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
-      let formattedLocalPrice = localPriceRaw;
+   return Object.entries(COUNTRY_CONFIG).map(([country, config], cIdx) => {
+      let finalLocalPrice = 0;
 
-      // Rounding conventions
-      if (config.currency === 'JPY' || config.currency === 'HUF') {
-         formattedLocalPrice = Math.round(localPriceRaw / 10) * 10;
+      // Use real catalog regional pricing for Turkey and United States when available
+      if (country === 'Turkey' && service?.regions?.TR?.tiers?.length) {
+         const monthlyTiers = service.regions.TR.tiers.filter(p => p.cycle === 'Monthly' && p.price > 0);
+         const chosenTier = monthlyTiers[Math.min(1, monthlyTiers.length - 1)] || service.regions.TR.tiers[0];
+         finalLocalPrice = chosenTier.price;
+      } else if (country === 'United States' && service?.regions?.US?.tiers?.length) {
+         const monthlyTiers = service.regions.US.tiers.filter(p => p.cycle === 'Monthly' && p.price > 0);
+         const chosenTier = monthlyTiers[Math.min(1, monthlyTiers.length - 1)] || service.regions.US.tiers[0];
+         finalLocalPrice = chosenTier.price;
+      } else if (country === 'United States' && service) {
+         finalLocalPrice = basePriceUSD;
       } else {
-         formattedLocalPrice = Math.round(localPriceRaw) - 0.01;
+         const localPriceRaw = basePriceUSD * config.ppp * (EXCHANGE_RATES[config.currency] || 1);
+         if (config.currency === 'JPY' || config.currency === 'HUF') {
+            finalLocalPrice = Math.max(0, Math.round(localPriceRaw / 10) * 10);
+         } else {
+            finalLocalPrice = Math.max(0, Math.round(localPriceRaw) - 0.01);
+         }
       }
-
-      // Ensure price is positive
-      const finalLocalPrice = Math.max(0, formattedLocalPrice);
 
       // Convert local price to Selected Base Currency for comparison
       const displayPrice = convertAmount(finalLocalPrice, config.currency, baseCurrency);
 
-      // Generate history based on display price
+      // Generate deterministic 6-month history curve based on display price
       const history = Array.from({ length: 6 }, (_, i) => {
-         const fluctuation = 1 + (Math.random() - 0.5) * 0.05;
-         return displayPrice * fluctuation;
+         if (i === 5) return displayPrice;
+         const wave = Math.sin((seed + cIdx * 7 + i * 3) * 0.7) * 0.025;
+         return displayPrice * (1 + wave);
       });
+
+      const trendVal = Number((((Math.sin(seed + cIdx * 3) * 2.4))).toFixed(1));
 
       return {
          country,
@@ -70,7 +91,7 @@ const generateLivePricing = (serviceName: string, baseCurrency: string): Pricing
          history,
          taxInfo: country === 'United States' ? '+ Tax' : 'incl. Tax',
          lastUpdated: 'Live',
-         trend: (Math.random() - 0.5) * 5
+         trend: trendVal
       };
    });
 };

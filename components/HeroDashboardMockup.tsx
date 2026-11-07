@@ -18,8 +18,8 @@ interface MiniSub {
 }
 
 const SUBS: MiniSub[] = [
-  { name: 'Netflix', price: '₺399,00', cadence: 'Monthly', accent: '#E50914' },
-  { name: 'Spotify', price: '₺59,99', cadence: 'Monthly', accent: '#1DB954' },
+  { name: 'Netflix', price: '₺389,99', cadence: 'Monthly', accent: '#E50914' },
+  { name: 'Spotify', price: '₺115,00', cadence: 'Monthly', accent: '#1DB954' },
   { name: 'Figma', price: '$15,00', cadence: 'Monthly', accent: '#A259FF' },
 ];
 

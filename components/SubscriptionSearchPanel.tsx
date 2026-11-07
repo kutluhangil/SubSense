@@ -69,9 +69,35 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
          );
       });
 
-      // Explicit Fallback if not found in catalog
+      // Explicit Fallback if not found in catalog (uses realistic 2026 market pricing)
       if (!detail) {
          debugLog('SUBSCRIPTION_CREATE', `Service not found in catalog, creating fallback for: ${cleanName}`);
+         const FALLBACK_PRICING: Record<string, { price: string; currency: string; trPrice?: number }> = {
+            discovery: { price: '5.99', currency: 'USD', trPrice: 149.90 },
+            puhutv: { price: '0.00', currency: 'TRY', trPrice: 0 },
+            pandora: { price: '5.99', currency: 'USD' },
+            soundcloud: { price: '10.99', currency: 'USD', trPrice: 89.99 },
+            amazonmusic: { price: '10.99', currency: 'USD' },
+            luna: { price: '9.99', currency: 'USD' },
+            steamdeck: { price: '9.99', currency: 'USD' },
+            epicgames: { price: '11.99', currency: 'USD' },
+            kittl: { price: '15.00', currency: 'USD' },
+            runway: { price: '15.00', currency: 'USD' },
+            leonardoai: { price: '12.00', currency: 'USD' },
+            procreate: { price: '12.99', currency: 'USD' },
+            replit: { price: '20.00', currency: 'USD' },
+            grammarly: { price: '12.00', currency: 'USD' },
+            jasper: { price: '39.00', currency: 'USD' },
+            trello: { price: '6.00', currency: 'USD' },
+            asana: { price: '10.99', currency: 'USD' },
+            clickup: { price: '7.00', currency: 'USD' },
+            mondaycom: { price: '9.00', currency: 'USD' },
+            hubspot: { price: '20.00', currency: 'USD' },
+            salesforce: { price: '25.00', currency: 'USD' },
+            getir: { price: '49.90', currency: 'TRY', trPrice: 49.90 },
+            yemeksepeti: { price: '49.90', currency: 'TRY', trPrice: 49.90 },
+         };
+         const fb = FALLBACK_PRICING[normalizedKey] || { price: '9.99', currency: 'USD', trPrice: 199.90 };
          detail = {
             id: normalizedKey || key,
             name: cleanName,
@@ -80,9 +106,23 @@ export default function SubscriptionSearchPanel({ onAddSubscription, existingSub
             founders: "-",
             ceo: "-",
             headquarters: "-",
-            price: "0.00",
-            currency: "USD",
-            type: normalizedKey || key
+            price: fb.price,
+            currency: fb.currency,
+            type: normalizedKey || key,
+            regions: {
+               US: {
+                  currency: 'USD',
+                  tiers: [{ name: 'Standard', price: parseFloat(fb.price) || 9.99, cycle: 'Monthly' }]
+               },
+               ...(fb.trPrice !== undefined
+                  ? {
+                       TR: {
+                          currency: 'TRY',
+                          tiers: [{ name: 'Standard', nameLocalized: 'Standart', price: fb.trPrice, cycle: 'Monthly' }]
+                       }
+                    }
+                  : {})
+            }
          } as SubscriptionDetail;
       }
 

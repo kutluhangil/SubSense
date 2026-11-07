@@ -211,9 +211,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Basic", nameLocalized: "Temel", price: 189.99, cycle: "Monthly" },
-          { name: "Standard", nameLocalized: "Standart", price: 289.99, cycle: "Monthly" },
-          { name: "Premium (4K)", nameLocalized: "Premium (4K)", price: 379.99, cycle: "Monthly" }
+          { name: "Basic", nameLocalized: "Temel", price: 259.99, cycle: "Monthly" },
+          { name: "Standard", nameLocalized: "Standart", price: 389.99, cycle: "Monthly" },
+          { name: "Premium (4K)", nameLocalized: "Özel (4K)", price: 499.99, cycle: "Monthly" }
         ]
       }
     }
@@ -254,10 +254,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 99.99, cycle: "Monthly" },
-          { name: "Duo", nameLocalized: "Duo", price: 129.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 159.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 54.99, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 115.00, cycle: "Monthly" },
+          { name: "Duo", nameLocalized: "Duo", price: 159.00, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 199.00, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 60.00, cycle: "Monthly" }
         ]
       }
     }
@@ -298,7 +298,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
         tiers: [
           { name: "Individual", nameLocalized: "Bireysel", price: 119.99, cycle: "Monthly" },
           { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 79.99, cycle: "Monthly" }
+          { name: "Student", nameLocalized: "Öğrenci", price: 79.99, cycle: "Monthly" },
+          { name: "Annual", nameLocalized: "Yıllık Bireysel", price: 1199.99, cycle: "Yearly" }
         ]
       }
     }
@@ -336,7 +337,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Prime Video", nameLocalized: "Prime Video", price: 39.90, cycle: "Monthly" }
+          { name: "Amazon Prime (Prime Video Dahil)", nameLocalized: "Amazon Prime (Video Dahil)", price: 69.90, cycle: "Monthly" }
         ]
       }
     }
@@ -349,7 +350,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "The Walt Disney Company",
     ceo: "Bob Iger",
     headquarters: "Burbank, California",
-    price: "13.99",
+    price: "15.99",
     currency: "USD",
     type: "disney",
     netWorth: "$200 Billion",
@@ -374,8 +375,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Standard", nameLocalized: "Reklamlı", price: 249.90, cycle: "Monthly" },
-          { name: "Premium", nameLocalized: "Reklamsız", price: 449.90, cycle: "Monthly" }
+          { name: "Standard (with Ads)", nameLocalized: "Reklamlı", price: 249.90, cycle: "Monthly" },
+          { name: "Premium (No Ads)", nameLocalized: "Reklamsız", price: 449.90, cycle: "Monthly" },
+          { name: "Annual (with Ads)", nameLocalized: "Yıllık Reklamlı", price: 2499.00, cycle: "Yearly" },
+          { name: "Annual Premium", nameLocalized: "Yıllık Reklamsız", price: 4499.00, cycle: "Yearly" }
         ]
       }
     }
@@ -388,7 +391,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "News Corp, NBC Universal, Providence Equity",
     ceo: "Joe Earley",
     headquarters: "Santa Monica, California",
-    price: "7.99",
+    price: "9.99",
     currency: "USD",
     type: "hulu",
     netWorth: "N/A (Disney Owned)",
@@ -442,6 +445,13 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
           { name: "Ad-Free", price: 16.99, cycle: "Monthly" },
           { name: "Ultimate (4K)", price: 20.99, cycle: "Monthly" }
         ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Standard", nameLocalized: "Standart", price: 229.90, cycle: "Monthly" },
+          { name: "Ultimate (4K)", nameLocalized: "Özel (4K)", price: 299.90, cycle: "Monthly" }
+        ]
       }
     }
   },
@@ -478,6 +488,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
+          { name: "iCloud+ 50GB (Apple TV Dahil)", nameLocalized: "iCloud+ 50GB (Apple TV Dahil)", price: 49.99, cycle: "Monthly" },
           { name: "Apple TV+", nameLocalized: "Apple TV+", price: 89.99, cycle: "Monthly" }
         ]
       }
@@ -519,9 +530,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Individual", nameLocalized: "Bireysel", price: 59.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 99.99, cycle: "Monthly" },
-          { name: "Student", nameLocalized: "Öğrenci", price: 32.99, cycle: "Monthly" }
+          { name: "Individual", nameLocalized: "Bireysel", price: 89.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 149.99, cycle: "Monthly" },
+          { name: "Student", nameLocalized: "Öğrenci", price: 49.99, cycle: "Monthly" }
         ]
       }
     }
@@ -561,8 +572,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Personal", nameLocalized: "Kişisel", price: 179.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 239.99, cycle: "Monthly" }
+          { name: "Personal", nameLocalized: "Bireysel", price: 329.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 409.99, cycle: "Monthly" },
+          { name: "Personal Annual", nameLocalized: "Yıllık Bireysel", price: 3299.99, cycle: "Yearly" },
+          { name: "Family Annual", nameLocalized: "Yıllık Aile", price: 4099.99, cycle: "Yearly" }
         ]
       }
     }
@@ -600,9 +613,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 279.99, cycle: "Monthly" },
+          { name: "Photography Plan", nameLocalized: "Fotoğrafçılık", price: 382.00, cycle: "Monthly" },
           { name: "Single App", nameLocalized: "Tek Uygulama", price: 649.99, cycle: "Monthly" },
-          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 925.20, cycle: "Monthly" }
+          { name: "All Apps", nameLocalized: "Tüm Uygulamalar", price: 956.00, cycle: "Monthly" }
         ]
       }
     }
@@ -639,8 +652,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Pro", nameLocalized: "Pro", price: 179.99, cycle: "Monthly" },
-          { name: "Teams", nameLocalized: "Ekip", price: 119.99, cycle: "Monthly" }
+          { name: "Pro", nameLocalized: "Pro Bireysel", price: 239.99, cycle: "Monthly" },
+          { name: "Pro Annual", nameLocalized: "Pro Yıllık", price: 1919.99, cycle: "Yearly" }
         ]
       }
     }
@@ -725,7 +738,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Ivan Zhao, Simon Last",
     ceo: "Ivan Zhao",
     headquarters: "San Francisco, California",
-    price: "8.00",
+    price: "10.00",
     currency: "USD",
     type: "notion",
     netWorth: "$10 Billion",
@@ -742,7 +755,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Plus", price: 8.00, cycle: "Monthly" },
+          { name: "Plus", price: 10.00, cycle: "Monthly" },
           { name: "Business", price: 15.00, cycle: "Monthly" }
         ]
       }
@@ -756,7 +769,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Dylan Field, Evan Wallace",
     ceo: "Dylan Field",
     headquarters: "San Francisco, California",
-    price: "12.00",
+    price: "15.00",
     currency: "USD",
     type: "figma",
     netWorth: "$10 Billion+",
@@ -773,7 +786,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Professional", price: 12.00, cycle: "Monthly" },
+          { name: "Professional", price: 15.00, cycle: "Monthly" },
           { name: "Organization", price: 45.00, cycle: "Monthly" }
         ]
       }
@@ -814,7 +827,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Plus", nameLocalized: "Plus", price: 649.99, cycle: "Monthly" }
+          { name: "Go", nameLocalized: "ChatGPT Go", price: 249.99, cycle: "Monthly" },
+          { name: "Plus", nameLocalized: "ChatGPT Plus", price: 999.99, cycle: "Monthly" }
         ]
       }
     }
@@ -892,7 +906,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Microsoft (Phil Spencer)",
     ceo: "Phil Spencer (Microsoft Gaming)",
     headquarters: "Redmond, Washington",
-    price: "16.99",
+    price: "19.99",
     currency: "USD",
     type: "gamepass",
     netWorth: "$3 Trillion (Microsoft)",
@@ -918,8 +932,9 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Core", nameLocalized: "Temel", price: 179, cycle: "Monthly" },
-          { name: "Standard", nameLocalized: "Standart", price: 279, cycle: "Monthly" },
+          { name: "Essential", nameLocalized: "Essential (Temel)", price: 269, cycle: "Monthly" },
+          { name: "PC Game Pass", nameLocalized: "PC Game Pass", price: 419, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Premium (Standart)", price: 409, cycle: "Monthly" },
           { name: "Ultimate", nameLocalized: "Ultimate", price: 529, cycle: "Monthly" }
         ]
       }
@@ -933,7 +948,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Sony",
     ceo: "Jim Ryan",
     headquarters: "San Mateo, California",
-    price: "9.99",
+    price: "14.99",
     currency: "USD",
     type: "playstation",
     netWorth: "$100 Billion (Sony)",
@@ -959,9 +974,10 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Essential", nameLocalized: "Temel", price: 400, cycle: "Monthly" },
-          { name: "Extra", nameLocalized: "Ekstra", price: 600, cycle: "Monthly" },
-          { name: "Deluxe", nameLocalized: "Deluxe", price: 710, cycle: "Monthly" }
+          { name: "Essential", nameLocalized: "Essential (Temel)", price: 400, cycle: "Monthly" },
+          { name: "Extra", nameLocalized: "Extra", price: 600, cycle: "Monthly" },
+          { name: "Deluxe", nameLocalized: "Deluxe", price: 710, cycle: "Monthly" },
+          { name: "Annual Essential", nameLocalized: "Yıllık Essential", price: 2890, cycle: "Yearly" }
         ]
       }
     }
@@ -998,7 +1014,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Turbo", nameLocalized: "Turbo", price: 164.99, cycle: "Monthly" }
+          { name: "Kanal Aboneliği (Kademe 1)", nameLocalized: "Kanal Aboneliği (Kademe 1)", price: 43.90, cycle: "Monthly" },
+          { name: "Turbo", nameLocalized: "Twitch Turbo", price: 399.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1035,8 +1052,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 37.99, cycle: "Monthly" },
-          { name: "Nitro", nameLocalized: "Nitro", price: 104.99, cycle: "Monthly" }
+          { name: "Nitro Basic", nameLocalized: "Nitro Temel", price: 104.99, cycle: "Monthly" },
+          { name: "Nitro", nameLocalized: "Tam Nitro", price: 269.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1049,7 +1066,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Luis von Ahn, Severin Hacker",
     ceo: "Luis von Ahn",
     headquarters: "Pittsburgh, Pennsylvania",
-    price: "6.99",
+    price: "12.99",
     currency: "USD",
     type: "duolingo",
     netWorth: "$9 Billion",
@@ -1066,16 +1083,17 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Super", price: 6.99, cycle: "Monthly" },
-          { name: "Max", price: 13.99, cycle: "Monthly" },
-          { name: "Family", price: 9.99, cycle: "Monthly" }
+          { name: "Super", price: 12.99, cycle: "Monthly" },
+          { name: "Max", price: 29.99, cycle: "Monthly" },
+          { name: "Super Annual", price: 83.99, cycle: "Yearly" }
         ]
       },
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Super", nameLocalized: "Super", price: 52.99, cycle: "Monthly" },
-          { name: "Family", nameLocalized: "Aile", price: 299.99, cycle: "Monthly" }
+          { name: "Super", nameLocalized: "Super Aylık", price: 169.99, cycle: "Monthly" },
+          { name: "Super Annual", nameLocalized: "Super Yıllık", price: 999.99, cycle: "Yearly" },
+          { name: "Family Annual", nameLocalized: "Aile Yıllık", price: 1499.99, cycle: "Yearly" }
         ]
       }
     }
@@ -1168,7 +1186,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Pro", price: 13.33, cycle: "Monthly" },
+          { name: "Pro", price: 15.99, cycle: "Monthly" },
           { name: "Business", price: 21.99, cycle: "Monthly" }
         ]
       }
@@ -1182,7 +1200,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "NBCUniversal",
     ceo: "Kelly Campbell",
     headquarters: "New York City, New York",
-    price: "5.99",
+    price: "7.99",
     currency: "USD",
     type: "peacock",
     netWorth: "Comcast Owned",
@@ -1214,7 +1232,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "CBS Interactive",
     ceo: "Bob Bakish (Paramount Global)",
     headquarters: "New York City, New York",
-    price: "5.99",
+    price: "7.99",
     currency: "USD",
     type: "paramount+",
     netWorth: "$8 Billion (Est. Valuation)",
@@ -1232,8 +1250,8 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Essential (with Ads)", price: 5.99, cycle: "Monthly" },
-          { name: "Showtime Bundle (No Ads)", price: 11.99, cycle: "Monthly" }
+          { name: "Essential (with Ads)", price: 7.99, cycle: "Monthly" },
+          { name: "Paramount+ with Showtime", price: 12.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1310,8 +1328,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Monthly", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" },
-          { name: "Annual", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
+          { name: "Monthly", nameLocalized: "Aylık", price: 69.90, cycle: "Monthly" }
         ]
       }
     }
@@ -1326,7 +1343,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Acun Ilıcalı",
     ceo: "Acun Ilıcalı",
     headquarters: "İstanbul, Türkiye",
-    price: "99.99",
+    price: "309.00",
     currency: "TRY",
     type: "exxen",
     globalUserCount: "2M+ (Türkiye)",
@@ -1352,12 +1369,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
   "blutv": {
     id: "blutv",
     name: "BluTV",
-    description: "BluTV, 2016 yılında Doğan Holding tarafından kurulan Türkiye'nin ilk yerli dijital yayın platformudur. Yerli ve yabancı diziler, filmler, belgeseller ve çocuk içerikleri sunan kapsamlı bir kütüphaneye sahiptir.\n\nPlatform 'Masum', 'Yeşilçam', 'Saygı' gibi başarılı orijinal yapımlarla bilinir. 2021 yılında Discovery Inc. tarafından satın alındı ve uluslararası içerik kütüphanesine de erişim sağladı.",
+    description: "BluTV, 2016 yılında Doğan Holding tarafından kurulan Türkiye'nin ilk yerli dijital yayın platformudur. Yerli ve yabancı diziler, filmler, belgeseller ve çocuk içerikleri sunan kapsamlı bir kütüphaneye sahiptir.\n\nPlatform 'Masum', 'Yeşilçam', 'Saygı' gibi başarılı orijinal yapımlarla bilinir. Warner Bros. Discovery bünyesinde HBO Max içerikleriyle birleşerek kütüphanesini genişletmiştir.",
     foundedYear: "2016",
     founders: "Doğan Holding",
     ceo: "Aydın Doğan Yalçındağ",
     headquarters: "İstanbul, Türkiye",
-    price: "89.90",
+    price: "229.90",
     currency: "TRY",
     type: "blutv",
     globalUserCount: "1.5M+ (Türkiye)",
@@ -1367,15 +1384,42 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       "2017: 'Masum' dizisi yayını",
       "2019: HBO işbirliği",
       "2021: Discovery tarafından satın alındı",
-      "2024: 1.5 milyon abone"
+      "2025: Max entegrasyonu"
     ],
     regions: {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 199.90, cycle: "Monthly" },
-          { name: "3 Aylık", nameLocalized: "3 Aylık", price: 239.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 799.90, cycle: "Yearly" }
+          { name: "Standart Aylık", nameLocalized: "Standart Aylık", price: 229.90, cycle: "Monthly" },
+          { name: "Özel (4K) Aylık", nameLocalized: "Özel (4K) Aylık", price: 299.90, cycle: "Monthly" },
+          { name: "Standart Yıllık", nameLocalized: "Standart Yıllık", price: 2299.00, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+  "gain": {
+    id: "gain",
+    name: "Gain",
+    description: "GAİN, Türkiye merkezli yeni nesil dijital içerik platformudur. 'Ayak İşleri', '10 Bin Adım', 'Şahsiyet' gibi özgün yerli dizileri, belgeselleri ve alternatif programlarıyla öne çıkar.",
+    foundedYear: "2020",
+    founders: "Gözde Akpınar",
+    ceo: "Aliye Ertuğrul",
+    headquarters: "İstanbul, Türkiye",
+    price: "249.00",
+    currency: "TRY",
+    type: "gain",
+    globalUserCount: "1.5M+ (Türkiye)",
+    website: "https://www.gain.tv",
+    milestones: [
+      "2020: GAİN yayına başladı",
+      "2021: 'Ayak İşleri' ve '10 Bin Adım' lansmanı",
+      "2023: 'Şahsiyet' 2. sezon prömiyeri"
+    ],
+    regions: {
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Premium Aylık", nameLocalized: "Premium Aylık", price: 249.00, cycle: "Monthly" }
         ]
       }
     }
@@ -1383,32 +1427,33 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
   "tabii": {
     id: "tabii",
     name: "Tabii",
-    description: "Tabii, TRT'nin 2023 yılında küresel pazarı hedefleyerek başlattığı dijital yayın platformudur. Türk yapımı diziler, filmler, belgeseller ve haber içeriklerini dünya çapında 27 dilde sunar.\n\nPlatform 'Kuruluş Osman', 'Diriliş Ertuğrul' gibi büyük TRT yapımlarına yer veriyor. Devlet destekli olması nedeniyle uygun fiyatlı bir alternatif sunmaya odaklanır.",
+    description: "Tabii, TRT'nin 2023 yılında küresel pazarı hedefleyerek başlattığı dijital yayın platformudur. Türk yapımı diziler, filmler, belgeseller, UEFA Şampiyonlar Ligi / Avrupa Ligi maçları ve özel içerikleri sunar.",
     foundedYear: "2023",
     founders: "TRT",
     ceo: "Mehmet Zahid Sobacı (TRT)",
     headquarters: "Ankara, Türkiye",
-    price: "0",
+    price: "99.00",
     currency: "TRY",
     type: "tabii",
     globalUserCount: "Küresel",
     website: "https://www.tabii.com",
     milestones: [
       "2023: Küresel lansman",
-      "2024: 27 dil desteği",
+      "2024: UEFA maç yayınları ve Tabii Premium",
       "2025: 100+ orijinal yapım"
     ],
     regions: {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Ücretsiz", nameLocalized: "Ücretsiz", price: 0, cycle: "Monthly" }
+          { name: "Premium (Reklamsız + Canlı Spor)", nameLocalized: "Tabii Premium", price: 99.00, cycle: "Monthly" },
+          { name: "Ücretsiz (Reklamlı)", nameLocalized: "Ücretsiz (Reklamlı)", price: 0, cycle: "Monthly" }
         ]
       },
       US: {
         currency: "USD",
         tiers: [
-          { name: "Free", price: 0, cycle: "Monthly" }
+          { name: "Premium", price: 4.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1416,29 +1461,27 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
   "trendyolelite": {
     id: "trendyolelite",
     name: "Trendyol Elite",
-    description: "Trendyol Elite, Türkiye'nin en büyük e-ticaret platformu Trendyol'un premium üyelik programıdır. Üyeler için ücretsiz hızlı teslimat, özel kampanyalar, Trendyol GO içeren bir abonelik servisidir.\n\n2010 yılında Demet Mutlu tarafından kurulan Trendyol, Alibaba'nın stratejik ortaklığıyla büyüdü ve Türkiye'nin tek decacorn (10+ milyar $ değerli) şirketi oldu. Elite üyelik, sadık müşterilere ek avantajlar sunar.",
-    foundedYear: "2021 (Elite)",
+    description: "Trendyol Plus / Elite, Türkiye'nin en büyük e-ticaret platformu Trendyol'un premium abonelik programıdır. Üyeler için ücretsiz kargo (Trendyol Pass), özel indirimler ve dijital platform kampanyaları sunar.",
+    foundedYear: "2021",
     founders: "Demet Mutlu (Trendyol)",
     ceo: "Çağlayan Çetin (Trendyol)",
     headquarters: "İstanbul, Türkiye",
-    price: "49.90",
+    price: "75.00",
     currency: "TRY",
     type: "trendyol",
     globalUserCount: "30M+ (Trendyol)",
-    website: "https://elite.trendyol.com",
+    website: "https://www.trendyol.com",
     milestones: [
       "2010: Trendyol kuruluşu",
       "2018: Alibaba yatırımı",
       "2021: Trendyol Elite lansmanı",
-      "2022: Trendyol GO entegrasyonu",
-      "2024: 30 milyon aktif kullanıcı"
+      "2025: Trendyol Plus abonelik modeli"
     ],
     regions: {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Aylık", nameLocalized: "Aylık", price: 49.90, cycle: "Monthly" },
-          { name: "Yıllık", nameLocalized: "Yıllık", price: 399, cycle: "Yearly" }
+          { name: "Plus Aylık", nameLocalized: "Trendyol Plus Aylık", price: 75.00, cycle: "Monthly" }
         ]
       }
     }
@@ -1446,12 +1489,12 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
   "hepsiburadapremium": {
     id: "hepsiburadapremium",
     name: "Hepsiburada Premium",
-    description: "Hepsiburada Premium, Türkiye'nin önde gelen e-ticaret platformu Hepsiburada'nın sadakat programıdır. Üyeler için ücretsiz kargo, hızlı teslimat ve özel indirimler sunan abonelik tabanlı bir hizmettir.\n\n2000 yılında Hanzade Doğan Boyner tarafından kurulan Hepsiburada, 2021'de NASDAQ'ta halka arz edilen ilk Türk teknoloji şirketi oldu. Premium, sadık müşteri tabanını güçlendirmek için tasarlandı.",
+    description: "Hepsiburada Premium, Türkiye'nin önde gelen e-ticaret platformu Hepsiburada'nın sadakat programıdır. Üyeler için ücretsiz kargo, Hepsipara kazancı ve özel indirimler sunan abonelik tabanlı bir hizmettir.\n\n2000 yılında Hanzade Doğan Boyner tarafından kurulan Hepsiburada, 2021'de NASDAQ'ta halka arz edilen ilk Türk teknoloji şirketi oldu. Premium, sadık müşteri tabanını güçlendirmek için tasarlandı.",
     foundedYear: "2000 (HB), 2020 (Premium)",
     founders: "Hanzade Doğan Boyner",
     ceo: "Nilhan Onal Gökçetekin (Hepsiburada)",
     headquarters: "İstanbul, Türkiye",
-    price: "59.90",
+    price: "69.90",
     currency: "TRY",
     type: "hepsiburada",
     globalUserCount: "12M+ (HB)",
@@ -1473,7 +1516,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     }
   },
 
-  // --- AI ADDITIONS ---
+  // --- AI & GAMING ADDITIONS ---
   "claudepro": {
     id: "claudepro",
     name: "Claude Pro",
@@ -1508,7 +1551,186 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       TR: {
         currency: "TRY",
         tiers: [
-          { name: "Pro", nameLocalized: "Pro", price: 699.99, cycle: "Monthly" }
+          { name: "Pro", nameLocalized: "Claude Pro", price: 899.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "geminiadvanced": {
+    id: "geminiadvanced",
+    name: "Gemini Advanced",
+    description: "Google One AI Premium (Gemini Advanced) provides access to Google's most capable AI models along with 2 TB of Google One cloud storage and Gemini integration in Gmail, Docs, and Drive.",
+    foundedYear: "2024",
+    founders: "Google",
+    ceo: "Sundar Pichai",
+    headquarters: "Mountain View, California",
+    price: "19.99",
+    currency: "USD",
+    type: "google",
+    netWorth: "$2 Trillion (Alphabet)",
+    globalUserCount: "100M+ (Google One)",
+    parentCompany: "Alphabet Inc.",
+    website: "https://one.google.com/about/ai-premium/",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "AI Pro (2 TB)", price: 19.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Google AI Pro (2 TB)", nameLocalized: "Google AI Pro (2 TB)", price: 719.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "perplexity": {
+    id: "perplexity",
+    name: "Perplexity",
+    description: "Perplexity Pro is an AI-powered conversational answer engine that combines real-time web search with frontier models like GPT-4o, Claude Sonnet, and Sonar.",
+    foundedYear: "2022",
+    founders: "Aravind Srinivas, Denis Yarats, Johnny Ho, Andy Konwinski",
+    ceo: "Aravind Srinivas",
+    headquarters: "San Francisco, California",
+    price: "20.00",
+    currency: "USD",
+    type: "perplexity",
+    netWorth: "$9 Billion",
+    globalUserCount: "15M+ MAU",
+    website: "https://www.perplexity.ai/pro",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Pro", price: 20.00, cycle: "Monthly" },
+          { name: "Pro Annual", price: 200.00, cycle: "Yearly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Pro", nameLocalized: "Perplexity Pro", price: 999.99, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "geforcenow": {
+    id: "geforcenow",
+    name: "GeForce Now",
+    description: "NVIDIA GeForce NOW (Türkiye'de Turkcell GAME+ iş birliğiyle) bulut tabanlı oyun akış servisidir. Kendi oyun kütüphanenizi güçlü RTX sunucuları üzerinden her cihazda oynamanızı sağlar.",
+    foundedYear: "2020",
+    founders: "NVIDIA",
+    ceo: "Jensen Huang",
+    headquarters: "Santa Clara, California",
+    price: "9.99",
+    currency: "USD",
+    type: "geforcenow",
+    parentCompany: "NVIDIA / GAME+",
+    website: "https://gameplus.com.tr",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Performance", price: 9.99, cycle: "Monthly" },
+          { name: "Ultimate", price: 19.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Performance", nameLocalized: "Performance Aylık", price: 599.00, cycle: "Monthly" },
+          { name: "Ultimate", nameLocalized: "Ultimate Aylık", price: 1199.00, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "eaplay": {
+    id: "eaplay",
+    name: "EA Play",
+    description: "EA Play, Electronic Arts'ın popüler oyun serilerine (EA SPORTS FC, Battlefield, The Sims, Need for Speed, F1) sınırsız erişim, 10 saatlik yeni oyun denemeleri ve %10 üye indirimi sunan oyun aboneliğidir.",
+    foundedYear: "2014",
+    founders: "Electronic Arts",
+    ceo: "Andrew Wilson",
+    headquarters: "Redwood City, California",
+    price: "5.99",
+    currency: "USD",
+    type: "eaplay",
+    parentCompany: "Electronic Arts",
+    website: "https://www.ea.com/ea-play",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "EA Play", price: 5.99, cycle: "Monthly" },
+          { name: "EA Play Pro", price: 16.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "EA Play Aylık", nameLocalized: "EA Play Aylık", price: 219.99, cycle: "Monthly" },
+          { name: "EA Play Yıllık", nameLocalized: "EA Play Yıllık", price: 1499.00, cycle: "Yearly" }
+        ]
+      }
+    }
+  },
+  "ubisoft+": {
+    id: "ubisoft+",
+    name: "Ubisoft+",
+    description: "Ubisoft+, Assassin's Creed, Far Cry, Rainbow Six ve The Crew dahil olmak üzere Ubisoft'un geniş oyun kataloğuna ve ilk gün çıkan yeni oyunlarına erişim sağlayan abonelik servisidir.",
+    foundedYear: "2019",
+    founders: "Ubisoft",
+    ceo: "Yves Guillemot",
+    headquarters: "Montreuil, France",
+    price: "17.99",
+    currency: "USD",
+    type: "ubisoft+",
+    parentCompany: "Ubisoft",
+    website: "https://plus.ubisoft.com",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Classics", price: 7.99, cycle: "Monthly" },
+          { name: "Premium", price: 17.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Classics", nameLocalized: "Ubisoft+ Classics", price: 139.00, cycle: "Monthly" },
+          { name: "Premium", nameLocalized: "Ubisoft+ Premium", price: 299.00, cycle: "Monthly" }
+        ]
+      }
+    }
+  },
+  "deezer": {
+    id: "deezer",
+    name: "Deezer",
+    description: "Deezer, HiFi (FLAC) kayıpsız ses kalitesi, Flow kişisel müzik akışı ve geniş parça kütüphanesiyle öne çıkan küresel müzik platformudur.",
+    foundedYear: "2007",
+    founders: "Daniel Marhely, Jonathan Benassaya",
+    ceo: "Alexis Lanternier",
+    headquarters: "Paris, France",
+    price: "11.99",
+    currency: "USD",
+    type: "deezer",
+    website: "https://www.deezer.com/offers",
+    regions: {
+      US: {
+        currency: "USD",
+        tiers: [
+          { name: "Premium", price: 11.99, cycle: "Monthly" },
+          { name: "Family", price: 19.99, cycle: "Monthly" }
+        ]
+      },
+      TR: {
+        currency: "TRY",
+        tiers: [
+          { name: "Premium Bireysel", nameLocalized: "Premium Bireysel", price: 89.99, cycle: "Monthly" },
+          { name: "Family", nameLocalized: "Aile", price: 149.99, cycle: "Monthly" }
         ]
       }
     }
@@ -1521,7 +1743,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
     founders: "Kun Gao, James Lin",
     ceo: "Rahul Purini",
     headquarters: "San Francisco, California",
-    price: "7.99",
+    price: "9.99",
     currency: "USD",
     type: "crunchyroll",
     netWorth: "$1.18 Billion (Acquisition)",
@@ -1539,7 +1761,7 @@ export const SUBSCRIPTION_CATALOG: Record<string, SubscriptionDetail> = {
       US: {
         currency: "USD",
         tiers: [
-          { name: "Fan", price: 7.99, cycle: "Monthly" },
+          { name: "Fan", price: 9.99, cycle: "Monthly" },
           { name: "Mega Fan", price: 11.99, cycle: "Monthly" },
           { name: "Ultimate Fan", price: 15.99, cycle: "Monthly" }
         ]

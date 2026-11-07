@@ -26,11 +26,11 @@ const DIAL_JEWELS: DialJewel[] = [
   {
     day: '04',
     angle: 38,
-    name: 'Netflix Ultra 4K',
-    price: '₺299,99',
+    name: 'Netflix Özel (4K)',
+    price: '₺499,99',
     color: '#D4AF7A',
-    noteTr: 'Gemini Notu: Yıllık kadranda ₺3.600. Aile planına geçişle %50 tasarruf imkanı.',
-    noteEn: 'Gemini Note: ₺3,600 annually. Switching to shared family tier saves 50%.'
+    noteTr: 'Gemini Notu: Yıllık kadranda ₺6.000. Ortak paylaşımlı planda kişi başı %50 tasarruf imkanı.',
+    noteEn: 'Gemini Note: ₺6,000 annually. Shared household split saves 50%.'
   },
   {
     day: '12',
@@ -45,19 +45,19 @@ const DIAL_JEWELS: DialJewel[] = [
     day: '19',
     angle: 222,
     name: 'Claude Pro AI',
-    price: '$20,00',
+    price: '₺899,99',
     color: '#10B981',
-    noteTr: 'Gemini Notu: ~₺730,80 anlık kur. Yüksek verimlilik — aktif tutulması önerilir.',
-    noteEn: 'Gemini Note: ~₺730.80 live FX rate. High utility score — keep active.'
+    noteTr: 'Gemini Notu: Küresel $20,00 / TR ₺899,99. Yüksek verimlilik — aktif tutulması önerilir.',
+    noteEn: 'Gemini Note: Global $20.00 / TR ₺899.99. High utility score — keep active.'
   },
   {
     day: '27',
     angle: 308,
     name: 'Spotify Duo',
-    price: '₺79,99',
+    price: '₺159,00',
     color: '#818CF8',
-    noteTr: 'Gemini Notu: Bireysel yıllık plana geçişte 2 ay ücretsiz avantajı bulundu.',
-    noteEn: 'Gemini Note: Annual billing unlocks 2 months free compared to monthly.'
+    noteTr: 'Gemini Notu: 2 kişilik ortak kullanımda bireysel plana göre kişi başı %31 tasarruf.',
+    noteEn: 'Gemini Note: Shared Duo plan saves 31% per person compared to Individual.'
   }
 ];
 
@@ -97,11 +97,11 @@ export default function Hero({ onOpenDemo, onOpenAuth }: HeroProps) {
     let prevY: number | null = null;
 
     const strings = [
-      { name: 'Netflix 4K', cost: '₺299', yRatio: 0.16, amp: 12, vel: 0, waste: false },
+      { name: 'Netflix Özel 4K', cost: '₺500', yRatio: 0.16, amp: 12, vel: 0, waste: false },
       { name: isTr ? 'Kullanılmayan Spor Uygulaması (Parazit)' : 'Unused Fitness App (Static)', cost: '₺450', yRatio: 0.34, amp: 20, vel: 0, waste: true },
-      { name: 'Claude Pro ($20)', cost: '₺730', yRatio: 0.52, amp: 0, vel: 0, waste: false },
+      { name: 'Claude Pro AI', cost: '₺900', yRatio: 0.52, amp: 0, vel: 0, waste: false },
       { name: isTr ? 'Çift Müzik Denemesi (Parazit)' : 'Duplicate Music Trial (Static)', cost: '₺199', yRatio: 0.70, amp: -15, vel: 0, waste: true },
-      { name: 'Spotify Duo + iCloud', cost: '₺476', yRatio: 0.87, amp: 0, vel: 0, waste: false },
+      { name: 'Spotify Duo + iCloud+', cost: '₺209', yRatio: 0.87, amp: 0, vel: 0, waste: false },
     ];
 
     const resize = () => {

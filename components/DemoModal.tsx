@@ -17,10 +17,10 @@ interface DemoModalProps {
 }
 
 const DEMO_SUBSCRIPTIONS: Subscription[] = [
-  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 19.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 24, 2023', type: 'netflix', status: 'Active', billingDay: 24, category: 'Entertainment', history: [15.99, 15.99, 19.99] },
-  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 14.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Oct 28, 2023', type: 'spotify', status: 'Active', billingDay: 28, category: 'Entertainment', history: [12.99, 14.99] },
-  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 54.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 01, 2023', type: 'adobe', status: 'Expiring', billingDay: 1, category: 'Productivity', history: [54.99] },
-  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2024', type: 'amazon', status: 'Active', billingDay: 12, category: 'Shopping', history: [139.00] },
+  { id: 1, name: 'Netflix', plan: 'Premium 4K', price: 24.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 24, 2026', type: 'netflix', status: 'Active', billingDay: 24, category: 'Entertainment', history: [19.99, 22.99, 24.99] },
+  { id: 2, name: 'Spotify', plan: 'Duo Plan', price: 16.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Nov 28, 2026', type: 'spotify', status: 'Active', billingDay: 28, category: 'Entertainment', history: [14.99, 16.99] },
+  { id: 3, name: 'Adobe Creative Cloud', plan: 'All Apps', price: 59.99, currency: 'USD', cycle: 'Monthly', nextDate: 'Dec 01, 2026', type: 'adobe', status: 'Expiring', billingDay: 1, category: 'Productivity', history: [54.99, 59.99] },
+  { id: 4, name: 'Amazon Prime', plan: 'Annual', price: 139.00, currency: 'USD', cycle: 'Yearly', nextDate: 'Feb 12, 2027', type: 'amazon', status: 'Active', billingDay: 12, category: 'Shopping', history: [139.00] },
 ];
 
 export default function DemoModal({ isOpen, onClose, onSignup }: DemoModalProps) {
