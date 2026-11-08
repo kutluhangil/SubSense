@@ -92,6 +92,10 @@ Firebase Blaze (ücretli) planına ihtiyaç duymamak için hem ön yüz (`aboney
 - `utils/subscriptionTemplates.ts` ve `utils/data.ts` (`SUBSCRIPTION_CATALOG`) içindeki tüm abonelik servislerinin Türkiye (`TRY`) ve Küresel (`USD`) fiyatları 2026 resmi tarifeleriyle güncellendi (Netflix TR `₺259,99 / ₺389,99 / ₺499,99`, Spotify TR `₺60 / ₺115 / ₺159 / ₺199`, YouTube Premium TR `₺79,99 / ₺119,99 / ₺239,99`, Disney+ TR `₺249,90 / ₺449,90`, Amazon Prime TR `₺69,90`, Max/BluTV `₺229,90 / ₺299,90`, Exxen `₺219 / ₺309 / ₺499`, Apple Music `₺89,99`, Xbox Game Pass `₺269–₺529`, PS Plus `₺400–₺710`, ChatGPT Plus `₺999,99 / $20`, Claude Pro `₺899,99 / $20`, Adobe CC `₺956 / $59.99`, Microsoft 365 `₺329,99 / ₺409,99`, Canva Pro `₺239,99`, Trendyol Plus `₺75`, Hepsiburada Premium `₺69,90` vb.).
 - Eksik olan popüler servisler (**Gain, Tabii, Canva Pro, Gemini Advanced, Perplexity, GeForce Now / GAME+, EA Play, Ubisoft+, Deezer**) hem şablonlara hem de katalog ve `functions/src/priceSync.ts` listesine eklendi.
 - `components/SubscriptionSearchPanel.tsx` içine katalog dışı ikincil servislerin `$0.00` görünmesini önleyen `FALLBACK_PRICING` eklendi; `components/Comparison.tsx` gerçek katalog bölge fiyatlarını (`regions.TR` ve `regions.US`) kullanacak şekilde güncellendi.
+- **Otomatik Fiyat Güncelleme ve Canlı Zam Radarı (`components/PriceSyncBanner.tsx`, `utils/priceCatalog.ts`, `functions/src/priceSync.ts`):**
+  - Kullanıcının aktif aboneliklerini ve seçili plan kademesini güncel 2026 katalog ve canlı sunucu fiyatlarıyla karşılaştıran `detectSubscriptionPriceUpdates` algoritması eklendi.
+  - Kayıtlı aboneliklerde fiyat farkı veya zam tespit edildiğinde Dashboard üzerinde `Eski Fiyat → Güncel Fiyat` gösterimiyle **"Tümünü Otomatik Güncelle"** / tekil **"Güncelle"** / **"Mevcut Fiyatımı Koru"** seçenekleri sunan `PriceSyncBanner` eklendi.
+  - `Comparison.tsx` ve `Dashboard.tsx` içerisine canlı tarife denetleme butonları (`syncLivePricesFromServer`) ve `aboneyim_api` üzerinde haftalık otomatik senkronizasyon eklendi.
 - 47 statik SEO fiyat sayfası yeniden üretildi ve güncel imaj `macmini-server` üzerine dağıtıldı.
 
 

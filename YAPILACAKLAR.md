@@ -13,6 +13,7 @@ Aşağıdaki tüm özellikler şu an canlı ortamda (`https://macmini-server.tai
 - **Firestore Gerçek Zamanlı Senkronizasyon:** Abonelik ekleme, düzenleme, silme, ortak abonelik (`isShared` / `myShare`), deneme süresi (`Trial`), bütçe limitleri (`budgetLimits`), tasarruf hedefi (`savingsGoal`), toplam tasarruf (`totalSaved`) ve bildirim tercihleri.
 - **Yıllık, Aylık ve Deneme (Trial) Takvimi:** Uygulama içi `CalendarModal` görünümü ve `.ics` dosya indirme.
 - **TR / EN Çift Dil Desteği:** 811 Türkçe / 811 İngilizce çeviri anahtarı, Yardım Merkezi 5 adımlı Kullanım Rehberi ve Bilinen Sınırlamalar modalları.
+- **2026 Güncel Abonelik Katalog Fiyatları & Otomatik Fiyat Güncelleme Radarı:** 47 popüler servisin TR (`TRY`) ve US (`USD`) 2026 fiyatları, canlı katalog senkronizasyonu (`utils/priceCatalog.ts`) ve kullanıcının kayıtlı aboneliklerinde fiyat farkı/zam tespit edildiğinde tek tıkla güncelleyen `PriceSyncBanner` bileşeni.
 - **%100 Ücretsiz (Free) Mod:** Tüm Pro kilitleri, yükseltme pencereleri ve Stripe ödeme adımları kaldırıldı.
 
 ---
