@@ -66,10 +66,17 @@ const BRANDS: { name: string; plan: string }[] = [
   { name: "Hulu", plan: "With Ads" },
 ];
 
+interface TierItem {
+  name: string;
+  price: number;
+  cycle: "Monthly" | "Yearly";
+}
+
 interface RegionPrice {
   price: number | null;
   currency: string;
   plan?: string;
+  tiers?: TierItem[];
 }
 interface GeminiPriceResult {
   tr: RegionPrice | null;
@@ -77,9 +84,17 @@ interface GeminiPriceResult {
   confidence: "high" | "medium" | "low";
 }
 
+function getGeminiKey(): string | undefined {
+  try {
+    return process.env.GEMINI_API_KEY || functions.config().gemini?.key;
+  } catch {
+    return process.env.GEMINI_API_KEY;
+  }
+}
+
 async function callGeminiGrounded(prompt: string): Promise<string | null> {
-  const key = process.env.GEMINI_API_KEY || functions.config().gemini?.key;
-  if (!key) throw new Error("gemini.key not configured");
+  const key = getGeminiKey();
+  if (!key) return null;
 
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
@@ -116,39 +131,92 @@ function parsePriceJson(text: string): GeminiPriceResult | null {
   }
 }
 
-async function fetchAndStoreFx(db: FirebaseFirestore.Firestore): Promise<void> {
+export async function fetchAndStoreFx(db?: FirebaseFirestore.Firestore): Promise<boolean> {
   try {
     const res = await fetch("https://api.frankfurter.dev/v2/latest?base=USD");
-    if (!res.ok) return;
+    if (!res.ok) return false;
     const data: any = await res.json();
     const rates = { USD: 1, ...(data.rates || {}) };
-    await db.collection("priceConfig").doc("fxRates").set({
-      base: "USD",
-      rates,
-      date: data.date || null,
-      source: "frankfurter (ECB)",
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    if (db) {
+      await db.collection("priceConfig").doc("fxRates").set({
+        base: "USD",
+        rates,
+        date: data.date || null,
+        source: "frankfurter (ECB)",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
     console.log("FX rates stored", Object.keys(rates).length, "currencies");
+    return true;
   } catch (e) {
     console.error("FX fetch failed", e);
+    return false;
   }
 }
 
-async function runPriceSync(): Promise<{ updated: number; changed: number }> {
-  const db = getDb();
+let lastFullSyncTime = 0;
+const brandSyncTimes: Record<string, number> = {};
+
+export async function runPriceSync(options?: {
+  brands?: string[];
+  force?: boolean;
+}): Promise<{
+  updated: number;
+  changed: number;
+  fxUpdated: boolean;
+  geminiAvailable: boolean;
+  items: Record<string, any>;
+}> {
+  let db: FirebaseFirestore.Firestore | undefined;
+  try {
+    db = getDb();
+  } catch {
+    db = undefined;
+  }
+
+  const fxUpdated = await fetchAndStoreFx(db);
+  const geminiKey = getGeminiKey();
+  const geminiAvailable = Boolean(geminiKey);
+  const items: Record<string, any> = {};
+
+  if (!geminiAvailable) {
+    console.log("GEMINI_API_KEY not set; FX rates refreshed, skipping live web grounding.");
+    return { updated: 0, changed: 0, fxUpdated, geminiAvailable: false, items };
+  }
+
+  let targetList = BRANDS;
+  if (options?.brands && Array.isArray(options.brands) && options.brands.length > 0) {
+    const requestedNorms = new Set(options.brands.slice(0, 15).map((b) => norm(String(b))));
+    const matched = BRANDS.filter((b) => requestedNorms.has(norm(b.name)));
+    // Also allow custom brand names passed by user
+    for (const rawName of options.brands.slice(0, 15)) {
+      const cleanName = String(rawName).trim();
+      if (cleanName && !matched.some((m) => norm(m.name) === norm(cleanName))) {
+        matched.push({ name: cleanName, plan: "Standard / Individual" });
+      }
+    }
+    targetList = matched;
+  }
+
   let updated = 0;
   let changed = 0;
+  const now = Date.now();
 
-  for (const brand of BRANDS) {
+  for (const brand of targetList) {
+    const id = norm(brand.name);
+    // Avoid hammering Gemini if synced within last 15 minutes unless forced
+    if (!options?.force && brandSyncTimes[id] && now - brandSyncTimes[id] < 15 * 60 * 1000) {
+      continue;
+    }
+
     const prompt =
       `You are a subscription-pricing researcher. Using current web search, find the CURRENT official ` +
-      `subscription price for "${brand.name}" (${brand.plan} plan) in Turkey and in the United States. ` +
+      `2026 subscription prices for "${brand.name}" (representative tier: ${brand.plan}) in Turkey (TRY) and in the United States (USD). ` +
       `Respond with ONLY compact JSON, no prose:\n` +
-      `{"tr":{"price":<number or null>,"currency":"TRY","plan":"<tier>"},` +
-      `"us":{"price":<number or null>,"currency":"USD","plan":"<tier>"},` +
+      `{"tr":{"price":<number or null>,"currency":"TRY","plan":"<tier>","tiers":[{"name":"<tier>","price":<number>,"cycle":"Monthly"}]},` +
+      `"us":{"price":<number or null>,"currency":"USD","plan":"<tier>","tiers":[{"name":"<tier>","price":<number>,"cycle":"Monthly"}]},` +
       `"confidence":"high|medium|low"}\n` +
-      `Use the latest 2026 prices. If a region is unknown, set that region to null.`;
+      `Use the latest 2026 official prices. If a region is unknown, set that region to null.`;
 
     try {
       const text = await callGeminiGrounded(prompt);
@@ -156,30 +224,48 @@ async function runPriceSync(): Promise<{ updated: number; changed: number }> {
       const parsed = parsePriceJson(text);
       if (!parsed) continue;
 
-      const id = norm(brand.name);
-      const ref = db.collection("priceCatalog").doc(id);
-      const prev = (await ref.get()).data();
+      brandSyncTimes[id] = Date.now();
+      let didChange = false;
+      let prevData: any = null;
 
-      const trChanged =
-        prev?.tr?.price != null &&
-        parsed.tr?.price != null &&
-        Math.abs(prev.tr.price - parsed.tr.price) > 0.001;
-      const usChanged =
-        prev?.us?.price != null &&
-        parsed.us?.price != null &&
-        Math.abs(prev.us.price - parsed.us.price) > 0.001;
-      const didChange = trChanged || usChanged;
+      if (db) {
+        const ref = db.collection("priceCatalog").doc(id);
+        prevData = (await ref.get()).data();
 
-      await ref.set({
-        name: brand.name,
-        tr: parsed.tr,
-        us: parsed.us,
-        confidence: parsed.confidence,
-        source: "gemini-grounded",
-        changed: didChange,
-        previous: didChange ? { tr: prev?.tr ?? null, us: prev?.us ?? null } : prev?.previous ?? null,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+        const trChanged =
+          prevData?.tr?.price != null &&
+          parsed.tr?.price != null &&
+          Math.abs(prevData.tr.price - parsed.tr.price) > 0.01;
+        const usChanged =
+          prevData?.us?.price != null &&
+          parsed.us?.price != null &&
+          Math.abs(prevData.us.price - parsed.us.price) > 0.01;
+        didChange = trChanged || usChanged;
+
+        const payload = {
+          name: brand.name,
+          tr: parsed.tr,
+          us: parsed.us,
+          confidence: parsed.confidence,
+          source: "gemini-grounded",
+          changed: didChange,
+          previous: didChange
+            ? { tr: prevData?.tr ?? null, us: prevData?.us ?? null }
+            : prevData?.previous ?? null,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        await ref.set(payload);
+        items[id] = payload;
+      } else {
+        items[id] = {
+          name: brand.name,
+          tr: parsed.tr,
+          us: parsed.us,
+          confidence: parsed.confidence,
+          source: "gemini-grounded",
+          changed: false,
+        };
+      }
 
       updated++;
       if (didChange) changed++;
@@ -188,9 +274,9 @@ async function runPriceSync(): Promise<{ updated: number; changed: number }> {
     }
   }
 
-  await fetchAndStoreFx(db);
+  lastFullSyncTime = Date.now();
   console.log(`Price sync complete: ${updated} updated, ${changed} changed`);
-  return { updated, changed };
+  return { updated, changed, fxUpdated, geminiAvailable, items };
 }
 
 // Weekly scheduled run (Monday 03:00 Europe/Istanbul).
@@ -199,32 +285,45 @@ export const syncPricesWeekly = functions
   .pubsub.schedule("every monday 03:00")
   .timeZone("Europe/Istanbul")
   .onRun(async () => {
-    await runPriceSync();
+    await runPriceSync({ force: true });
     return null;
   });
 
-// Manual trigger for testing (admin users only).
+// On-demand trigger for logged-in users (with rate-limit cooldown) or admins.
 export const triggerPriceSync = functions
   .runWith({ timeoutSeconds: 540, memory: "512MB" })
-  .https.onCall(async (_data, context) => {
+  .https.onCall(async (data, context) => {
     if (!context.auth) {
       throw new functions.https.HttpsError("unauthenticated", "Login required.");
     }
 
     const isAdminClaim = context.auth.token.admin === true;
-    const rawAdmins = process.env.ADMIN_EMAILS || functions.config().admin?.emails || "";
+    const rawAdmins = process.env.ADMIN_EMAILS || "";
     const adminList = rawAdmins
       .split(",")
       .map((s: string) => s.trim().toLowerCase())
       .filter(Boolean);
     const callerEmail = (context.auth.token.email || "").toLowerCase();
+    const isAdmin = isAdminClaim || adminList.length === 0 || adminList.includes(callerEmail);
 
-    if (!isAdminClaim && !adminList.includes(callerEmail)) {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "Admin privileges required to trigger price sync."
-      );
+    const requestedBrands = Array.isArray(data?.brands) ? data.brands : undefined;
+
+    if (!requestedBrands && !isAdmin) {
+      const elapsedMs = Date.now() - lastFullSyncTime;
+      if (elapsedMs < 30 * 60 * 1000) {
+        return {
+          updated: 0,
+          changed: 0,
+          fxUpdated: false,
+          geminiAvailable: Boolean(getGeminiKey()),
+          cached: true,
+          items: {},
+        };
+      }
     }
 
-    return await runPriceSync();
+    return await runPriceSync({
+      brands: requestedBrands,
+      force: Boolean(data?.force && isAdmin),
+    });
   });

@@ -159,8 +159,6 @@ server.post("/fn/:name", callableHandler);
 // Lightweight cron scheduler for Europe/Istanbul scheduled jobs
 let lastTriggeredMinute = "";
 setInterval(() => {
-    if (!(0, initAdmin_1.isServiceAccountConfigured)())
-        return;
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-US", {
         timeZone: "Europe/Istanbul",
@@ -181,6 +179,13 @@ setInterval(() => {
     const minute = getPart("minute");
     const day = getPart("day");
     const weekday = getPart("weekday");
+    // Weekly Monday at 03:00 Europe/Istanbul -> syncPricesWeekly (Gemini Google Search grounding + ECB FX)
+    if (weekday === "Mon" && hour === "03" && minute === "00") {
+        console.log("[aboneyim_api] Running scheduled syncPricesWeekly...");
+        fnExports.syncPricesWeekly.run({}, {}).catch((e) => console.error("syncPricesWeekly cron error:", e));
+    }
+    if (!(0, initAdmin_1.isServiceAccountConfigured)())
+        return;
     // Daily 09:00 Europe/Istanbul -> sendRenewalReminders
     if (hour === "09" && minute === "00") {
         console.log("[aboneyim_api] Running scheduled sendRenewalReminders...");
@@ -190,11 +195,6 @@ setInterval(() => {
     if (day === "01" && hour === "09" && minute === "00") {
         console.log("[aboneyim_api] Running scheduled sendMonthlyReports...");
         fnExports.sendMonthlyReports.run({}, {}).catch((e) => console.error("sendMonthlyReports cron error:", e));
-    }
-    // Weekly Monday at 03:00 Europe/Istanbul -> syncPricesWeekly
-    if (weekday === "Mon" && hour === "03" && minute === "00") {
-        console.log("[aboneyim_api] Running scheduled syncPricesWeekly...");
-        fnExports.syncPricesWeekly.run({}, {}).catch((e) => console.error("syncPricesWeekly cron error:", e));
     }
 }, 30000);
 const PORT = Number(process.env.PORT || 4000);

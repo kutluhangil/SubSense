@@ -15,6 +15,7 @@ import AIAssistant from "./AIAssistant";
 import AIInsightsCard from "./AIInsightsCard";
 import CurrencySelector from "./CurrencySelector";
 import BudgetAlert from "./BudgetAlert";
+import PriceSyncBanner from "./PriceSyncBanner";
 
 const Wrapped = React.lazy(() => import("./Wrapped"));
 import {
@@ -337,6 +338,26 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
     }
   };
 
+  const handleAutoPriceUpdate = async (sub: Subscription, newPrice: number) => {
+    if (!currentUser) return;
+    const newHistory = [...(sub.history || []), sub.price];
+    const updates: Partial<Subscription> = {
+      price: newPrice,
+      history: newHistory,
+    };
+    if (sub.isShared && sub.price > 0 && sub.myShare != null) {
+      updates.myShare = Number(((sub.myShare * newPrice) / sub.price).toFixed(2));
+    }
+    await updateSubscription(currentUser.uid, sub.id, updates);
+    trackEvent("subscription_edited", {
+      name: sub.name,
+      oldPrice: sub.price,
+      newPrice,
+      currency: sub.currency,
+    });
+    showToast(`${sub.name} fiyatı ${newPrice} ${sub.currency} olarak güncellendi.`);
+  };
+
   const handleSubDelete = async (id: string | number) => {
     // E-06: Prevent rapid double-click / double-tap triggering two deletes
     if (isDeletingRef.current) return;
@@ -617,6 +638,12 @@ export default function Dashboard({ onLogout, user }: DashboardProps) {
                 onEditBudgets={() => setIsBudgetEditorOpen(!isBudgetEditorOpen)}
               />
             </div>
+
+            {/* Automatic Subscription Price Sync & Hike Radar */}
+            <PriceSyncBanner
+              subscriptions={subscriptions}
+              onUpdateSubscriptionPrice={handleAutoPriceUpdate}
+            />
 
             {/* Inline Budget Editor */}
             {isBudgetEditorOpen && (

@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.triggerPriceSync = exports.syncPricesWeekly = void 0;
+exports.triggerPriceSync = exports.syncPricesWeekly = exports.runPriceSync = exports.fetchAndStoreFx = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const initAdmin_1 = require("./initAdmin");
@@ -85,11 +85,20 @@ const BRANDS = [
     { name: "HBO Max", plan: "Ad-Free / Standard" },
     { name: "Hulu", plan: "With Ads" },
 ];
+function getGeminiKey() {
+    var _a;
+    try {
+        return process.env.GEMINI_API_KEY || ((_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key);
+    }
+    catch (_b) {
+        return process.env.GEMINI_API_KEY;
+    }
+}
 async function callGeminiGrounded(prompt) {
-    var _a, _b, _c, _d, _e;
-    const key = process.env.GEMINI_API_KEY || ((_a = functions.config().gemini) === null || _a === void 0 ? void 0 : _a.key);
+    var _a, _b, _c, _d;
+    const key = getGeminiKey();
     if (!key)
-        throw new Error("gemini.key not configured");
+        return null;
     const body = {
         contents: [{ parts: [{ text: prompt }] }],
         // Google Search grounding so prices reflect the live web, not training data.
@@ -105,7 +114,7 @@ async function callGeminiGrounded(prompt) {
         return null;
     }
     const data = await res.json();
-    return ((_e = (_d = (_c = (_b = data === null || data === void 0 ? void 0 : data.candidates) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.content) === null || _d === void 0 ? void 0 : _d.parts) === null || _e === void 0 ? void 0 : _e.map((p) => p.text).join("")) || null;
+    return ((_d = (_c = (_b = (_a = data === null || data === void 0 ? void 0 : data.candidates) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.content) === null || _c === void 0 ? void 0 : _c.parts) === null || _d === void 0 ? void 0 : _d.map((p) => p.text).join("")) || null;
 }
 function parsePriceJson(text) {
     var _a, _b;
@@ -129,35 +138,75 @@ async function fetchAndStoreFx(db) {
     try {
         const res = await fetch("https://api.frankfurter.dev/v2/latest?base=USD");
         if (!res.ok)
-            return;
+            return false;
         const data = await res.json();
         const rates = Object.assign({ USD: 1 }, (data.rates || {}));
-        await db.collection("priceConfig").doc("fxRates").set({
-            base: "USD",
-            rates,
-            date: data.date || null,
-            source: "frankfurter (ECB)",
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
+        if (db) {
+            await db.collection("priceConfig").doc("fxRates").set({
+                base: "USD",
+                rates,
+                date: data.date || null,
+                source: "frankfurter (ECB)",
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        }
         console.log("FX rates stored", Object.keys(rates).length, "currencies");
+        return true;
     }
     catch (e) {
         console.error("FX fetch failed", e);
+        return false;
     }
 }
-async function runPriceSync() {
+exports.fetchAndStoreFx = fetchAndStoreFx;
+let lastFullSyncTime = 0;
+const brandSyncTimes = {};
+async function runPriceSync(options) {
     var _a, _b, _c, _d, _e, _f, _g;
-    const db = getDb();
+    let db;
+    try {
+        db = getDb();
+    }
+    catch (_h) {
+        db = undefined;
+    }
+    const fxUpdated = await fetchAndStoreFx(db);
+    const geminiKey = getGeminiKey();
+    const geminiAvailable = Boolean(geminiKey);
+    const items = {};
+    if (!geminiAvailable) {
+        console.log("GEMINI_API_KEY not set; FX rates refreshed, skipping live web grounding.");
+        return { updated: 0, changed: 0, fxUpdated, geminiAvailable: false, items };
+    }
+    let targetList = BRANDS;
+    if ((options === null || options === void 0 ? void 0 : options.brands) && Array.isArray(options.brands) && options.brands.length > 0) {
+        const requestedNorms = new Set(options.brands.slice(0, 15).map((b) => norm(String(b))));
+        const matched = BRANDS.filter((b) => requestedNorms.has(norm(b.name)));
+        // Also allow custom brand names passed by user
+        for (const rawName of options.brands.slice(0, 15)) {
+            const cleanName = String(rawName).trim();
+            if (cleanName && !matched.some((m) => norm(m.name) === norm(cleanName))) {
+                matched.push({ name: cleanName, plan: "Standard / Individual" });
+            }
+        }
+        targetList = matched;
+    }
     let updated = 0;
     let changed = 0;
-    for (const brand of BRANDS) {
+    const now = Date.now();
+    for (const brand of targetList) {
+        const id = norm(brand.name);
+        // Avoid hammering Gemini if synced within last 15 minutes unless forced
+        if (!(options === null || options === void 0 ? void 0 : options.force) && brandSyncTimes[id] && now - brandSyncTimes[id] < 15 * 60 * 1000) {
+            continue;
+        }
         const prompt = `You are a subscription-pricing researcher. Using current web search, find the CURRENT official ` +
-            `subscription price for "${brand.name}" (${brand.plan} plan) in Turkey and in the United States. ` +
+            `2026 subscription prices for "${brand.name}" (representative tier: ${brand.plan}) in Turkey (TRY) and in the United States (USD). ` +
             `Respond with ONLY compact JSON, no prose:\n` +
-            `{"tr":{"price":<number or null>,"currency":"TRY","plan":"<tier>"},` +
-            `"us":{"price":<number or null>,"currency":"USD","plan":"<tier>"},` +
+            `{"tr":{"price":<number or null>,"currency":"TRY","plan":"<tier>","tiers":[{"name":"<tier>","price":<number>,"cycle":"Monthly"}]},` +
+            `"us":{"price":<number or null>,"currency":"USD","plan":"<tier>","tiers":[{"name":"<tier>","price":<number>,"cycle":"Monthly"}]},` +
             `"confidence":"high|medium|low"}\n` +
-            `Use the latest 2026 prices. If a region is unknown, set that region to null.`;
+            `Use the latest 2026 official prices. If a region is unknown, set that region to null.`;
         try {
             const text = await callGeminiGrounded(prompt);
             if (!text)
@@ -165,26 +214,44 @@ async function runPriceSync() {
             const parsed = parsePriceJson(text);
             if (!parsed)
                 continue;
-            const id = norm(brand.name);
-            const ref = db.collection("priceCatalog").doc(id);
-            const prev = (await ref.get()).data();
-            const trChanged = ((_a = prev === null || prev === void 0 ? void 0 : prev.tr) === null || _a === void 0 ? void 0 : _a.price) != null &&
-                ((_b = parsed.tr) === null || _b === void 0 ? void 0 : _b.price) != null &&
-                Math.abs(prev.tr.price - parsed.tr.price) > 0.001;
-            const usChanged = ((_c = prev === null || prev === void 0 ? void 0 : prev.us) === null || _c === void 0 ? void 0 : _c.price) != null &&
-                ((_d = parsed.us) === null || _d === void 0 ? void 0 : _d.price) != null &&
-                Math.abs(prev.us.price - parsed.us.price) > 0.001;
-            const didChange = trChanged || usChanged;
-            await ref.set({
-                name: brand.name,
-                tr: parsed.tr,
-                us: parsed.us,
-                confidence: parsed.confidence,
-                source: "gemini-grounded",
-                changed: didChange,
-                previous: didChange ? { tr: (_e = prev === null || prev === void 0 ? void 0 : prev.tr) !== null && _e !== void 0 ? _e : null, us: (_f = prev === null || prev === void 0 ? void 0 : prev.us) !== null && _f !== void 0 ? _f : null } : (_g = prev === null || prev === void 0 ? void 0 : prev.previous) !== null && _g !== void 0 ? _g : null,
-                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            brandSyncTimes[id] = Date.now();
+            let didChange = false;
+            let prevData = null;
+            if (db) {
+                const ref = db.collection("priceCatalog").doc(id);
+                prevData = (await ref.get()).data();
+                const trChanged = ((_a = prevData === null || prevData === void 0 ? void 0 : prevData.tr) === null || _a === void 0 ? void 0 : _a.price) != null &&
+                    ((_b = parsed.tr) === null || _b === void 0 ? void 0 : _b.price) != null &&
+                    Math.abs(prevData.tr.price - parsed.tr.price) > 0.01;
+                const usChanged = ((_c = prevData === null || prevData === void 0 ? void 0 : prevData.us) === null || _c === void 0 ? void 0 : _c.price) != null &&
+                    ((_d = parsed.us) === null || _d === void 0 ? void 0 : _d.price) != null &&
+                    Math.abs(prevData.us.price - parsed.us.price) > 0.01;
+                didChange = trChanged || usChanged;
+                const payload = {
+                    name: brand.name,
+                    tr: parsed.tr,
+                    us: parsed.us,
+                    confidence: parsed.confidence,
+                    source: "gemini-grounded",
+                    changed: didChange,
+                    previous: didChange
+                        ? { tr: (_e = prevData === null || prevData === void 0 ? void 0 : prevData.tr) !== null && _e !== void 0 ? _e : null, us: (_f = prevData === null || prevData === void 0 ? void 0 : prevData.us) !== null && _f !== void 0 ? _f : null }
+                        : (_g = prevData === null || prevData === void 0 ? void 0 : prevData.previous) !== null && _g !== void 0 ? _g : null,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                };
+                await ref.set(payload);
+                items[id] = payload;
+            }
+            else {
+                items[id] = {
+                    name: brand.name,
+                    tr: parsed.tr,
+                    us: parsed.us,
+                    confidence: parsed.confidence,
+                    source: "gemini-grounded",
+                    changed: false,
+                };
+            }
             updated++;
             if (didChange)
                 changed++;
@@ -193,37 +260,52 @@ async function runPriceSync() {
             console.error(`Price sync failed for ${brand.name}`, e);
         }
     }
-    await fetchAndStoreFx(db);
+    lastFullSyncTime = Date.now();
     console.log(`Price sync complete: ${updated} updated, ${changed} changed`);
-    return { updated, changed };
+    return { updated, changed, fxUpdated, geminiAvailable, items };
 }
+exports.runPriceSync = runPriceSync;
 // Weekly scheduled run (Monday 03:00 Europe/Istanbul).
 exports.syncPricesWeekly = functions
     .runWith({ timeoutSeconds: 540, memory: "512MB" })
     .pubsub.schedule("every monday 03:00")
     .timeZone("Europe/Istanbul")
     .onRun(async () => {
-    await runPriceSync();
+    await runPriceSync({ force: true });
     return null;
 });
-// Manual trigger for testing (admin users only).
+// On-demand trigger for logged-in users (with rate-limit cooldown) or admins.
 exports.triggerPriceSync = functions
     .runWith({ timeoutSeconds: 540, memory: "512MB" })
-    .https.onCall(async (_data, context) => {
-    var _a;
+    .https.onCall(async (data, context) => {
     if (!context.auth) {
         throw new functions.https.HttpsError("unauthenticated", "Login required.");
     }
     const isAdminClaim = context.auth.token.admin === true;
-    const rawAdmins = process.env.ADMIN_EMAILS || ((_a = functions.config().admin) === null || _a === void 0 ? void 0 : _a.emails) || "";
+    const rawAdmins = process.env.ADMIN_EMAILS || "";
     const adminList = rawAdmins
         .split(",")
         .map((s) => s.trim().toLowerCase())
         .filter(Boolean);
     const callerEmail = (context.auth.token.email || "").toLowerCase();
-    if (!isAdminClaim && !adminList.includes(callerEmail)) {
-        throw new functions.https.HttpsError("permission-denied", "Admin privileges required to trigger price sync.");
+    const isAdmin = isAdminClaim || adminList.length === 0 || adminList.includes(callerEmail);
+    const requestedBrands = Array.isArray(data === null || data === void 0 ? void 0 : data.brands) ? data.brands : undefined;
+    if (!requestedBrands && !isAdmin) {
+        const elapsedMs = Date.now() - lastFullSyncTime;
+        if (elapsedMs < 30 * 60 * 1000) {
+            return {
+                updated: 0,
+                changed: 0,
+                fxUpdated: false,
+                geminiAvailable: Boolean(getGeminiKey()),
+                cached: true,
+                items: {},
+            };
+        }
     }
-    return await runPriceSync();
+    return await runPriceSync({
+        brands: requestedBrands,
+        force: Boolean((data === null || data === void 0 ? void 0 : data.force) && isAdmin),
+    });
 });
 //# sourceMappingURL=priceSync.js.map

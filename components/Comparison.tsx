@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, Sparkles } from 'lucide-react';
+import { ChevronDown, Globe, TrendingUp, TrendingDown, Clock, DollarSign, Zap, Sparkles, RefreshCw } from 'lucide-react';
 import { BrandIcon } from './BrandIcon';
 import { ALL_SUBSCRIPTIONS, SUBSCRIPTION_CATALOG, SubscriptionDetail } from '../utils/data';
+import { syncLivePricesFromServer } from '../utils/priceCatalog';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Subscription } from './SubscriptionModal';
@@ -479,23 +480,43 @@ const RegionalPriceTable = ({ data, baseCurrencySymbol }: { data: PricingData[],
 };
 
 export default function Comparison() {
-   const { t, currentCurrency } = useLanguage(); // Use context currency as default
+   const { t, currentCurrency, currentLanguage } = useLanguage(); // Use context currency as default
    const { subscriptions } = useAuth();
    const [selectedService, setSelectedService] = useState('Netflix');
    const [baseCurrency, setBaseCurrency] = useState(currentCurrency);
+   const [priceVersion, setPriceVersion] = useState(0);
+   const [syncingLive, setSyncingLive] = useState(false);
 
    // Sync local baseCurrency with global change if user hasn't overridden it locally (optional, staying consistent for now)
    useEffect(() => {
       setBaseCurrency(currentCurrency);
    }, [currentCurrency]);
 
+   useEffect(() => {
+      const onUpdated = () => setPriceVersion((v) => v + 1);
+      window.addEventListener('aboneyim:prices-updated', onUpdated);
+      return () => window.removeEventListener('aboneyim:prices-updated', onUpdated);
+   }, []);
+
+   const handleRefreshServicePrice = async () => {
+      if (syncingLive) return;
+      setSyncingLive(true);
+      try {
+         await syncLivePricesFromServer({ brands: [selectedService] });
+         setPriceVersion((v) => v + 1);
+      } finally {
+         setSyncingLive(false);
+      }
+   };
+
    const currencies = useMemo(() => Object.values(CURRENCY_DATA), []);
    const baseCurrencySymbol = CURRENCY_DATA[baseCurrency]?.symbol || '$';
 
    // Real-time calculation based on exchange rates and selected base currency
    const currentData = useMemo(() => {
+      void priceVersion;
       return generateLivePricing(selectedService, baseCurrency);
-   }, [selectedService, baseCurrency]);
+   }, [selectedService, baseCurrency, priceVersion]);
 
    // Find user's active subscription matching the selected service
    const mySub = useMemo(() => {
@@ -521,6 +542,18 @@ export default function Comparison() {
                <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{t('features.compare.title')}</h2>
                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{t('compare.subtitle')}</p>
             </div>
+            <button
+               onClick={handleRefreshServicePrice}
+               disabled={syncingLive}
+               className="inline-flex items-center gap-2 self-start md:self-auto px-3.5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:border-indigo-500/50 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+            >
+               <RefreshCw size={13} className={syncingLive ? 'animate-spin text-indigo-500' : ''} />
+               <span>
+                  {syncingLive
+                     ? (currentLanguage === 'tr' ? `${selectedService} taranıyor...` : `Syncing ${selectedService}...`)
+                     : (currentLanguage === 'tr' ? `${selectedService} Fiyatını Canlı Güncelle` : `Live Sync ${selectedService} Price`)}
+               </span>
+            </button>
          </div>
 
          {/* Controls */}
