@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>SubSense: ücretsiz abonelik takibi</title>
+    <meta name="description" content="Tüm aboneliklerini tek yerde takip et: yenileme tarihleri, güncel Türkiye ve ABD fiyatları, zam uyarıları. Tamamen ücretsiz, reklamsız." />
+    <meta name="theme-color" content="#fbf9fe" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0e12" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="SubSense" />
+    <meta property="og:description" content="Ücretsiz abonelik takipçisi. Reklam yok, ücretli sürüm yok." />
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem('subsense.web.v1') || '{}').state || {};
+        var a = (s.settings && s.settings.appearance) || 'system';
+        var d = a === 'dark' || (a === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = d ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

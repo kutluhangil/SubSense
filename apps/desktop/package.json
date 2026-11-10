@@ -1,0 +1,13 @@
+{
+  "name": "subsense-desktop",
+  "private": true,
+  "version": "3.0.0",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:mas": "tauri build --bundles app --target universal-apple-darwin"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0"
+  }
+}

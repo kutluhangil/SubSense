@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-11-10T11:39:21.362Z",
+        "reason": "Claude: single Apple-style gradient headline on the dark price-hike section, sanctioned by the apple-design skill's marketing reference"
+      }
+    ]
+  }
+}

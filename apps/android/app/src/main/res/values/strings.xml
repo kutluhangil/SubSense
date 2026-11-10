@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SubSense</string>
+    <string name="title_activity_main">SubSense</string>
+    <string name="package_name">com.subsense.app</string>
+    <string name="custom_url_scheme">com.subsense.app</string>
+    <string name="widget_name">SubSense</string>
+    <string name="widget_description">Monthly subscription spend and your next charge, at a glance.</string>
+</resources>

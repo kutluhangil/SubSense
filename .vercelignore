@@ -1,0 +1,16 @@
+# Only apps/web is built on Vercel.
+apps/android
+apps/desktop
+functions
+server
+dist
+cypress
+components
+contexts
+utils
+docs
+**/node_modules
+**/target
+**/build
+*.apk
+*.aab
