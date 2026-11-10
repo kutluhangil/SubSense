@@ -98,4 +98,19 @@ Firebase Blaze (ücretli) planına ihtiyaç duymamak için hem ön yüz (`aboney
   - `Comparison.tsx` ve `Dashboard.tsx` içerisine canlı tarife denetleme butonları (`syncLivePricesFromServer`) ve `aboneyim_api` üzerinde haftalık otomatik senkronizasyon eklendi.
 - 47 statik SEO fiyat sayfası yeniden üretildi ve güncel imaj `macmini-server` üzerine dağıtıldı.
 
+---
+
+## 7. Orijinal Temiz Ana Sayfa (Hero) Restorasyonu ve Vercel Production Dağıtımı
+
+- **Ana Sayfa Düzeni (`components/Hero.tsx`):**
+  - Deneysel "saat kadranı / horlogerie / akustik teller" tasarımı kaldırılarak projenin Vercel'deki orijinal temiz, modern ve yüksek dönüşümlü ana sayfa mimarisine dönüldü.
+  - **Arka Plan:** Hareketli abonelik logoları (`FloatingLogoLayer`), dot-grid ızgarası ve aurora gradyan parıltıları korundu.
+  - **Tipografi ve Başlık:** Dinamik metin rotatörü (`HeroTextRotator`), Sparkles rozeti, 10.000+ kullanıcı sosyal kanıtı ve "Ücretsiz Takibe Başla" / "Canlı Demoyu Gör" aksiyonları geri getirildi.
+  - **Ürün Vitrini:** Sağ sütunda 3D eğimli interaktif gösterge maketi (`HeroDashboardMockup`) yerini aldı.
+  - **Alt Bölümler:** `FeatureGrid`, `MicroDemoRow` ve `FinalCTA` bölümleri tam entegre çalıştırıldı (ücretsiz mod gereği `PricingSection` kapalı tutuldu).
+- **Çift Canlı Dağıtım Doğrulaması:**
+  - **Ev Sunucusu (`macmini-server`):** Yeni SPA paketi `server/scripts/deploy.sh` ile `aboneyim_web` konteynerine aktarıldı ve `https://macmini-server.taild883a6.ts.net/` üzerinde canlıya alındı.
+  - **Vercel Production (`https://sub-sense-ashy.vercel.app`):** Vercel CLI (`vercel deploy --prod --yes`) aracılığıyla üretim ortamına dağıtıldı, 47 SEO fiyat sayfasıyla birlikte production alias'ına başarıyla bağlandı.
+
+
 

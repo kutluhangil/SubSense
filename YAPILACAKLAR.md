@@ -1,15 +1,17 @@
 # Aboneyim — Yapılacaklar ve İsteğe Bağlı Yapılandırma Rehberi
 
-> **Son Güncelleme:** 8 Kasım 2026  
-> **Canlı Sunucu:** `https://macmini-server.taild883a6.ts.net/` (`aboneyim_web` + `aboneyim_api` Docker konteynerleri `macmini-server` üzerinde çalışıyor)
+> **Son Güncelleme:** 10 Kasım 2026  
+> **Canlı Sunucu (Ev / Mac mini):** `https://macmini-server.taild883a6.ts.net/` (`aboneyim_web` + `aboneyim_api` Docker konteynerleri)  
+> **Canlı Sunucu (Vercel Production):** `https://sub-sense-ashy.vercel.app/`
 
 ---
 
 ## 1. Şu An Tam Çalışan Özellikler (Ek Ayar Gerektirmez)
 
-Aşağıdaki tüm özellikler şu an canlı ortamda (`https://macmini-server.taild883a6.ts.net/`) ve yerel geliştirme ortamında (`http://localhost:5173`) eksiksiz çalışmaktadır:
+Aşağıdaki tüm özellikler şu an ev sunucusunda (`https://macmini-server.taild883a6.ts.net/`), Vercel ortamında (`https://sub-sense-ashy.vercel.app/`) ve yerel geliştirme ortamında (`http://localhost:5173`) eksiksiz çalışmaktadır:
 
-- **Kullanıcı Girişi & Kayıt:** E-posta/Şifre ve Google OAuth (`macmini-server.taild883a6.ts.net` Firebase Authorized Domains listesine eklendi).
+- **Kullanıcı Girişi & Kayıt:** E-posta/Şifre ve Google OAuth (`macmini-server.taild883a6.ts.net` ve `sub-sense-ashy.vercel.app` Firebase Authorized Domains listesinde).
+- **Orijinal Temiz Ana Sayfa (Hero):** Dinamik `HeroTextRotator`, `FloatingLogoLayer`, 3D cam gösterge kartı (`HeroDashboardMockup`), `FeatureGrid` ve `FinalCTA`.
 - **Firestore Gerçek Zamanlı Senkronizasyon:** Abonelik ekleme, düzenleme, silme, ortak abonelik (`isShared` / `myShare`), deneme süresi (`Trial`), bütçe limitleri (`budgetLimits`), tasarruf hedefi (`savingsGoal`), toplam tasarruf (`totalSaved`) ve bildirim tercihleri.
 - **Yıllık, Aylık ve Deneme (Trial) Takvimi:** Uygulama içi `CalendarModal` görünümü ve `.ics` dosya indirme.
 - **TR / EN Çift Dil Desteği:** 811 Türkçe / 811 İngilizce çeviri anahtarı, Yardım Merkezi 5 adımlı Kullanım Rehberi ve Bilinen Sınırlamalar modalları.
