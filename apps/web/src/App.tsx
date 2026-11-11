@@ -17,6 +17,7 @@ import { Overview } from './pages/Overview'
 import { Subscriptions } from './pages/Subscriptions'
 import { Calendar } from './pages/Calendar'
 import { Insights } from './pages/Insights'
+import { Wrapped } from './pages/Wrapped'
 import { Discover, ServiceSheet } from './pages/Discover'
 import { Settings } from './pages/Settings'
 import { Auth } from './pages/Auth'
@@ -36,12 +37,14 @@ export default function App() {
   const catalogVersion = useCatalog((s) => s.version)
   const show = useOverlay((s) => s.show)
   const inApp = Boolean(uid || onboarded || isDesktop)
+  // The web always opens on the landing page until someone signs in; the Mac and Android shells go straight in.
+  const skipLanding = Boolean(uid) || isDesktop || (isNative && onboarded)
 
-  // Signed-in or guest users skip the landing page; strangers can't open app pages.
+  // Strangers can't open app pages.
   useEffect(() => {
-    if (page === 'home' && inApp) go('overview')
+    if (page === 'home' && skipLanding) go('overview')
     if (!PUBLIC.has(page) && !inApp) go('home')
-  }, [page, inApp])
+  }, [page, inApp, skipLanding])
 
   useEffect(() => {
     scrollTo(0, 0)
@@ -105,9 +108,9 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col text-label">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-20 focus:z-50 focus:rounded-full focus:bg-tint focus:px-4 focus:py-2 focus:text-on-tint">Skip to content</a>
-      <TopBar page={page} inApp={inApp} />
+      <TopBar page={page} inApp={inApp && page !== 'home' && page !== 'auth'} />
       <main id="main" className="flex-1">
-        {page === 'home' && !inApp && <Landing />}
+        {page === 'home' && !skipLanding && <Landing />}
         {page === 'auth' && <Auth />}
         {page === 'privacy' && <Legal kind="privacy" />}
         {page === 'deletion' && <Legal kind="deletion" />}
@@ -116,6 +119,7 @@ export default function App() {
         {showApp && page === 'calendar' && <Calendar />}
         {showApp && page === 'insights' && <Insights />}
         {showApp && page === 'discover' && <Discover />}
+        {showApp && page === 'wrapped' && <Wrapped />}
         {showApp && page === 'settings' && <Settings />}
       </main>
       {page !== 'auth' && <Footer />}

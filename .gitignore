@@ -1,49 +1,29 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
+# Dependencies and build output
 node_modules
 dist
-dist-ssr
-*.local
+target
+*.log
 
-# Environment Variables — NEVER commit these
-.env
-.env.local
-.env.development
-.env.development.local
-.env.test
-.env.test.local
-.env.production
-.env.production.local
-.env.*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.vercel
+# Secrets: never commit
 .env*
-
-# Gemini görsel kaynakları (sıkıştırılmadan önce)
-apps/web/assets-src
-
-# Android shell (apps/android): build output and secrets stay local
-apps/android/app/build
-apps/android/.gradle
-apps/android/local.properties
-apps/android/keystore.properties
-apps/android/app/google-services.json
 *.jks
 *.keystore
+apps/android/keystore.properties
+apps/android/app/google-services.json
+
+# Local tooling
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+.vercel
+.claude
+
+# Gemini image sources (before compression)
+apps/web/assets-src
+
+# Android shell: build output stays local
+apps/android/app/build
+apps/android/build
+apps/android/.gradle
+apps/android/local.properties

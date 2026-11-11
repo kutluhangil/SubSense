@@ -8,7 +8,7 @@ import { categoryColor } from '../core/lib/categories'
 import { convert, formatMoney } from '../core/lib/format'
 import type { Subscription } from '../core/types'
 import { useI } from '../ui/strings'
-import { Glyph, GroupTitle, Rings, Section, go, monthCharges, useFlash, useOverlay } from '../ui/kit'
+import { Art, Glyph, GroupTitle, Rings, Section, go, monthCharges, useFlash, useOverlay } from '../ui/kit'
 import { Orbit } from '../ui/Orbit'
 import { monthName, relWhen } from '../ui/when'
 
@@ -70,7 +70,7 @@ export function OverviewBoard({ subs, onPick, preview = false }: { subs: Subscri
           <span className="capitalize">{monthName(now.getFullYear(), now.getMonth(), lang)}</span>
         </GroupTitle>
         <div className="grid grid-cols-7 gap-y-1.5 text-center">
-          {weekdays.map((w) => <span key={w} className="text-[11px] font-medium text-label-3">{w}</span>)}
+          {weekdays.map((w, i) => <span key={i} className="text-[11px] font-medium text-label-3">{w}</span>)}
           {Array.from({ length: lead }, (_, i) => <span key={'x' + i} />)}
           {Array.from({ length: len }, (_, i) => {
             const d = i + 1
@@ -136,6 +136,7 @@ export function Overview() {
           <span className="capitalize">{monthName(now.getFullYear(), now.getMonth(), lang, true)}</span>
           {!empty && <span>{t('ov.metaSubs', { n: subs.length })}</span>}
         </p>
+        {empty && <Art name="empty-month" size={220} className="mx-auto mt-6" />}
         <h1 className="t-display mt-5 text-label">{empty ? t('ov.emptyTitle') : t('ov.title')}</h1>
         <p className="mx-auto mt-6 max-w-[34em] text-[18px] leading-[1.65] text-label-2">
           {empty ? t('ov.emptyText') : <>

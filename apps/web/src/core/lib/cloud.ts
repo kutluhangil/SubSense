@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   GoogleAuthProvider,
   EmailAuthProvider,
+  OAuthProvider,
   createUserWithEmailAndPassword,
   deleteUser,
   linkWithPopup,
@@ -37,7 +38,7 @@ import type { AppSettings, Subscription } from '../types';
 /**
  * Cloud sync shared with the Android app (Firestore `users/{uid}/subscriptions`).
  *
- * Safety rules (see docs/plan/PLAN.md §3.1):
+ * Safety rules:
  *  - Rows are never hard-deleted by sync; a removal writes `deletedAt` (tombstone).
  *  - Only changed fields are written; cleared fields use deleteField().
  *  - A row missing locally is NOT deleted remotely on reconcile — the cloud wins.
@@ -88,6 +89,19 @@ export const signInWithGoogle = () =>
       ? signInWithCredential(auth, GoogleAuthProvider.credential(await (isDesktop ? desktopGoogleIdToken() : nativeGoogleIdToken())))
       : signInWithPopup(auth, new GoogleAuthProvider()),
   );
+
+/** The Mac App Store build ships without Google sign-in: rule 4.8 would otherwise require Sign in with Apple too. */
+export const googleSignInEnabled = !(isDesktop && import.meta.env.VITE_MAS === '1');
+
+/** Sign in with Apple is web-only for now and off until the provider is enabled in Firebase (VITE_APPLE_SIGN_IN=1). */
+export const appleSignInEnabled = import.meta.env.VITE_APPLE_SIGN_IN === '1' && !isNative && !isDesktop;
+const appleProvider = () => {
+  const p = new OAuthProvider('apple.com');
+  p.addScope('email');
+  p.addScope('name');
+  return p;
+};
+export const signInWithApple = () => run(() => signInWithPopup(auth, appleProvider()));
 
 export const signInWithEmail = (email: string, password: string) =>
   run(() => signInWithEmailAndPassword(auth, email.trim(), password));
@@ -154,6 +168,8 @@ async function reauthenticate(user: User, password?: string) {
   if (ids.includes('password')) {
     if (!password) throw Object.assign(new Error('password-required'), { code: 'password-required' });
     await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email ?? '', password));
+  } else if (ids.includes('apple.com') && !ids.includes('google.com')) {
+    await reauthenticateWithPopup(user, appleProvider());
   } else if (isNative || isDesktop) {
     await reauthenticateWithCredential(user, GoogleAuthProvider.credential(await (isDesktop ? desktopGoogleIdToken() : nativeGoogleIdToken())));
   } else {

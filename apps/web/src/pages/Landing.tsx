@@ -1,20 +1,27 @@
-import { useMemo } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { useMemo, useRef } from 'react'
 import { buildSeed } from '../core/data/seed'
-import { EXPLORE_CATALOG, effectivePricing } from '../core/data/explore'
+import { EXPLORE_CATALOG, effectivePricing, exploreStartPrice } from '../core/data/explore'
+import { logoFor } from '../core/lib/logos'
 import { computeTotals } from '../core/lib/derive'
 import { formatMoney } from '../core/lib/format'
 import { useApp } from '../core/store/app'
 import { useMoney } from '../core/lib/useMoney'
 import { useI } from '../ui/strings'
 import { Glyph, Ornament, go, useOverlay } from '../ui/kit'
+import { DuotoneRoster, type RosterMember } from '../ui/duotone-roster'
+import { GlowCard } from '../ui/spotlight-card'
+import { AuthForm } from './Auth'
 import { OverviewBoard } from './Overview'
 
 const COPY = {
   tr: {
-    eyebrow: 'Ücretsiz, reklamsız, hesap gerekmez', title: ['Her abonelik.', 'Tek bakışta.'],
+    eyebrow: 'Tek bakışta', title: 'Her\nabonelik',
     sub: 'Ne ödediğini, ne zaman yenilendiğini ve hangi fiyatın arttığını gösterir. Hep ücretsiz.',
-    start: 'Ücretsiz başla', try: 'Hesapsız dene',
+    start: 'Giriş yap', try: 'Hesapsız dene', perMonth: '/ay', free: 'Ücretsiz',
+    wall: { pause: 'Durdur', play: 'Oynat', team: 'Servisler', openRole: 'Kendi aboneliğin', hiring: 'Ekle', roleLink: 'Ücretsiz başla', memberLink: 'Aç' },
+    yours: 'Seninki eksik mi?', yoursNote: 'Listede olmayan her aboneliği kendin ekleyebilirsin.',
+    loginEyebrow: 'Giriş', loginTitle: 'Tek hesap. Her cihazda aynı liste.',
+    loginPoints: ['Google, Apple ya da e-posta ile giriş', 'Web, Mac ve Android arasında anında eşitleme', 'Hesap açmak istemezsen hesapsız da çalışır'],
     thisMonth: 'Bu ay',
     radarEyebrow: 'Güncel fiyatlar', radarTitle: 'Zamları ilk sen gör.',
     radarText: 'Türkiye ve ABD fiyatları güncel tutulur. Kayıtlı fiyatın eskidiyse SubSense söyler.',
@@ -28,13 +35,16 @@ const COPY = {
       ['Çevrimdışı', 'İnternet yokken de çalışır, gelince eşitlenir.'],
       ['Verin senin', 'JSON ve CSV olarak dışa aktar, tek tıkla sil.'],
     ],
-    railTitle: 'Türkiye’nin abonelikleri. Tek listede.',
-    finalTitle: 'Ücretsiz. Gerçekten.', finalText: 'Hesap açmadan dene. Beğenirsen tüm cihazlarında eşitle.',
+    loginText: 'Hesap açmadan dene. Beğenirsen tüm cihazlarında eşitle.',
   },
   en: {
-    eyebrow: 'Free, ad-free, no account needed', title: ['Every subscription.', 'At a glance.'],
+    eyebrow: 'At a glance', title: 'Every\nsub',
     sub: 'See what you pay, when it renews and which price went up. Free, for good.',
-    start: 'Start for free', try: 'Try without an account',
+    start: 'Sign in', try: 'Try without an account', perMonth: '/mo', free: 'Free',
+    wall: { pause: 'Pause', play: 'Play', team: 'Services', openRole: 'Your own subscription', hiring: 'Add', roleLink: 'Start for free', memberLink: 'Open' },
+    yours: 'Missing yours?', yoursNote: 'Anything that is not listed can be added by hand.',
+    loginEyebrow: 'Sign in', loginTitle: 'One account. The same list everywhere.',
+    loginPoints: ['Sign in with Google, Apple or email', 'Instant sync across web, Mac and Android', 'Works without an account too'],
     thisMonth: 'This month',
     radarEyebrow: 'Current prices', radarTitle: 'Catch price hikes first.',
     radarText: 'Prices for Turkey and the US are kept current. If your saved price is out of date, SubSense tells you.',
@@ -48,10 +58,12 @@ const COPY = {
       ['Offline', 'Works without internet and syncs when you are back.'],
       ['Your data', 'Export JSON or CSV, delete with one click.'],
     ],
-    railTitle: 'Every service you pay for. One list.',
-    finalTitle: 'Free. Really.', finalText: 'Try it without an account. Sync across your devices when you like it.',
+    loginText: 'Try it without an account. Sync across your devices when you like it.',
   },
 }
+
+// The brand's night and indigo, as the roster's burning field.
+const PALETTE = { ground: '#0d0e12', deep: '#1b1c6b', hot: '#494bd6', glow: '#a9aaff', ink: '#f3f1ff', shadow: '#0a0b26', highlight: '#e6e5ff' }
 
 const RADAR = ['Netflix', 'Spotify', 'YouTube Premium', 'Disney+', 'Exxen']
 
@@ -61,29 +73,55 @@ export function Landing() {
   const { base, rates, fmt } = useMoney()
   const completeOnboarding = useApp((s) => s.completeOnboarding)
   const show = useOverlay((s) => s.show)
+  const login = useRef<HTMLElement>(null)
   const sample = useMemo(() => buildSeed(), [])
   const total = computeTotals(sample, base, rates).monthly
-  const tryIt = () => (completeOnboarding(), go('overview'))
 
   const radar = RADAR.map((name) => EXPLORE_CATALOG.find((s) => s.name === name))
     .filter((s): s is NonNullable<typeof s> => Boolean(s))
     .map((s) => ({ name: s.name, tiers: effectivePricing(s).regions.TR?.tiers ?? [] }))
     .filter((s) => s.tiers.length)
 
+  // One tile per service with a bundled logo; plans and the starting price show in the unfolded card.
+  const members = EXPLORE_CATALOG.flatMap((s): RosterMember[] => {
+    const logo = logoFor(s.name)
+    if (!logo) return []
+    const { regions } = effectivePricing(s)
+    const tiers = (base === 'TRY' ? regions.TR : regions.US)?.tiers ?? regions.TR?.tiers ?? regions.US?.tiers ?? []
+    const from = exploreStartPrice(s, base)
+    return [{ name: s.name, role: from.amount ? fmt(from.amount, from.currency) + c.perMonth : c.free, bio: tiers.slice(0, 3).map((x) => x.nameLocalized ?? x.name).join(' · '), photo: logo.url, tile: logo.dark ? '#111111' : '#ffffff' }]
+  })
+
   return (
-    <div className="overflow-x-clip">
-      <section className="rise mx-auto max-w-[980px] px-5 pt-36 text-center sm:pt-44">
-        <p className="inline-flex items-center gap-2 text-[13.5px] text-label-3"><span className="live-dot on" />{c.eyebrow}</p>
-        <h1 className="t-hero mt-5 text-label">{c.title[0]}<br />{c.title[1]}</h1>
-        <p className="t-subhead mx-auto mt-6 max-w-[30em]">{c.sub}</p>
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <a href="#/auth" className="btn btn-ink">{c.start}</a>
-          <button type="button" onClick={tryIt} className="btn btn-line">{c.try}<ChevronRight size={17} strokeWidth={2.2} /></button>
+    <div className="overflow-x-clip bg-bg text-label" data-theme="dark">
+      <DuotoneRoster
+        members={members}
+        openRoles={[{ title: c.yours, note: c.yoursNote, href: '#/auth' }]}
+        eyebrow={c.eyebrow}
+        title={c.title}
+        intro={c.sub}
+        cta={{ label: c.start, href: '#/auth', onClick: (e) => (e.preventDefault(), login.current?.scrollIntoView({ behavior: 'smooth' })) }}
+        secondaryCta={{ label: c.try, href: '#/overview', onClick: (e) => (e.preventDefault(), completeOnboarding(), go('overview')) }}
+        palette={PALETTE}
+        labels={c.wall}
+        onMemberSelect={(m) => show({ kind: 'service', name: m.name })}
+      />
+
+      {/* Sign in, right under the hero */}
+      <section ref={login} className="mx-auto grid max-w-[1120px] scroll-mt-20 items-center gap-12 px-5 py-24 sm:py-32 lg:grid-cols-[1fr_minmax(0,460px)]">
+        <div>
+          <p className="t-eyebrow">{c.loginEyebrow}</p>
+          <h2 className="t-display grad-text mt-3 max-w-[12em] pb-1">{c.loginTitle}</h2>
+          <p className="t-subhead mt-5 max-w-[28em]">{c.loginText}</p>
+          <ul className="mt-8 space-y-3 text-[16px] text-label-2">
+            {c.loginPoints.map((p) => <li key={p} className="flex items-center gap-3"><span className="live-dot shrink-0" />{p}</li>)}
+          </ul>
         </div>
+        <GlowCard glowColor="purple" className="p-6 sm:p-9"><AuthForm /></GlowCard>
       </section>
 
       {/* Product shot: the real dashboard inside a Mac window */}
-      <section className="mx-auto mt-16 max-w-[1120px] px-4 sm:mt-20 sm:px-6" aria-hidden>
+      <section className="mx-auto max-w-[1120px] px-4 sm:px-6" aria-hidden>
         <div className="overflow-hidden rounded-[18px] bg-bg-2 shadow-[0_40px_120px_-40px_rgba(47,46,190,.45),0_0_0_.5px_var(--sep)]">
           <div className="flex h-11 items-center gap-2 border-b border-sep bg-cell/80 px-4">
             <span className="size-3 rounded-full bg-[#ff5f57]" /><span className="size-3 rounded-full bg-[#febc2e]" /><span className="size-3 rounded-full bg-[#28c840]" />
@@ -97,8 +135,31 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="mt-32 bg-night py-28 text-center sm:py-36" data-theme="dark">
+      <section className="mx-auto max-w-[1040px] px-4 pt-28 sm:px-6 sm:pt-36">
+        <Ornament />
+        <h2 className="t-section mx-auto mt-5 max-w-[16em] text-center text-label">{c.bentoTitle}</h2>
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {c.bento.map(([big, small], i) => (
+            <GlowCard key={i} glowColor={i % 2 ? 'blue' : 'purple'} className="flex min-h-[220px] flex-col justify-end p-7">
+              <p className="figure relative text-[clamp(40px,5vw,56px)] leading-none text-label">{big.replace('{n}', String(EXPLORE_CATALOG.length))}</p>
+              <p className="relative mt-3 text-[17px] leading-snug text-label-2">{small}</p>
+            </GlowCard>
+          ))}
+        </div>
+      </section>
+
+      <section className="py-28 text-center sm:py-36">
         <div className="mx-auto max-w-[980px] px-5">
+          <svg className="mx-auto mb-7" width="96" height="96" viewBox="-48 -48 96 96" aria-hidden>
+            {[[18, 9, 2.6], [30, 15, 2.2], [42, 24, 1.8]].map(([r, dur, dot], i) => (
+              <g key={r} className="orbit-turn" style={{ animationDuration: `${dur}s`, animationDirection: i % 2 ? 'reverse' : 'normal' }}>
+                <circle r={r} fill="none" stroke="rgba(192,193,255,.3)" strokeWidth="1" strokeDasharray={i === 1 ? '1.5 4' : undefined} />
+                <circle cx={r} r={dot} fill="#c0c1ff" />
+              </g>
+            ))}
+            <circle r="4" fill="#8083ff" />
+            <circle r="4" fill="none" stroke="#8083ff" strokeWidth="1" className="orbit-beat" />
+          </svg>
           <p className="t-eyebrow" style={{ color: '#a9aaff' }}>{c.radarEyebrow}</p>
           <h2 className="t-display grad-text mx-auto mt-3 max-w-[14em] pb-1">{c.radarTitle}</h2>
           <p className="t-subhead mx-auto mt-5 max-w-[30em]" style={{ color: '#a1a1b3' }}>{c.radarText}</p>
@@ -115,42 +176,6 @@ export function Landing() {
             ))}
           </div>
           <p className="mt-4 text-[13px] text-[#7f7e8f]">{c.radarNote}</p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[1040px] px-4 py-28 sm:px-6 sm:py-36">
-        <Ornament />
-        <h2 className="t-section mx-auto mt-5 max-w-[16em] text-center text-label">{c.bentoTitle}</h2>
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {c.bento.map(([big, small], i) => (
-            <div key={i} className={`card flex min-h-[220px] flex-col justify-end p-7 ${i === 0 ? '!bg-tint text-on-tint' : ''}`}>
-              <p className={`figure text-[clamp(40px,5vw,56px)] leading-none ${i === 0 ? '' : 'text-label'}`}>{big.replace('{n}', String(EXPLORE_CATALOG.length))}</p>
-              <p className={`mt-3 text-[17px] leading-snug ${i === 0 ? 'opacity-85' : 'text-label-2'}`}>{small}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="pb-8 text-center">
-        <Ornament />
-        <h2 className="t-section mx-auto mt-5 max-w-[15em] px-5 text-label">{c.railTitle}</h2>
-        <div className="no-scrollbar mt-14 flex snap-x gap-4 overflow-x-auto px-[max(20px,calc(50vw-520px))] pb-6">
-          {EXPLORE_CATALOG.map((s) => (
-            <button key={s.name} type="button" onClick={() => show({ kind: 'service', name: s.name })} className="flex w-[92px] shrink-0 snap-start flex-col items-center gap-2.5 rounded-[18px] py-1 transition-transform active:scale-95" aria-label={s.name}>
-              <Glyph name={s.name} size={72} color={s.accent} />
-              <span className="w-full truncate text-[12.5px] text-label-2">{s.name}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-[980px] px-5 py-28 text-center sm:py-36">
-        <Ornament />
-        <h2 className="t-display mt-5 text-label">{c.finalTitle}</h2>
-        <p className="t-subhead mx-auto mt-5 max-w-[28em]">{c.finalText}</p>
-        <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          <a href="#/auth" className="btn btn-ink">{c.start}</a>
-          <button type="button" onClick={tryIt} className="btn btn-line">{c.try}<ChevronRight size={17} strokeWidth={2.2} /></button>
         </div>
       </section>
     </div>

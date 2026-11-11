@@ -5,7 +5,7 @@ import { useMoney } from '../core/lib/useMoney'
 import { daysUntil, monthlyAmount } from '../core/lib/format'
 import { CATEGORIES } from '../core/data/catalog'
 import { useI } from '../ui/strings'
-import { Chevron, Glyph, GroupTitle, PageHead, useOverlay } from '../ui/kit'
+import { Art, Chevron, Glyph, GroupTitle, PageHead, useOverlay } from '../ui/kit'
 
 export function Subscriptions() {
   const { t, tCat, tStatus, tCycle } = useI()
@@ -57,7 +57,7 @@ export function Subscriptions() {
           )}
 
           <div className="mt-10 space-y-8">
-            {groups.length === 0 && <p className="text-center text-[15px] text-label-3">{t('subs.none')}</p>}
+            {groups.length === 0 && <div className="text-center text-[15px] text-label-3"><Art name="no-results" size={180} className="mx-auto" /><p className="mt-2">{t('subs.none')}</p></div>}
             {groups.map(([category, list]) => (
               <section key={category}>
                 <GroupTitle action={<span className="num text-[14px] text-label-3">{fmt(list.filter((s) => s.status !== 'Inactive').reduce((a, s) => a + monthlyAmount(priceOf(s), s.cycle), 0))}</span>}>{tCat(category)}</GroupTitle>

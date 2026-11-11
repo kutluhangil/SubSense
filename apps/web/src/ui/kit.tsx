@@ -9,8 +9,8 @@ import { resolveAppearance } from '../core/lib/appearance'
 import type { Subscription } from '../core/types'
 
 // ── Hash router (identical on the web and inside the desktop shell) ─────────
-export type Page = 'home' | 'overview' | 'subs' | 'calendar' | 'insights' | 'discover' | 'settings' | 'auth' | 'privacy' | 'deletion'
-const PAGES = new Set<Page>(['home', 'overview', 'subs', 'calendar', 'insights', 'discover', 'settings', 'auth', 'privacy', 'deletion'])
+export type Page = 'home' | 'overview' | 'subs' | 'calendar' | 'insights' | 'discover' | 'wrapped' | 'settings' | 'auth' | 'privacy' | 'deletion'
+const PAGES = new Set<Page>(['home', 'overview', 'subs', 'calendar', 'insights', 'discover', 'wrapped', 'settings', 'auth', 'privacy', 'deletion'])
 
 const subscribeHash = (cb: () => void) => (addEventListener('hashchange', cb), () => removeEventListener('hashchange', cb))
 
@@ -92,19 +92,9 @@ export function Glyph({ name, size = 40, color }: { name: string; size?: number;
   )
 }
 
-/** App mark: indigo squircle with a white orbit. */
+/** App mark: the indigo squircle with the orbit S. */
 export function Mark({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <defs>
-        <linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6264ef" /><stop offset="1" stopColor="#2f2ebe" /></linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="8.6" fill="url(#mk)" />
-      <circle cx="16" cy="16" r="8" fill="none" stroke="#fff" strokeWidth="1.8" />
-      <circle cx="16" cy="16" r="2.6" fill="#fff" />
-      <circle cx="21.66" cy="10.34" r="2.3" fill="#fff" />
-    </svg>
-  )
+  return <img src="/art/mark.webp" alt="" width={size} height={size} />
 }
 
 // ── Layout ──────────────────────────────────────────────────────────────────
@@ -236,6 +226,13 @@ export function useFlash(ms = 2400): [boolean, () => void] {
 }
 
 // ── Neural-Vault editorial pieces ──────────────────────────────────────────
+/** Gemini illustration, in the light or dark drawing that matches the surface it sits on. */
+export function Art({ name, size, dark, className = '' }: { name: string; size: number; dark?: boolean; className?: string }) {
+  const themeDark = useIsDark()
+  const d = dark ?? themeDark
+  return <img src={`/art/${name}${d ? '-dark' : ''}.webp`} alt="" width={size} height={size} loading="lazy" className={className} />
+}
+
 export function Ornament() {
   return (
     <div className="flex items-center justify-center gap-4" aria-hidden>

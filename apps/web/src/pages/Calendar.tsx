@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApp } from '../core/store/app'
 import { useMoney } from '../core/lib/useMoney'
 import { useI } from '../ui/strings'
-import { Chevron, Glyph, PageHead, monthCharges, useOverlay } from '../ui/kit'
+import { Art, Chevron, Glyph, PageHead, monthCharges, useOverlay } from '../ui/kit'
 import { monthName } from '../ui/when'
 
 export function Calendar() {
@@ -42,7 +42,7 @@ export function Calendar() {
             </div>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center">
-            {weekdays.map((w) => <span key={w} className="pb-2 text-[12px] font-semibold text-label-3">{w}</span>)}
+            {weekdays.map((w, i) => <span key={i} className="pb-2 text-[12px] font-semibold text-label-3">{w}</span>)}
             {Array.from({ length: lead }, (_, i) => <span key={'x' + i} />)}
             {Array.from({ length: len }, (_, i) => {
               const d = i + 1
@@ -64,7 +64,7 @@ export function Calendar() {
             <h3 className="mb-2.5 px-1 text-[22px] font-semibold tracking-[-0.018em] text-label">
               {new Intl.DateTimeFormat(lang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', weekday: 'long' }).format(new Date(cursor.y, cursor.m, picked))}
             </h3>
-            {dayCharges.length === 0 ? <p className="px-1 text-[15px] text-label-3">{t('cal.empty')}</p> : (
+            {dayCharges.length === 0 ? <div className="flex items-center gap-4 px-1"><Art name="calendar" size={88} /><p className="text-[15px] text-label-3">{t('cal.empty')}</p></div> : (
               <div className="grouped">
                 {dayCharges.map((c) => (
                   <button key={c.id} type="button" onClick={() => show({ kind: 'editor', id: c.id })} className="row with-icon">

@@ -7,14 +7,25 @@ import { isDesktop } from '../core/lib/native'
 import { EXPLORE_CATALOG } from '../core/data/explore'
 import { useI } from './strings'
 import { Glyph, Mark, go, useIsDark, useOverlay, type Page } from './kit'
+import { LiquidNavbar, type NimbusFx } from './liquid-navbar'
 
-export const APP_NAV: { page: Page; key: string; icon: typeof Home }[] = [
-  { page: 'overview', key: 'nav.overview', icon: Home },
-  { page: 'subs', key: 'nav.subs', icon: LayoutGrid },
-  { page: 'calendar', key: 'nav.calendar', icon: CalendarDays },
-  { page: 'insights', key: 'nav.insights', icon: PieChart },
-  { page: 'discover', key: 'nav.discover', icon: Compass },
+export const APP_NAV: { page: Page; key: string; icon: typeof Home; fx: NimbusFx }[] = [
+  { page: 'overview', key: 'nav.overview', icon: Home, fx: 'glow' },
+  { page: 'subs', key: 'nav.subs', icon: LayoutGrid, fx: 'pop' },
+  { page: 'calendar', key: 'nav.calendar', icon: CalendarDays, fx: 'drop' },
+  { page: 'insights', key: 'nav.insights', icon: PieChart, fx: 'spin' },
+  { page: 'discover', key: 'nav.discover', icon: Compass, fx: 'wave' },
 ]
+
+/** The water pill menu, shared by the top bar and the mobile tab bar. */
+function WaterNav({ page, items, compact }: { page: Page; items: typeof APP_NAV; compact?: boolean }) {
+  const { t } = useI()
+  const dark = useIsDark()
+  return (
+    <LiquidNavbar tone={dark ? 'dark' : 'light'} compact={compact} active={items.findIndex((n) => n.page === page)}
+      items={items.map((n) => ({ label: t(n.key), href: `#/${n.page}`, icon: <n.icon size={18} strokeWidth={1.8} />, fx: n.fx }))} />
+  )
+}
 
 const iconBtn = 'grid size-9 place-items-center rounded-full text-label-2 transition-colors hover:bg-[color-mix(in_srgb,var(--label)_7%,transparent)] hover:text-label'
 
@@ -24,7 +35,7 @@ function LiveChip() {
   const label = !uid ? t('sync.local') : t(`sync.${status === 'idle' ? 'working' : status}`)
   const color = !uid ? 'var(--label-3)' : status === 'error' ? 'var(--red)' : status === 'offline' ? 'var(--orange)' : 'var(--green)'
   return (
-    <span className="mr-1 hidden items-center gap-2 rounded-full px-3 py-1.5 text-[13px] text-label-2 shadow-[inset_0_0_0_1px_var(--sep)] lg:inline-flex">
+    <span className="mr-1 hidden items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] text-label-2 shadow-[inset_0_0_0_1px_var(--sep)] xl:inline-flex">
       <span className={`live-dot ${uid && status === 'synced' ? 'on' : ''}`} style={{ background: color }} />
       {label}
     </span>
@@ -37,35 +48,32 @@ export function TopBar({ page, inApp }: { page: Page; inApp: boolean }) {
   const setSetting = useApp((s) => s.setSetting)
   const dark = useIsDark()
   const show = useOverlay((s) => s.show)
+  // The landing page is always dark, whatever the theme.
+  const landing = page === 'home'
 
   return (
     <>
       <div className="scroll-edge" aria-hidden />
-      <header className="fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]" data-tauri-drag-region>
+      <header className="fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]" data-theme={landing ? 'dark' : undefined} data-tauri-drag-region>
         <div data-tauri-drag-region className={`mx-auto grid h-[68px] max-w-[1240px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6 ${isDesktop ? 'pl-[84px] sm:pl-[84px]' : ''}`}>
-          <a href={inApp ? '#/overview' : '#/'} className="flex items-center gap-2.5 justify-self-start" aria-label="SubSense">
-            <Mark size={28} />
-            <span className="serif text-[21px] text-label">SubSense</span>
-          </a>
+          {landing ? <span /> : (
+            <a href={inApp ? '#/overview' : '#/'} className="flex items-center gap-2.5 justify-self-start" aria-label="SubSense">
+              <Mark size={28} />
+              <span className="serif text-[21px] text-label">SubSense</span>
+            </a>
+          )}
 
           {inApp ? (
-            <nav aria-label="Main" className="glass hidden items-center gap-0.5 rounded-full p-1 md:flex">
-              {APP_NAV.map((n) => (
-                <a key={n.page} href={`#/${n.page}`} aria-current={page === n.page ? 'page' : undefined}
-                  className={`rounded-full px-3.5 py-1.5 text-[14px] transition-colors lg:px-4 ${page === n.page ? 'bg-cell font-medium text-label shadow-[0_1px_3px_rgba(0,0,0,.08),0_0_0_.5px_var(--sep)]' : 'text-label-2 hover:text-label'}`}>
-                  {t(n.key)}
-                </a>
-              ))}
-            </nav>
+            <div className="hidden md:block"><WaterNav page={page} items={APP_NAV} /></div>
           ) : <span />}
 
-          <div className="flex items-center justify-self-end">
+          <div className={`flex items-center justify-self-end ${landing ? 'glass rounded-full p-1' : ''}`}>
             {inApp && <LiveChip />}
             {inApp && <button type="button" onClick={() => show({ kind: 'palette' })} className={iconBtn} aria-label={`${t('top.search')} (⌘K)`}><Search size={17} strokeWidth={2} /></button>}
             <button type="button" onClick={() => setSetting('language', lang === 'tr' ? 'en' : 'tr')} className={`${iconBtn} w-auto px-2.5 text-[13px] font-semibold`} aria-label={t('top.lang')}>{lang === 'tr' ? 'EN' : 'TR'}</button>
-            <button type="button" onClick={() => setSetting('appearance', dark ? 'light' : 'dark')} className={iconBtn} aria-label={t('top.theme')}>
+            {!landing && <button type="button" onClick={() => setSetting('appearance', dark ? 'light' : 'dark')} className={iconBtn} aria-label={t('top.theme')}>
               {dark ? <Sun size={17} strokeWidth={2} /> : <Moon size={17} strokeWidth={2} />}
-            </button>
+            </button>}
             {inApp ? (
               <a href="#/settings" aria-label={t('nav.settings')} aria-current={page === 'settings' ? 'page' : undefined} className={`${iconBtn} ${page === 'settings' ? 'text-label' : ''}`}><Settings size={17} strokeWidth={2} /></a>
             ) : (
@@ -78,31 +86,17 @@ export function TopBar({ page, inApp }: { page: Page; inApp: boolean }) {
   )
 }
 
-/** Mobile: floating glass tab bar with a center add button. */
+/** Mobile: floating water pill with the add button beside it. */
 export function MobileNav({ page }: { page: Page }) {
   const { t } = useI()
   const show = useOverlay((s) => s.show)
-  const items = APP_NAV.slice(0, 4)
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-[max(14px,env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:hidden">
-      <div className="glass flex items-center gap-1 rounded-full p-1.5">
-        {items.slice(0, 2).map((n) => <TabItem key={n.page} n={n} active={page === n.page} label={t(n.key)} />)}
-        <button type="button" onClick={() => show({ kind: 'editor' })} className="mx-1 grid size-11 place-items-center rounded-full bg-tint text-on-tint" aria-label={t('ov.add')}>
-          <Plus size={21} strokeWidth={2.4} />
-        </button>
-        {items.slice(2).map((n) => <TabItem key={n.page} n={n} active={page === n.page} label={t(n.key)} />)}
-      </div>
-    </nav>
-  )
-}
-
-function TabItem({ n, active, label }: { n: (typeof APP_NAV)[number]; active: boolean; label: string }) {
-  const Icon = n.icon
-  return (
-    <a href={`#/${n.page}`} aria-current={active ? 'page' : undefined} aria-label={label}
-      className={`grid h-11 w-14 place-items-center rounded-full transition-colors ${active ? 'bg-[color-mix(in_srgb,var(--label)_8%,transparent)] text-tint' : 'text-label-2'}`}>
-      <Icon size={21} strokeWidth={active ? 2.3 : 1.9} />
-    </a>
+    <div className="fixed inset-x-0 bottom-[max(14px,env(safe-area-inset-bottom))] z-40 flex items-center justify-center gap-2.5 px-4 md:hidden">
+      <WaterNav page={page} items={APP_NAV.slice(0, 4)} compact />
+      <button type="button" onClick={() => show({ kind: 'editor' })} className="grid size-[54px] place-items-center rounded-full bg-tint text-on-tint shadow-[var(--lift)]" aria-label={t('ov.add')}>
+        <Plus size={22} strokeWidth={2.4} />
+      </button>
+    </div>
   )
 }
 
@@ -126,6 +120,7 @@ export function Footer() {
     {
       title: L ? 'Destek' : 'Support',
       links: [
+        { label: L ? 'Güncel fiyatlar' : 'Current prices (Turkish)', href: 'https://sub-sense-ashy.vercel.app/fiyatlar', ext: true },
         { label: t('foot.privacy'), href: '#/privacy' },
         { label: t('foot.deletion'), href: '#/deletion' },
         { label: L ? 'İletişim' : 'Contact', href: 'mailto:kutluhangil@gmail.com', ext: true },
@@ -134,18 +129,21 @@ export function Footer() {
   ]
   const syncText = !uid ? t('sync.local') : t(`sync.${status === 'idle' ? 'working' : status}`)
   const ratesText = ratesAt ? new Intl.DateTimeFormat(L ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(ratesAt) : '—'
+  const facts = [[L ? 'Eşitleme' : 'Sync', syncText], [L ? 'Kurlar' : 'Rates', ratesText], [L ? 'Katalog' : 'Catalog', `${EXPLORE_CATALOG.length} ${L ? 'servis' : 'services'}`], [L ? 'Sürüm' : 'Version', __APP_VERSION__]]
 
   return (
     <footer className="mt-32 overflow-hidden bg-night text-[#b4b2c3] [[data-theme=dark]_&]:border-t [[data-theme=dark]_&]:border-white/[0.06] [[data-theme=dark]_&]:bg-[#08090c]">
       <div className="mx-auto grid max-w-[1240px] gap-12 px-6 pb-8 pt-16 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
         <div>
-          <a href="#/" className="inline-flex items-center gap-2.5"><Mark size={28} /><span className="serif text-[26px] text-[#ecebf2]">SubSense</span></a>
-          <p className="mt-4 max-w-[32ch] text-[15px] leading-relaxed text-[#9e9cb0]">{t('foot.tagline')}</p>
-          <dl className="mt-6 space-y-1.5 text-[13.5px] text-[#7f7e8f]">
-            <div className="flex items-center gap-2"><span className={`live-dot ${uid && status === 'synced' ? 'on' : ''}`} style={{ background: uid ? undefined : '#7f7e8f' }} />{syncText}</div>
-            <div>{L ? 'Kurlar' : 'Rates'}: {ratesText}</div>
-            <div>{L ? 'Katalog' : 'Catalog'}: {EXPLORE_CATALOG.length} {L ? 'servis' : 'services'}</div>
-            <div>{L ? 'Sürüm' : 'Version'} {__APP_VERSION__}</div>
+          <a href="#/" className="inline-flex items-center gap-3"><Mark size={44} /><span className="serif text-[34px] leading-none text-[#ecebf2]">SubSense</span></a>
+          <p className="mt-5 max-w-[30ch] text-[17px] leading-relaxed text-[#b4b2c3]">{t('foot.tagline')}</p>
+          <dl className="mt-7 grid max-w-[340px] grid-cols-2 overflow-hidden rounded-[16px] bg-white/[0.03] ring-1 ring-white/[0.08]">
+            {facts.map(([k, v], i) => (
+              <div key={k} className={`px-4 py-3 ${i % 2 ? 'border-l border-white/[0.08]' : ''} ${i > 1 ? 'border-t border-white/[0.08]' : ''}`}>
+                <dt className="text-[12px] text-[#7f7e8f]">{k}</dt>
+                <dd className="mt-0.5 flex items-center gap-2 text-[14.5px] text-[#dcdae6]">{i === 0 && <span className={`live-dot shrink-0 ${uid && status === 'synced' ? 'on' : ''}`} style={{ background: uid ? undefined : '#7f7e8f' }} />}{v}</dd>
+              </div>
+            ))}
           </dl>
         </div>
         {cols.map((c) => (
@@ -205,7 +203,7 @@ export function Palette() {
     type Item = { id: string; group: string; label: string; glyph?: string; run: () => void }
     const mine: Item[] = subs.filter((s) => m(s.name) || m(s.plan ?? '')).slice(0, 6).map((s) => ({ id: 's' + s.id, group: t('pal.subs'), label: s.name, glyph: s.name, run: () => show({ kind: 'editor', id: s.id }) }))
     const services: Item[] = k ? EXPLORE_CATALOG.filter((s) => m(s.name)).slice(0, 6).map((s) => ({ id: 'c' + s.name, group: t('pal.services'), label: s.name, glyph: s.name, run: () => show({ kind: 'service', name: s.name }) })) : []
-    const pages: Item[] = [...APP_NAV, { page: 'settings' as Page, key: 'nav.settings', icon: Settings }].filter((n) => m(t(n.key))).map((n) => ({ id: 'p' + n.page, group: t('pal.pages'), label: t(n.key), run: () => go(n.page) }))
+    const pages: Item[] = [...APP_NAV, { page: 'wrapped' as Page, key: 'nav.wrapped', icon: Settings }, { page: 'settings' as Page, key: 'nav.settings', icon: Settings }].filter((n) => m(t(n.key))).map((n) => ({ id: 'p' + n.page, group: t('pal.pages'), label: t(n.key), run: () => go(n.page) }))
     return [...mine, ...services, ...pages]
   }, [q, subs, t, show])
 

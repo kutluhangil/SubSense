@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Bell, Download, FileText, Globe, Link2, LogOut, Moon, ShieldCheck, Trash2, Upload, UserRound, Wallet } from 'lucide-react'
 import { useApp } from '../core/store/app'
-import { useCloud, deleteAccount, linkGoogle, signOutCloud } from '../core/lib/cloud'
+import { useCloud, deleteAccount, googleSignInEnabled, linkGoogle, signOutCloud } from '../core/lib/cloud'
 import { buildBackup, exportBackup, parseBackup, pickBackupFile } from '../core/lib/backup'
 import { CURRENCIES } from '../core/data/currencies'
 import type { Appearance, Subscription } from '../core/types'
@@ -90,7 +90,7 @@ export function Settings() {
                   <span className="block truncate text-[13px] text-label-3">{t('set.signedAs', { email: cloud.email ?? '' })}</span>
                 </span>
               </div>
-              {!cloud.providers.includes('google.com') && (
+              {googleSignInEnabled && !cloud.providers.includes('google.com') && (
                 <button type="button" className="row with-icon" onClick={() => linkGoogle().catch((e) => setNote(err(e)))}>
                   <Icon bg="#34a853"><Link2 {...ic} /></Icon><span className="flex-1 text-[17px] text-label">{t('set.linkGoogle')}</span><Chevron />
                 </button>

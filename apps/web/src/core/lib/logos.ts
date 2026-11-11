@@ -15,7 +15,7 @@ for (const [path, url] of Object.entries(modules)) {
 }
 
 /** Brands whose logo is white/very light → need a dark tile to be visible. */
-export const DARK_TILE = new Set(['apple-music', 'tidal', 'trendyol', 'getir', 'hbo-max']);
+export const DARK_TILE = new Set(['apple-music', 'tidal', 'trendyol', 'getir', 'tabii']);
 
 /** Display-name (lowercased) -> logo slug, for names that don't map 1:1. */
 const ALIASES: Record<string, string> = {

@@ -10,21 +10,21 @@ export interface Plan {
 }
 
 /**
- * Curated real-world current prices (2025) per service, ordered cheapest→priciest.
+ * Curated real-world current prices (TRY checked Nov 2026) per service, ordered cheapest→priciest.
  * `regional` holds actual local list prices for major markets; other currencies
  * fall back to FX conversion of `usd`.
  */
 export const PRICING: Record<string, Plan[]> = {
   Netflix: [
-    { name: 'Standard with ads', usd: 6.99, blurb: '1080p · 2 devices', regional: { EUR: 5.99, GBP: 5.99, TRY: 189.99, INR: 149, BRL: 20.9, CAD: 5.99, AUD: 7.99 } },
-    { name: 'Standard', usd: 15.49, blurb: '1080p · 2 devices · downloads', regional: { EUR: 13.49, GBP: 12.99, TRY: 289.99, INR: 499, BRL: 44.9, CAD: 16.49, AUD: 18.99 } },
-    { name: 'Premium', usd: 22.99, blurb: '4K Ultra HD · 4 devices', regional: { EUR: 19.99, GBP: 18.99, TRY: 379.99, INR: 649, BRL: 59.9, CAD: 22.99, AUD: 25.99 } },
+    { name: 'Standard with ads', usd: 6.99, blurb: '1080p · 2 devices', regional: { EUR: 5.99, GBP: 5.99, TRY: 259.99, INR: 149, BRL: 20.9, CAD: 5.99, AUD: 7.99 } },
+    { name: 'Standard', usd: 15.49, blurb: '1080p · 2 devices · downloads', regional: { EUR: 13.49, GBP: 12.99, TRY: 389.99, INR: 499, BRL: 44.9, CAD: 16.49, AUD: 18.99 } },
+    { name: 'Premium', usd: 22.99, blurb: '4K Ultra HD · 4 devices', regional: { EUR: 19.99, GBP: 18.99, TRY: 499.99, INR: 649, BRL: 59.9, CAD: 22.99, AUD: 25.99 } },
   ],
   Spotify: [
-    { name: 'Student', usd: 5.99, blurb: 'Discounted, ad-free', regional: { EUR: 5.99, GBP: 5.99, TRY: 55.99, INR: 59, BRL: 11.5 } },
-    { name: 'Individual', usd: 11.99, blurb: '1 account', regional: { EUR: 10.99, GBP: 11.99, TRY: 99.99, INR: 119, BRL: 21.9 } },
-    { name: 'Duo', usd: 16.99, blurb: '2 accounts', regional: { EUR: 14.99, GBP: 16.99, TRY: 135.99, INR: 149, BRL: 27.9 } },
-    { name: 'Family', usd: 19.99, blurb: 'Up to 6 accounts', regional: { EUR: 17.99, GBP: 19.99, TRY: 169.99, INR: 179, BRL: 34.9 } },
+    { name: 'Student', usd: 5.99, blurb: 'Discounted, ad-free', regional: { EUR: 5.99, GBP: 5.99, TRY: 60, INR: 59, BRL: 11.5 } },
+    { name: 'Individual', usd: 11.99, blurb: '1 account', regional: { EUR: 10.99, GBP: 11.99, TRY: 115, INR: 119, BRL: 21.9 } },
+    { name: 'Duo', usd: 16.99, blurb: '2 accounts', regional: { EUR: 14.99, GBP: 16.99, TRY: 159, INR: 149, BRL: 27.9 } },
+    { name: 'Family', usd: 19.99, blurb: 'Up to 6 accounts', regional: { EUR: 17.99, GBP: 19.99, TRY: 199, INR: 179, BRL: 34.9 } },
   ],
   'YouTube Premium': [
     { name: 'Student', usd: 7.99, regional: { EUR: 7.99, GBP: 6.99, TRY: 79.99, INR: 89, BRL: 14.9 } },
@@ -38,8 +38,8 @@ export const PRICING: Record<string, Plan[]> = {
   ],
   'HBO Max': [
     { name: 'With Ads', usd: 9.99, regional: { EUR: 5.99 } },
-    { name: 'Ad-Free', usd: 16.99, regional: { EUR: 9.99 } },
-    { name: 'Ultimate', usd: 20.99, blurb: '4K Ultra HD', regional: { EUR: 12.99 } },
+    { name: 'Ad-Free', usd: 16.99, regional: { EUR: 9.99, TRY: 229.9 } },
+    { name: 'Ultimate', usd: 20.99, blurb: '4K Ultra HD', regional: { EUR: 12.99, TRY: 299.9 } },
   ],
   Hulu: [
     { name: 'With Ads', usd: 9.99 },
@@ -53,12 +53,12 @@ export const PRICING: Record<string, Plan[]> = {
     { name: 'Essential', usd: 7.99, regional: { EUR: 5.99 } },
     { name: 'Premium', usd: 12.99, regional: { EUR: 9.99 } },
   ],
-  'Apple TV+': [{ name: 'Monthly', usd: 9.99, regional: { EUR: 9.99, GBP: 8.99, TRY: 229.99 } }],
+  'Apple TV+': [{ name: 'Monthly', usd: 9.99, regional: { EUR: 9.99, GBP: 8.99, TRY: 49.99 } }],
   Audible: [{ name: 'Premium Plus', usd: 14.95, regional: { EUR: 9.95, GBP: 7.99, TRY: 99.99 } }],
   'Apple Music': [
-    { name: 'Student', usd: 5.99, regional: { EUR: 5.99, GBP: 5.99, TRY: 32.99 } },
-    { name: 'Individual', usd: 10.99, regional: { EUR: 10.99, GBP: 10.99, TRY: 59.99, INR: 99, BRL: 21.9 } },
-    { name: 'Family', usd: 16.99, blurb: 'Up to 6', regional: { EUR: 16.99, GBP: 16.99, TRY: 99.99, INR: 149, BRL: 34.9 } },
+    { name: 'Student', usd: 5.99, regional: { EUR: 5.99, GBP: 5.99, TRY: 49.99 } },
+    { name: 'Individual', usd: 10.99, regional: { EUR: 10.99, GBP: 10.99, TRY: 89.99, INR: 99, BRL: 21.9 } },
+    { name: 'Family', usd: 16.99, blurb: 'Up to 6', regional: { EUR: 16.99, GBP: 16.99, TRY: 149.99, INR: 149, BRL: 34.9 } },
   ],
   Tidal: [{ name: 'Individual', usd: 10.99, regional: { EUR: 10.99, GBP: 10.99 } }],
   Deezer: [
@@ -117,12 +117,13 @@ export const PRICING: Record<string, Plan[]> = {
     { name: 'Premium', usd: 10 },
   ],
   'Microsoft 365': [
-    { name: 'Personal', usd: 6.99, regional: { EUR: 7, GBP: 5.99, TRY: 119.99 } },
-    { name: 'Family', usd: 9.99, regional: { EUR: 10, GBP: 7.99, TRY: 169.99 } },
+    { name: 'Personal', usd: 6.99, regional: { EUR: 7, GBP: 5.99, TRY: 329.99 } },
+    { name: 'Family', usd: 9.99, regional: { EUR: 10, GBP: 7.99, TRY: 409.99 } },
   ],
   Grammarly: [{ name: 'Pro', usd: 12, regional: { EUR: 11 } }],
   'Xbox Game Pass': [
-    { name: 'Core', usd: 9.99, regional: { EUR: 6.99, GBP: 6.99, TRY: 269.0 } },
+    { name: 'Essential', usd: 9.99, regional: { EUR: 6.99, GBP: 6.99, TRY: 269.0 } },
+    { name: 'Premium', usd: 14.99, regional: { TRY: 409.0 } },
     { name: 'PC Game Pass', usd: 11.99, regional: { EUR: 11.99, GBP: 9.99, TRY: 419.0 } },
     { name: 'Ultimate', usd: 19.99, blurb: 'Console + PC + cloud', regional: { EUR: 17.99, GBP: 14.99, TRY: 529.0 } },
   ],

@@ -1,7 +1,7 @@
 // Explore catalog — editorial subscription dataset for the mobile Explore module.
 // Content pulled verbatim from the SubSense web app `SUBSCRIPTION_CATALOG`.
 // Bundled (no network) so Explore works fully offline; brand logos are the only
-// remote-ish asset and they too are bundled via src/images. See EXPLORE_MOBILE_SPEC.md.
+// remote-ish asset and they too are bundled via src/core/images.
 
 import type { Category } from '../types';
 import { EXPLORE_TR } from './explore.tr';
@@ -94,9 +94,9 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Premium (4K)', price: 24.99 },
       ] },
       TR: { tiers: [
-        { name: 'Temel', nameLocalized: 'Temel', price: 189.99 },
-        { name: 'Standart', nameLocalized: 'Standart', price: 289.99 },
-        { name: 'Premium (4K)', nameLocalized: 'Premium (4K)', price: 379.99 },
+        { name: 'Temel', nameLocalized: 'Temel', price: 259.99 },
+        { name: 'Standart', nameLocalized: 'Standart', price: 389.99 },
+        { name: 'Premium (4K)', nameLocalized: 'Premium (4K)', price: 499.99 },
       ] },
     },
     milestones: [
@@ -171,7 +171,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Amazon Prime (Bundle)', price: 14.99 },
       ] },
       TR: { tiers: [
-        { name: 'Prime Video', nameLocalized: 'Prime Video', price: 39.90 },
+        { name: 'Prime Video', nameLocalized: 'Prime Video', price: 69.90 },
       ] },
     },
     milestones: [
@@ -206,6 +206,12 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'With Ads', price: 9.99 },
         { name: 'Ad-Free', price: 16.99 },
         { name: 'Ultimate (4K)', price: 20.99 },
+      ] },
+      TR: { tiers: [
+        { name: 'Standart', nameLocalized: 'Standart', price: 229.90 },
+        { name: 'Standart (Yıllık)', nameLocalized: 'Standart (Yıllık)', price: 2299, cycle: 'Yearly' },
+        { name: 'Özel', nameLocalized: 'Özel', price: 299.90 },
+        { name: 'Özel (Yıllık)', nameLocalized: 'Özel (Yıllık)', price: 2999, cycle: 'Yearly' },
       ] },
     },
     milestones: [
@@ -274,7 +280,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Apple TV+ (Annual)', price: 129.00, cycle: 'Yearly' },
       ] },
       TR: { tiers: [
-        { name: 'Apple TV+', nameLocalized: 'Apple TV+', price: 89.99 },
+        { name: 'iCloud+ 50 GB ile', nameLocalized: 'iCloud+ 50 GB ile', price: 49.99 },
       ] },
     },
     milestones: [
@@ -417,10 +423,10 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Student', price: 5.99 },
       ] },
       TR: { tiers: [
-        { name: 'Bireysel', nameLocalized: 'Bireysel', price: 99.99 },
-        { name: 'Duo', nameLocalized: 'Duo', price: 135.99 },
-        { name: 'Aile', nameLocalized: 'Aile', price: 169.99 },
-        { name: 'Öğrenci', nameLocalized: 'Öğrenci', price: 55.99 },
+        { name: 'Bireysel', nameLocalized: 'Bireysel', price: 115 },
+        { name: 'Duo', nameLocalized: 'Duo', price: 159 },
+        { name: 'Aile', nameLocalized: 'Aile', price: 199 },
+        { name: 'Öğrenci', nameLocalized: 'Öğrenci', price: 60 },
       ] },
     },
     milestones: [
@@ -459,9 +465,9 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Student', price: 5.99 },
       ] },
       TR: { tiers: [
-        { name: 'Bireysel', nameLocalized: 'Bireysel', price: 74.99 },
-        { name: 'Aile', nameLocalized: 'Aile', price: 109.99 },
-        { name: 'Öğrenci', nameLocalized: 'Öğrenci', price: 39.99 },
+        { name: 'Bireysel', nameLocalized: 'Bireysel', price: 89.99 },
+        { name: 'Aile', nameLocalized: 'Aile', price: 149.99 },
+        { name: 'Öğrenci', nameLocalized: 'Öğrenci', price: 49.99 },
       ] },
     },
     milestones: [
@@ -609,9 +615,10 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'All Apps', price: 59.99 },
       ] },
       TR: { tiers: [
-        { name: 'Fotoğrafçılık', nameLocalized: 'Fotoğrafçılık', price: 279.99 },
-        { name: 'Tek Uygulama', nameLocalized: 'Tek Uygulama', price: 649.99 },
-        { name: 'Tüm Uygulamalar', nameLocalized: 'Tüm Uygulamalar', price: 1599.99 },
+        { name: 'Fotoğrafçılık', nameLocalized: 'Fotoğrafçılık', price: 669 },
+        { name: 'Tek Uygulama', nameLocalized: 'Tek Uygulama', price: 769 },
+        { name: 'Creative Cloud Standard', nameLocalized: 'Creative Cloud Standard', price: 1799 },
+        { name: 'Creative Cloud Pro', nameLocalized: 'Creative Cloud Pro', price: 2299 },
       ] },
     },
     milestones: [
@@ -857,8 +864,8 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Family', price: 12.99 },
       ] },
       TR: { tiers: [
-        { name: 'Kişisel', nameLocalized: 'Kişisel', price: 179.99 },
-        { name: 'Aile', nameLocalized: 'Aile', price: 239.99 },
+        { name: 'Bireysel', nameLocalized: 'Bireysel', price: 329.99 },
+        { name: 'Aile', nameLocalized: 'Aile', price: 409.99 },
       ] },
     },
     milestones: [
@@ -895,8 +902,9 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Business Plus', price: 18.00 },
       ] },
       TR: { tiers: [
-        { name: 'İşletme Başlangıç', nameLocalized: 'İşletme Başlangıç', price: 119.99 },
-        { name: 'İşletme Standart', nameLocalized: 'İşletme Standart', price: 239.99 },
+        { name: 'Business Starter', nameLocalized: 'Business Starter', price: 71.20 },
+        { name: 'Business Standard', nameLocalized: 'Business Standard', price: 142.40 },
+        { name: 'Business Plus', nameLocalized: 'Business Plus', price: 223.70 },
       ] },
     },
     milestones: [
@@ -1059,12 +1067,13 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     ],
     regions: {
       US: { tiers: [
-        { name: 'Core', price: 9.99 },
-        { name: 'Standard', price: 14.99 },
+        { name: 'Essential', price: 9.99 },
+        { name: 'Premium', price: 14.99 },
         { name: 'Ultimate', price: 19.99 },
       ] },
       TR: { tiers: [
-        { name: 'Temel', nameLocalized: 'Temel', price: 269 },
+        { name: 'Essential', nameLocalized: 'Essential', price: 269 },
+        { name: 'Premium', nameLocalized: 'Premium', price: 409 },
         { name: 'PC Game Pass', nameLocalized: 'PC Game Pass', price: 419 },
         { name: 'Ultimate', nameLocalized: 'Ultimate', price: 529 },
       ] },
@@ -1103,9 +1112,9 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Premium', price: 17.99 },
       ] },
       TR: { tiers: [
-        { name: 'Temel', nameLocalized: 'Temel', price: 250 },
-        { name: 'Ekstra', nameLocalized: 'Ekstra', price: 370 },
-        { name: 'Premium', nameLocalized: 'Premium', price: 470 },
+        { name: 'Essential', nameLocalized: 'Essential', price: 400 },
+        { name: 'Extra', nameLocalized: 'Extra', price: 600 },
+        { name: 'Deluxe', nameLocalized: 'Deluxe', price: 710 },
       ] },
     },
     milestones: [
@@ -1324,8 +1333,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
         { name: 'Annual', price: 139.00, cycle: 'Yearly' },
       ] },
       TR: { tiers: [
-        { name: 'Aylık', nameLocalized: 'Aylık', price: 39.90 },
-        { name: 'Yıllık', nameLocalized: 'Yıllık', price: 399, cycle: 'Yearly' },
+        { name: 'Aylık', nameLocalized: 'Aylık', price: 69.90 },
       ] },
     },
     milestones: [
@@ -1347,7 +1355,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     founders: 'Acun Ilıcalı',
     ceo: 'Acun Ilıcalı',
     globalUserCount: '2M+ (Türkiye)',
-    startingAt: 99.99,
+    startingAt: 275,
     startingCurrency: 'TRY',
     website: 'https://www.exxen.com/uyelik',
     description: [
@@ -1356,9 +1364,10 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     ],
     regions: {
       TR: { tiers: [
-        { name: 'Reklamlı', nameLocalized: 'Reklamlı', price: 99.99 },
-        { name: 'Reklamsız', nameLocalized: 'Reklamsız', price: 169.99 },
-        { name: 'Spor Paketi', nameLocalized: 'Spor Paketi', price: 299.99 },
+        { name: 'Reklamlı', nameLocalized: 'Reklamlı', price: 275 },
+        { name: 'Reklamsız', nameLocalized: 'Reklamsız', price: 388 },
+        { name: 'Spor (Reklamlı)', nameLocalized: 'Spor (Reklamlı)', price: 486 },
+        { name: 'Spor (Reklamsız)', nameLocalized: 'Spor (Reklamsız)', price: 599 },
       ] },
     },
     milestones: [
@@ -1378,7 +1387,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     founders: 'Doğan Holding',
     ceo: 'Aydın Doğan Yalçındağ',
     globalUserCount: '1.5M+ (Türkiye)',
-    startingAt: 89.90,
+    startingAt: 229.90,
     startingCurrency: 'TRY',
     website: 'https://www.blutv.com/uyelik',
     description: [
@@ -1387,9 +1396,10 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     ],
     regions: {
       TR: { tiers: [
-        { name: 'Aylık', nameLocalized: 'Aylık', price: 89.90 },
-        { name: '3 Aylık', nameLocalized: '3 Aylık', price: 239.90 },
-        { name: 'Yıllık', nameLocalized: 'Yıllık', price: 799.90, cycle: 'Yearly' },
+        { name: 'Standart', nameLocalized: 'Standart', price: 229.90 },
+        { name: 'Standart (Yıllık)', nameLocalized: 'Standart (Yıllık)', price: 2299, cycle: 'Yearly' },
+        { name: 'Özel', nameLocalized: 'Özel', price: 299.90 },
+        { name: 'Özel (Yıllık)', nameLocalized: 'Özel (Yıllık)', price: 2999, cycle: 'Yearly' },
       ] },
     },
     milestones: [
@@ -1419,6 +1429,7 @@ export const EXPLORE_CATALOG: ExploreService[] = [
     regions: {
       TR: { tiers: [
         { name: 'Ücretsiz', nameLocalized: 'Ücretsiz', price: 0 },
+        { name: 'Premium', nameLocalized: 'Premium', price: 99 },
       ] },
       US: { tiers: [
         { name: 'Free', price: 0 },

@@ -25,7 +25,9 @@ export function Insights() {
 
   return (
     <div>
-      <PageHead title={t('in.title')} lede={t('in.lede', { month: fmt(totals.monthly), year: fmt(totals.annual) })} />
+      <PageHead title={t('in.title')} lede={t('in.lede', { month: fmt(totals.monthly), year: fmt(totals.annual) })}>
+        <a href="#/wrapped" className="btn btn-line">{t('wr.title', { year: new Date().getFullYear() })}</a>
+      </PageHead>
 
       <div className="mx-auto mt-14 grid max-w-[1040px] gap-4 px-4 sm:px-6 md:grid-cols-2">
         <section className="card p-6">

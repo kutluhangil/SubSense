@@ -5,7 +5,7 @@ import { useCatalog } from '../core/store/catalog'
 import { EXPLORE_CATALOG, EXPLORE_CATEGORY_ORDER, appCategoryFor, effectivePricing, exploreService, exploreStartPrice, localizedExplore } from '../core/data/explore'
 import { formatMoney, isoInDays } from '../core/lib/format'
 import { useI } from '../ui/strings'
-import { Glyph, GroupTitle, PageHead, Segmented, Sheet, useOverlay } from '../ui/kit'
+import { Art, Glyph, GroupTitle, PageHead, Segmented, Sheet, useOverlay } from '../ui/kit'
 
 const CAT_TR: Record<string, string> = {
   Streaming: 'Dizi ve film', Music: 'Müzik', Design: 'Tasarım', AI: 'Yapay zekâ araçları', SaaS: 'Yazılım', Gaming: 'Oyun', Community: 'Topluluk', Shopping: 'Alışveriş', Turkish: 'Yerli platformlar',
@@ -33,7 +33,7 @@ export function Discover() {
           <input className="field pl-11" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('dis.search')} aria-label={t('dis.search')} />
         </div>
         <div className="mt-12 space-y-12">
-          {groups.length === 0 && <p className="text-center text-label-3">{t('dis.none')}</p>}
+          {groups.length === 0 && <div className="text-center text-label-3"><Art name="no-results" size={180} className="mx-auto" /><p className="mt-2">{t('dis.none')}</p></div>}
           {groups.map((g) => (
             <section key={g.key}>
               <GroupTitle>{lang === 'tr' ? CAT_TR[g.key] ?? g.label : g.label}</GroupTitle>
